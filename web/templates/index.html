@@ -20,9 +20,52 @@
     </header>
 
     <main>
+        <!-- Cluster-wide resource section (always visible) -->
+        <section class="cluster-section">
+            <h2>Cluster Resources</h2>
+            <div class="cluster-grid">
+                <div class="resource-card">
+                    <div class="resource-header">
+                        <span class="resource-title">Memory</span>
+                        <span class="resource-values" id="mem-values">Laster...</span>
+                    </div>
+                    <div class="bar-track">
+                        <div class="bar-fill" id="mem-bar" style="width:0%"></div>
+                    </div>
+                    <div class="resource-sub" id="mem-sub"></div>
+                </div>
+                <div class="resource-card">
+                    <div class="resource-header">
+                        <span class="resource-title">Disk free</span>
+                        <span class="resource-values" id="disk-values">Laster...</span>
+                    </div>
+                    <div class="bar-track">
+                        <div class="bar-fill bar-fill--disk" id="disk-bar" style="width:0%"></div>
+                    </div>
+                    <div class="resource-sub" id="disk-sub"></div>
+                </div>
+            </div>
+
+            <div class="vhost-resources">
+                <h3>Message data per vhost</h3>
+                <table class="vhost-res-table">
+                    <thead>
+                        <tr>
+                            <th>Vhost</th>
+                            <th>Memory (messages)</th>
+                            <th>Disk (persistent)</th>
+                        </tr>
+                    </thead>
+                    <tbody id="vhost-res-body">
+                        <tr><td colspan="3" class="loading">Laster...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
         {{if .Metrics}}
         <section class="limits-card">
-            <h2>Limits</h2>
+            <h2>Limits — {{.Selected}}</h2>
             <table class="limits-table">
                 <tr>
                     <td class="label">
@@ -90,6 +133,13 @@
             window.location.href = '/?vhost=' + encodeURIComponent(vhost);
         }
 
+        function fmtBytes(b) {
+            if (b >= 1073741824) return (b / 1073741824).toFixed(1) + ' GB';
+            if (b >= 1048576)    return (b / 1048576).toFixed(1) + ' MB';
+            if (b >= 1024)       return (b / 1024).toFixed(1) + ' KB';
+            return b + ' B';
+        }
+
         function fmtRate(r) {
             if (r === 0) return '<span class="zero">0</span>';
             return r.toFixed(2) + '/s';
@@ -110,6 +160,53 @@
             return `<svg width="${w}" height="${h}" style="vertical-align:middle;display:block">
                 <polyline points="${points}" fill="none" stroke="${color}" stroke-width="1.5" stroke-linejoin="round"/>
             </svg>`;
+        }
+
+        function fetchCluster() {
+            fetch('/api/cluster')
+                .then(r => r.json())
+                .then(d => {
+                    // Memory bar
+                    const memPct = d.total_mem_limit > 0
+                        ? Math.min(100, (d.total_mem_used / d.total_mem_limit) * 100)
+                        : 0;
+                    document.getElementById('mem-bar').style.width = memPct.toFixed(1) + '%';
+                    document.getElementById('mem-bar').className =
+                        'bar-fill' + (memPct > 80 ? ' bar-fill--warn' : '');
+                    document.getElementById('mem-values').textContent =
+                        fmtBytes(d.total_mem_used) + ' / ' + fmtBytes(d.total_mem_limit);
+                    document.getElementById('mem-sub').textContent =
+                        memPct.toFixed(1) + '% av alarm-grense brukt';
+
+                    // Disk bar — show how much free space remains above the alert threshold
+                    const diskSafe = d.total_disk_free - d.min_disk_limit;
+                    const diskPct = d.total_disk_free > 0
+                        ? Math.min(100, Math.max(0, (diskSafe / d.total_disk_free) * 100))
+                        : 0;
+                    document.getElementById('disk-bar').style.width = diskPct.toFixed(1) + '%';
+                    const diskEl = document.getElementById('disk-bar');
+                    diskEl.className = 'bar-fill bar-fill--disk' + (diskPct < 20 ? ' bar-fill--warn' : '');
+                    document.getElementById('disk-values').textContent =
+                        fmtBytes(d.total_disk_free) + ' ledig';
+                    document.getElementById('disk-sub').textContent =
+                        'Alarm-grense: ' + fmtBytes(d.min_disk_limit);
+
+                    // Per-vhost table
+                    const tbody = document.getElementById('vhost-res-body');
+                    if (!d.vhost_resources || d.vhost_resources.length === 0) {
+                        tbody.innerHTML = '<tr><td colspan="3" class="empty">Ingen data</td></tr>';
+                        return;
+                    }
+                    tbody.innerHTML = d.vhost_resources.map(v => {
+                        const highlight = v.name === currentVhost ? ' class="vhost-highlight"' : '';
+                        return `<tr${highlight}>
+                            <td class="vhost-name">${v.name}</td>
+                            <td>${fmtBytes(v.message_bytes)}</td>
+                            <td>${fmtBytes(v.disk_bytes)}</td>
+                        </tr>`;
+                    }).join('');
+                })
+                .catch(() => {});
         }
 
         function fetchQueues() {
@@ -140,11 +237,11 @@
                 });
         }
 
+        fetchCluster();
         fetchQueues();
+        setInterval(fetchCluster, 15000);
         setInterval(fetchQueues, 10000);
-
-        // Refresh limits hvert 15 sekund
-        setTimeout(() => location.reload(), 15000);
+        setTimeout(() => location.reload(), 60000);
     </script>
 </body>
 </html>

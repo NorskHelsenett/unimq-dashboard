@@ -6,6 +6,7 @@ import (
 	"io"
 	"net/http"
 	"net/url"
+	"sort"
 	"sync"
 )
 
@@ -64,6 +65,30 @@ var DefaultLimits = Limits{
 	MaxQueues:      150,
 }
 
+// ClusterStats holds cluster-wide memory and disk info plus per-vhost breakdown.
+type NodeStats struct {
+	Name          string `json:"name"`
+	MemUsed       int64  `json:"mem_used"`
+	MemLimit      int64  `json:"mem_limit"`
+	DiskFree      int64  `json:"disk_free"`
+	DiskFreeLimit int64  `json:"disk_free_limit"`
+}
+
+type VhostResources struct {
+	Name         string `json:"name"`
+	MessageBytes int64  `json:"message_bytes"`
+	DiskBytes    int64  `json:"disk_bytes"`
+}
+
+type ClusterStats struct {
+	Nodes          []NodeStats      `json:"nodes"`
+	TotalMemUsed   int64            `json:"total_mem_used"`
+	TotalMemLimit  int64            `json:"total_mem_limit"`
+	TotalDiskFree  int64            `json:"total_disk_free"`
+	MinDiskLimit   int64            `json:"min_disk_limit"`
+	VhostResources []VhostResources `json:"vhost_resources"`
+}
+
 type vhostResponse struct {
 	Name                   string `json:"name"`
 	MessagesUnacknowledged int    `json:"messages_unacknowledged"`
@@ -82,9 +107,9 @@ type rateDetail struct {
 }
 
 type messageStats struct {
-	PublishDetails  rateDetail `json:"publish_details"`
-	DeliverDetails  rateDetail `json:"deliver_get_details"`
-	RedelivDetails  rateDetail `json:"redeliver_details"`
+	PublishDetails rateDetail `json:"publish_details"`
+	DeliverDetails rateDetail `json:"deliver_get_details"`
+	RedelivDetails rateDetail `json:"redeliver_details"`
 }
 
 type queueAPIResponse struct {
@@ -93,7 +118,17 @@ type queueAPIResponse struct {
 	Messages               int          `json:"messages"`
 	MessagesUnacknowledged int          `json:"messages_unacknowledged"`
 	Consumers              int          `json:"consumers"`
+	MessageBytes           int64        `json:"message_bytes"`
+	MessageBytesPersistent int64        `json:"message_bytes_persistent"`
 	MessageStats           messageStats `json:"message_stats"`
+}
+
+type nodeAPIResponse struct {
+	Name          string `json:"name"`
+	MemUsed       int64  `json:"mem_used"`
+	MemLimit      int64  `json:"mem_limit"`
+	DiskFree      int64  `json:"disk_free"`
+	DiskFreeLimit int64  `json:"disk_free_limit"`
 }
 
 func fetch(path string, v any) error {
@@ -195,4 +230,52 @@ func GetQueueDetails(vhost string) ([]QueueDetail, error) {
 		}
 	}
 	return details, nil
+}
+
+func GetClusterStats() (*ClusterStats, error) {
+	var nodes []nodeAPIResponse
+	if err := fetch("/nodes", &nodes); err != nil {
+		return nil, err
+	}
+
+	stats := &ClusterStats{}
+	for _, n := range nodes {
+		stats.Nodes = append(stats.Nodes, NodeStats{
+			Name:          n.Name,
+			MemUsed:       n.MemUsed,
+			MemLimit:      n.MemLimit,
+			DiskFree:      n.DiskFree,
+			DiskFreeLimit: n.DiskFreeLimit,
+		})
+		stats.TotalMemUsed += n.MemUsed
+		stats.TotalMemLimit += n.MemLimit
+		stats.TotalDiskFree += n.DiskFree
+		if stats.MinDiskLimit == 0 || n.DiskFreeLimit < stats.MinDiskLimit {
+			stats.MinDiskLimit = n.DiskFreeLimit
+		}
+	}
+
+	// Aggregate per-vhost message bytes from all queues
+	var allQueues []queueAPIResponse
+	if err := fetch("/queues", &allQueues); err != nil {
+		return nil, err
+	}
+
+	vhostMap := make(map[string]*VhostResources)
+	for _, q := range allQueues {
+		if _, ok := vhostMap[q.Vhost]; !ok {
+			vhostMap[q.Vhost] = &VhostResources{Name: q.Vhost}
+		}
+		vhostMap[q.Vhost].MessageBytes += q.MessageBytes
+		vhostMap[q.Vhost].DiskBytes += q.MessageBytesPersistent
+	}
+
+	for _, v := range vhostMap {
+		stats.VhostResources = append(stats.VhostResources, *v)
+	}
+	sort.Slice(stats.VhostResources, func(i, j int) bool {
+		return stats.VhostResources[i].MessageBytes > stats.VhostResources[j].MessageBytes
+	})
+
+	return stats, nil
 }

@@ -150,10 +150,21 @@ func queuesAPIHandler(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(details)
 }
 
+func clusterAPIHandler(w http.ResponseWriter, r *http.Request) {
+	stats, err := scraper.GetClusterStats()
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadGateway)
+		return
+	}
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(stats)
+}
+
 func main() {
 	http.HandleFunc("/", indexHandler)
 	http.HandleFunc("/queue", queueHandler)
 	http.HandleFunc("/api/queues", queuesAPIHandler)
+	http.HandleFunc("/api/cluster", clusterAPIHandler)
 	http.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("web/static"))))
 
 	log.Println("Dashboard running on http://localhost:8080")
