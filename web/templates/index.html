@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="no">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RabbitMQ Dashboard</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <header>
+        <h1>RabbitMQ Dashboard</h1>
+        <div class="vhost-selector">
+            <label for="vhost-select">Vhost:</label>
+            <select id="vhost-select" onchange="selectVhost(this.value)">
+                {{range .Vhosts}}
+                <option value="{{.}}" {{if eq . $.Selected}}selected{{end}}>{{.}}</option>
+                {{end}}
+            </select>
+        </div>
+    </header>
+
+    <main>
+        {{if .Metrics}}
+        <section class="limits-card">
+            <h2>Limits</h2>
+            <table class="limits-table">
+                <tr>
+                    <td class="label">
+                        Connections
+                        <span class="tooltip" title="Antall åpne connections på denne vhosten">?</span>
+                    </td>
+                    <td class="value {{if ge .Metrics.Connections .Limits.MaxConnections}}over-limit{{else if ge .Metrics.Connections (div .Limits.MaxConnections 2)}}near-limit{{end}}">
+                        {{.Metrics.Connections}} of {{.Limits.MaxConnections}}
+                    </td>
+                </tr>
+                <tr>
+                    <td class="label">
+                        Channels
+                        <span class="tooltip" title="Antall åpne channels på denne vhosten">?</span>
+                    </td>
+                    <td class="value">
+                        {{.Metrics.Channels}}
+                    </td>
+                </tr>
+                <tr>
+                    <td class="label">
+                        Queues
+                        <span class="tooltip" title="Antall køer på denne vhosten">?</span>
+                    </td>
+                    <td class="value {{if ge .Metrics.Queues .Limits.MaxQueues}}over-limit{{else if ge .Metrics.Queues (div .Limits.MaxQueues 2)}}near-limit{{end}}">
+                        {{.Metrics.Queues}} of {{.Limits.MaxQueues}}
+                    </td>
+                </tr>
+                <tr>
+                    <td class="label">
+                        Unacked messages
+                        <span class="tooltip" title="Meldinger som er levert til consumer men ikke bekreftet">?</span>
+                    </td>
+                    <td class="value">
+                        {{.Metrics.Unacked}}
+                    </td>
+                </tr>
+                <tr>
+                    <td class="label">
+                        Max messages per queue
+                        <span class="tooltip" title="Maks antall meldinger tillatt per kø">?</span>
+                    </td>
+                    <td class="value">{{.Limits.MaxMessages}}</td>
+                </tr>
+                <tr>
+                    <td class="label">
+                        Max queue size
+                        <span class="tooltip" title="Maks størrelse per kø">?</span>
+                    </td>
+                    <td class="value">{{.Limits.MaxQueueSize}}</td>
+                </tr>
+            </table>
+        </section>
+
+        <section class="grafana-section">
+            <h2>Queue Details</h2>
+            <iframe
+                src="http://localhost:3000/d/rabbitmq-queues-overview?orgId=1&kiosk&var-rabbitmq_vhost={{.Selected}}&refresh=10s"
+                frameborder="0">
+            </iframe>
+        </section>
+        {{end}}
+    </main>
+
+    <script>
+        function selectVhost(vhost) {
+            window.location.href = '/?vhost=' + encodeURIComponent(vhost);
+        }
+
+        // Auto-refresh metrikker hvert 15 sekund
+        setTimeout(() => location.reload(), 15000);
+    </script>
+</body>
+</html>
