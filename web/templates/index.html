@@ -3,12 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>RabbitMQ Dashboard</title>
+    <title>UniMQ</title>
     <link rel="stylesheet" href="/static/style.css">
 </head>
 <body>
     <header>
-        <h1>RabbitMQ Dashboard</h1>
+        <div class="logo"><img src="/static/logo.svg" alt="UniMQ logo"><h1>UniMQ</h1></div>
         <div class="vhost-selector">
             <label for="vhost-select">Vhost:</label>
             <select id="vhost-select" onchange="selectVhost(this.value)">
@@ -106,7 +106,7 @@
                 const y = (h - pad) - ((v - min) / range) * (h - pad * 2);
                 return `${x.toFixed(1)},${y.toFixed(1)}`;
             }).join(' ');
-            const color = max > min ? '#4a90d9' : '#aaa';
+            const color = max > min ? '#ff6600' : '#ffcc99';
             return `<svg width="${w}" height="${h}" style="vertical-align:middle;display:block">
                 <polyline points="${points}" fill="none" stroke="${color}" stroke-width="1.5" stroke-linejoin="round"/>
             </svg>`;

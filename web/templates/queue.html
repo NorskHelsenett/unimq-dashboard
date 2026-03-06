@@ -3,12 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{.Queue}} — RabbitMQ Dashboard</title>
+    <title>{{.Queue}} — UniMQ</title>
     <link rel="stylesheet" href="/static/style.css">
 </head>
 <body>
     <header>
-        <h1>RabbitMQ Dashboard</h1>
+        <div class="logo"><img src="/static/logo.svg" alt="UniMQ logo"><h1>UniMQ</h1></div>
         <nav class="breadcrumb">
             <a href="/?vhost={{.Vhost}}">{{.Vhost}}</a>
             <span>/</span>
@@ -114,7 +114,7 @@
             ctx.lineTo(xOf(times[times.length-1]), pad.top + ch);
             ctx.lineTo(xOf(times[0]), pad.top + ch);
             ctx.closePath();
-            ctx.fillStyle = 'rgba(74,144,217,0.1)';
+            ctx.fillStyle = 'rgba(255,102,0,0.1)';
             ctx.fill();
 
             // Line
@@ -123,7 +123,7 @@
             for (let i = 1; i < samples.length; i++) {
                 ctx.lineTo(xOf(times[i]), yOf(values[i]));
             }
-            ctx.strokeStyle = '#4a90d9';
+            ctx.strokeStyle = '#ff6600';
             ctx.lineWidth = 2;
             ctx.lineJoin = 'round';
             ctx.stroke();
