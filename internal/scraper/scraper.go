@@ -22,26 +22,29 @@ type VhostMetrics struct {
 	Unacked     int    `json:"unacked"`
 }
 
+type QueueDetail struct {
+	Name        string  `json:"name"`
+	Messages    int     `json:"messages"`
+	Consumers   int     `json:"consumers"`
+	PublishRate float64 `json:"publish_rate"`
+	DeliverRate float64 `json:"deliver_rate"`
+	RedelivRate float64 `json:"redeliver_rate"`
+	Unacked     int     `json:"messages_unacknowledged"`
+}
+
 type Limits struct {
 	MaxConnections int
 	MaxQueues      int
-	MaxMessages    int
-	MaxQueueSize   string
 }
 
 var DefaultLimits = Limits{
 	MaxConnections: 300,
 	MaxQueues:      150,
-	MaxMessages:    10000,
-	MaxQueueSize:   "10 GiB",
 }
 
 type vhostResponse struct {
-	Name  string `json:"name"`
-	Stats struct {
-		MessagesUnacknowledged int `json:"messages_unacknowledged"`
-	} `json:"messages_details"`
-	MessagesUnacknowledged int `json:"messages_unacknowledged"`
+	Name                   string `json:"name"`
+	MessagesUnacknowledged int    `json:"messages_unacknowledged"`
 }
 
 type connectionResponse struct {
@@ -52,8 +55,23 @@ type channelResponse struct {
 	Vhost string `json:"vhost"`
 }
 
-type queueResponse struct {
-	Vhost string `json:"vhost"`
+type rateDetail struct {
+	Rate float64 `json:"rate"`
+}
+
+type messageStats struct {
+	PublishDetails  rateDetail `json:"publish_details"`
+	DeliverDetails  rateDetail `json:"deliver_get_details"`
+	RedelivDetails  rateDetail `json:"redeliver_details"`
+}
+
+type queueAPIResponse struct {
+	Name                   string       `json:"name"`
+	Vhost                  string       `json:"vhost"`
+	Messages               int          `json:"messages"`
+	MessagesUnacknowledged int          `json:"messages_unacknowledged"`
+	Consumers              int          `json:"consumers"`
+	MessageStats           messageStats `json:"message_stats"`
 }
 
 func fetch(path string, v any) error {
@@ -118,7 +136,7 @@ func GetMetrics(vhost string) (*VhostMetrics, error) {
 		}
 	}
 
-	var queues []queueResponse
+	var queues []queueAPIResponse
 	if err := fetch("/queues/"+encoded, &queues); err != nil {
 		return nil, err
 	}
@@ -130,4 +148,27 @@ func GetMetrics(vhost string) (*VhostMetrics, error) {
 		Queues:      len(queues),
 		Unacked:     vhostData.MessagesUnacknowledged,
 	}, nil
+}
+
+func GetQueueDetails(vhost string) ([]QueueDetail, error) {
+	encoded := url.PathEscape(vhost)
+
+	var queues []queueAPIResponse
+	if err := fetch("/queues/"+encoded, &queues); err != nil {
+		return nil, err
+	}
+
+	details := make([]QueueDetail, len(queues))
+	for i, q := range queues {
+		details[i] = QueueDetail{
+			Name:        q.Name,
+			Messages:    q.Messages,
+			Consumers:   q.Consumers,
+			PublishRate: q.MessageStats.PublishDetails.Rate,
+			DeliverRate: q.MessageStats.DeliverDetails.Rate,
+			RedelivRate: q.MessageStats.RedelivDetails.Rate,
+			Unacked:     q.MessagesUnacknowledged,
+		}
+	}
+	return details, nil
 }

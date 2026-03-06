@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"html/template"
 	"log"
 	"net/http"
@@ -55,8 +56,26 @@ func indexHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+func queuesAPIHandler(w http.ResponseWriter, r *http.Request) {
+	vhost := r.URL.Query().Get("vhost")
+	if vhost == "" {
+		http.Error(w, "missing vhost", http.StatusBadRequest)
+		return
+	}
+
+	details, err := scraper.GetQueueDetails(vhost)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadGateway)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(details)
+}
+
 func main() {
 	http.HandleFunc("/", indexHandler)
+	http.HandleFunc("/api/queues", queuesAPIHandler)
 	http.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("web/static"))))
 
 	log.Println("Dashboard running on http://localhost:8080")

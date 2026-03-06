@@ -38,9 +38,7 @@
                         Channels
                         <span class="tooltip" title="Antall åpne channels på denne vhosten">?</span>
                     </td>
-                    <td class="value">
-                        {{.Metrics.Channels}}
-                    </td>
+                    <td class="value">{{.Metrics.Channels}}</td>
                 </tr>
                 <tr>
                     <td class="label">
@@ -54,45 +52,80 @@
                 <tr>
                     <td class="label">
                         Unacked messages
-                        <span class="tooltip" title="Meldinger som er levert til consumer men ikke bekreftet">?</span>
+                        <span class="tooltip" title="Meldinger levert til consumer men ikke bekreftet">?</span>
                     </td>
-                    <td class="value">
-                        {{.Metrics.Unacked}}
-                    </td>
-                </tr>
-                <tr>
-                    <td class="label">
-                        Max messages per queue
-                        <span class="tooltip" title="Maks antall meldinger tillatt per kø">?</span>
-                    </td>
-                    <td class="value">{{.Limits.MaxMessages}}</td>
-                </tr>
-                <tr>
-                    <td class="label">
-                        Max queue size
-                        <span class="tooltip" title="Maks størrelse per kø">?</span>
-                    </td>
-                    <td class="value">{{.Limits.MaxQueueSize}}</td>
+                    <td class="value">{{.Metrics.Unacked}}</td>
                 </tr>
             </table>
         </section>
 
-        <section class="grafana-section">
-            <h2>Queue Details</h2>
-            <iframe
-                src="http://localhost:3000/d/rabbitmq-queues-overview?orgId=1&kiosk&var-rabbitmq_vhost={{.Selected}}&refresh=10s"
-                frameborder="0">
-            </iframe>
+        <section class="queues-section">
+            <h2>Queues</h2>
+            <div id="queues-container">
+                <table class="queues-table">
+                    <thead>
+                        <tr>
+                            <th>Queue</th>
+                            <th>Messages</th>
+                            <th>Unacked</th>
+                            <th>Consumers</th>
+                            <th>Publish rate</th>
+                            <th>Deliver rate</th>
+                            <th>Redelivered</th>
+                        </tr>
+                    </thead>
+                    <tbody id="queues-body">
+                        <tr><td colspan="7" class="loading">Laster...</td></tr>
+                    </tbody>
+                </table>
+            </div>
         </section>
         {{end}}
     </main>
 
     <script>
+        const currentVhost = {{.Selected}};
+
         function selectVhost(vhost) {
             window.location.href = '/?vhost=' + encodeURIComponent(vhost);
         }
 
-        // Auto-refresh metrikker hvert 15 sekund
+        function fmtRate(r) {
+            if (r === 0) return '<span class="zero">0</span>';
+            return r.toFixed(2) + '/s';
+        }
+
+        function fetchQueues() {
+            if (!currentVhost) return;
+            fetch('/api/queues?vhost=' + encodeURIComponent(currentVhost))
+                .then(r => r.json())
+                .then(queues => {
+                    const tbody = document.getElementById('queues-body');
+                    if (!queues || queues.length === 0) {
+                        tbody.innerHTML = '<tr><td colspan="7" class="empty">Ingen køer på denne vhosten</td></tr>';
+                        return;
+                    }
+                    tbody.innerHTML = queues.map(q => `
+                        <tr>
+                            <td class="queue-name">${q.name}</td>
+                            <td>${q.messages}</td>
+                            <td>${q.messages_unacknowledged}</td>
+                            <td>${q.consumers}</td>
+                            <td>${fmtRate(q.publish_rate)}</td>
+                            <td>${fmtRate(q.deliver_rate)}</td>
+                            <td>${fmtRate(q.redeliver_rate)}</td>
+                        </tr>`).join('');
+                })
+                .catch(() => {
+                    document.getElementById('queues-body').innerHTML =
+                        '<tr><td colspan="7" class="error">Kunne ikke hente kødata</td></tr>';
+                });
+        }
+
+        fetchQueues();
+        setInterval(fetchQueues, 10000);
+
+        // Refresh limits hvert 15 sekund
         setTimeout(() => location.reload(), 15000);
     </script>
 </body>
