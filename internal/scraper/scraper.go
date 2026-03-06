@@ -53,11 +53,13 @@ type QueueDetail struct {
 }
 
 type Limits struct {
+	MaxChannels    int
 	MaxConnections int
 	MaxQueues      int
 }
 
 var DefaultLimits = Limits{
+	MaxChannels:    1000,
 	MaxConnections: 300,
 	MaxQueues:      150,
 }

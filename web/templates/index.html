@@ -38,7 +38,7 @@
                         Channels
                         <span class="tooltip" title="Antall åpne channels på denne vhosten">?</span>
                     </td>
-                    <td class="value">{{.Metrics.Channels}}</td>
+                    <td class="value {{if ge .Metrics.Channels .Limits.MaxChannels}}over-limit{{else if ge .Metrics.Channels (div .Limits.MaxChannels 2)}}near-limit{{end}}">{{.Metrics.Channels}} of {{.Limits.MaxChannels}}</td>
                 </tr>
                 <tr>
                     <td class="label">
