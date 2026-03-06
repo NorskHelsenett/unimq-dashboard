@@ -6,7 +6,26 @@ import (
 	"io"
 	"net/http"
 	"net/url"
+	"sync"
 )
+
+const historySize = 20
+
+var history = struct {
+	mu   sync.Mutex
+	data map[string][]int
+}{data: make(map[string][]int)}
+
+func appendHistory(key string, value int) []int {
+	history.mu.Lock()
+	defer history.mu.Unlock()
+	h := append(history.data[key], value)
+	if len(h) > historySize {
+		h = h[len(h)-historySize:]
+	}
+	history.data[key] = h
+	return h
+}
 
 const (
 	baseURL  = "http://localhost:15672/api"
@@ -25,6 +44,7 @@ type VhostMetrics struct {
 type QueueDetail struct {
 	Name        string  `json:"name"`
 	Messages    int     `json:"messages"`
+	History     []int   `json:"history"`
 	Consumers   int     `json:"consumers"`
 	PublishRate float64 `json:"publish_rate"`
 	DeliverRate float64 `json:"deliver_rate"`
@@ -160,9 +180,11 @@ func GetQueueDetails(vhost string) ([]QueueDetail, error) {
 
 	details := make([]QueueDetail, len(queues))
 	for i, q := range queues {
+		key := vhost + "/" + q.Name
 		details[i] = QueueDetail{
 			Name:        q.Name,
 			Messages:    q.Messages,
+			History:     appendHistory(key, q.Messages),
 			Consumers:   q.Consumers,
 			PublishRate: q.MessageStats.PublishDetails.Rate,
 			DeliverRate: q.MessageStats.DeliverDetails.Rate,

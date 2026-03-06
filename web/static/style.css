@@ -168,6 +168,16 @@ main {
     font-size: 0.85rem;
 }
 
+.queues-table td.msg-count {
+    font-weight: 500;
+    white-space: nowrap;
+}
+
+.queues-table td.sparkline-cell {
+    padding: 4px 8px;
+    width: 72px;
+}
+
 .queues-table .zero { color: #bbb; }
 
 .queues-table td.loading,
