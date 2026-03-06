@@ -124,7 +124,7 @@
                     }
                     tbody.innerHTML = queues.map(q => `
                         <tr>
-                            <td class="queue-name">${q.name}</td>
+                            <td class="queue-name"><a href="/queue?vhost=${encodeURIComponent(currentVhost)}&name=${encodeURIComponent(q.name)}">${q.name}</a></td>
                             <td class="msg-count">${q.messages}</td>
                             <td class="sparkline-cell">${sparkline(q.history)}</td>
                             <td>${q.messages_unacknowledged}</td>

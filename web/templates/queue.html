@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="no">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{.Queue}} — RabbitMQ Dashboard</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <header>
+        <h1>RabbitMQ Dashboard</h1>
+        <nav class="breadcrumb">
+            <a href="/?vhost={{.Vhost}}">{{.Vhost}}</a>
+            <span>/</span>
+            <span>{{.Queue}}</span>
+        </nav>
+    </header>
+
+    <main>
+        <section class="chart-section">
+            <div class="chart-header">
+                <h2>Messages — <code>{{.Queue}}</code></h2>
+                <div class="range-selector">
+                    {{range .Ranges}}
+                    <a href="?vhost={{$.Vhost}}&name={{$.Queue}}&range={{.Value}}"
+                       class="range-btn {{if eq .Value $.SelectedRange}}active{{end}}">
+                        {{.Label}}
+                    </a>
+                    {{end}}
+                </div>
+            </div>
+
+            {{if .NoData}}
+            <div class="no-data">
+                Ingen historisk data ennå — Prometheus samler inn data gradvis.
+                Prøv igjen om litt.
+            </div>
+            {{else}}
+            <div class="chart-wrapper">
+                <canvas id="chart"></canvas>
+            </div>
+            {{end}}
+        </section>
+    </main>
+
+    <script>
+        const samples = {{.SamplesJSON}};
+
+        if (samples && samples.length > 1) {
+            const canvas = document.getElementById('chart');
+            const dpr = window.devicePixelRatio || 1;
+            const W = canvas.parentElement.clientWidth;
+            const H = 300;
+            canvas.width = W * dpr;
+            canvas.height = H * dpr;
+            canvas.style.width = W + 'px';
+            canvas.style.height = H + 'px';
+            const ctx = canvas.getContext('2d');
+            ctx.scale(dpr, dpr);
+
+            const pad = { top: 20, right: 20, bottom: 40, left: 60 };
+            const cw = W - pad.left - pad.right;
+            const ch = H - pad.top - pad.bottom;
+
+            const values = samples.map(s => s.v);
+            const times  = samples.map(s => s.t);
+            const minV = Math.min(...values);
+            const maxV = Math.max(...values) || 1;
+            const minT = times[0];
+            const maxT = times[times.length - 1];
+
+            function xOf(t) { return pad.left + ((t - minT) / (maxT - minT)) * cw; }
+            function yOf(v) { return pad.top + ch - ((v - minV) / (maxV - minV || 1)) * ch; }
+
+            // Grid lines
+            ctx.strokeStyle = '#f0f0f0';
+            ctx.lineWidth = 1;
+            const yTicks = 5;
+            for (let i = 0; i <= yTicks; i++) {
+                const v = minV + (maxV - minV) * (i / yTicks);
+                const y = yOf(v);
+                ctx.beginPath();
+                ctx.moveTo(pad.left, y);
+                ctx.lineTo(pad.left + cw, y);
+                ctx.stroke();
+
+                ctx.fillStyle = '#999';
+                ctx.font = '11px sans-serif';
+                ctx.textAlign = 'right';
+                ctx.fillText(Math.round(v), pad.left - 8, y + 4);
+            }
+
+            // X-axis time labels
+            ctx.fillStyle = '#999';
+            ctx.font = '11px sans-serif';
+            ctx.textAlign = 'center';
+            const xTicks = Math.min(6, samples.length - 1);
+            for (let i = 0; i <= xTicks; i++) {
+                const idx = Math.round(i * (samples.length - 1) / xTicks);
+                const t = times[idx];
+                const x = xOf(t);
+                const d = new Date(t * 1000);
+                const label = d.getHours().toString().padStart(2,'0') + ':' +
+                              d.getMinutes().toString().padStart(2,'0');
+                ctx.fillText(label, x, H - pad.bottom + 16);
+            }
+
+            // Fill under line
+            ctx.beginPath();
+            ctx.moveTo(xOf(times[0]), yOf(values[0]));
+            for (let i = 1; i < samples.length; i++) {
+                ctx.lineTo(xOf(times[i]), yOf(values[i]));
+            }
+            ctx.lineTo(xOf(times[times.length-1]), pad.top + ch);
+            ctx.lineTo(xOf(times[0]), pad.top + ch);
+            ctx.closePath();
+            ctx.fillStyle = 'rgba(74,144,217,0.1)';
+            ctx.fill();
+
+            // Line
+            ctx.beginPath();
+            ctx.moveTo(xOf(times[0]), yOf(values[0]));
+            for (let i = 1; i < samples.length; i++) {
+                ctx.lineTo(xOf(times[i]), yOf(values[i]));
+            }
+            ctx.strokeStyle = '#4a90d9';
+            ctx.lineWidth = 2;
+            ctx.lineJoin = 'round';
+            ctx.stroke();
+
+            // Hover tooltip
+            const tooltip = document.createElement('div');
+            tooltip.className = 'chart-tooltip';
+            canvas.parentElement.appendChild(tooltip);
+
+            canvas.addEventListener('mousemove', e => {
+                const rect = canvas.getBoundingClientRect();
+                const mx = e.clientX - rect.left;
+                const t = minT + ((mx - pad.left) / cw) * (maxT - minT);
+                let closest = 0;
+                let bestDist = Infinity;
+                for (let i = 0; i < times.length; i++) {
+                    const d = Math.abs(times[i] - t);
+                    if (d < bestDist) { bestDist = d; closest = i; }
+                }
+                const s = samples[closest];
+                const d = new Date(s.t * 1000);
+                const ts = d.toLocaleTimeString('no-NO', {hour:'2-digit', minute:'2-digit', second:'2-digit'});
+                tooltip.textContent = `${ts} — ${Math.round(s.v)} meldinger`;
+                const tx = Math.min(xOf(s.t), W - 180);
+                tooltip.style.left = tx + 'px';
+                tooltip.style.top = (pad.top - 4) + 'px';
+                tooltip.style.display = 'block';
+            });
+            canvas.addEventListener('mouseleave', () => { tooltip.style.display = 'none'; });
+        }
+    </script>
+</body>
+</html>
