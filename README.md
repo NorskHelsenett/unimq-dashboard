@@ -11,25 +11,12 @@ Et overvåkingsdashboard og varslingsside for UniMQ. Viser metrikker per vhost, 
 - **Kø-detaljer** — Historisk graf med Prometheus-data (5m, 1h, 6h, 24h, 7d)
 - **Cluster Resources** — Minne- og disk-gauger for clusteret, meldingsdata for valgt vhost
 - **Alarmer** — Konfigurerbare alarmer for connections, channels, køer, unacked, meldinger i kø, kø-størrelse, ingen consumer og vedlikehold
-- **Webhook-varsling** — Sender varsler til Slack, Teams eller generiske webhooks ved alarmutløsning
-- **Vedlikehold** — Synliggjøre vedlikeholdsvindu og eventuelle endringer i forbindelse med oppdatering av RabbitMQ og OS. Leveranseteam integrasjon skal kunne publisere endringer. 
+- **Webhook-varsling** —  Alarmer kan sende varsler til Slack, Microsoft Teams eller andre tjenester via innkommende webhooks ved alarmutløsning. Meldinger sendes som HTTP POST med JSON-payload:
+        ```json
+        { "text": "[UniMQ] Alarm: <navn> — <vhost>\n\n<beskrivelse>" }
+        ```
+- **Vedlikehold** — Synliggjøre vedlikeholdsvindu og eventuelle endringer i forbindelse med oppdatering av RabbitMQ og OS. Leveranseteam integrasjon skal kunne publisere endringer.
 
----
-## Webhook-varsling
-
-Alarmer kan sende varsler til Slack, Microsoft Teams eller andre tjenester via innkommende webhooks. Meldinger sendes som HTTP POST med JSON-payload:
-
-```json
-{ "text": "[UniMQ] Alarm: <navn> — <vhost>\n\n<beskrivelse>" }
-```
-
----
-
-## Forutsetninger
-
-- [Go](https://go.dev/) 1.21 eller nyere
-- RabbitMQ med Management Plugin aktivert (`rabbitmq-plugins enable rabbitmq_management`)
-- Prometheus med RabbitMQ-eksporter (valgfritt — kreves for historiske kø-grafer)
 
 ---
 ## Prosjektstruktur
@@ -68,6 +55,13 @@ rabbitmq-dashboard/
 ---
 
 ## Kom i gang
+
+
+### Forutsetninger
+
+- [Go](https://go.dev/) 1.21 eller nyere
+- RabbitMQ med Management Plugin aktivert (`rabbitmq-plugins enable rabbitmq_management`)
+- Prometheus med RabbitMQ-eksporter (valgfritt — kreves for historiske kø-grafer)
 
 ### 1. Klon repoet
 
