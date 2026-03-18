@@ -55,8 +55,8 @@ Relevante endepunkter:
 |--------------|-----------|
 | Connections  | 300       |
 | Queues       | 150       |
-| Messages/kø  | 10 000    |
-| Størrelse/kø | 10 GiB    |
+| Messages/kø  | 20 000    |
+| Størrelse/kø | 1 GiB    |
 
 ## Grafana
 
