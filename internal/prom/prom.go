@@ -10,7 +10,12 @@ import (
 	"time"
 )
 
-const baseURL = "http://localhost:9090/api/v1"
+// CONFIG: Oppdater denne URL-en til din Prometheus-instans.
+//   Prometheus brukes til historiske køgrafer (queue-detaljsiden).
+//   Eksempel: "https://prometheus.example.com/api/v1"
+//   Merk: Prometheus må skrape RabbitMQ sin /metrics/detailed-endepunkt
+//   (se prometheus.yml i prosjektroten for konfigurasjon).
+const baseURL = "http://localhost:9090/api/v1" // CONFIG: Bytt til din Prometheus-URL
 
 type Sample struct {
 	T float64 `json:"t"`

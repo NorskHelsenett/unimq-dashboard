@@ -28,10 +28,15 @@ func appendHistory(key string, value int) []int {
 	return h
 }
 
+// CONFIG: Oppdater disse tre verdiene til din faktiske RabbitMQ-instans.
+//   baseURL:  URL til RabbitMQ Management API (standardport er 15672)
+//             Eksempel: "https://rabbitmq.example.com/api"
+//   username: Brukernavn med tilgang til Management API
+//   password: Passord for brukeren over
 const (
-	baseURL  = "http://localhost:15672/api"
-	username = "guest"
-	password = "guest"
+	baseURL  = "http://localhost:15672/api" // CONFIG: Bytt til din RabbitMQ Management API-URL
+	username = "guest"                      // CONFIG: Bytt til ditt brukernavn
+	password = "guest"                      // CONFIG: Bytt til ditt passord
 )
 
 type VhostMetrics struct {
@@ -43,14 +48,15 @@ type VhostMetrics struct {
 }
 
 type QueueDetail struct {
-	Name        string  `json:"name"`
-	Messages    int     `json:"messages"`
-	History     []int   `json:"history"`
-	Consumers   int     `json:"consumers"`
-	PublishRate float64 `json:"publish_rate"`
-	DeliverRate float64 `json:"deliver_rate"`
-	RedelivRate float64 `json:"redeliver_rate"`
-	Unacked     int     `json:"messages_unacknowledged"`
+	Name         string  `json:"name"`
+	Messages     int     `json:"messages"`
+	MessageBytes int64   `json:"message_bytes"`
+	History      []int   `json:"history"`
+	Consumers    int     `json:"consumers"`
+	PublishRate  float64 `json:"publish_rate"`
+	DeliverRate  float64 `json:"deliver_rate"`
+	RedelivRate  float64 `json:"redeliver_rate"`
+	Unacked      int     `json:"messages_unacknowledged"`
 }
 
 type Limits struct {
@@ -219,14 +225,15 @@ func GetQueueDetails(vhost string) ([]QueueDetail, error) {
 	for i, q := range queues {
 		key := vhost + "/" + q.Name
 		details[i] = QueueDetail{
-			Name:        q.Name,
-			Messages:    q.Messages,
-			History:     appendHistory(key, q.Messages),
-			Consumers:   q.Consumers,
-			PublishRate: q.MessageStats.PublishDetails.Rate,
-			DeliverRate: q.MessageStats.DeliverDetails.Rate,
-			RedelivRate: q.MessageStats.RedelivDetails.Rate,
-			Unacked:     q.MessagesUnacknowledged,
+			Name:         q.Name,
+			Messages:     q.Messages,
+			MessageBytes: q.MessageBytes,
+			History:      appendHistory(key, q.Messages),
+			Consumers:    q.Consumers,
+			PublishRate:  q.MessageStats.PublishDetails.Rate,
+			DeliverRate:  q.MessageStats.DeliverDetails.Rate,
+			RedelivRate:  q.MessageStats.RedelivDetails.Rate,
+			Unacked:      q.MessagesUnacknowledged,
 		}
 	}
 	return details, nil

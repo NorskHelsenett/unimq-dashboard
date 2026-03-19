@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="no">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Maintenance — UniMQ</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <header>
+        <div class="logo"><img src="/static/logo.png" alt="UniMQ logo"><h1>UniMQ</h1></div>
+    </header>
+
+    <div class="app-wrapper">
+        <nav class="sidebar">
+            <a href="/" class="sidebar-item">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+                Overview
+            </a>
+            <a href="/maintenance" class="sidebar-item active">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/><path d="M4.93 4.93a10 10 0 0 0 0 14.14"/></svg>
+                Maintenance
+            </a>
+        </nav>
+
+        <main>
+            <!-- Scheduled Maintenance -->
+            <section class="maint-section">
+                <div class="maint-section-header">
+                    <h2>Scheduled Maintenance</h2>
+                    <a href="/maintenance/admin" class="admin-btn">Administrer</a>
+                </div>
+
+                {{if .Scheduled}}
+                <table class="maint-table">
+                    <thead>
+                        <tr>
+                            <th>Beskrivelse</th>
+                            <th>Tidspunkt</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {{range .Scheduled}}
+                        <tr class="maint-scheduled-row">
+                            <td>{{.Description}}</td>
+                            <td class="maint-window">{{.Start.Format "2006-01-02 15:04"}} – {{.End.Format "15:04"}} UTC</td>
+                        </tr>
+                        {{end}}
+                    </tbody>
+                </table>
+                {{else}}
+                <p class="maint-empty">Ingen planlagt vedlikehold.</p>
+                {{end}}
+            </section>
+
+            <!-- Maintenance History -->
+            <section class="maint-section">
+                <h2>Maintenance History</h2>
+
+                {{if .History}}
+                <table class="maint-table">
+                    <thead>
+                        <tr>
+                            <th>Beskrivelse</th>
+                            <th>Dato</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {{range .History}}
+                        <tr>
+                            <td>{{.Description}}</td>
+                            <td class="maint-window">{{.Start.Format "2006-01-02 15:04"}} – {{.End.Format "15:04"}} UTC</td>
+                            <td>
+                                {{if eq .Status "done"}}<span class="status-done">Done</span>{{end}}
+                                {{if eq .Status "skipped"}}<span class="status-skipped">Skipped</span>{{end}}
+                            </td>
+                        </tr>
+                        {{end}}
+                    </tbody>
+                </table>
+                {{else}}
+                <p class="maint-empty">Ingen historikk ennå.</p>
+                {{end}}
+            </section>
+        </main>
+    </div>
+</body>
+</html>
