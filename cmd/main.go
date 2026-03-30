@@ -16,18 +16,23 @@ import (
 	"github.com/sisneve/rabbitmq-dashboard/internal/scraper"
 )
 
+func mustTemplate(name string) *template.Template {
+	path := "web/templates/" + name
+	return template.Must(template.New(name).Funcs(funcMap).ParseFiles(path))
+}
+
 var (
 	funcMap = template.FuncMap{
 		"div":  func(a, b int) int { return a / b },
 		"json": jsonMarshal,
 	}
 
-	indexTmpl      = template.Must(template.New("index.html").Funcs(funcMap).ParseFiles("web/templates/index.html"))
-	queueTmpl      = template.Must(template.New("queue.html").Funcs(funcMap).ParseFiles("web/templates/queue.html"))
-	maintTmpl      = template.Must(template.New("maintenance.html").Funcs(funcMap).ParseFiles("web/templates/maintenance.html"))
-	maintAdminTmpl = template.Must(template.New("maintenance_admin.html").Funcs(funcMap).ParseFiles("web/templates/maintenance_admin.html"))
-	notifTmpl      = template.Must(template.New("notifications.html").Funcs(funcMap).ParseFiles("web/templates/notifications.html"))
-	notifRuleTmpl  = template.Must(template.New("notification_rule.html").Funcs(funcMap).ParseFiles("web/templates/notification_rule.html"))
+	indexTmpl      = mustTemplate("index.html")
+	queueTmpl      = mustTemplate("queue.html")
+	maintTmpl      = mustTemplate("maintenance.html")
+	maintAdminTmpl = mustTemplate("maintenance_admin.html")
+	notifTmpl      = mustTemplate("notifications.html")
+	notifRuleTmpl  = mustTemplate("notification_rule.html")
 
 	maintStore  *maintenance.Store
 	notifyStore *notify.Store
@@ -347,7 +352,9 @@ func main() {
 	// Start background alarm checker — runs every 60 seconds.
 	notify.StartChecker(notifyStore, maintStore, 60*time.Second)
 
-	mime.AddExtensionType(".js", "application/javascript")
+	if err := mime.AddExtensionType(".js", "application/javascript"); err != nil {
+		log.Fatalf("failed to register MIME type: %v", err)
+	}
 
 	http.HandleFunc("/", indexHandler)
 	http.HandleFunc("/queue", queueHandler)
