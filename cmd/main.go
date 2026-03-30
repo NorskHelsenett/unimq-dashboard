@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"html/template"
 	"log"
+	"mime"
 	"net/http"
 	"net/url"
 	"strconv"
@@ -16,12 +17,17 @@ import (
 )
 
 var (
-	indexTmpl      = template.Must(template.New("index.html").Funcs(template.FuncMap{"div": func(a, b int) int { return a / b }}).ParseFiles("web/templates/index.html"))
-	queueTmpl      = template.Must(template.ParseFiles("web/templates/queue.html"))
-	maintTmpl      = template.Must(template.ParseFiles("web/templates/maintenance.html"))
-	maintAdminTmpl = template.Must(template.ParseFiles("web/templates/maintenance_admin.html"))
-	notifTmpl      = template.Must(template.ParseFiles("web/templates/notifications.html"))
-	notifRuleTmpl  = template.Must(template.ParseFiles("web/templates/notification_rule.html"))
+	funcMap = template.FuncMap{
+		"div":  func(a, b int) int { return a / b },
+		"json": jsonMarshal,
+	}
+
+	indexTmpl      = template.Must(template.New("index.html").Funcs(funcMap).ParseFiles("web/templates/index.html"))
+	queueTmpl      = template.Must(template.New("queue.html").Funcs(funcMap).ParseFiles("web/templates/queue.html"))
+	maintTmpl      = template.Must(template.New("maintenance.html").Funcs(funcMap).ParseFiles("web/templates/maintenance.html"))
+	maintAdminTmpl = template.Must(template.New("maintenance_admin.html").Funcs(funcMap).ParseFiles("web/templates/maintenance_admin.html"))
+	notifTmpl      = template.Must(template.New("notifications.html").Funcs(funcMap).ParseFiles("web/templates/notifications.html"))
+	notifRuleTmpl  = template.Must(template.New("notification_rule.html").Funcs(funcMap).ParseFiles("web/templates/notification_rule.html"))
 
 	maintStore  *maintenance.Store
 	notifyStore *notify.Store
@@ -221,7 +227,6 @@ func notificationsDeleteRecipientHandler(w http.ResponseWriter, r *http.Request)
 	http.Redirect(w, r, "/notifications", http.StatusSeeOther)
 }
 
-
 func notificationsAddRuleHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method == http.MethodPost {
 		vhost := r.FormValue("vhost")
@@ -311,6 +316,12 @@ func notificationsTestHandler(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, "/notifications", http.StatusSeeOther)
 }
 
+// -- json marshaller -----------------------------------------------------------
+func jsonMarshal(v any) (template.JS, error) {
+	b, err := json.Marshal(v)
+	return template.JS(b), err
+}
+
 // ── main ──────────────────────────────────────────────────────────────────────
 
 func main() {
@@ -328,6 +339,8 @@ func main() {
 
 	// Start background alarm checker — runs every 60 seconds.
 	notify.StartChecker(notifyStore, maintStore, 60*time.Second)
+
+	mime.AddExtensionType(".js", "application/javascript")
 
 	http.HandleFunc("/", indexHandler)
 	http.HandleFunc("/queue", queueHandler)
