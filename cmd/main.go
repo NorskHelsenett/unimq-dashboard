@@ -317,9 +317,16 @@ func notificationsTestHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 // -- json marshaller -----------------------------------------------------------
+// jsonMarshal marshals v to JSON for safe embedding in JavaScript contexts.
+// It must not be used to inject JSON directly into HTML markup; use only
+// where the template engine expects JavaScript (e.g., inside <script> tags).
 func jsonMarshal(v any) (template.JS, error) {
 	b, err := json.Marshal(v)
-	return template.JS(b), err
+	if err != nil {
+		// Return empty value on error; caller can handle the error separately.
+		return template.JS(""), err
+	}
+	return template.JS(b), nil
 }
 
 // ── main ──────────────────────────────────────────────────────────────────────
