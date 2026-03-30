@@ -13,8 +13,8 @@ Et overvåkingsdashboard og varslingsside for UniMQ. Viser metrikker per vhost, 
 - **Alarmer** — Konfigurerbare alarmer for connections, channels, køer, unacked, meldinger i kø, kø-størrelse, ingen consumer og vedlikehold
 - **Webhook-varsling** — Alarmer kan sende varsler til Slack, Microsoft Teams eller andre tjenester via innkommende webhooks ved alarmutløsning. Meldinger sendes som HTTP POST med JSON-payload:
   `json
-      { "text": "[UniMQ] Alarm: <navn> — <vhost>\n\n<beskrivelse>" }
-      `
+    { "text": "[UniMQ] Alarm: <navn> — <vhost>\n\n<beskrivelse>" }
+    `
 - **Vedlikehold** — Synliggjøre vedlikeholdsvindu og eventuelle endringer i forbindelse med oppdatering av RabbitMQ og OS. Leveranseteam integrasjon skal kunne publisere endringer.
 
 ---
@@ -65,7 +65,7 @@ unimq-dashboard/
 ### 1. Klon repoet
 
 ```bash
-git clone https://github.com/sisneve/unimq-dashboard.git
+git clone https://github.com/NorskHelsenett/unimq-dashboard.git
 cd unimq-dashboard
 ```
 
