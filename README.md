@@ -11,18 +11,18 @@ Et overvåkingsdashboard og varslingsside for UniMQ. Viser metrikker per vhost, 
 - **Kø-detaljer** — Historisk graf med Prometheus-data (5m, 1h, 6h, 24h, 7d)
 - **Cluster Resources** — Minne- og disk-gauger for clusteret, meldingsdata for valgt vhost
 - **Alarmer** — Konfigurerbare alarmer for connections, channels, køer, unacked, meldinger i kø, kø-størrelse, ingen consumer og vedlikehold
-- **Webhook-varsling** —  Alarmer kan sende varsler til Slack, Microsoft Teams eller andre tjenester via innkommende webhooks ved alarmutløsning. Meldinger sendes som HTTP POST med JSON-payload:
-        ```json
-        { "text": "[UniMQ] Alarm: <navn> — <vhost>\n\n<beskrivelse>" }
-        ```
+- **Webhook-varsling** — Alarmer kan sende varsler til Slack, Microsoft Teams eller andre tjenester via innkommende webhooks ved alarmutløsning. Meldinger sendes som HTTP POST med JSON-payload:
+  `json
+    { "text": "[UniMQ] Alarm: <navn> — <vhost>\n\n<beskrivelse>" }
+    `
 - **Vedlikehold** — Synliggjøre vedlikeholdsvindu og eventuelle endringer i forbindelse med oppdatering av RabbitMQ og OS. Leveranseteam integrasjon skal kunne publisere endringer.
 
-
 ---
+
 ## Prosjektstruktur
 
 ```
-rabbitmq-dashboard/
+unimq-dashboard/
 ├── cmd/
 │   └── main.go                    # HTTP-server, ruter og side-handlere
 ├── internal/
@@ -56,7 +56,6 @@ rabbitmq-dashboard/
 
 ## Kom i gang
 
-
 ### Forutsetninger
 
 - [Go](https://go.dev/) 1.21 eller nyere
@@ -66,8 +65,8 @@ rabbitmq-dashboard/
 ### 1. Klon repoet
 
 ```bash
-git clone https://github.com/sisneve/rabbitmq-dashboard.git
-cd rabbitmq-dashboard
+git clone https://github.com/NorskHelsenett/unimq-dashboard.git
+cd unimq-dashboard
 ```
 
 ### 2. Opprett data-mappen
@@ -81,6 +80,7 @@ mkdir -p data
 Åpne filene under og oppdater tilkoblingsdetaljer for ditt miljø:
 
 **`internal/scraper/scraper.go`**
+
 ```go
 baseURL  = "http://localhost:15672/api"  // RabbitMQ Management API
 username = "guest"
@@ -88,11 +88,13 @@ password = "guest"
 ```
 
 **`internal/prom/prom.go`**
+
 ```go
 baseURL = "http://localhost:9090/api/v1"  // Prometheus
 ```
 
 **`cmd/main.go`**
+
 ```go
 http.ListenAndServe(":8080", nil)  // Port dashboardet kjører på
 ```
@@ -106,4 +108,3 @@ go run ./cmd/main.go
 Åpne [http://localhost:8080](http://localhost:8080) i nettleseren.
 
 ---
-
