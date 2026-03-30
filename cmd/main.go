@@ -23,7 +23,12 @@ func mustTemplate(name string) *template.Template {
 
 var (
 	funcMap = template.FuncMap{
-		"div":  func(a, b int) int { return a / b },
+		"div": func(a, b int) int {
+			if b == 0 {
+				return 0
+			}
+			return a / b
+		},
 		"json": jsonMarshal,
 	}
 
