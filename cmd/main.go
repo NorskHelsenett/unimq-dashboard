@@ -336,7 +336,7 @@ func jsonMarshal(v any) (template.JS, error) {
 		// Return empty value on error; caller can handle the error separately.
 		return template.JS(""), err
 	}
-	return template.JS(b), nil
+	return template.JS(string(b)), nil
 }
 
 // ── main ──────────────────────────────────────────────────────────────────────
