@@ -1,1 +1,0 @@
-import{n as e,t}from"./jsx-runtime.js";var n=e(),r=t();function i(){return(0,r.jsx)(`div`,{})}var a=document.getElementById(`app`);if(!a)throw Error(`Missing #app mount point`);(0,n.createRoot)(a).render((0,r.jsx)(i,{}));
