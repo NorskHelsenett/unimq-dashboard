@@ -63,9 +63,13 @@
     --color-text-sidebar-active: #111827;
   
     --color-status-ok: #15803d;
-    --color-status-ok-bg: #f0fdf4;
+    --color-status-ok-bg: #f0fff4;
+    --color-status-ok-bg-subtle: #fbfffb;
     --color-status-ok-border: #bbf7d0;
     --color-status-warning: #d97706;
+    --color-status-warning-bg: #fff8f0;
+    --color-status-warning-bg-subtle: #fffbfb;
+    --color-status-warning-border: #f7ddba;
     --color-status-danger: #b91c1c;
     --color-status-danger-bg: #fef2f2;
     --color-status-danger-border: #fecaca;

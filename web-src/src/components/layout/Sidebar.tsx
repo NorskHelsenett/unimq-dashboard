@@ -1,19 +1,15 @@
-import { NAV_ITEMS } from "@/data/navItems"
+import { NAV_ITEMS } from "@/lib/navItems"
 import { LogoLink } from "./LogoLink"
 import { cn } from "@/lib/utils"
 import { VhostSelector } from "./VhostSelector"
+import { Vhosts } from "@/types/vhosts"
 
 function isActive(itemHref: string, currentPath: string): boolean {
     if (itemHref === '/') return currentPath === '/'
     return currentPath.startsWith(itemHref)
 }
 
-interface SidebarProps {
-    Vhosts: string[]
-    Selected: string
-}
-
-export function Sidebar({ Vhosts, Selected }: SidebarProps) {
+export function Sidebar({ Vhosts, Selected }: Vhosts) {
     const currentPath = window.location.pathname
 
     return (

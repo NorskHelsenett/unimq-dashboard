@@ -10,8 +10,18 @@
 <body>
     <script>
         window.__DATA__ = {
-            Vhosts: ["/", "staging", "production"],
-            Selected: "/"
+            Vhosts: ["/", "staging"],
+            Selected: "/",
+            Metrics: {
+                connections: 168,
+                channels: 42,
+                queues: 70,
+                unacked: 0
+            },
+            Limits: {
+                MaxConnections: 300,
+                MaxQueues: 150
+            }
         };
     </script>
     <div id="app"></div>

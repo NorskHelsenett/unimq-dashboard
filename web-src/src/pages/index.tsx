@@ -3,10 +3,25 @@ import { createRoot } from 'react-dom/client'
 import '../index.css'
 import { getPageData } from '@/lib/pageData'
 import { Layout } from '@/components/layout/Layout'
+import { LimitsCard } from '@/components/overview/LimitsCard'
+
+interface Metrics {
+  connections: number
+  channels: number
+  queues: number
+  unacked: number
+}
+
+interface Limits {
+  MaxConnections: number
+  MaxQueues: number
+}
 
 interface IndexData {
   Vhosts: string[]
   Selected: string
+  Metrics: Metrics | null
+  Limits: Limits
 }
 
 const data = getPageData<IndexData>()
@@ -14,10 +29,33 @@ const data = getPageData<IndexData>()
 const root = document.getElementById('app')
 if (!root) throw new Error('Missing #app mount point')
 
+const MainPage = () => {
+  const selected = data.Selected
+  const metrics = data.Metrics
+  return (
+    <>
+      <h1 className='text-4xl mb-6'>{selected}</h1>
+      {metrics ? (
+        <LimitsCard
+          selected={data.Selected}
+          connections={metrics.connections}
+          channels={metrics.channels}
+          queues={metrics.queues}
+          unacked={metrics.unacked}
+          maxConnections={data.Limits.MaxConnections}
+          maxQueues={data.Limits.MaxQueues}
+        />
+      ) : (
+        <p className="text-sm text-text-muted">No metrics available.</p>
+      )}
+    </>
+  )
+}
+
 createRoot(document.getElementById('app')!).render(
   <StrictMode>
     <Layout Vhosts={data.Vhosts} Selected={data.Selected}>
-      <p className="text-sm text-gray-500">Overview coming soon.</p>
+      <MainPage />
     </Layout>
   </StrictMode>,
 )
