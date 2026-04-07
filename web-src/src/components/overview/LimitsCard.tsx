@@ -1,114 +1,7 @@
-// import { cn } from "@/lib/utils"
-// import { Tooltip, TooltipContent, TooltipTrigger } from "../ui/tooltip"
-
-// interface LimitsCardProps {
-//     selected: string
-//     connections: number
-//     channels: number
-//     queues: number
-//     unacked: number
-//     maxConnections: number
-//     maxQueues: number
-// }
-
-// function limitColor(value: number, max: number): string {
-//     if (value >= max) {
-//         return "text-status-danger"
-//     }
-//     if (value >= max/2) {
-//         return "text-status-warning"
-//     }
-//     return "text-status-ok"
-// }
-
-// interface RowProps {
-//     label: string
-//     tooltip: string
-//     value: number
-//     max?: number
-// }
-
-// const LimitRow = ({ label, tooltip, value, max}: RowProps) => {
-//     const colorClass = max ? limitColor(value, max) : "text-text-primary"
-//     const display = max ? `${value} of ${max}` : `${value}`
-
-//     return (
-//         <tr className="border-t border-border-card">
-//             <td className="py-3 pr-4 text-sm text-text-secondary">
-//                 <span className="flex items-center gap-1.5">
-//                     {label}
-//                     <Tooltip>
-//                         <TooltipTrigger asChild>
-//                             <span className="inline-flex items-center justify-center w-4 h-4 rounded-full bg-gray-100 text-gray-400 text-xs cursor-default select-none">
-//                                 ?
-//                             </span>
-//                         </TooltipTrigger>
-//                         <TooltipContent>
-//                             <p className="max-w-xs text-xs">{tooltip}</p>
-//                         </TooltipContent>
-//                     </Tooltip>
-//                 </span>
-//             </td>
-//             <td className={cn('py-3 text-right text-sm font-mono font-medium', colorClass)}>
-//                 {display}
-//             </td>
-//         </tr>
-//     )
-// }
-
-// export const LimitsCard = ({
-//   selected,
-//   connections,
-//   channels,
-//   queues,
-//   unacked,
-//   maxConnections,
-//   maxQueues,
-// }: LimitsCardProps) => {
-//   return (
-//     <div className="bg-surface-card border border-border-card rounded-lg p-6">
-//       <h2 className="text-base font-semibold text-text-primary mb-4">
-//         Limits — {selected}
-//       </h2>
-//       <table className="w-full">
-//         <tbody>
-//           <LimitRow
-//             label="Connections"
-//             tooltip="Max connections per vhost is 300. Once reached, new connections are rejected until the count drops below the limit."
-//             value={connections}
-//             max={maxConnections}
-//           />
-//           <LimitRow
-//             label="Channels"
-//             tooltip="We recommend keeping channels per vhost below 1000."
-//             value={channels}
-//           />
-//           <LimitRow
-//             label="Queues"
-//             tooltip="Max queues per vhost is 150. Once reached, new queues cannot be created until the count drops below the limit."
-//             value={queues}
-//             max={maxQueues}
-//           />
-//           <LimitRow
-//             label="Unacked messages"
-//             tooltip="Messages delivered but not yet acknowledged. These are held in memory — a high count is undesirable."
-//             value={unacked}
-//           />
-//         </tbody>
-//       </table>
-//     </div>
-//   )
-// }
-
 import { cn } from '@/lib/utils'
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from '@/components/ui/tooltip'
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
 
 interface LimitsCardProps {
-  selected: string
   connections: number
   channels: number
   queues: number
@@ -176,15 +69,7 @@ function MetricTile({ label, tooltip, value, max, sub }: MetricTileProps) {
   )
 }
 
-export function LimitsCard({
-  selected,
-  connections,
-  channels,
-  queues,
-  unacked,
-  maxConnections,
-  maxQueues,
-}: LimitsCardProps) {
+export function LimitsCard({ connections, channels, queues, unacked, maxConnections, maxQueues }: LimitsCardProps) {
   return (
     <div>
       <h2 className="text-base font-semibold text-text-primary mb-3">
