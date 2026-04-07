@@ -37,7 +37,6 @@ const MainPage = () => {
       <h1 className='text-4xl mb-6'>{selected}</h1>
       {metrics ? (
         <LimitsCard
-          selected={data.Selected}
           connections={metrics.connections}
           channels={metrics.channels}
           queues={metrics.queues}
