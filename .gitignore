@@ -1,2 +1,4 @@
 data/
 main
+.DS_Store
+web/static/dist/
