@@ -50,10 +50,14 @@ function MetricTile({ label, tooltip, value, max, sub }: MetricTileProps) {
           {label}
           <Tooltip>
             <TooltipTrigger asChild>
-              <span className="inline-flex items-center justify-center w-4 h-4 rounded-full
-                               bg-gray-100 text-gray-400 text-xs cursor-default select-none normal-case tracking-normal">
+              <button
+                type="button"
+                aria-label={`Show information about ${label}`}
+                className="inline-flex items-center justify-center w-4 h-4 rounded-full
+                               bg-gray-100 text-gray-400 text-xs cursor-default select-none normal-case tracking-normal"
+              >
                 ?
-              </span>
+              </button>
             </TooltipTrigger>
             <TooltipContent>
               <p className="max-w-xs text-xs">{tooltip}</p>
@@ -78,27 +82,27 @@ export function LimitsCard({ connections, channels, queues, unacked, maxConnecti
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         <MetricTile
           label="Connections"
-          tooltip="Max connections per vhost is 300. Once reached, new connections are rejected until the count drops below the limit."
+          tooltip={`Maks antall connections til en vhost er ${maxConnections}. Etter at dette antallet er nådd, vil det ikke lenger være mulig å opprette nye connections før du er under grensen igjen.`}
           value={connections}
           max={maxConnections}
           sub={`limit ${maxConnections}`}
         />
         <MetricTile
           label="Channels"
-          tooltip="We recommend keeping channels per vhost below 1000."
+          tooltip="Vi anbefaler å holde antallet channels per vhost under 1000."
           value={channels}
           sub="rec. <1000"
         />
         <MetricTile
           label="Queues"
-          tooltip="Max queues per vhost is 150. Once reached, new queues cannot be created until the count drops below the limit."
+          tooltip={`Maks antall queues på en vhost er ${maxQueues}. Etter at dette antallet er nådd, vil det ikke lenger være mulig å opprette nye queues før du er under grensen igjen.`}
           value={queues}
           max={maxQueues}
           sub={`limit ${maxQueues}`}
         />
         <MetricTile
           label="Unacked messages"
-          tooltip="Messages delivered but not yet acknowledged. These are held in memory — a high count is undesirable."
+          tooltip="Totalt antall unacked messages på vhosten. Meldinger som hentes, men ikke enda er konsumert, havner i «unacked state». Disse meldingene lagres i minne, det er derfor ikke ønskelig å ha for mange."
           value={unacked}
           sub="keep low"
         />
