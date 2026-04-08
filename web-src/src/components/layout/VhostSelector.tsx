@@ -1,11 +1,7 @@
+import { Vhosts } from "@/types/vhosts"
 import { ChangeEvent } from "react"
 
-interface VhostSelectorProps {
-    Vhosts: string[]
-    Selected: string
-}
-
-export function VhostSelector({ Vhosts, Selected }: VhostSelectorProps) {
+export function VhostSelector({ Vhosts, Selected }: Vhosts) {
     function handleChange(e: ChangeEvent<HTMLSelectElement>) {
         const params = new URLSearchParams(window.location.search)
         params.set('vhost', e.target.value)
