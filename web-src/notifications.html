@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>UniMQ</title>
+</head>
+
+<body>
+    <script>
+        window.__DATA__ = {
+            Vhosts: ["/", "bruh"],
+            Selected: "/",
+            alarms: [
+                {
+                    name: "High Memory Usage",
+                    severity: "critical",
+                    description: "Memory usage has exceeded 90% of the limit.",
+                    timestamp: "2024-06-01T12:34:56Z"
+                },
+                {
+                    name: "Connection Limit Reached",
+                    severity: "warning",
+                    description: "The number of connections has reached the maximum limit.",
+                    timestamp: "2024-06-01T13:45:00Z"
+                }
+            ]
+        };
+    </script>
+    <div id="app"></div>
+    <!-- <script type="module" src="/src/pages/index.tsx"></script> -->
+    <script type="module" src="./src/pages/notifications.tsx"></script>
+</body>
+
+</html>

@@ -31,7 +31,7 @@ export default defineConfig({
   server: {
     proxy: {
       "/api": "http://localhost:8080",
-      "/notifications": "http://localhost:8080",
+      "/notifications/": "http://localhost:8080",
       "/maintenance": "http://localhost:8080",
       "/static/logo": "http://localhost:8080",
     },
