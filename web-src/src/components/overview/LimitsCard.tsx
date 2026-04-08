@@ -71,11 +71,11 @@ function MetricTile({ label, tooltip, value, max, sub }: MetricTileProps) {
 
 export function LimitsCard({ connections, channels, queues, unacked, maxConnections, maxQueues }: LimitsCardProps) {
   return (
-    <div>
+    <div className='min-w-sm w-xl'>
       <h2 className="text-base font-semibold text-text-primary mb-3">
         Limits
       </h2>
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         <MetricTile
           label="Connections"
           tooltip="Max connections per vhost is 300. Once reached, new connections are rejected until the count drops below the limit."

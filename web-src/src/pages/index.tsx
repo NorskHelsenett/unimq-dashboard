@@ -4,6 +4,7 @@ import '../index.css'
 import { getPageData } from '@/lib/pageData'
 import { Layout } from '@/components/layout/Layout'
 import { LimitsCard } from '@/components/overview/LimitsCard'
+import { QueueSizeInfoCard } from '@/components/overview/QueueSizeInfoCard'
 
 interface Metrics {
   connections: number
@@ -32,22 +33,26 @@ if (!root) throw new Error('Missing #app mount point')
 const MainPage = () => {
   const selected = data.Selected
   const metrics = data.Metrics
+  
   return (
-    <>
+    <div className='text-text-primary'>
       <h1 className='text-4xl mb-6'>{selected}</h1>
-      {metrics ? (
-        <LimitsCard
-          connections={metrics.connections}
-          channels={metrics.channels}
-          queues={metrics.queues}
-          unacked={metrics.unacked}
-          maxConnections={data.Limits.MaxConnections}
-          maxQueues={data.Limits.MaxQueues}
-        />
-      ) : (
-        <p className="text-sm text-text-muted">No metrics available.</p>
-      )}
-    </>
+      <div className='flex gap-8 items-end flex-wrap'> 
+        {metrics ? (
+          <LimitsCard
+            connections={metrics.connections}
+            channels={metrics.channels}
+            queues={metrics.queues}
+            unacked={metrics.unacked}
+            maxConnections={data.Limits.MaxConnections}
+            maxQueues={data.Limits.MaxQueues}
+          />
+        ) : (
+          <p className="text-sm text-text-muted">No metrics available.</p>
+        )}
+        <QueueSizeInfoCard />
+      </div>
+    </div>
   )
 }
 
