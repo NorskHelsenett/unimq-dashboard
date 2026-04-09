@@ -1,10 +1,10 @@
 export function QueueSizeInfoCard() {
   return (
     <div className="flex-1 bg-surface-card border  border-border-card rounded-lg p-5 min-w-sm max-w-xl 2xl:max-w-fit">
-      <h3 className="flex items-center gap-2 text-sm font-semibold mb-2">
+      <h3 className="flex items-center gap-2 font-semibold mb-2">
         <span className="text-amber-700">&#9432;</span>Kø-størrelse
       </h3>
-      <div className="text-sm space-y-2">
+      <div className="space-y-2">
         <p>
           En kø kan inneholde <strong>20 000 meldinger</strong> eller <strong>1 GiB</strong>. Når denne terskelverdien nås, vil de eldste meldingene skrives over under forvarsel!
         </p>

@@ -46,7 +46,7 @@ function MetricTile({ label, tooltip, value, max, sub }: MetricTileProps) {
   return (
     <div className={cn('rounded-lg p-4 flex justify-between items-center border', bgClass)}>
       <div className="flex flex-col gap-0.5">
-        <span className="flex items-center gap-1.5 text-xs text-text-muted uppercase tracking-wide">
+        <span className="flex items-center gap-1.5 text-text-muted uppercase tracking-wide">
           {label}
           <Tooltip>
             <TooltipTrigger asChild>
@@ -60,7 +60,7 @@ function MetricTile({ label, tooltip, value, max, sub }: MetricTileProps) {
               </button>
             </TooltipTrigger>
             <TooltipContent>
-              <p className="max-w-xs text-xs">{tooltip}</p>
+              <p className="max-w-xs text-sm">{tooltip}</p>
             </TooltipContent>
           </Tooltip>
         </span>
@@ -76,7 +76,7 @@ function MetricTile({ label, tooltip, value, max, sub }: MetricTileProps) {
 export function LimitsCard({ connections, channels, queues, unacked, maxConnections, maxQueues }: LimitsCardProps) {
   return (
     <div className='min-w-sm w-xl'>
-      <h2 className="text-base font-semibold text-text-primary mb-3">
+      <h2 className="text-lg font-semibold text-text-primary mb-3">
         Limits
       </h2>
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
