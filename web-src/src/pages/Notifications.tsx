@@ -10,10 +10,14 @@ import { AlarmCard, AlarmProps } from '@/components/notifications/AlarmCard'
 //   Selected: string
 // }
 
+interface RecipientData {
+  [key: string]: unknown
+}
+
 interface NotificationData {
   Vhosts: string[]
   Selected: string
-  Recipients: string[]
+  Recipients: RecipientData[]
   Rules: AlarmProps[]
 }
 
