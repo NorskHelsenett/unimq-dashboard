@@ -26,7 +26,7 @@ const alarmDropdownOptions = [
     { value: 'unacked', label: 'Unacknowledged Messages' },
     { value: 'queue_messages', label: 'Messages in Queue' },
     { value: 'queue_size', label: 'Queue Size' },
-    { value: 'no_consumers', label: 'No Consumers' },
+    { value: 'no_consumer', label: 'No Consumers' },
     { value: 'maintenance', label: 'Maintenance Message' },
 ]
 
