@@ -32,7 +32,6 @@ const alarmDropdownOptions = [
 
 // name, type, threshold, message, enabled, status, last_value
 function ExistingAlarms({existingAlarms, vhost}: {existingAlarms: AlarmProps[], vhost: string}) {
-
     const alarms = existingAlarms || []
     const [disabledIds, setDisabledIds] = useState<Set<string>>(
         () => new Set(alarms.filter(a => !a.enabled && a.id).map(a => a.id!))
@@ -55,6 +54,10 @@ function ExistingAlarms({existingAlarms, vhost}: {existingAlarms: AlarmProps[], 
             next.has(id) ? next.delete(id) : next.add(id)
             return next
         })
+        const data = new FormData()
+        data.set('vhost', vhost)
+        data.set('id', id)
+        fetch('/notifications/rules/toggle', { method: 'POST', body: data })
     }
 
     return (
@@ -71,7 +74,16 @@ function ExistingAlarms({existingAlarms, vhost}: {existingAlarms: AlarmProps[], 
                         <DialogClose asChild>
                             <Button variant="outline" className="bg-gray-100">Cancel</Button>
                         </DialogClose>
-                        <Button variant="destructive" onClick={() => setDeletingId(null) /* TODO: call backend */}>
+                        <Button variant="destructive" onClick={() => {
+                            if (deletingId) {
+                                const data = new FormData()
+                                data.set('vhost', vhost)
+                                data.set('id', deletingId)
+                                fetch('/notifications/rules/delete', { method: 'POST', body: data })
+                                    .then(() => window.location.reload())
+                            }
+                            setDeletingId(null)
+                        }}>
                             Delete
                         </Button>
                     </DialogFooter>
@@ -148,55 +160,65 @@ function ExistingAlarms({existingAlarms, vhost}: {existingAlarms: AlarmProps[], 
 }
 
 
-function AddAlarmForm({ selectedAlarm, onClose }: { selectedAlarm: string, onClose: () => void }) {
+function AddAlarmForm({ selectedAlarm, vhost, onClose }: { selectedAlarm: string, vhost: string, onClose: () => void }) {
     if (!selectedAlarm) return null
 
+    const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+        e.preventDefault()
+        const form = e.currentTarget
+        const data = new FormData(form)
+        data.set('vhost', vhost)
+        data.set('type', selectedAlarm)
+        fetch('/notifications/rules/add', { method: 'POST', body: data })
+            .then(() => window.location.reload())
+    }
+
     return(
-        <div className="bg-gray-50 border border-gray-300 rounded-lg p-4">
+        <form onSubmit={handleSubmit} className="bg-gray-50 border border-gray-300 rounded-lg p-4">
             <h2 className="text-sm font-semibold mb-3">New alarm: {alarmDropdownOptions.find(o => o.value === selectedAlarm)?.label}</h2>
 
             {selectedAlarm === 'queue_messages' ? (
                 <div className="grid grid-cols-3 gap-4 mb-3">
                     <div>
                         <p className="text-sm mb-1">Alarm name</p>
-                        <Input placeholder="E.g. Queue backlog high" className="bg-white" />
+                        <Input name="name" placeholder="E.g. Queue backlog high" className="bg-white" required />
                     </div>
                     <div>
                         <p className="text-sm mb-1">Queue name</p>
-                        <Input placeholder="E.g. my.queue.name" className="bg-white" />
+                        <Input name="queue_name" placeholder="E.g. my.queue.name" className="bg-white" required />
                     </div>
                     <div>
                         <p className="text-sm mb-1">Threshold</p>
-                        <Input placeholder="E.g. 1000" className="bg-white" />
+                        <Input name="threshold" type="number" placeholder="E.g. 1000" className="bg-white" required />
                     </div>
                 </div>
             ) : selectedAlarm === 'maintenance' ? (
                 <div className="mb-3">
                     <p className="text-sm mb-1">Alarm name</p>
-                    <Input placeholder="E.g. Scheduled downtime" className="bg-white" />
+                    <Input name="name" placeholder="E.g. Scheduled downtime" className="bg-white" required />
                 </div>
             ) : (
                 <div className="grid grid-cols-2 gap-4 mb-3">
                     <div>
                         <p className="text-sm mb-1">Alarm name</p>
-                        <Input placeholder="E.g. Connection close to limit" className="bg-white" />
+                        <Input name="name" placeholder="E.g. Connection close to limit" className="bg-white" required />
                     </div>
                     <div>
                         <p className="text-sm mb-1">Threshold</p>
-                        <Input placeholder="E.g. 250" className="bg-white" />
+                        <Input name="threshold" type="number" placeholder="E.g. 250" className="bg-white" required />
                     </div>
                 </div>
             )}
 
             <div className="mb-3">
                 <p className="text-sm mb-1">Notification text (optional)</p>
-                <Input placeholder="Leave empty for default" className="bg-white" />
+                <Input name="message" placeholder="Leave empty for default" className="bg-white" />
             </div>
             <div className="flex justify-between mt-2">
-                <Button>Add alarm</Button>
-                <Button variant="outline" onClick={onClose}>Cancel</Button>
+                <Button type="submit">Add alarm</Button>
+                <Button type="button" variant="outline" onClick={onClose}>Cancel</Button>
             </div>
-        </div>
+        </form>
     )
 }
 
@@ -228,7 +250,7 @@ export function AlarmCard({ existingAlarms, vhost = '' }: { existingAlarms: Alar
                 Alerts are sent only once per trigger and reset automatically when the value goes back below the threshold.
             </p>
             
-            <AddAlarmForm selectedAlarm={userSelectedAlarm} onClose={() => setUserSelectedAlarm('')} />
+            <AddAlarmForm selectedAlarm={userSelectedAlarm} vhost={vhost} onClose={() => setUserSelectedAlarm('')} />
             <ExistingAlarms existingAlarms={existingAlarms} vhost={vhost}/>
         </div>
     )
