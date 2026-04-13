@@ -5,6 +5,7 @@ import { getPageData } from '@/lib/pageData'
 import { Layout } from '@/components/layout/Layout'
 import { LimitsCard } from '@/components/overview/LimitsCard'
 import { QueueSizeInfoCard } from '@/components/overview/QueueSizeInfoCard'
+import { QueuesCard } from '@/components/overview/QueuesCard'
 
 interface Metrics {
   connections: number
@@ -35,7 +36,7 @@ const MainPage = () => {
   const metrics = data.Metrics
   
   return (
-    <div className='text-text-primary'>
+    <div className='text-text-primary text-base'>
       <h1 className='text-4xl mb-6'>{selected}</h1>
       <div className='flex gap-8 items-end flex-wrap'> 
         {metrics ? (
@@ -51,6 +52,7 @@ const MainPage = () => {
           <p className="text-sm text-text-muted">No metrics available.</p>
         )}
         <QueueSizeInfoCard />
+        <QueuesCard vhost={selected} />
       </div>
     </div>
   )
