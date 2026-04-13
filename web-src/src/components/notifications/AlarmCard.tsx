@@ -177,7 +177,12 @@ function AddAlarmForm({ selectedAlarm, vhost, onClose }: { selectedAlarm: string
         <form onSubmit={handleSubmit} className="bg-gray-50 border border-gray-300 rounded-lg p-4">
             <h2 className="text-sm font-semibold mb-3">New alarm: {alarmDropdownOptions.find(o => o.value === selectedAlarm)?.label}</h2>
 
-            {selectedAlarm === 'queue_messages' ? (
+            {selectedAlarm === 'maintenance' ? (
+                <div className="mb-3">
+                    <p className="text-sm mb-1">Alarm name</p>
+                    <Input name="name" placeholder="E.g. Scheduled downtime" className="bg-white" required />
+                </div>
+            ) : selectedAlarm === 'queue_messages' || selectedAlarm === 'queue_size' ? (
                 <div className="grid grid-cols-3 gap-4 mb-3">
                     <div>
                         <p className="text-sm mb-1">Alarm name</p>
@@ -192,10 +197,16 @@ function AddAlarmForm({ selectedAlarm, vhost, onClose }: { selectedAlarm: string
                         <Input name="threshold" type="number" placeholder="E.g. 1000" className="bg-white" required />
                     </div>
                 </div>
-            ) : selectedAlarm === 'maintenance' ? (
-                <div className="mb-3">
-                    <p className="text-sm mb-1">Alarm name</p>
-                    <Input name="name" placeholder="E.g. Scheduled downtime" className="bg-white" required />
+            ) : selectedAlarm === 'no_consumer' ? (
+                <div className="grid grid-cols-2 gap-4 mb-3">
+                    <div>
+                        <p className="text-sm mb-1">Alarm name</p>
+                        <Input name="name" placeholder="E.g. Queue has no consumer" className="bg-white" required />
+                    </div>
+                    <div>
+                        <p className="text-sm mb-1">Queue name</p>
+                        <Input name="queue_name" placeholder="E.g. my.queue.name" className="bg-white" required />
+                    </div>
                 </div>
             ) : (
                 <div className="grid grid-cols-2 gap-4 mb-3">
