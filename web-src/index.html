@@ -9,19 +9,22 @@
 
 <body>
     <script>
+        const params = new URLSearchParams(window.location.search);
+        const selectedVhost = params.get('vhost') || '/';
+
         window.__DATA__ = {
-            Vhosts: ["/", "staging"],
-            Selected: "/",
+            Vhosts: ["/", "test"],
+            Selected: selectedVhost,
             Metrics: {
                 connections: 168,
                 channels: 42,
                 queues: 70,
-                unacked: 0
+                unacked: 0,
             },
             Limits: {
                 MaxConnections: 300,
-                MaxQueues: 150
-            }
+                MaxQueues: 150,
+            },
         };
     </script>
     <div id="app"></div>
