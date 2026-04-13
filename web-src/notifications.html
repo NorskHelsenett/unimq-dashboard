@@ -12,19 +12,84 @@
         window.__DATA__ = {
             Vhosts: ["/", "bruh"],
             Selected: "/",
-            alarms: [
+            Rules: [
                 {
-                    name: "High Memory Usage",
-                    severity: "critical",
-                    description: "Memory usage has exceeded 90% of the limit.",
-                    timestamp: "2024-06-01T12:34:56Z"
+                    id: "1",
+                    name: "Nummer 1",
+                    type: "channels",
+                    threshold: 50,
+                    message: "",
+                    enabled: false,
+                    status: "ok",
+                    last_value: 5,
+                    last_fired: null
                 },
                 {
-                    name: "Connection Limit Reached",
-                    severity: "warning",
-                    description: "The number of connections has reached the maximum limit.",
-                    timestamp: "2024-06-01T13:45:00Z"
-                }
+                    id: "2",
+                    name: "Too many connections",
+                    type: "connections",
+                    threshold: 200,
+                    message: "",
+                    enabled: true,
+                    status: "firing",
+                    last_value: 210,
+                    last_fired: "2026-04-09T08:12:00Z"
+                },
+                {
+                    id: "3",
+                    name: "Noe her",
+                    type: "channels",
+                    threshold: 50,
+                    message: "",
+                    enabled: false,
+                    status: "ok",
+                    last_value: 38,
+                    last_fired: "2026-03-15T14:30:00Z"
+                },
+                {
+                    id: "4",
+                    name: "Ny alarm",
+                    type: "connections",
+                    threshold: 200,
+                    message: "",
+                    enabled: true,
+                    status: "ok",
+                    last_value: 155,
+                    last_fired: null
+                },
+                {
+                    id: "5",
+                    name: "Woppsi",
+                    type: "channels",
+                    threshold: 50,
+                    message: "",
+                    enabled: false,
+                    status: "ok",
+                    last_value: 20,
+                    last_fired: "2026-04-08T23:50:00Z"
+                },
+                {
+                    id: "6",
+                    name: "Lollyyy",
+                    type: "connections",
+                    threshold: 200,
+                    message: "",
+                    enabled: true,
+                    status: "ok",
+                    last_value: 100,
+                    last_fired: "2026-04-01T09:00:00Z"
+                },
+                {
+                    id: "7",
+                    name: "Ny ukjent alarm",
+                    type: "queues",
+                    threshold: 100,
+                    message: "",
+                    enabled: true,
+                    status: "unknown",
+                    last_value: 1,
+                    last_fired: null
+                },
             ]
         };
     </script>

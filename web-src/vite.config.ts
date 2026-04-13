@@ -31,6 +31,14 @@ export default defineConfig({
   server: {
     proxy: {
       "/api": "http://localhost:8080",
+      //Litt usikker på om dette går og er final ?
+      "/notifications/rule": {
+        target: "http://localhost:8080",
+        bypass: (req) => {
+          if (req.method === "GET") return "/notification_rule.html"
+          return null
+        },
+      },
       "/notifications/": "http://localhost:8080",
       "/maintenance": "http://localhost:8080",
       "/static/logo": "http://localhost:8080",

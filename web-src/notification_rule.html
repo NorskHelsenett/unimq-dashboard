@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>UniMQ — Edit Alarm</title>
+</head>
+
+<body>
+    <script>
+        const allRules = [
+            { id: "1", name: "Nummer 1", type: "channels", threshold: 50, message: "", enabled: false, status: "ok", last_value: 5, last_fired: null },
+            { id: "2", name: "Too many connections", type: "connections", threshold: 200, message: "", enabled: true, status: "firing", last_value: 210, last_fired: "2026-04-09T08:12:00Z" },
+            { id: "3", name: "Noe her", type: "channels", threshold: 50, message: "", enabled: false, status: "ok", last_value: 38, last_fired: "2026-03-15T14:30:00Z" },
+            { id: "4", name: "Ny alarm", type: "connections", threshold: 200, message: "", enabled: true, status: "ok", last_value: 155, last_fired: null },
+            { id: "5", name: "Woppsi", type: "channels", threshold: 50, message: "", enabled: false, status: "ok", last_value: 20, last_fired: "2026-04-08T23:50:00Z" },
+            { id: "6", name: "Lollyyy", type: "connections", threshold: 200, message: "", enabled: true, status: "ok", last_value: 100, last_fired: "2026-04-01T09:00:00Z" },
+            { id: "7", name: "Ny ukjent alarm", type: "queues", threshold: 100, message: "", enabled: true, status: "unknown", last_value: null, last_fired: null },
+        ]
+        const params = new URLSearchParams(window.location.search)
+        const id = params.get("id")
+        const vhost = params.get("vhost") || "/"
+        const rule = allRules.find(r => r.id === id) || allRules[0]
+        window.__DATA__ = { Vhost: vhost, Msg: "", Rule: rule }
+    </script>
+    <div id="app"></div>
+    <script type="module" src="/src/pages/NotifyRule.tsx"></script>
+</body>
+
+</html>
