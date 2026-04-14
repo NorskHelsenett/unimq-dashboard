@@ -31,7 +31,7 @@ export default defineConfig({
   server: {
     proxy: {
       "/api": "http://localhost:8080",
-      //Litt usikker på om dette går og er final ?
+      //TODO: Should ideally have a better way to serve the static html files for the notifications rules page
       "/notifications/rule": {
         target: "http://localhost:8080",
         bypass: (req) => {
