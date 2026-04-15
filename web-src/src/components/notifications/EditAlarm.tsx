@@ -14,6 +14,7 @@ export const EditAlarm = ({ alarm, vhost }: { alarm: AlarmProps, vhost: string }
     const [showLogs, setShowLogs] = useState(false)
     const [updated, setUpdated] = useState(false)
     const [testResult, setTestResult] = useState<{ status: 'success' | 'error', message: string } | null>(null)
+    const [updateResult, setUpdateResult] = useState<{ status: 'success' | 'error', message: string } | null>(null)
     const [updateSummary, setUpdateSummary] = useState("")
     const [threshold, setThreshold] = useState(alarm.threshold?.toString() ?? "")
     const [message, setMessage] = useState(alarm.message ?? "")
@@ -23,6 +24,12 @@ export const EditAlarm = ({ alarm, vhost }: { alarm: AlarmProps, vhost: string }
 
     const redirectAfterDelete = () => {
         window.location.href = `/notifications?vhost=${encodeURIComponent(vhost)}`
+    }
+
+    const ensureOk = async (res: globalThis.Response, fallbackMessage: string) => {
+        if (res.ok) return
+        const errorText = await res.text().catch(() => "")
+        throw new Error(errorText || fallbackMessage)
     }
 
     const secondaryActions = [
@@ -56,11 +63,23 @@ export const EditAlarm = ({ alarm, vhost }: { alarm: AlarmProps, vhost: string }
         data.set('id', id)
         data.set('threshold', threshold)
         data.set('message', message)
-        fetch('/notifications/rules/update', { method: 'POST', body: data }).then(() => {
-            setUpdateSummary(`Updated: ${changes.join(", ")}`)
-            setUpdated(true)
-            setTimeout(() => window.location.reload(), 2500)
-        })
+        setUpdated(false)
+        setUpdateResult(null)
+        fetch('/notifications/rules/update', { method: 'POST', body: data })
+            .then(async (res) => {
+                await ensureOk(res, 'Failed to update alarm.')
+                const summary = `Updated: ${changes.join(", ")}`
+                setUpdateSummary(summary)
+                setUpdateResult({ status: 'success', message: summary })
+                setUpdated(true)
+                setTimeout(() => window.location.reload(), 2500)
+            })
+            .catch((error: unknown) => {
+                const errorMessage = error instanceof Error ? error.message : 'Failed to update alarm.'
+                setUpdateSummary(errorMessage)
+                setUpdateResult({ status: 'error', message: errorMessage })
+                setUpdated(false)
+            })
     }
 
     const resetToDefaultMessage = () => {
@@ -68,11 +87,23 @@ export const EditAlarm = ({ alarm, vhost }: { alarm: AlarmProps, vhost: string }
         data.set('vhost', vhost)
         data.set('id', alarm.id!)
         data.set('message', '')
-        fetch('/notifications/rules/message', { method: 'POST', body: data }).then(() => {
-            setUpdateSummary(`Updated: message → "(default)"`)
-            setUpdated(true)
-            setTimeout(() => window.location.reload(), 2500)
-        })
+        setUpdated(false)
+        setUpdateResult(null)
+        fetch('/notifications/rules/message', { method: 'POST', body: data })
+            .then(async (res) => {
+                await ensureOk(res, 'Failed to reset message to default.')
+                const summary = `Updated: message → "(default)"`
+                setUpdateSummary(summary)
+                setUpdateResult({ status: 'success', message: summary })
+                setUpdated(true)
+                setTimeout(() => window.location.reload(), 2500)
+            })
+            .catch((error: unknown) => {
+                const errorMessage = error instanceof Error ? error.message : 'Failed to reset message to default.'
+                setUpdateSummary(errorMessage)
+                setUpdateResult({ status: 'error', message: errorMessage })
+                setUpdated(false)
+            })
     }
 
     const testNotification = () => {
