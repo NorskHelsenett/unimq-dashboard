@@ -6,10 +6,12 @@ import { Input } from "../ui/input"
 import { useState } from "react"
 import { DropdownMenu } from "radix-ui"
 import { DeleteAlarm } from "./DeleteAlarm"
+import { AlarmLogSheet } from "./AlarmLogSheet"
 import { Response } from "../ui/response"
 
 export const EditAlarm = ({ alarm, vhost }: { alarm: AlarmProps, vhost: string }) => {
     const [deletingId, setDeletingId] = useState<string | null>(null)
+    const [showLogs, setShowLogs] = useState(false)
     const [updated, setUpdated] = useState(false)
     const [testResult, setTestResult] = useState<{ status: 'success' | 'error', message: string } | null>(null)
     const [updateSummary, setUpdateSummary] = useState("")
@@ -26,7 +28,7 @@ export const EditAlarm = ({ alarm, vhost }: { alarm: AlarmProps, vhost: string }
     const secondaryActions = [
         { label: "Reset to default message", onClick: () => { resetToDefaultMessage() } },
         { label: "Duplicate alarm", onClick: () => {} },
-        { label: "View history/logs", onClick: () => {} },
+        { label: "View history/logs", onClick: () => { setShowLogs(true) } },
         { label: "Delete alarm", onClick: () => { alarm.id && setDeletingId(alarm.id) } },
     ]
 
@@ -93,6 +95,7 @@ export const EditAlarm = ({ alarm, vhost }: { alarm: AlarmProps, vhost: string }
     return (
         <div className="mt-2">
         <DeleteAlarm alarm={alarm} vhost={vhost} open={deletingId !== null} onClose={() => setDeletingId(null)} onDeleted={redirectAfterDelete} />
+        <AlarmLogSheet alarmId={alarm.id!} alarmName={alarm.name ?? ""} open={showLogs} onClose={() => setShowLogs(false)} />
         <Response onClose={() => setUpdated(false)} open={updated} status="success" message={`Alarm updated successfully!`} />
         <Response onClose={() => setTestResult(null)} open={testResult !== null} status={testResult?.status ?? 'success'} message={testResult?.message ?? ''} />
         <div className="border border-gray-200 bg-white rounded-lg overflow-hidden">
@@ -128,7 +131,7 @@ export const EditAlarm = ({ alarm, vhost }: { alarm: AlarmProps, vhost: string }
                 </div>
                 <div className="flex justify-between py-1.5">
                     <span className="text-text-muted">Threshold</span>
-                    <Input name="threshold" className="w-20 h-6 text-right" value={threshold} onChange={e => setThreshold(e.target.value)} />
+                    <Input type="number" name="threshold" className="w-20 h-6 text-right" value={threshold} onChange={e => setThreshold(e.target.value)} />
                 </div>
             </div>
 

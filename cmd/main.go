@@ -41,6 +41,7 @@ var (
 
 	maintStore  *maintenance.Store
 	notifyStore *notify.Store
+	logStore    *notify.LogStore
 )
 
 // ── page data structs ────────────────────────────────────────────────────────
@@ -348,6 +349,17 @@ func notificationsTestHandler(w http.ResponseWriter, r *http.Request) {
 	http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
 }
 
+func notificationsLogsHandler(w http.ResponseWriter, r *http.Request) {
+	id := r.URL.Query().Get("id")
+	if id == "" {
+		http.Error(w, "missing id", http.StatusBadRequest)
+		return
+	}
+	entries := logStore.Get(id)
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(entries)
+}
+
 // -- json marshaller -----------------------------------------------------------
 // jsonMarshal marshals v to JSON for safe embedding in JavaScript contexts.
 // It must not be used to inject JSON directly into HTML markup; use only
@@ -379,8 +391,13 @@ func main() {
 		log.Fatalf("could not load notification store: %v", err)
 	}
 
+	logStore, err = notify.NewLogStore("data/alarm_logs.json")
+	if err != nil {
+		log.Fatalf("could not load alarm log store: %v", err)
+	}
+
 	// Start background alarm checker — runs every 60 seconds.
-	notify.StartChecker(notifyStore, maintStore, 60*time.Second)
+	notify.StartChecker(notifyStore, logStore, maintStore, 60*time.Second)
 
 	if err := mime.AddExtensionType(".js", "application/javascript"); err != nil {
 		log.Fatalf("failed to register MIME type: %v", err)
@@ -402,6 +419,7 @@ func main() {
 	http.HandleFunc("/notifications/rules/toggle", notificationsToggleRuleHandler)
 	http.HandleFunc("/notifications/rules/message", notificationsUpdateMessageHandler)
 	http.HandleFunc("/notifications/rules/test", notificationsTestHandler)
+	http.HandleFunc("/notifications/rules/logs", notificationsLogsHandler)
 	http.HandleFunc("/notifications/rule", notificationsRuleHandler)
 	http.HandleFunc("/api/queues", queuesAPIHandler)
 	http.HandleFunc("/api/cluster", clusterAPIHandler)
