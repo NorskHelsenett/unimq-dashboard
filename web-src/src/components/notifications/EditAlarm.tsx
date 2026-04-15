@@ -38,11 +38,11 @@ export const EditAlarm = ({ alarm, vhost }: { alarm: AlarmProps, vhost: string }
         { label: "Delete alarm", onClick: () => { alarm.id && setDeletingId(alarm.id) } },
     ]
 
-    const [disabledIds, setDisabledIds] = useState<Set<string>>(
+    const [enabledIds, setEnabledIds] = useState<Set<string>>(
                 () => new Set(alarm.enabled && alarm.id ? [alarm.id] : [])
             )
     const toggleAlarm = (id: string) => {
-        setDisabledIds(prev => {
+        setEnabledIds(prev => {
             const next = new Set(prev)
             next.has(id) ? next.delete(id) : next.add(id)
             return next
