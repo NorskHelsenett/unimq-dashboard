@@ -265,6 +265,18 @@ func notificationsDeleteRuleHandler(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, "/notifications", http.StatusSeeOther)
 }
 
+func notificationsUpdateRuleHandler(w http.ResponseWriter, r *http.Request) {
+	if r.Method == http.MethodPost {
+		vhost := r.FormValue("vhost")
+		id := r.FormValue("id")
+		threshold, _ := strconv.ParseFloat(r.FormValue("threshold"), 64)
+		notifyStore.UpdateRule(vhost, id, r.FormValue("message"), threshold)
+		w.WriteHeader(http.StatusOK)
+		return
+	}
+	http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+}
+
 func notificationsToggleRuleHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method == http.MethodPost {
 		vhost := r.FormValue("vhost")
@@ -310,20 +322,30 @@ func notificationsTestHandler(w http.ResponseWriter, r *http.Request) {
 		id := r.FormValue("id")
 		rule, ok := notifyStore.GetRuleCopy(vhost, id)
 		vc := notifyStore.GetVhostCopy(vhost)
-		redirect := "/notifications/rule?vhost=" + url.QueryEscape(vhost) + "&id=" + id
-		if ok && len(vc.WebhookURLs()) > 0 {
-			subject := "[UniMQ TEST] " + rule.Name + " — " + vhost
-			body := "Dette er en test-varsling fra UniMQ.\n\n" + notify.BuildMessage(rule, vhost)
-			if err := notifyStore.SendWebhooks(vc.WebhookURLs(), subject, body); err != nil {
-				log.Printf("notify test webhook failed: %v", err)
-				http.Redirect(w, r, redirect+"&msg=error", http.StatusSeeOther)
-				return
-			}
+		w.Header().Set("Content-Type", "application/json")
+		if !ok {
+			w.WriteHeader(http.StatusNotFound)
+			json.NewEncoder(w).Encode(map[string]string{"status": "error", "message": "Rule not found"})
+			return
 		}
-		http.Redirect(w, r, redirect+"&msg=sent", http.StatusSeeOther)
+		if len(vc.WebhookURLs()) == 0 {
+			w.WriteHeader(http.StatusOK)
+			json.NewEncoder(w).Encode(map[string]string{"status": "no_recipients", "message": "No recipients configured for this vhost"})
+			return
+		}
+		subject := "[UniMQ TEST] " + rule.Name + " — " + vhost
+		body := "Dette er en test-varsling fra UniMQ.\n\n" + notify.BuildMessage(rule, vhost)
+		if err := notifyStore.SendWebhooks(vc.WebhookURLs(), subject, body); err != nil {
+			log.Printf("notify test webhook failed: %v", err)
+			w.WriteHeader(http.StatusInternalServerError)
+			json.NewEncoder(w).Encode(map[string]string{"status": "error", "message": "Failed to send webhook: " + err.Error()})
+			return
+		}
+		w.WriteHeader(http.StatusOK)
+		json.NewEncoder(w).Encode(map[string]string{"status": "sent", "message": "Test notification sent!"})
 		return
 	}
-	http.Redirect(w, r, "/notifications", http.StatusSeeOther)
+	http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
 }
 
 // -- json marshaller -----------------------------------------------------------
@@ -376,6 +398,7 @@ func main() {
 	http.HandleFunc("/notifications/recipients/delete", notificationsDeleteRecipientHandler)
 	http.HandleFunc("/notifications/rules/add", notificationsAddRuleHandler)
 	http.HandleFunc("/notifications/rules/delete", notificationsDeleteRuleHandler)
+	http.HandleFunc("/notifications/rules/update", notificationsUpdateRuleHandler)
 	http.HandleFunc("/notifications/rules/toggle", notificationsToggleRuleHandler)
 	http.HandleFunc("/notifications/rules/message", notificationsUpdateMessageHandler)
 	http.HandleFunc("/notifications/rules/test", notificationsTestHandler)

@@ -1,23 +1,175 @@
+import { Switch } from "../ui/switch"
+import { Pill } from "../ui/pill"
 import { AlarmProps } from "./AlarmCard"
+import { Button } from "../ui/button"
+import { Input } from "../ui/input"
+import { useState } from "react"
+import { DropdownMenu } from "radix-ui"
+import { DeleteAlarm } from "./DeleteAlarm"
+import { Response } from "../ui/response"
 
-function AlarmOverview({ alarm }: { alarm: AlarmProps }) {
+export const EditAlarm = ({ alarm, vhost }: { alarm: AlarmProps, vhost: string }) => {
+    const [deletingId, setDeletingId] = useState<string | null>(null)
+    const [updated, setUpdated] = useState(false)
+    const [testResult, setTestResult] = useState<{ status: 'success' | 'error', message: string } | null>(null)
+    const [updateSummary, setUpdateSummary] = useState("")
+    const [threshold, setThreshold] = useState(alarm.threshold?.toString() ?? "")
+    const [message, setMessage] = useState(alarm.message ?? "")
+    const hasUnsavedChanges =
+        threshold !== (alarm.threshold?.toString() ?? "") ||
+        message !== (alarm.message ?? "")
+
+    const redirectAfterDelete = () => {
+        window.location.href = `/notifications?vhost=${encodeURIComponent(vhost)}`
+    }
+
+    const secondaryActions = [
+        { label: "Reset to default message", onClick: () => { resetToDefaultMessage() } },
+        { label: "Duplicate alarm", onClick: () => {} },
+        { label: "View history/logs", onClick: () => {} },
+        { label: "Delete alarm", onClick: () => { alarm.id && setDeletingId(alarm.id) } },
+    ]
+
+    const [disabledIds, setDisabledIds] = useState<Set<string>>(
+                () => new Set(alarm.enabled && alarm.id ? [alarm.id] : [])
+            )
+    const toggleAlarm = (id: string) => {
+        setDisabledIds(prev => {
+            const next = new Set(prev)
+            next.has(id) ? next.delete(id) : next.add(id)
+            return next
+        })
+        const data = new FormData()
+        data.set('vhost', vhost)
+        data.set('id', id)
+        fetch('/notifications/rules/toggle', { method: 'POST', body: data })
+    }
+
+
+    const updateAlarm = (id: string) => {
+        const changes: string[] = []
+        if (threshold !== (alarm.threshold?.toString() ?? "")) changes.push(`threshold → ${threshold}`)
+        if (message !== (alarm.message ?? "")) changes.push(`message → "${message || "(default)"}"`)
+        const data = new FormData()
+        data.set('vhost', vhost)
+        data.set('id', id)
+        data.set('threshold', threshold)
+        data.set('message', message)
+        fetch('/notifications/rules/update', { method: 'POST', body: data }).then(() => {
+            setUpdateSummary(`Updated: ${changes.join(", ")}`)
+            setUpdated(true)
+            setTimeout(() => window.location.reload(), 2500)
+        })
+    }
+
+    const resetToDefaultMessage = () => {
+        const data = new FormData()
+        data.set('vhost', vhost)
+        data.set('id', alarm.id!)
+        data.set('message', '')
+        fetch('/notifications/rules/message', { method: 'POST', body: data }).then(() => {
+            setUpdateSummary(`Updated: message → "(default)"`)
+            setUpdated(true)
+            setTimeout(() => window.location.reload(), 2500)
+        })
+    }
+
+    const testNotification = () => {
+        const data = new FormData()
+        data.set('vhost', vhost)
+        data.set('id', alarm.id!)
+        fetch('/notifications/rules/test', { method: 'POST', body: data })
+            .then(res => res.json())
+            .then((json: { status: string, message: string }) => {
+                if (json.status === 'sent') {
+                    setTestResult({ status: 'success', message: json.message })
+                } else {
+                    setTestResult({ status: 'error', message: json.message })
+                }
+            })
+            .catch(() => setTestResult({ status: 'error', message: 'Failed to reach server.' }))
+    }
+
     return (
-        <div>
-            <h2 className="text-2xl font-bold mb-4">{alarm.name}</h2>
-            <p>Type: {alarm.type}</p>
-            {alarm.queue_name && <p>Queue: {alarm.queue_name}</p>}
-            {alarm.threshold && <p>Threshold: {alarm.threshold}</p>}
-            <p>Status: {alarm.status}</p>
-            {alarm.last_value && <p>Last value: {alarm.last_value}</p>}
-        </div>
-    )
-}
-
-export const EditAlarm = ({ alarm }: { alarm: AlarmProps }) => {
-        return (
-            <div>
-                <AlarmOverview alarm={alarm} />
+        <div className="mt-2">
+        <DeleteAlarm alarm={alarm} vhost={vhost} open={deletingId !== null} onClose={() => setDeletingId(null)} onDeleted={redirectAfterDelete} />
+        <Response onClose={() => setUpdated(false)} open={updated} status="success" message={`Alarm updated successfully!`} />
+        <Response onClose={() => setTestResult(null)} open={testResult !== null} status={testResult?.status ?? 'success'} message={testResult?.message ?? ''} />
+        <div className="border border-gray-200 bg-white rounded-lg overflow-hidden">
+            {/* Header row */}
+            <div className="flex items-center gap-3 px-5 py-4 border-b border-gray-100">
+                <h3 className="text-lg font-semibold flex-1">{alarm.name}</h3>
+                <label className="flex items-center gap-1.5 text-sm text-text-muted cursor-pointer select-none">
+                    Activated
+                    <Switch checked={disabledIds.has(alarm.id!)} onCheckedChange={() => alarm.id && toggleAlarm(alarm.id)}/>
+                </label>
+                <Pill variant={alarm.status === "ok" ? "lightGreen" : alarm.status === "firing" ? "destructive" : "secondary"}>
+                    Status: {alarm.status}
+                </Pill>
             </div>
-        )
 
+            {/* Meta grid */}
+            <div className="grid grid-cols-2 gap-x-8 gap-y-1 px-5 py-4 text-sm border-b border-gray-100">
+                <div className="flex justify-between py-1.5">
+                    <span className="text-text-muted">Type</span>
+                    <span className="text-text-primary">{alarm.type}</span>
+                </div>
+                <div className="flex justify-between py-1.5">
+                    <span className="text-text-muted">Vhost</span>
+                    <span className="text-text-primary">{vhost}</span>
+                </div>
+                <div className="flex justify-between py-1.5">
+                    <span className="text-text-muted">Last fired</span>
+                    <span className="text-text-primary">
+                        {alarm.last_fired
+                            ? new Date(alarm.last_fired).toLocaleString('no-NO', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })
+                            : "Never"}
+                    </span>
+                </div>
+                <div className="flex justify-between py-1.5">
+                    <span className="text-text-muted">Threshold</span>
+                    <Input name="threshold" className="w-20 h-6 text-right" value={threshold} onChange={e => setThreshold(e.target.value)} />
+                </div>
+            </div>
+
+            {/* Message editor */}
+            <div className="px-5 py-4">
+                <p className="text-md font-medium text-text-primary mb-1">Custom notification text</p>
+                <p className="text-xs text-text-muted mb-2">Override the default message. Leave empty to use the default.</p>
+                    <Input name="customMessage" className="flex-1" value={message} onChange={e => setMessage(e.target.value)} placeholder="Enter your custom message..." />
+                {hasUnsavedChanges && (
+                    <p className="text-xs text-amber-600 mt-2">You have unsaved changes. Click <strong>Save</strong> to apply them.</p>
+                )}
+                <div className="flex mt-2 justify-end gap-2"> 
+                    <Button variant="orange" size="sm" onClick={() => updateAlarm(alarm.id!)}>Save</Button>
+                    <div className="flex">
+                        <Button variant="outline" size="sm" className="rounded-r-none border-r-0" onClick={testNotification}>Send test notification</Button>
+                        <DropdownMenu.Root>
+                            <DropdownMenu.Trigger asChild>
+                                <Button variant="outline" size="sm" className="rounded-l-none px-2.5 tracking-widest">···</Button>
+                            </DropdownMenu.Trigger>
+                            <DropdownMenu.Portal>
+                                <DropdownMenu.Content
+                                    align="end"
+                                    sideOffset={4}
+                                    className="z-50 min-w-[10rem] overflow-hidden rounded-md border border-gray-200 bg-white shadow-md text-sm text-text-primary p-1"
+                                    >
+                                    {secondaryActions.map((action, index) => (
+                                        <DropdownMenu.Item
+                                        key={index}
+                                        className={`flex cursor-pointer select-none items-center rounded px-3 py-2 outline-none hover:bg-gray-100 ${action.label === "Delete alarm" ? "text-destructive hover:bg-red-50" : ""}`}
+                                        onSelect={action.onClick}
+                                        >
+                                            {action.label}
+                                        </DropdownMenu.Item>
+                                    ))}
+                                </DropdownMenu.Content>
+                            </DropdownMenu.Portal>
+                        </DropdownMenu.Root>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    )
 }
