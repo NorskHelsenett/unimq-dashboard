@@ -27,7 +27,6 @@ export const EditAlarm = ({ alarm, vhost }: { alarm: AlarmProps, vhost: string }
 
     const secondaryActions = [
         { label: "Reset to default message", onClick: () => { resetToDefaultMessage() } },
-        { label: "Duplicate alarm", onClick: () => {} },
         { label: "View history/logs", onClick: () => { setShowLogs(true) } },
         { label: "Delete alarm", onClick: () => { alarm.id && setDeletingId(alarm.id) } },
     ]
