@@ -11,6 +11,8 @@ import { Response } from "../ui/response"
 
 export const EditAlarm = ({ alarm, vhost }: { alarm: AlarmProps, vhost: string }) => {
     const [deletingId, setDeletingId] = useState<string | null>(null)
+    const alarmId = alarm.id
+    const hasAlarmId = alarmId !== undefined && alarmId !== null
     const [showLogs, setShowLogs] = useState(false)
     const [updated, setUpdated] = useState(false)
     const [testResult, setTestResult] = useState<{ status: 'success' | 'error', message: string } | null>(null)
@@ -83,9 +85,13 @@ export const EditAlarm = ({ alarm, vhost }: { alarm: AlarmProps, vhost: string }
     }
 
     const resetToDefaultMessage = () => {
+        if (!hasAlarmId) {
+            return
+        }
+
         const data = new FormData()
         data.set('vhost', vhost)
-        data.set('id', alarm.id!)
+        data.set('id', alarmId)
         data.set('message', '')
         setUpdated(false)
         setUpdateResult(null)
@@ -107,9 +113,13 @@ export const EditAlarm = ({ alarm, vhost }: { alarm: AlarmProps, vhost: string }
     }
 
     const testNotification = () => {
+        if (!hasAlarmId) {
+            return
+        }
+
         const data = new FormData()
         data.set('vhost', vhost)
-        data.set('id', alarm.id!)
+        data.set('id', alarmId)
         fetch('/notifications/rules/test', { method: 'POST', body: data })
             .then(res => res.json())
             .then((json: { status: string, message: string }) => {
@@ -125,7 +135,9 @@ export const EditAlarm = ({ alarm, vhost }: { alarm: AlarmProps, vhost: string }
     return (
         <div className="mt-2">
         <DeleteAlarm alarm={alarm} vhost={vhost} open={deletingId !== null} onClose={() => setDeletingId(null)} onDeleted={redirectAfterDelete} />
-        <AlarmLogSheet alarmId={alarm.id!} alarmName={alarm.name ?? ""} open={showLogs} onClose={() => setShowLogs(false)} />
+        {hasAlarmId && (
+            <AlarmLogSheet alarmId={alarmId} alarmName={alarm.name ?? ""} open={showLogs} onClose={() => setShowLogs(false)} />
+        )}
         <Response onClose={() => setUpdated(false)} open={updated} status="success" message={`Alarm updated successfully!`} />
         <Response onClose={() => setTestResult(null)} open={testResult !== null} status={testResult?.status ?? 'success'} message={testResult?.message ?? ''} />
         <div className="border border-gray-200 bg-white rounded-lg overflow-hidden">
@@ -134,7 +146,7 @@ export const EditAlarm = ({ alarm, vhost }: { alarm: AlarmProps, vhost: string }
                 <h3 className="text-lg font-semibold flex-1">{alarm.name}</h3>
                 <label className="flex items-center gap-1.5 text-sm text-text-muted cursor-pointer select-none">
                     Activated
-                    <Switch checked={disabledIds.has(alarm.id!)} onCheckedChange={() => alarm.id && toggleAlarm(alarm.id)}/>
+                    <Switch checked={hasAlarmId ? disabledIds.has(alarmId) : false} onCheckedChange={() => hasAlarmId && toggleAlarm(alarmId)}/>
                 </label>
                 <Pill variant={alarm.status === "ok" ? "lightGreen" : alarm.status === "firing" ? "destructive" : "secondary"}>
                     Status: {alarm.status}
