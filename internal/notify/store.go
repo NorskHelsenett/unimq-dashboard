@@ -28,17 +28,17 @@ func (r Recipient) TypeLabel() string {
 }
 
 type AlarmRule struct {
-		ID         string     `json:"id"`
-		Name       string     `json:"name"`
-		Type       string     `json:"type"`
-		QueueName  string     `json:"queue_name,omitempty"`
-		Threshold  float64    `json:"threshold,omitempty"`
-		Message    string     `json:"message"`
-		Enabled    bool       `json:"enabled"`
-		Status     string     `json:"status"`
-		LastFired  *time.Time `json:"last_fired,omitempty"`
-		LastValue  *float64   `json:"last_value,omitempty"`
-	}
+	ID        string     `json:"id"`
+	Name      string     `json:"name"`
+	Type      string     `json:"type"`
+	QueueName string     `json:"queue_name,omitempty"`
+	Threshold float64    `json:"threshold,omitempty"`
+	Message   string     `json:"message"`
+	Enabled   bool       `json:"enabled"`
+	Status    string     `json:"status"`
+	LastFired *time.Time `json:"last_fired,omitempty"`
+	LastValue *float64   `json:"last_value,omitempty"`
+}
 
 func (r AlarmRule) TypeLabel() string {
 	switch r.Type {
@@ -251,6 +251,21 @@ func (s *Store) UpdateMessage(vhost, id, message string) error {
 		for i, r := range vc.Rules {
 			if r.ID == id {
 				vc.Rules[i].Message = message
+				break
+			}
+		}
+	}
+	return s.save()
+}
+
+func (s *Store) UpdateRule(vhost, id, message string, threshold float64) error {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	if vc, ok := s.Vhosts[vhost]; ok {
+		for i, r := range vc.Rules {
+			if r.ID == id {
+				vc.Rules[i].Message = message
+				vc.Rules[i].Threshold = threshold
 				break
 			}
 		}

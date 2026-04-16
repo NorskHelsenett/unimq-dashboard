@@ -22,7 +22,7 @@ createRoot(root).render(
     <Layout Vhosts={[data.Vhost]} Selected={data.Vhost}>
       <div className="max-w-4xl mx-auto">
         <a href={`/notifications?vhost=${encodeURIComponent(data.Vhost)}`} className="text-sm text-text-muted hover:text-text-primary mb-4 inline-block">← Back to alarms</a>
-        <EditAlarm alarm={data.Rule} />
+        <EditAlarm alarm={data.Rule} vhost={data.Vhost} />
       </div>
     </Layout>
   </StrictMode>,

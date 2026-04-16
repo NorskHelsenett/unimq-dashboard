@@ -3,7 +3,7 @@ import { Input } from "../ui/input"
 import { Selector, SelectorTrigger, SelectorContent, SelectorItem, SelectorValue, SelectLabel } from "../ui/selector"
 import { Button } from "../ui/button"
 import { Switch } from "../ui/switch"
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogClose } from "../ui/dialog"
+import { DeleteAlarm } from "./DeleteAlarm"
 
 export interface AlarmProps {
     id?: string
@@ -38,7 +38,7 @@ function ExistingAlarms({existingAlarms, vhost}: {existingAlarms: AlarmProps[], 
     )
     const [deletingId, setDeletingId] = useState<string | null>(null)
     const deletingAlarm = alarms.find(a => a.id === deletingId)
-    const [showAll, setShowAll] = useState(false)
+    // const [showAll, setShowAll] = useState(false)
     const [showDeactivated, setShowDeactivated] = useState(false)
     const sortedAlarms = [...alarms].sort((a, b) => {
         const aDisabled = disabledIds.has(a.id!) ? 1 : 0
@@ -62,33 +62,7 @@ function ExistingAlarms({existingAlarms, vhost}: {existingAlarms: AlarmProps[], 
 
     return (
         <div className="mt-4">
-            <Dialog open={deletingId !== null} onOpenChange={(open) => !open && setDeletingId(null)}>
-                <DialogContent>
-                    <DialogHeader>
-                        <DialogTitle>Delete alarm</DialogTitle>
-                        <DialogDescription>
-                            Are you sure you want to delete <span className="font-medium text-text-primary">{deletingAlarm?.name}</span>? This cannot be undone.
-                        </DialogDescription>
-                    </DialogHeader>
-                    <DialogFooter>
-                        <DialogClose asChild>
-                            <Button variant="outline" className="bg-gray-100">Cancel</Button>
-                        </DialogClose>
-                        <Button variant="destructive" onClick={() => {
-                            if (deletingId) {
-                                const data = new FormData()
-                                data.set('vhost', vhost)
-                                data.set('id', deletingId)
-                                fetch('/notifications/rules/delete', { method: 'POST', body: data })
-                                    .then(() => window.location.reload())
-                            }
-                            setDeletingId(null)
-                        }}>
-                            Delete
-                        </Button>
-                    </DialogFooter>
-                </DialogContent>
-            </Dialog>
+            <DeleteAlarm alarm={deletingAlarm} vhost={vhost} open={deletingId !== null} onClose={() => setDeletingId(null)} />
             {visibleAlarms.length > 0 ? (
                 <div className="flex flex-col divide-y divide-gray-100 border border-gray-200 rounded-lg overflow-hidden">
                     {visibleAlarms.map(alarm => {

@@ -5,11 +5,6 @@ import { getPageData } from '@/lib/pageData'
 import { Layout } from '@/components/layout/Layout'
 import { AlarmCard, AlarmProps } from '@/components/notifications/AlarmCard'
 
-// interface IndexData {
-//   Vhosts: string[]
-//   Selected: string
-// }
-
 interface RecipientData {
   [key: string]: unknown
 }
@@ -22,7 +17,6 @@ interface NotificationData {
 }
 
 const data = getPageData<NotificationData>()
-// const alarmData = getPageData<NotificationData>()
 
 const root = document.getElementById('app')
 if (!root) throw new Error('Missing #app mount point')
