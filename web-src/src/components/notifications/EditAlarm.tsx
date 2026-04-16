@@ -146,7 +146,7 @@ export const EditAlarm = ({ alarm, vhost }: { alarm: AlarmProps, vhost: string }
                 <h3 className="text-lg font-semibold flex-1">{alarm.name}</h3>
                 <label className="flex items-center gap-1.5 text-sm text-text-muted cursor-pointer select-none">
                     Activated
-                    <Switch checked={hasAlarmId ? disabledIds.has(alarmId) : false} onCheckedChange={() => hasAlarmId && toggleAlarm(alarmId)}/>
+                    <Switch checked={hasAlarmId ? enabledIds.has(alarmId) : false} onCheckedChange={() => hasAlarmId && toggleAlarm(alarmId)}/>
                 </label>
                 <Pill variant={alarm.status === "ok" ? "lightGreen" : alarm.status === "firing" ? "destructive" : "secondary"}>
                     Status: {alarm.status}
