@@ -2,23 +2,39 @@ import { useState } from "react"
 import { Button } from "../ui/button"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogClose } from "../ui/dialog"
 import { AlarmProps } from "./AlarmCard"
+import { RecipientsProps } from "./RecipientCard"
 
 interface DeleteAlarmProps {
-    alarm: AlarmProps | undefined
+    alarm?: AlarmProps | undefined
+    recipient?: RecipientsProps | undefined
     vhost: string
     open: boolean
     onClose: () => void
     onDeleted?: () => void
 }
 
-export function DeleteAlarm({ alarm, vhost, open, onClose, onDeleted }: DeleteAlarmProps) {
+export function DeleteItem({ recipient, alarm, vhost, open, onClose, onDeleted }: DeleteAlarmProps) {
     const [deleting, setDeleting] = useState(false)
     const [deleted, setDeleted] = useState(false)
 
     const handleDelete = () => {
-        if (!alarm?.id) return
+        if (!alarm?.id && !recipient?.id) return
         const data = new FormData()
         data.set('vhost', vhost)
+        if (recipient?.id) {
+            data.set('id', recipient.id)
+            setDeleting(true)
+            Promise.all([
+                fetch('/notifications/recipients/delete', { method: 'POST', body: data }),
+                new Promise(res => setTimeout(res, 2000)),
+            ]).then(() => {
+                setDeleting(false)
+                setDeleted(true)
+                setTimeout(() => onDeleted ? onDeleted() : window.location.reload(), 1500)
+            })
+            return
+        }
+        if (!alarm?.id) return
         data.set('id', alarm.id)
         setDeleting(true)
         Promise.all([
@@ -42,15 +58,23 @@ export function DeleteAlarm({ alarm, vhost, open, onClose, onDeleted }: DeleteAl
                             </svg>
                         </div>
                         <p className="text-sm font-medium text-text-primary text-center">
-                            <span className="font-semibold">{alarm?.name}</span> deleted from <span className="font-semibold">{vhost}</span>
+                            {recipient ? (
+                                <>
+                                    <span className="font-semibold">{recipient.name}</span> deleted from <span className="font-semibold">{vhost}</span>
+                                </>
+                            ) : (
+                                <>
+                                    <span className="font-semibold">{alarm?.name}</span> deleted from <span className="font-semibold">{vhost}</span>
+                                </>
+                            )}
                         </p>
                     </div>
                 ) : (
                     <>
                         <DialogHeader>
-                            <DialogTitle>Delete alarm</DialogTitle>
+                            <DialogTitle>Delete {alarm ? 'alarm' : 'recipient'}</DialogTitle>
                             <DialogDescription>
-                                Are you sure you want to delete <span className="font-medium text-text-primary">{alarm?.name}</span>? This cannot be undone.
+                                Are you sure you want to delete <span className="font-medium text-text-primary">{alarm ? alarm.name : recipient?.name}</span>? This cannot be undone.
                             </DialogDescription>
                         </DialogHeader>
                         <DialogFooter>

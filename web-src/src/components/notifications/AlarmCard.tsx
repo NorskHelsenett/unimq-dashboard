@@ -3,7 +3,7 @@ import { Input } from "../ui/input"
 import { Selector, SelectorTrigger, SelectorContent, SelectorItem, SelectorValue, SelectLabel } from "../ui/selector"
 import { Button } from "../ui/button"
 import { Switch } from "../ui/switch"
-import { DeleteAlarm } from "./DeleteAlarm"
+import { DeleteItem } from "./DeleteItem"
 
 export interface AlarmProps {
     id?: string
@@ -62,7 +62,7 @@ function ExistingAlarms({existingAlarms, vhost}: {existingAlarms: AlarmProps[], 
 
     return (
         <div className="mt-4">
-            <DeleteAlarm alarm={deletingAlarm} vhost={vhost} open={deletingId !== null} onClose={() => setDeletingId(null)} />
+            <DeleteItem alarm={deletingAlarm} vhost={vhost} open={deletingId !== null} onClose={() => setDeletingId(null)} />
             {visibleAlarms.length > 0 ? (
                 <div className="flex flex-col divide-y divide-gray-100 border border-gray-200 rounded-lg overflow-hidden">
                     {visibleAlarms.map(alarm => {

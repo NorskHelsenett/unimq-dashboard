@@ -25,13 +25,19 @@
                 { id: "5", name: "Woppsi", type: "channels", threshold: 50, message: "", enabled: false, status: "ok", last_value: 20, last_fired: "2026-04-08T23:50:00Z" },
                 { id: "6", name: "Lollyyy", type: "connections", threshold: 200, message: "", enabled: true, status: "ok", last_value: 100, last_fired: "2026-04-01T09:00:00Z" },
             ],
-        };
+        }
+        const recipientsByVhost = {
+            "/": [
+                { id: "20", name: "Ops team", type: "email", url: "http://heiehi@nice.com" },
+            ]
+        }
+
 
         window.__DATA__ = {
             Vhosts: vhosts,
             Selected: selected,
             Rules: rulesByVhost[selected] || [],
-            Recipients: [],
+            Recipients: recipientsByVhost[selected] || [],
         };
     </script>
     <div id="app"></div>

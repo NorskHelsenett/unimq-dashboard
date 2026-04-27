@@ -21,13 +21,20 @@
                 { id: "5", name: "Woppsi", type: "channels", threshold: 50, message: "", enabled: false, status: "ok", last_value: 20, last_fired: "2026-04-08T23:50:00Z" },
                 { id: "6", name: "Lollyyy", type: "connections", threshold: 200, message: "", enabled: true, status: "ok", last_value: 100, last_fired: "2026-04-01T09:00:00Z" },
             ],
-        };
+        }
+          const recipientsByVhost = {
+            "/": [
+                { id: "1", name: "Ops team", type: "email", url: "http://heiehi@nice.com" },
+            ]
+        }
+        
         const params = new URLSearchParams(window.location.search);
         const id = params.get("id");
         const vhost = params.get("vhost") || "/";
         const rules = rulesByVhost[vhost] || rulesByVhost["/"];
         const rule = rules.find(r => r.id === id) || rules[0];
-        window.__DATA__ = { Vhost: vhost, Msg: "", Rule: rule };
+        const recipients = recipientsByVhost[vhost] || recipientsByVhost["/"];
+        window.__DATA__ = { Vhost: vhost, Msg: "", Rule: rule, Recipients: recipients };
     </script>
     <div id="app"></div>
     <script type="module" src="/src/pages/NotifyRule.tsx"></script>

@@ -4,15 +4,13 @@ import '../index.css'
 import { getPageData } from '@/lib/pageData'
 import { Layout } from '@/components/layout/Layout'
 import { AlarmCard, AlarmProps } from '@/components/notifications/AlarmCard'
+import { RecipientCard, RecipientsProps } from '@/components/notifications/RecipientCard'
 
-interface RecipientData {
-  [key: string]: unknown
-}
 
 interface NotificationData {
   Vhosts: string[]
   Selected: string
-  Recipients: RecipientData[]
+  Recipients: RecipientsProps[]
   Rules: AlarmProps[]
 }
 
@@ -28,6 +26,7 @@ const NotificationsPage = () => {
       <h1 className='text-4xl mb-6'>Notifications</h1>
       <div className='max-w-4xl mx-auto flex flex-col gap-4'>
         <AlarmCard existingAlarms={data.Rules || []} vhost={data.Selected} />
+        <RecipientCard existingRecipients={data.Recipients || null} vhost={data.Selected} />
       </div>    
     </div>
   )
