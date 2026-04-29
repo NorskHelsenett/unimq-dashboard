@@ -62,7 +62,6 @@ export const ClusterResourceCard = () => {
         const id = setInterval(load, 15_000)
         return () => clearInterval(id)
     }, [])
-    console.log("CLUSTER RESOURCE CARD:", data)
     if (!data) return <p>ClusterStats does not exist</p>
 
     const totalMemUsed = data.total_mem_used || 0
