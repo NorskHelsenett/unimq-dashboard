@@ -1,5 +1,6 @@
 import { cn } from '@/lib/utils'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
+import { Tile } from '../layout/Tile'
 
 interface LimitsCardProps {
   connections: number
@@ -44,7 +45,7 @@ function MetricTile({ label, tooltip, value, max, sub }: MetricTileProps) {
   const textClass = textMap[colorKey]
 
   return (
-    <div className={cn('rounded-lg p-4 flex justify-between items-center border', bgClass)}>
+    <Tile className={cn('rounded-lg p-4 flex justify-between items-center border', bgClass)}>
       <div className="flex flex-col gap-0.5">
         <span className="flex items-center gap-1.5 text-text-muted uppercase tracking-wide">
           {label}
@@ -54,7 +55,7 @@ function MetricTile({ label, tooltip, value, max, sub }: MetricTileProps) {
                 type="button"
                 aria-label={`Show information about ${label}`}
                 className="inline-flex items-center justify-center w-4 h-4 rounded-full
-                               bg-gray-100 text-gray-400 text-xs cursor-default select-none normal-case tracking-normal"
+                              bg-gray-100 text-gray-400 text-xs cursor-default select-none normal-case tracking-normal"
               >
                 ?
               </button>
@@ -69,7 +70,7 @@ function MetricTile({ label, tooltip, value, max, sub }: MetricTileProps) {
       <span className={cn('text-2xl font-mono font-semibold tabular-nums', textClass)}>
         {value}
       </span>
-    </div>
+    </Tile>
   )
 }
 

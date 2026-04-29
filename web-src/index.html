@@ -25,6 +25,14 @@
                 MaxConnections: 300,
                 MaxQueues: 150,
             },
+            ClusterStats: {
+                nodes: [{name: "node1", mem_used: 1000, mem_limit: 10000, disk_free: 100000, disk_free_limit: 1000000}, { name: "node2", mem_used: 2000, mem_limit: 20000, disk_free: 200000, disk_free_limit: 2000000 }], 
+                total_mem_used: 3000,
+                total_mem_limit: 30000,
+                total_disk_free: 300000,
+                min_disk_limit: 3000000,
+                vhost_resources: [{name: "1", message_bytes: 10, disk_bytes: 100}, { name: "2", message_bytes: 20, disk_bytes: 200 }],
+            },
         };
     </script>
     <div id="app"></div>

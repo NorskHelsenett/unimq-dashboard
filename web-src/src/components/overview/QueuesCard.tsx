@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Sparkline } from '@/components/Sparkline'
+import { Sparkline } from '@/components/charts/Sparkline'
 import { Skeleton } from '@/components/ui/skeleton'
 import { fmtBytes, fmtRate } from '@/lib/format'
 import { cn } from '@/lib/utils'
