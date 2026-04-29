@@ -111,6 +111,21 @@
     --sidebar-accent-foreground: oklch(0.205 0 0);
     --sidebar-border: oklch(0.922 0 0);
     --sidebar-ring: oklch(0.708 0 0);
+    
+    --status-ok: #15803d;
+    --status-ok-bg: #f0fff4;
+    --status-ok-bg-subtle: #fbfffb;
+    --status-ok-border: #bbf7d0;
+    --status-warning: #d97706;
+    --status-warning-bg: #fff8f0;
+    --status-warning-bg-subtle: #fffbfb;
+    --status-warning-border: #f7ddba;
+    --status-danger: #b91c1c;
+    --status-danger-bg: #fef2f2;
+    --status-danger-border: #fecaca;
+    --status-unknown: #6b7280;
+    --status-unknown-bg: #f3f4f6;
+    --status-unknown-border: #e5e7eb;
 }
 
 .dark {

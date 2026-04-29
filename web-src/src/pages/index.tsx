@@ -6,6 +6,7 @@ import { Layout } from '@/components/layout/Layout'
 import { LimitsCard } from '@/components/overview/LimitsCard'
 import { QueueSizeInfoCard } from '@/components/overview/QueueSizeInfoCard'
 import { QueuesCard } from '@/components/overview/QueuesCard'
+import { ClusterResourceCard } from '@/components/overview/ClusterResourceCard'
 
 interface Metrics {
   connections: number
@@ -53,6 +54,7 @@ const MainPage = () => {
         )}
         <QueueSizeInfoCard />
         <QueuesCard vhost={selected} />
+        <ClusterResourceCard />
       </div>
     </div>
   )
