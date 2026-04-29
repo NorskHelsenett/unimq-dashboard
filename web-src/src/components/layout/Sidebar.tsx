@@ -23,7 +23,7 @@ export function Sidebar({ Vhosts, Selected }: Vhosts) {
                 {NAV_ITEMS.map((item) => {
                     const active = isActive(item.href, currentPath)
                     return (
-                        <a className={cn(
+                        <a href={item.href} className={cn(
                             "py-2 px-4", 
                             active 
                                 ? "bg-surface-sidebar-active text-text-sidebar-active border-l-3 border-brand font-bold" 

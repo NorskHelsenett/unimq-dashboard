@@ -4,6 +4,24 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Notifications — UniMQ</title>
+    <link rel="stylesheet" href="/static/dist/jsx-runtime.css">
+</head>
+<body>
+    <script>
+        window.__DATA__ = {{json .}}
+    </script>
+    <div id="app"></div>
+    <script type="module" src="/static/dist/notifications.js"></script>
+</body>
+</html>
+
+
+<!-- DOCTYPE html>
+<html lang="no">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Notifications — UniMQ</title>
     <link rel="stylesheet" href="/static/style.css">
 </head>
 <body>
@@ -40,7 +58,7 @@
             <p class="maint-empty">Ingen vhoster tilgjengelig.</p>
             {{else}}
 
-            <!-- ALARMS SECTION -->
+            <!-- ALARMS SECTION --!>
             <section class="notif-section">
                 <div class="notif-section-head">
                     <div>
@@ -65,7 +83,7 @@
                     </div>
                 </div>
 
-                <!-- Inline add-alarm form (hidden by default) -->
+                <!-- Inline add-alarm form (hidden by default) --!>
                 <div id="alarm-form-card" class="inline-form-card" style="display:none">
                     <h3 id="alarm-form-title"></h3>
                     <form action="/notifications/rules/add" method="post" class="inline-form">
@@ -140,7 +158,7 @@
                 {{end}}
             </section>
 
-            <!-- RECIPIENTS SECTION -->
+            <!-- RECIPIENTS SECTION --!>
             <section class="notif-section">
                 <div class="notif-section-head">
                     <div>
@@ -160,7 +178,7 @@
                     </div>
                 </div>
 
-                <!-- Inline add-recipient form -->
+                <!-- Inline add-recipient form --!>
                 <div id="recipient-form-card" class="inline-form-card" style="display:none">
                     <h3 id="recipient-form-title">Legg til webhook</h3>
                     <form action="/notifications/recipients/add" method="post" class="inline-form">
@@ -290,4 +308,4 @@
         }
     </script>
 </body>
-</html>
+</html> -->

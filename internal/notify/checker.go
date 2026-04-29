@@ -9,17 +9,17 @@ import (
 	"github.com/sisneve/rabbitmq-dashboard/internal/scraper"
 )
 
-func StartChecker(store *Store, maintStore *maintenance.Store, interval time.Duration) {
+func StartChecker(store *Store, logStore *LogStore, maintStore *maintenance.Store, interval time.Duration) {
 	go func() {
 		time.Sleep(15 * time.Second)
 		for {
-			runChecks(store, maintStore)
+			runChecks(store, logStore, maintStore)
 			time.Sleep(interval)
 		}
 	}()
 }
 
-func runChecks(store *Store, maintStore *maintenance.Store) {
+func runChecks(store *Store, logStore *LogStore, maintStore *maintenance.Store) {
 	snapshots := store.AllSnapshots()
 	for vhost, snap := range snapshots {
 		if len(snap.Rules) == 0 {
@@ -54,6 +54,18 @@ func runChecks(store *Store, maintStore *maintenance.Store) {
 			shouldNotify := triggered && rule.Status != "firing" && len(urls) > 0
 			if err := store.SetRuleStatus(vhost, rule.ID, newStatus, shouldNotify, value); err != nil {
 				log.Printf("notify: set status failed: %v", err)
+			}
+			// Log state transitions
+			if rule.Status != "firing" && newStatus == "firing" {
+				entry := LogEntry{Timestamp: time.Now(), Event: LogEventFired, Value: value, Threshold: rule.Threshold}
+				if err := logStore.Append(rule.ID, entry); err != nil {
+					log.Printf("notify: log append failed: %v", err)
+				}
+			} else if rule.Status == "firing" && newStatus == "ok" {
+				entry := LogEntry{Timestamp: time.Now(), Event: LogEventResolved, Value: value, Threshold: rule.Threshold}
+				if err := logStore.Append(rule.ID, entry); err != nil {
+					log.Printf("notify: log append failed: %v", err)
+				}
 			}
 			if shouldNotify {
 				subject := fmt.Sprintf("[UniMQ] Alarm: %s — %s", rule.Name, vhost)
