@@ -1,13 +1,11 @@
 "use client"
 
-import { RatioChart } from "../charts/RatioChart"
-import { GaugeChart } from "../charts/GaugeChart"
 import { Tile } from "../layout/Tile"
 import { useEffect, useState } from "react"
 import { ClusterStats } from "@/types/clusterStats"
 import { convertBytes } from "@/lib/bytes"
 
-export const ClusterResourceCard = () => {
+export const VhostResourceCard = ({ vhost }: { vhost: string }) => {
     const [data, setData] = useState<ClusterStats | null>(null)
 
     useEffect(() => {
@@ -26,10 +24,8 @@ export const ClusterResourceCard = () => {
     }, [])
     if (!data) return <p>ClusterStats does not exist</p>
 
-    const totalMemUsed = data.total_mem_used || 0
-    const totalMemLimit = data.total_mem_limit || 0
-    const totalDiskFree = data.total_disk_free || 0
-    const minDiskLimit = data.min_disk_limit || 0
+    const vhostResources = data.vhost_resources
+    const vhostResource = vhostResources.find(v => v.name === vhost)
 
     const DiskDescription = ({ free, limit }: { free: number, limit: number }) => (
         <div>
@@ -40,12 +36,20 @@ export const ClusterResourceCard = () => {
 
     return (
         <div>
-            <h2 className="text-lg font-semibold text-text-primary mb-3">Cluster Resources</h2>
+            <h2 className="text-lg font-semibold text-text-primary mb-3">Vhost Resources</h2>
             <Tile>
-                <p className="mb-2">General data from cluster</p>
-                <div className="flex gap-4">
-                    <GaugeChart title="Memory" usage={totalMemUsed} max={totalMemLimit} labelText={`${convertBytes(totalMemUsed)}/${convertBytes(totalMemLimit)}`} fontSize={16} />
-                    <RatioChart title={"Disk"} description={<DiskDescription free={totalDiskFree} limit={minDiskLimit}/>} free={totalDiskFree} limit={minDiskLimit} />
+                <p className="mb-2">Data from vhost</p>
+                <div className="border rounded-md">
+                    <table>
+                        <tr className="border-b">
+                            <td className="py-2 pl-2 pr-8">Minne (meldinger)</td>
+                            <td className="py-2 pl-8 pr-2">{convertBytes(vhostResource?.message_bytes || 0)}</td>
+                        </tr>
+                        <tr>
+                            <td className="py-2 pl-2 pr-8">Disk (persistent)</td>
+                            <td className="py-2 pl-8 pr-2">{convertBytes(vhostResource?.disk_bytes || 0)}</td>
+                        </tr>
+                    </table>
                 </div>
             </Tile>
         </div>

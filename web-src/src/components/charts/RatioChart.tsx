@@ -1,9 +1,7 @@
 
-import { Bar, BarChart, CartesianGrid, Label, Legend, Pie, PieChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts"
+import { Bar, BarChart, XAxis, YAxis } from "recharts"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { ChartContainer, type ChartConfig } from "@/components/ui/chart"
-import { fmtBytes } from "@/lib/format"
-import { convertBytes } from "../overview/ClusterResourceCard"
+import { ChartContainer } from "@/components/ui/chart"
 import { ReactNode } from "react"
 
 export const description = "A radial chart with stacked sections"
