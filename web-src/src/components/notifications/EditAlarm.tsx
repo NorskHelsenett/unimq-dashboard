@@ -5,7 +5,7 @@ import { Button } from "../ui/button"
 import { Input } from "../ui/input"
 import { useState } from "react"
 import { DropdownMenu } from "radix-ui"
-import { DeleteAlarm } from "./DeleteAlarm"
+import { DeleteItem } from "./DeleteItem"
 import { AlarmLogSheet } from "./AlarmLogSheet"
 import { Response } from "../ui/response"
 
@@ -134,7 +134,7 @@ export const EditAlarm = ({ alarm, vhost }: { alarm: AlarmProps, vhost: string }
 
     return (
         <div className="mt-2">
-        <DeleteAlarm alarm={alarm} vhost={vhost} open={deletingId !== null} onClose={() => setDeletingId(null)} onDeleted={redirectAfterDelete} />
+        <DeleteItem alarm={alarm} vhost={vhost} open={deletingId !== null} onClose={() => setDeletingId(null)} onDeleted={redirectAfterDelete} />
         {hasAlarmId && (
             <AlarmLogSheet alarmId={alarmId} alarmName={alarm.name ?? ""} open={showLogs} onClose={() => setShowLogs(false)} />
         )}
