@@ -7,6 +7,8 @@ import { LimitsCard } from '@/components/overview/LimitsCard'
 import { QueueSizeInfoCard } from '@/components/overview/QueueSizeInfoCard'
 import { QueuesCard } from '@/components/overview/QueuesCard'
 import { ClusterResourceCard } from '@/components/overview/ClusterResourceCard'
+import { VhostResourceCard } from '@/components/overview/VhostResourceCard'
+import { SizeDistributionCard } from '@/components/overview/SizeDistributionCard'
 
 interface Metrics {
   connections: number
@@ -54,7 +56,11 @@ const MainPage = () => {
         )}
         <QueueSizeInfoCard />
         <QueuesCard vhost={selected} />
-        <ClusterResourceCard />
+        <SizeDistributionCard vhost={selected} />
+        <div className='flex gap-4'>
+          <ClusterResourceCard />
+          <VhostResourceCard vhost={selected} />
+        </div>
       </div>
     </div>
   )

@@ -4,46 +4,8 @@ import { RatioChart } from "../charts/RatioChart"
 import { GaugeChart } from "../charts/GaugeChart"
 import { Tile } from "../layout/Tile"
 import { useEffect, useState } from "react"
-
-
-
-interface NodeStats {
-    name: string
-    mem_used: number       
-    mem_limit: number      
-    disk_free: number      
-    disk_free_limit: number 
-}
-
-interface VhostResources {
-    name: string
-    message_bytes: number  
-    disk_bytes: number  
-}
-
-interface ClusterStats {
-    nodes: NodeStats[]      
-    total_mem_used: number            
-    total_mem_limit: number            
-    total_disk_free: number            
-    min_disk_limit: number            
-    vhost_resources: VhostResources[] 
-}
-
-const BYTE_SIZE_UNITS = ['Bytes', 'KB', 'MB', 'GB', 'TB', 'PB']
-
-export function convertBytes(bytes: number) {
-    let count = 0
-    let unit = BYTE_SIZE_UNITS[0]
-    let num = bytes
-    while (num.toString().split(".")[0].length > 3) {
-        num = num/1000
-        count++
-        unit = BYTE_SIZE_UNITS[count]
-        console.log("TEst", count, unit, num)
-    }
-    return `${num.toFixed(2)} ${unit}`
-}
+import { ClusterStats } from "@/types/clusterStats"
+import { convertBytes } from "@/lib/bytes"
 
 export const ClusterResourceCard = () => {
     const [data, setData] = useState<ClusterStats | null>(null)
@@ -79,9 +41,12 @@ export const ClusterResourceCard = () => {
     return (
         <div>
             <h2 className="text-lg font-semibold text-text-primary mb-3">Cluster Resources</h2>
-            <Tile className="flex gap-4">
-                <GaugeChart title="Memory" usage={totalMemUsed} max={totalMemLimit} labelText={`${convertBytes(totalMemUsed)}/${convertBytes(totalMemLimit)}`} fontSize={16} />
-                <RatioChart title={"Disk"} description={<DiskDescription free={totalDiskFree} limit={minDiskLimit}/>} free={totalDiskFree} limit={minDiskLimit} />
+            <Tile>
+                <p className="mb-2">General data from cluster</p>
+                <div className="flex gap-4">
+                    <GaugeChart title="Memory" usage={totalMemUsed} max={totalMemLimit} labelText={`${convertBytes(totalMemUsed)}/${convertBytes(totalMemLimit)}`} fontSize={16} />
+                    <RatioChart title={"Disk"} description={<DiskDescription free={totalDiskFree} limit={minDiskLimit}/>} free={totalDiskFree} limit={minDiskLimit} />
+                </div>
             </Tile>
         </div>
 
