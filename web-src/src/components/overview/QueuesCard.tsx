@@ -108,8 +108,8 @@ export function QueuesCard({ vhost }: QueuesCardProps) {
         const load = () =>
             fetch(`/api/queues?vhost=${encodeURIComponent(vhost)}`)
                 .then((r) => {
-                if (!r.ok) throw new Error()
-                return r.json() as Promise<QueueDetail[]>
+                    if (!r.ok) throw new Error()
+                    return r.json() as Promise<QueueDetail[]>
                 })
                 .then(setData)
                 .catch(() => setError(true))
