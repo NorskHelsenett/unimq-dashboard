@@ -4,6 +4,16 @@ Et overvåkingsdashboard og varslingsside for UniMQ. Viser metrikker per vhost, 
 
 ---
 
+## Kjøre dashboardet med ny Dex authentication
+For å få tilgang til dashboardet er det nå nødvendig og også spinne opp en container som kjører dex.
+
+Slik det er satt opp nå kjører man denne containeren, Go applikasjonen og Vite dev server samtidig ved å kjøre:
+```bash
+cd web-src
+npm run dev:all
+```
+---
+
 ## Funksjonalitet
 
 - **Oversikt** — Connections, channels, køer og unacked meldinger per vhost, med grenser og fargeindikator

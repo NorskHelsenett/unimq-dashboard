@@ -1,0 +1,42 @@
+# The base path of dex and the external name of the OpenID Connect service.
+# This is the canonical URL that all clients MUST use to refer to dex. If a
+# path is provided, dex's HTTP service will listen at a non-root URL.
+issuer: http://localhost:5556/dex
+
+storage:
+  type: memory
+
+
+web:
+  http: 0.0.0.0:5556
+  allowedOrigins:
+  - http://localhost:8080
+  - http://localhost:5173
+
+oauth2:
+  skipApprovalScreen: true
+
+enablePasswordDB: true
+
+expiry:
+  idTokens: 1h
+  refreshTokens:
+    validIfNotUsedFor: 1h
+    absoluteLifetime: 8h
+
+staticClients:
+  - id: unimq-dashboard
+    name: Unimq Dashboard
+    secret: O8jad9kl1PD1er
+    redirectURIs:
+      - http://localhost:8080/callback
+      - http://localhost:5173/callback
+
+
+staticPasswords:
+  - email: local@user.com
+    username: local
+    userID: "123"
+    # password
+    hash: "$2a$10$2b2cU8CPhOTaGrs1HRQuAueS7JTT5ZHsHSzYiFPm1leZck7Mc8T4W"
+

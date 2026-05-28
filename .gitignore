@@ -1,4 +1,5 @@
 data/
 main
 .DS_Store
+.env
 web/static/dist/

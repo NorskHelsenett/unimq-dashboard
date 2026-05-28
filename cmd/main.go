@@ -360,7 +360,6 @@ func notificationsLogsHandler(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(entries)
 }
 
-// -- json marshaller -----------------------------------------------------------
 // jsonMarshal marshals v to JSON for safe embedding in JavaScript contexts.
 // It must not be used to inject JSON directly into HTML markup; use only
 // where the template engine expects JavaScript (e.g., inside <script> tags).
@@ -403,6 +402,12 @@ func main() {
 		log.Fatalf("failed to register MIME type: %v", err)
 	}
 
+	http.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("web/static"))))
+	// Serve the callback page so oidc-client-ts can complete the OIDC flow client-side.
+	http.HandleFunc("/callback", func(w http.ResponseWriter, r *http.Request) {
+		http.ServeFile(w, r, "web/templates/callback.html")
+	})
+
 	http.HandleFunc("/", indexHandler)
 	http.HandleFunc("/queue", queueHandler)
 	http.HandleFunc("/maintenance", maintenanceHandler)
@@ -423,7 +428,6 @@ func main() {
 	http.HandleFunc("/notifications/rule", notificationsRuleHandler)
 	http.HandleFunc("/api/queues", queuesAPIHandler)
 	http.HandleFunc("/api/cluster", clusterAPIHandler)
-	http.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("web/static"))))
 
 	// CONFIG: Bytt port hvis 8080 er opptatt eller du ønsker en annen port.
 	//         Husk å oppdatere URL-en i eventuelle reverse proxy-oppsett (nginx, etc.).
