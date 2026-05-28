@@ -1,6 +1,7 @@
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import '../index.css'
+import { RequireAuth } from '@/auth/RequireAuth'
 import { getPageData } from '@/lib/pageData'
 import { Layout } from '@/components/layout/Layout'
 import { AlarmCard, AlarmProps } from '@/components/notifications/AlarmCard'
@@ -34,8 +35,10 @@ const NotificationsPage = () => {
 
 createRoot(document.getElementById('app')!).render(
   <StrictMode>
-    <Layout Vhosts={data.Vhosts} Selected={data.Selected}>
-        <NotificationsPage />
-    </Layout>
+    <RequireAuth>
+      <Layout Vhosts={data.Vhosts} Selected={data.Selected}>
+          <NotificationsPage />
+      </Layout>
+    </RequireAuth>
   </StrictMode>,
 )

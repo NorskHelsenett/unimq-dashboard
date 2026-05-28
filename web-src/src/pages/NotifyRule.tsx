@@ -1,6 +1,7 @@
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import '../index.css'
+import { RequireAuth } from '@/auth/RequireAuth'
 import { getPageData } from '@/lib/pageData'
 import { Layout } from '@/components/layout/Layout'
 import { EditAlarm } from '@/components/notifications/EditAlarm'
@@ -19,11 +20,13 @@ if (!root) throw new Error('Missing #app mount point')
 
 createRoot(root).render(
   <StrictMode>
-    <Layout Vhosts={[data.Vhost]} Selected={data.Vhost}>
-      <div className="max-w-4xl mx-auto">
-        <a href={`/notifications?vhost=${encodeURIComponent(data.Vhost)}`} className="text-sm text-text-muted hover:text-text-primary mb-4 inline-block">← Back to alarms</a>
-        <EditAlarm alarm={data.Rule} vhost={data.Vhost} />
-      </div>
-    </Layout>
+    <RequireAuth>
+      <Layout Vhosts={[data.Vhost]} Selected={data.Vhost}>
+        <div className="max-w-4xl mx-auto">
+          <a href={`/notifications?vhost=${encodeURIComponent(data.Vhost)}`} className="text-sm text-text-muted hover:text-text-primary mb-4 inline-block">← Back to alarms</a>
+          <EditAlarm alarm={data.Rule} vhost={data.Vhost} />
+        </div>
+      </Layout>
+    </RequireAuth>
   </StrictMode>,
 )

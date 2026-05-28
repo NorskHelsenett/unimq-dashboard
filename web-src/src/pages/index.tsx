@@ -1,6 +1,7 @@
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import '../index.css'
+import { RequireAuth } from '@/auth/RequireAuth'
 import { getPageData } from '@/lib/pageData'
 import { Layout } from '@/components/layout/Layout'
 import { LimitsCard } from '@/components/overview/LimitsCard'
@@ -68,8 +69,10 @@ const MainPage = () => {
 
 createRoot(document.getElementById('app')!).render(
   <StrictMode>
-    <Layout Vhosts={data.Vhosts} Selected={data.Selected}>
-      <MainPage />
-    </Layout>
+    <RequireAuth>
+      <Layout Vhosts={data.Vhosts} Selected={data.Selected}>
+        <MainPage />
+      </Layout>
+    </RequireAuth>
   </StrictMode>,
 )

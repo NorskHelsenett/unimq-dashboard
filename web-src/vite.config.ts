@@ -20,6 +20,7 @@ export default defineConfig({
         notifRule: resolve(__dirname, "src/pages/NotifyRule.tsx"),
         maintenance: resolve(__dirname, "src/pages/Maintenance.tsx"),
         maintAdmin: resolve(__dirname, "src/pages/MaintenanceAdmin.tsx"),
+        callback: resolve(__dirname, "callback.html"),
       },
       output: {
         entryFileNames: "[name].js",

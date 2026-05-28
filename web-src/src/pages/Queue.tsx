@@ -1,5 +1,7 @@
 import { createRoot } from 'react-dom/client'
+import { StrictMode } from 'react'
 // import '../index.css'
+import { RequireAuth } from '@/auth/RequireAuth'
 import '.'
 
 function App() {
@@ -8,4 +10,10 @@ function App() {
 
 const root = document.getElementById('app')
 if (!root) throw new Error('Missing #app mount point')
-createRoot(root).render(<App />)
+createRoot(root).render(
+  <StrictMode>
+    <RequireAuth>
+      <App />
+    </RequireAuth>
+  </StrictMode>
+)
