@@ -38,6 +38,7 @@ var (
 	maintAdminTmpl = mustTemplate("maintenance_admin.html")
 	notifTmpl      = mustTemplate("notifications.html")
 	notifRuleTmpl  = mustTemplate("notification_rule.html")
+	profileTmpl    = mustTemplate("profile.html")
 
 	maintStore  *maintenance.Store
 	notifyStore *notify.Store
@@ -349,6 +350,20 @@ func notificationsTestHandler(w http.ResponseWriter, r *http.Request) {
 	http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
 }
 
+// ── profile ───────────────────────────────────────────────────────────────────
+
+func profileHandler(w http.ResponseWriter, r *http.Request) {
+	vhosts, _ := scraper.GetVhosts()
+	selected := r.URL.Query().Get("vhost")
+	if selected == "" && len(vhosts) > 0 {
+		selected = vhosts[0]
+	}
+	data := pageData{Vhosts: vhosts, Selected: selected, Limits: scraper.DefaultLimits}
+	if err := profileTmpl.Execute(w, data); err != nil {
+		log.Printf("template error: %v", err)
+	}
+}
+
 func notificationsLogsHandler(w http.ResponseWriter, r *http.Request) {
 	id := r.URL.Query().Get("id")
 	if id == "" {
@@ -426,6 +441,7 @@ func main() {
 	http.HandleFunc("/notifications/rules/test", notificationsTestHandler)
 	http.HandleFunc("/notifications/rules/logs", notificationsLogsHandler)
 	http.HandleFunc("/notifications/rule", notificationsRuleHandler)
+	http.HandleFunc("/profile", profileHandler)
 	http.HandleFunc("/api/queues", queuesAPIHandler)
 	http.HandleFunc("/api/cluster", clusterAPIHandler)
 
