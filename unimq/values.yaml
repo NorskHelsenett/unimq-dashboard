@@ -1,0 +1,16 @@
+unimq:
+  vite:
+    auth_issuer: ""
+    client_id: ""
+
+image:
+  repository: ghcr.io/norskhelsenett/unimq
+  pullPolicy: IfNotPresent
+  tag: "0.0.1"
+
+enabled: true
+name: unimq-dashboard
+namespace: unimq-dashboard
+replicaCount: 1
+
+# Remember to update the secret value with a base64 encoded string.

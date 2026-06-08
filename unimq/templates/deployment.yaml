@@ -1,0 +1,58 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: "{{ $.Values.name }}-deployment"
+  labels:
+    app: "{{ $.Values.name }}"
+  namespace: "{{ $.Values.namespace }}"
+spec:
+  replicas: "{{ $.Values.replicaCount }}"
+  selecto:
+    matchLabels:
+      app: "{{ $.Values.name }}"
+  template:
+    metadata:
+      labels:
+        app: "{{ $.Values.name }}"
+    spec:
+      revisionHistoryLimit: 2
+      containers:
+        - name: "{{ $.Values.name }}-deployment"
+          image: "{{ $.Values.image.repository }}:{{ $.Values.tag | default
+            $.Chart.appVersion }}"
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            seccompProfile:
+              type: RuntimeDefault
+            capabilities:
+              drop:
+                - ALL
+          resources:
+            requests:
+              memory: "10Mi"
+            limits:
+              memory: "40Mi"
+          env:
+            - name: VITE_CLIENT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: nhn-unimq-dashboard-secret
+                  key: vite.client_secret
+            - name: VITE_AUTH_ISSUER
+              valueFrom:
+                configMapKeyRef:
+                  name: nhn-unimq-dashboard-configmap
+                  key: vite.auth_issuer
+            - name: VITE_CLIENT_ID
+              valueFrom:
+                configMapKeyRef:
+                  name: nhn-unimq-dashboard-configmap
+                  key: vite.client_id
+      securityContext:
+        runAsNonRoot: true
+        fsGroup: 3000
+        runAsUser: 2000
+        runAsGroup: 3000
+        supplementalGroups: [501]

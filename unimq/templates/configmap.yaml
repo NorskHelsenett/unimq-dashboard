@@ -1,0 +1,10 @@
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: "{{ $.Values.name }}-configmap"
+  namespace: "{{ $.Values.namespace }}"
+data:
+  vite:
+    auth_issuer: "{{ $.Values.unimq.vite.auth_issuer }}"
+    client_id: "{{ $.Values.unimq.vite.client_id }}"
