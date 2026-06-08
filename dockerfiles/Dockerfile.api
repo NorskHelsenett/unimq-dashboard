@@ -1,0 +1,21 @@
+FROM "golang:latest" AS build
+
+LABEL org.opencontainers.image.source="https://github.com/norskhelsenett/unimq-dashboard"
+
+WORKDIR /app
+COPY . .
+
+RUN go get $(go list ./... | grep -v /vendor/)
+RUN go fmt $(go list ./... | grep -v /vendor/)
+RUN go vet $(go list ./... | grep -v /vendor/)
+RUN go test -race $(go list ./... | grep -v /vendor/)
+RUN CGO_ENABLED=0 go build -o nhn-unimq -ldflags '-w -extldflags "-static"' cmd/main.go
+
+FROM gcr.io/distroless/static AS nhn-unimq-api
+
+WORKDIR /
+COPY --chown=1001:2000 --from=build /app/nhn-unimq /bin/nhn-unimq
+
+EXPOSE 8080
+
+ENTRYPOINT ["/bin/nhn-unimq"]
