@@ -5,36 +5,107 @@ import (
 	"log"
 	"time"
 
+	"github.com/sisneve/rabbitmq-dashboard/internal/config"
 	"github.com/sisneve/rabbitmq-dashboard/internal/maintenance"
+	"github.com/sisneve/rabbitmq-dashboard/internal/models"
+	"github.com/sisneve/rabbitmq-dashboard/internal/notify/store"
 	"github.com/sisneve/rabbitmq-dashboard/internal/scraper"
 )
 
-func StartChecker(store *Store, logStore *LogStore, maintStore *maintenance.Store, interval time.Duration) {
+type (
+	Checker struct {
+		Config     *config.Config
+		store      *store.Store
+		logStore   *store.LogStore
+		maintStore *maintenance.Store
+		interval   time.Duration
+	}
+
+	CheckerOptions func(*Checker)
+)
+
+func WithConfig(cfg *config.Config) CheckerOptions {
+	return func(c *Checker) {
+		c.Config = cfg
+	}
+}
+
+func WithStore(s *store.Store) CheckerOptions {
+	return func(c *Checker) {
+		c.store = s
+	}
+}
+
+func WithLogStore(ls *store.LogStore) CheckerOptions {
+	return func(c *Checker) {
+		c.logStore = ls
+	}
+}
+
+func WithMaintStore(ms *maintenance.Store) CheckerOptions {
+	return func(c *Checker) {
+		c.maintStore = ms
+	}
+}
+
+func WithInterval(d time.Duration) CheckerOptions {
+	return func(c *Checker) {
+		c.interval = d
+	}
+}
+
+func NewChecker(opts ...CheckerOptions) *Checker {
+	c := &Checker{
+		Config:     config.NewConfig(),
+		store:      nil,
+		logStore:   nil,
+		maintStore: nil,
+		interval:   60 * time.Second,
+	}
+	for _, opt := range opts {
+		opt(c)
+	}
+	return c
+}
+
+func (c *Checker) StartChecker() {
 	go func() {
 		time.Sleep(15 * time.Second)
 		for {
-			runChecks(store, logStore, maintStore)
-			time.Sleep(interval)
+			c.runChecks()
+			time.Sleep(c.interval)
 		}
 	}()
 }
 
-func runChecks(store *Store, logStore *LogStore, maintStore *maintenance.Store) {
-	snapshots := store.AllSnapshots()
+func (c *Checker) runChecks() {
+	snapshots := c.store.AllSnapshots()
 	for vhost, snap := range snapshots {
 		if len(snap.Rules) == 0 {
 			continue
 		}
 		urls := snap.WebhookURLs()
-		var metrics *scraper.VhostMetrics
-		var queues []scraper.QueueDetail
+		var metrics *models.VhostMetrics
+		var queues []models.QueueDetail
 		fetched := false
 		fetchOnce := func() {
 			if fetched {
 				return
 			}
-			metrics, _ = scraper.GetMetrics(vhost)
-			queues, _ = scraper.GetQueueDetails(vhost)
+			restclient := scraper.NewRestClient(
+				fmt.Sprintf("%v:%d/api",
+					c.Config.RabbitMQURL,
+					c.Config.RabbitMQPort,
+				),
+				c.Config.RabbitMQUsername,
+				c.Config.RabbitMQPassword,
+				c.Config.PrometheusURL,
+				"v1",
+				c.Config.PrometheusPort,
+			)
+
+			metrics, _ = restclient.GetMetrics(vhost)
+			queues, _ = restclient.GetQueueDetails(vhost)
 			fetched = true
 		}
 		for _, rule := range snap.Rules {
@@ -42,7 +113,7 @@ func runChecks(store *Store, logStore *LogStore, maintStore *maintenance.Store) 
 				continue
 			}
 			if rule.Type == "maintenance" {
-				checkMaintenanceRule(store, vhost, rule, urls, maintStore)
+				checkMaintenanceRule(c.store, vhost, rule, urls, c.maintStore)
 				continue
 			}
 			fetchOnce()
@@ -52,25 +123,25 @@ func runChecks(store *Store, logStore *LogStore, maintStore *maintenance.Store) 
 				newStatus = "firing"
 			}
 			shouldNotify := triggered && rule.Status != "firing" && len(urls) > 0
-			if err := store.SetRuleStatus(vhost, rule.ID, newStatus, shouldNotify, value); err != nil {
+			if err := c.store.SetRuleStatus(vhost, rule.ID, newStatus, shouldNotify, value); err != nil {
 				log.Printf("notify: set status failed: %v", err)
 			}
 			// Log state transitions
 			if rule.Status != "firing" && newStatus == "firing" {
-				entry := LogEntry{Timestamp: time.Now(), Event: LogEventFired, Value: value, Threshold: rule.Threshold}
-				if err := logStore.Append(rule.ID, entry); err != nil {
+				entry := store.LogEntry{Timestamp: time.Now(), Event: store.LogEventFired, Value: value, Threshold: rule.Threshold}
+				if err := c.logStore.Append(rule.ID, entry); err != nil {
 					log.Printf("notify: log append failed: %v", err)
 				}
 			} else if rule.Status == "firing" && newStatus == "ok" {
-				entry := LogEntry{Timestamp: time.Now(), Event: LogEventResolved, Value: value, Threshold: rule.Threshold}
-				if err := logStore.Append(rule.ID, entry); err != nil {
+				entry := store.LogEntry{Timestamp: time.Now(), Event: store.LogEventResolved, Value: value, Threshold: rule.Threshold}
+				if err := c.logStore.Append(rule.ID, entry); err != nil {
 					log.Printf("notify: log append failed: %v", err)
 				}
 			}
 			if shouldNotify {
 				subject := fmt.Sprintf("[UniMQ] Alarm: %s — %s", rule.Name, vhost)
-				body := BuildMessage(rule, vhost)
-				if err := store.SendWebhooks(urls, subject, body); err != nil {
+				body := rule.BuildMessage(vhost)
+				if err := c.store.SendWebhooks(urls, subject, body); err != nil {
 					log.Printf("notify: webhook failed (rule %s): %v", rule.Name, err)
 				} else {
 					log.Printf("notify: webhook sent for rule %q on vhost %q", rule.Name, vhost)
@@ -80,7 +151,7 @@ func runChecks(store *Store, logStore *LogStore, maintStore *maintenance.Store) 
 	}
 }
 
-func evaluate(rule AlarmRule, metrics *scraper.VhostMetrics, queues []scraper.QueueDetail) (bool, *float64) {
+func evaluate(rule models.AlarmRule, metrics *models.VhostMetrics, queues []models.QueueDetail) (bool, *float64) {
 	val := func(v float64) *float64 { return &v }
 	switch rule.Type {
 	case "channels":
@@ -128,7 +199,7 @@ func evaluate(rule AlarmRule, metrics *scraper.VhostMetrics, queues []scraper.Qu
 	return false, nil
 }
 
-func checkMaintenanceRule(store *Store, vhost string, rule AlarmRule, urls []string, maintStore *maintenance.Store) {
+func checkMaintenanceRule(store *store.Store, vhost string, rule models.AlarmRule, urls []string, maintStore *maintenance.Store) {
 	scheduled := maintStore.Scheduled()
 	fired := false
 	for _, m := range scheduled {

@@ -1,4 +1,4 @@
-package notify
+package store
 
 import (
 	"encoding/json"

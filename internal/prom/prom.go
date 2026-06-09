@@ -10,13 +10,6 @@ import (
 	"time"
 )
 
-// CONFIG: Oppdater denne URL-en til din Prometheus-instans.
-//   Prometheus brukes til historiske køgrafer (queue-detaljsiden).
-//   Eksempel: "https://prometheus.example.com/api/v1"
-//   Merk: Prometheus må skrape RabbitMQ sin /metrics/detailed-endepunkt
-//   (se prometheus.yml i prosjektroten for konfigurasjon).
-const baseURL = "http://localhost:9090/api/v1" // CONFIG: Bytt til din Prometheus-URL
-
 type Sample struct {
 	T float64 `json:"t"`
 	V float64 `json:"v"`
@@ -29,7 +22,23 @@ type RangeOptions struct {
 	Step  time.Duration
 }
 
-func QueryRange(opts RangeOptions) ([]Sample, error) {
+type PromClient struct {
+	apiURL     string
+	baseURL    string
+	port       int
+	apiVersion string
+}
+
+func NewPromClient(baseURL, apiVersion string, port int) *PromClient {
+	return &PromClient{
+		apiURL:     fmt.Sprintf("%v:%d/api/%v", baseURL, port, apiVersion),
+		baseURL:    baseURL,
+		port:       port,
+		apiVersion: apiVersion,
+	}
+}
+
+func (pc *PromClient) QueryRange(opts RangeOptions) ([]Sample, error) {
 	query := fmt.Sprintf(`rabbitmq_detailed_queue_messages{vhost=%q,queue=%q}`,
 		opts.Vhost, opts.Queue)
 
@@ -42,7 +51,7 @@ func QueryRange(opts RangeOptions) ([]Sample, error) {
 	params.Set("end", strconv.FormatInt(now.Unix(), 10))
 	params.Set("step", strconv.FormatInt(int64(opts.Step.Seconds()), 10))
 
-	resp, err := http.Get(baseURL + "/query_range?" + params.Encode())
+	resp, err := http.Get(pc.apiURL + "/query_range?" + params.Encode())
 	if err != nil {
 		return nil, fmt.Errorf("prometheus unreachable: %w", err)
 	}

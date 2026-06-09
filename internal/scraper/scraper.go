@@ -8,6 +8,9 @@ import (
 	"net/url"
 	"sort"
 	"sync"
+
+	"github.com/sisneve/rabbitmq-dashboard/internal/models"
+	"github.com/sisneve/rabbitmq-dashboard/internal/prom"
 )
 
 const historySize = 20
@@ -28,44 +31,7 @@ func appendHistory(key string, value int) []int {
 	return h
 }
 
-// CONFIG: Oppdater disse tre verdiene til din faktiske RabbitMQ-instans.
-//   baseURL:  URL til RabbitMQ Management API (standardport er 15672)
-//             Eksempel: "https://rabbitmq.example.com/api"
-//   username: Brukernavn med tilgang til Management API
-//   password: Passord for brukeren over
-const (
-	baseURL  = "http://localhost:15672/api" // CONFIG: Bytt til din RabbitMQ Management API-URL
-	username = "guest"                      // CONFIG: Bytt til ditt brukernavn
-	password = "guest"                      // CONFIG: Bytt til ditt passord
-)
-
-type VhostMetrics struct {
-	Name        string `json:"name"`
-	Connections int    `json:"connections"`
-	Channels    int    `json:"channels"`
-	Queues      int    `json:"queues"`
-	Unacked     int    `json:"unacked"`
-}
-
-type QueueDetail struct {
-	Name         string  `json:"name"`
-	Messages     int     `json:"messages"`
-	MessageBytes int64   `json:"message_bytes"`
-	History      []int   `json:"history"`
-	Consumers    int     `json:"consumers"`
-	PublishRate  float64 `json:"publish_rate"`
-	DeliverRate  float64 `json:"deliver_rate"`
-	RedelivRate  float64 `json:"redeliver_rate"`
-	Unacked      int     `json:"messages_unacknowledged"`
-}
-
-type Limits struct {
-	MaxChannels    int
-	MaxConnections int
-	MaxQueues      int
-}
-
-var DefaultLimits = Limits{
+var DefaultLimits = models.Limits{
 	MaxChannels:    1000,
 	MaxConnections: 300,
 	MaxQueues:      150,
@@ -137,12 +103,29 @@ type nodeAPIResponse struct {
 	DiskFreeLimit int64  `json:"disk_free_limit"`
 }
 
-func fetch(path string, v any) error {
-	req, err := http.NewRequest("GET", baseURL+path, nil)
+// TODO: Seperate the clients
+type RestClient struct {
+	baseURL    string
+	username   string
+	password   string
+	PromClient *prom.PromClient
+}
+
+func NewRestClient(baseURL, username, password string, promURL, promAPIVersion string, promPort int) *RestClient {
+	return &RestClient{
+		baseURL:    baseURL,
+		username:   username,
+		password:   password,
+		PromClient: prom.NewPromClient(promURL, promAPIVersion, promPort),
+	}
+}
+
+func (r *RestClient) fetch(path string, v any) error {
+	req, err := http.NewRequest("GET", r.baseURL+path, nil)
 	if err != nil {
 		return err
 	}
-	req.SetBasicAuth(username, password)
+	req.SetBasicAuth(r.username, r.password)
 
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
@@ -157,9 +140,9 @@ func fetch(path string, v any) error {
 	return json.Unmarshal(body, v)
 }
 
-func GetVhosts() ([]string, error) {
+func (r *RestClient) GetVhosts() ([]string, error) {
 	var vhosts []vhostResponse
-	if err := fetch("/vhosts", &vhosts); err != nil {
+	if err := r.fetch("/vhosts", &vhosts); err != nil {
 		return nil, err
 	}
 	names := make([]string, len(vhosts))
@@ -169,16 +152,16 @@ func GetVhosts() ([]string, error) {
 	return names, nil
 }
 
-func GetMetrics(vhost string) (*VhostMetrics, error) {
+func (r *RestClient) GetMetrics(vhost string) (*models.VhostMetrics, error) {
 	encoded := url.PathEscape(vhost)
 
 	var vhostData vhostResponse
-	if err := fetch("/vhosts/"+encoded, &vhostData); err != nil {
+	if err := r.fetch("/vhosts/"+encoded, &vhostData); err != nil {
 		return nil, err
 	}
 
 	var connections []connectionResponse
-	if err := fetch("/connections", &connections); err != nil {
+	if err := r.fetch("/connections", &connections); err != nil {
 		return nil, err
 	}
 	connCount := 0
@@ -189,7 +172,7 @@ func GetMetrics(vhost string) (*VhostMetrics, error) {
 	}
 
 	var channels []channelResponse
-	if err := fetch("/channels", &channels); err != nil {
+	if err := r.fetch("/channels", &channels); err != nil {
 		return nil, err
 	}
 	chanCount := 0
@@ -200,11 +183,11 @@ func GetMetrics(vhost string) (*VhostMetrics, error) {
 	}
 
 	var queues []queueAPIResponse
-	if err := fetch("/queues/"+encoded, &queues); err != nil {
+	if err := r.fetch("/queues/"+encoded, &queues); err != nil {
 		return nil, err
 	}
 
-	return &VhostMetrics{
+	return &models.VhostMetrics{
 		Name:        vhost,
 		Connections: connCount,
 		Channels:    chanCount,
@@ -213,18 +196,18 @@ func GetMetrics(vhost string) (*VhostMetrics, error) {
 	}, nil
 }
 
-func GetQueueDetails(vhost string) ([]QueueDetail, error) {
+func (r *RestClient) GetQueueDetails(vhost string) ([]models.QueueDetail, error) {
 	encoded := url.PathEscape(vhost)
 
 	var queues []queueAPIResponse
-	if err := fetch("/queues/"+encoded, &queues); err != nil {
+	if err := r.fetch("/queues/"+encoded, &queues); err != nil {
 		return nil, err
 	}
 
-	details := make([]QueueDetail, len(queues))
+	details := make([]models.QueueDetail, len(queues))
 	for i, q := range queues {
 		key := vhost + "/" + q.Name
-		details[i] = QueueDetail{
+		details[i] = models.QueueDetail{
 			Name:         q.Name,
 			Messages:     q.Messages,
 			MessageBytes: q.MessageBytes,
@@ -239,9 +222,9 @@ func GetQueueDetails(vhost string) ([]QueueDetail, error) {
 	return details, nil
 }
 
-func GetClusterStats() (*ClusterStats, error) {
+func (r *RestClient) GetClusterStats() (*ClusterStats, error) {
 	var nodes []nodeAPIResponse
-	if err := fetch("/nodes", &nodes); err != nil {
+	if err := r.fetch("/nodes", &nodes); err != nil {
 		return nil, err
 	}
 
@@ -264,7 +247,7 @@ func GetClusterStats() (*ClusterStats, error) {
 
 	// Aggregate per-vhost message bytes from all queues
 	var allQueues []queueAPIResponse
-	if err := fetch("/queues", &allQueues); err != nil {
+	if err := r.fetch("/queues", &allQueues); err != nil {
 		return nil, err
 	}
 
