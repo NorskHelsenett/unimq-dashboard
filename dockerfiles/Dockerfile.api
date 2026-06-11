@@ -15,6 +15,7 @@ FROM gcr.io/distroless/static AS nhn-unimq-api
 
 WORKDIR /
 COPY --chown=1001:2000 --from=build /app/nhn-unimq /bin/nhn-unimq
+COPY --chown=1001:2000 web/templates /web/templates
 
 EXPOSE 8080
 
