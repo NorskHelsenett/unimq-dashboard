@@ -31,6 +31,7 @@ func appendHistory(key string, value int) []int {
 	return h
 }
 
+// TODO: Move to env vars or config file
 var DefaultLimits = models.Limits{
 	MaxChannels:    1000,
 	MaxConnections: 300,
@@ -120,6 +121,8 @@ func NewRestClient(baseURL, username, password string, promURL, promAPIVersion s
 	}
 }
 
+// TODO: Is Get request.
+// TODO: Make a generic rest client (Borrow from ror-ms-backup)
 func (r *RestClient) fetch(path string, v any) error {
 	req, err := http.NewRequest("GET", r.baseURL+path, nil)
 	if err != nil {

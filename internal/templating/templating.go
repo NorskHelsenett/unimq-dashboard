@@ -4,8 +4,8 @@ import (
 	"encoding/json"
 	"html/template"
 
-	"github.com/sisneve/rabbitmq-dashboard/internal/maintenance"
-	"github.com/sisneve/rabbitmq-dashboard/internal/notify/store"
+	"github.com/sisneve/rabbitmq-dashboard/internal/store/maintenance"
+	"github.com/sisneve/rabbitmq-dashboard/internal/store/notify"
 )
 
 func mustTemplate(name string) *template.Template {
@@ -25,8 +25,8 @@ var (
 	}
 
 	MaintStore  *maintenance.Store
-	NotifyStore *store.Store
-	LogStore    *store.LogStore
+	NotifyStore *notify.Store
+	LogStore    *notify.LogStore
 
 	IndexTmpl      = mustTemplate("index.html")
 	QueueTmpl      = mustTemplate("queue.html")

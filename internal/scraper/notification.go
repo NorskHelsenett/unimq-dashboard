@@ -93,47 +93,39 @@ func (rc *RestClient) NotificationsRuleHandler(w http.ResponseWriter, r *http.Re
 	}
 }
 
-func (rc *RestClient) NotificationsUpdateMessageHandler(w http.ResponseWriter, r *http.Request) {
-	if r.Method == http.MethodPost {
-		vhost := r.FormValue("vhost")
-		id := r.FormValue("id")
-		templating.NotifyStore.UpdateMessage(vhost, id, r.FormValue("message"))
-		http.Redirect(w, r, "/notifications/rule?vhost="+url.QueryEscape(vhost)+"&id="+id+"&msg=saved", http.StatusSeeOther)
-		return
-	}
-	http.Redirect(w, r, "/notifications", http.StatusSeeOther)
+func (rc *RestClient) PostNotificationsUpdateMessageHandler(w http.ResponseWriter, r *http.Request) {
+	vhost := r.FormValue("vhost")
+	id := r.FormValue("id")
+	templating.NotifyStore.UpdateMessage(vhost, id, r.FormValue("message"))
+	http.Redirect(w, r, "/notifications/rule?vhost="+url.QueryEscape(vhost)+"&id="+id+"&msg=saved", http.StatusSeeOther)
 }
 
-func (rc *RestClient) NotificationsTestHandler(w http.ResponseWriter, r *http.Request) {
-	if r.Method == http.MethodPost {
-		vhost := r.FormValue("vhost")
-		id := r.FormValue("id")
-		rule, ok := templating.NotifyStore.GetRuleCopy(vhost, id)
-		vc := templating.NotifyStore.GetVhostCopy(vhost)
-		w.Header().Set("Content-Type", "application/json")
-		if !ok {
-			w.WriteHeader(http.StatusNotFound)
-			json.NewEncoder(w).Encode(map[string]string{"status": "error", "message": "Rule not found"})
-			return
-		}
-		if len(vc.WebhookURLs()) == 0 {
-			w.WriteHeader(http.StatusOK)
-			json.NewEncoder(w).Encode(map[string]string{"status": "no_recipients", "message": "No recipients configured for this vhost"})
-			return
-		}
-		subject := "[UniMQ TEST] " + rule.Name + " — " + vhost
-		body := "Dette er en test-varsling fra UniMQ.\n\n" + rule.BuildMessage(vhost)
-		if err := templating.NotifyStore.SendWebhooks(vc.WebhookURLs(), subject, body); err != nil {
-			log.Printf("notify test webhook failed: %v", err)
-			w.WriteHeader(http.StatusInternalServerError)
-			json.NewEncoder(w).Encode(map[string]string{"status": "error", "message": "Failed to send webhook: " + err.Error()})
-			return
-		}
-		w.WriteHeader(http.StatusOK)
-		json.NewEncoder(w).Encode(map[string]string{"status": "sent", "message": "Test notification sent!"})
+func (rc *RestClient) PostNotificationsTestHandler(w http.ResponseWriter, r *http.Request) {
+	vhost := r.FormValue("vhost")
+	id := r.FormValue("id")
+	rule, ok := templating.NotifyStore.GetRuleCopy(vhost, id)
+	vc := templating.NotifyStore.GetVhostCopy(vhost)
+	w.Header().Set("Content-Type", "application/json")
+	if !ok {
+		w.WriteHeader(http.StatusNotFound)
+		json.NewEncoder(w).Encode(map[string]string{"status": "error", "message": "Rule not found"})
 		return
 	}
-	http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+	if len(vc.WebhookURLs()) == 0 {
+		w.WriteHeader(http.StatusOK)
+		json.NewEncoder(w).Encode(map[string]string{"status": "no_recipients", "message": "No recipients configured for this vhost"})
+		return
+	}
+	subject := "[UniMQ TEST] " + rule.Name + " — " + vhost
+	body := "Dette er en test-varsling fra UniMQ.\n\n" + rule.BuildMessage(vhost)
+	if err := templating.NotifyStore.SendWebhooks(vc.WebhookURLs(), subject, body); err != nil {
+		log.Printf("notify test webhook failed: %v", err)
+		w.WriteHeader(http.StatusInternalServerError)
+		json.NewEncoder(w).Encode(map[string]string{"status": "error", "message": "Failed to send webhook: " + err.Error()})
+		return
+	}
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(map[string]string{"status": "sent", "message": "Test notification sent!"})
 }
 
 func (rc *RestClient) NotificationsLogsHandler(w http.ResponseWriter, r *http.Request) {

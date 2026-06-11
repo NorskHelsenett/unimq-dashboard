@@ -6,8 +6,8 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/go-chi/chi/middleware"
 	"github.com/go-chi/chi/v5"
+	"github.com/go-chi/chi/v5/middleware"
 	"github.com/sisneve/rabbitmq-dashboard/internal/config"
 	"github.com/sisneve/rabbitmq-dashboard/internal/scraper"
 )
@@ -22,15 +22,21 @@ func SetupRoutes(config *config.Config) chi.Router {
 
 	rmqclient := scraper.NewRestClient(
 		fmt.Sprintf("%v:%d/api",
-			config.RabbitMQURL,
+			config.RabbitMQHost,
 			config.RabbitMQPort,
 		),
 		config.RabbitMQUsername,
 		config.RabbitMQPassword,
-		config.PrometheusURL,
+		config.PrometheusHost,
 		"v1",
 		config.PrometheusPort,
 	)
+
+	http.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("web/static"))))
+	// Serve the callback page so oidc-client-ts can complete the OIDC flow client-side.
+	http.HandleFunc("/callback", func(w http.ResponseWriter, r *http.Request) {
+		http.ServeFile(w, r, "web/templates/callback.html")
+	})
 
 	// TODO: group into v1, v2, etc. as needed for API versioning and better organization
 	// TODO: correct the methods for these routes (e.g. POST for add/delete operations)
@@ -51,17 +57,18 @@ func SetupRoutes(config *config.Config) chi.Router {
 	r.Post("/notifications/rules/delete", rmqclient.PostNotificationsDeleteRuleHandler)
 	r.Post("/notifications/rules/update", rmqclient.PostNotificationsUpdateRuleHandler)
 	// TODO: Where are rules listed?
-	r.HandleFunc("/notifications/rules/toggle", rmqclient.PostNotificationsToggleRuleHandler)
-	r.HandleFunc("/notifications/rules/message", rmqclient.NotificationsUpdateMessageHandler)
-	r.HandleFunc("/notifications/rules/test", rmqclient.NotificationsTestHandler)
-	r.HandleFunc("/notifications/rules/logs", rmqclient.NotificationsLogsHandler)
-	r.HandleFunc("/notifications/rule", rmqclient.NotificationsRuleHandler)
-	r.HandleFunc("/profile", rmqclient.GetProfileHandler)
+	r.Post("/notifications/rules/toggle", rmqclient.PostNotificationsToggleRuleHandler)
+	r.Post("/notifications/rules/message", rmqclient.PostNotificationsUpdateMessageHandler) // TODO: requires rule ID and vhost query params, likely a Get request
+	r.Post("/notifications/rules/test", rmqclient.PostNotificationsTestHandler)
+	r.HandleFunc("/notifications/rules/logs", rmqclient.NotificationsLogsHandler) // TODO: Likely a Get request, requires an id query param, unsure which id (rule id? vhost? log id?)
+	r.HandleFunc("/notifications/rule", rmqclient.NotificationsRuleHandler)       // TODO: Likely a Get request, requires rule ID and vhost query params
+	r.Get("/profile", rmqclient.GetProfileHandler)                                // TODO: requires vhost query param
 
 	// API routes
 	r.Get("/api/queues", rmqclient.GetQueuesHandler) // TODO: Fix required vhost query param
 	r.Get("/api/cluster", rmqclient.GetClusterHandler)
 
+	// Logs every route implicitly or explicitly defined above with its method, path, and number of middlewares.
 	chi.Walk(r, func(method string, route string, handler http.Handler, middlewares ...func(http.Handler) http.Handler) error {
 		slog.Info("route info", "method", method, "route", route, "middlewares", len(r.Middlewares()))
 		return nil

@@ -4,14 +4,14 @@ import (
 	"log"
 	"net/http"
 
-	"github.com/sisneve/rabbitmq-dashboard/internal/maintenance"
+	"github.com/sisneve/rabbitmq-dashboard/internal/models"
 	"github.com/sisneve/rabbitmq-dashboard/internal/templating"
 )
 
 func (rc *RestClient) GetMaintenanceHandler(w http.ResponseWriter, r *http.Request) {
 	data := struct {
-		Scheduled []maintenance.Entry
-		History   []maintenance.Entry
+		Scheduled []models.MaintenanceEntry
+		History   []models.MaintenanceEntry
 	}{templating.MaintStore.Scheduled(), templating.MaintStore.History()}
 	if err := templating.MaintTmpl.Execute(w, data); err != nil {
 		log.Printf("template error: %v", err)
@@ -19,7 +19,7 @@ func (rc *RestClient) GetMaintenanceHandler(w http.ResponseWriter, r *http.Reque
 }
 
 func (rc *RestClient) GetMaintenanceAdminHandler(w http.ResponseWriter, r *http.Request) {
-	data := struct{ Entries []maintenance.Entry }{templating.MaintStore.All()}
+	data := struct{ Entries []models.MaintenanceEntry }{templating.MaintStore.All()}
 	if err := templating.MaintAdminTmpl.Execute(w, data); err != nil {
 		log.Printf("template error: %v", err)
 	}
@@ -34,7 +34,7 @@ func (rc *RestClient) MaintenanceAddHandler(w http.ResponseWriter, r *http.Reque
 
 func (rc *RestClient) MaintenanceStatusHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method == http.MethodPost {
-		templating.MaintStore.SetStatus(r.FormValue("id"), r.FormValue("status"))
+		templating.MaintStore.SetStatus(r.FormValue("id"), models.ParseMaintenanceStatus(r.FormValue("status")))
 	}
 	http.Redirect(w, r, "/maintenance/admin", http.StatusSeeOther)
 }

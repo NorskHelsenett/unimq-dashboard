@@ -6,17 +6,18 @@ import (
 	"time"
 
 	"github.com/sisneve/rabbitmq-dashboard/internal/config"
-	"github.com/sisneve/rabbitmq-dashboard/internal/maintenance"
 	"github.com/sisneve/rabbitmq-dashboard/internal/models"
-	"github.com/sisneve/rabbitmq-dashboard/internal/notify/store"
 	"github.com/sisneve/rabbitmq-dashboard/internal/scraper"
+	"github.com/sisneve/rabbitmq-dashboard/internal/store/maintenance"
+	"github.com/sisneve/rabbitmq-dashboard/internal/store/notify"
 )
 
 type (
+	// Checker periodically evaluates alarm rules against current RabbitMQ metrics and triggers notifications.
 	Checker struct {
 		Config     *config.Config
-		store      *store.Store
-		logStore   *store.LogStore
+		store      *notify.Store
+		logStore   *notify.LogStore
 		maintStore *maintenance.Store
 		interval   time.Duration
 	}
@@ -30,13 +31,13 @@ func WithConfig(cfg *config.Config) CheckerOptions {
 	}
 }
 
-func WithStore(s *store.Store) CheckerOptions {
+func WithStore(s *notify.Store) CheckerOptions {
 	return func(c *Checker) {
 		c.store = s
 	}
 }
 
-func WithLogStore(ls *store.LogStore) CheckerOptions {
+func WithLogStore(ls *notify.LogStore) CheckerOptions {
 	return func(c *Checker) {
 		c.logStore = ls
 	}
@@ -94,12 +95,12 @@ func (c *Checker) runChecks() {
 			}
 			restclient := scraper.NewRestClient(
 				fmt.Sprintf("%v:%d/api",
-					c.Config.RabbitMQURL,
+					c.Config.RabbitMQHost,
 					c.Config.RabbitMQPort,
 				),
 				c.Config.RabbitMQUsername,
 				c.Config.RabbitMQPassword,
-				c.Config.PrometheusURL,
+				c.Config.PrometheusHost,
 				"v1",
 				c.Config.PrometheusPort,
 			)
@@ -128,12 +129,12 @@ func (c *Checker) runChecks() {
 			}
 			// Log state transitions
 			if rule.Status != "firing" && newStatus == "firing" {
-				entry := store.LogEntry{Timestamp: time.Now(), Event: store.LogEventFired, Value: value, Threshold: rule.Threshold}
+				entry := notify.LogEntry{Timestamp: time.Now(), Event: notify.LogEventFired, Value: value, Threshold: rule.Threshold}
 				if err := c.logStore.Append(rule.ID, entry); err != nil {
 					log.Printf("notify: log append failed: %v", err)
 				}
 			} else if rule.Status == "firing" && newStatus == "ok" {
-				entry := store.LogEntry{Timestamp: time.Now(), Event: store.LogEventResolved, Value: value, Threshold: rule.Threshold}
+				entry := notify.LogEntry{Timestamp: time.Now(), Event: notify.LogEventResolved, Value: value, Threshold: rule.Threshold}
 				if err := c.logStore.Append(rule.ID, entry); err != nil {
 					log.Printf("notify: log append failed: %v", err)
 				}
@@ -199,7 +200,7 @@ func evaluate(rule models.AlarmRule, metrics *models.VhostMetrics, queues []mode
 	return false, nil
 }
 
-func checkMaintenanceRule(store *store.Store, vhost string, rule models.AlarmRule, urls []string, maintStore *maintenance.Store) {
+func checkMaintenanceRule(store *notify.Store, vhost string, rule models.AlarmRule, urls []string, maintStore *maintenance.Store) {
 	scheduled := maintStore.Scheduled()
 	fired := false
 	for _, m := range scheduled {
