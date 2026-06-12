@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/sisneve/rabbitmq-dashboard/internal/models"
+	"go.mongodb.org/mongo-driver/v2/bson"
 )
 
 type VhostNotification struct {
@@ -25,17 +26,10 @@ func (vn *VhostNotification) WebhookURLs() []string {
 	return urls
 }
 
-// type VhostNotification struct {
-// 	Name     string                        `bson:"name"`
-// 	Vhosts   map[string]models.VhostConfig `bson:"vhosts"`
-// 	Notified bool                          `bson:"notified"`
-// }
-
 func (dbc *Database) GetNotificationsAll(ctx context.Context) ([]VhostNotification, error) {
 	start := time.Now()
-	collection := dbc.client.Database(dbc.db).Collection("notifications")
 
-	cursor, err := collection.Find(ctx, map[string]any{})
+	cursor, err := dbc.Collections.Notifications.Find(ctx, bson.M{})
 	if err != nil {
 		return nil, err
 	}
@@ -52,125 +46,139 @@ func (dbc *Database) GetNotificationsAll(ctx context.Context) ([]VhostNotificati
 }
 
 // Probably unnecessary as vhost functions already cover this.
-func (dbc *Database) GetNotification(ctx context.Context, vhost string) (VhostNotification, error) {
+func (dbc *Database) GetNotification(ctx context.Context, vhost string) (*VhostNotification, error) {
 	start := time.Now()
-	collection := dbc.client.Database(dbc.db).Collection("notifications")
 
 	var notification VhostNotification
-	err := collection.FindOne(ctx, map[string]any{"vhost": vhost}).Decode(&notification)
+	err := dbc.Collections.Notifications.FindOne(ctx, bson.M{"_id": vhost}).Decode(&notification)
+	if err != nil {
+		slog.Error("failed to retrieve notification", "runtime", time.Since(start), "id", vhost, "error", err)
+		return nil, err
+	}
+
 	slog.Info("retrieved notification", "runtime", time.Since(start), "id", vhost)
-	return notification, err
+	return &notification, err
 }
 
+// TODO: Handle insertOne result object for better logging and error handling.
 func (dbc *Database) AddNotification(ctx context.Context, notification VhostNotification) error {
 	start := time.Now()
-	collection := dbc.client.Database(dbc.db).Collection("notifications")
+	_, err := dbc.Collections.Notifications.InsertOne(ctx, notification)
+	if err != nil {
+		slog.Error("failed to add notification", "runtime", time.Since(start), "name", notification.Name, "error", err)
+		return err
+	}
 
-	_, err := collection.InsertOne(ctx, notification)
 	slog.Info("added notification", "runtime", time.Since(start), "name", notification.Name)
 	return err
 }
 
 func (dbc *Database) UpdateNotification(ctx context.Context, name string, notification VhostNotification) error {
 	start := time.Now()
-	collection := dbc.client.Database(dbc.db).Collection("notifications")
 
-	_, err := collection.UpdateOne(
-		ctx,
-		map[string]any{"name": name},
-		map[string]any{
-			"$set": notification,
-		},
-	)
+	filter := map[string]any{"_id": name}
+	update := map[string]any{
+		"$set": notification,
+	}
+
+	_, err := dbc.Collections.Notifications.UpdateOne(ctx, filter, update)
+	if err != nil {
+		slog.Error("failed to update notification", "runtime", time.Since(start), "name", name, "error", err)
+		return err
+	}
+
 	slog.Info("updated notification", "runtime", time.Since(start), "name", notification.Name)
 	return err
 }
 
-func (dbc *Database) DeleteNotification(ctx context.Context, path string) error {
+func (dbc *Database) DeleteNotification(ctx context.Context, id string) error {
 	start := time.Now()
-	collection := dbc.client.Database(dbc.db).Collection("notifications")
+	_, err := dbc.Collections.Notifications.DeleteOne(ctx, bson.M{"_id": id})
+	if err != nil {
+		slog.Error("failed to delete notification", "runtime", time.Since(start), "id", id, "error", err)
+		return err
+	}
 
-	_, err := collection.DeleteOne(ctx, map[string]any{"path": path})
-	slog.Info("deleted notification", "runtime", time.Since(start), "path", path)
+	slog.Info("deleted notification", "runtime", time.Since(start), "id", id)
 	return err
 }
 
 func (dbc *Database) UpdateNotificationRuleThreshold(ctx context.Context, vhost, ruleID string, threshold float64) error {
 	start := time.Now()
-	collection := dbc.client.Database(dbc.db).Collection("notifications")
 
-	_, err := collection.UpdateOne(
-		ctx,
-		map[string]any{"name": vhost, "rules.id": ruleID},
-		map[string]any{
-			"$set": map[string]any{
-				"rules.$.threshold": threshold,
-			},
+	filter := map[string]any{"_id": vhost, "rules.id": ruleID}
+	update := map[string]any{
+		"$set": map[string]any{
+			"rules.$.threshold": threshold,
 		},
-	)
+	}
+	_, err := dbc.Collections.Notifications.UpdateOne(ctx, filter, update)
+	if err != nil {
+		slog.Error("failed to update notification rule", "runtime", time.Since(start), "vhost", vhost, "ruleID", ruleID, "error", err)
+		return err
+	}
+
 	slog.Info("updated notification rule", "runtime", time.Since(start), "vhost", vhost, "ruleID", ruleID)
 	return err
 }
 
 func (dbc *Database) UpdateNotificationRuleMessage(ctx context.Context, vhost, ruleID string, message string) error {
 	start := time.Now()
-	collection := dbc.client.Database(dbc.db).Collection("notifications")
 
-	_, err := collection.UpdateOne(
-		ctx,
-		map[string]any{"name": vhost, "rules.id": ruleID},
-		map[string]any{
-			"$set": map[string]any{
-				"rules.$.message": message,
-			},
+	filter := map[string]any{"_id": vhost, "rules.id": ruleID}
+	update := map[string]any{
+		"$set": map[string]any{
+			"rules.$.message": message,
 		},
-	)
-	slog.Info("updated notification rule", "runtime", time.Since(start), "vhost", vhost, "ruleID", ruleID)
+	}
+
+	_, err := dbc.Collections.Notifications.UpdateOne(ctx, filter, update)
+	if err != nil {
+		slog.Error("failed to update notification rule message", "runtime", time.Since(start), "vhost", vhost, "ruleID", ruleID, "error", err)
+		return err
+	}
+
+	slog.Info("updated notification rule message", "runtime", time.Since(start), "vhost", vhost, "ruleID", ruleID)
 	return err
 }
 
 func (dbc *Database) UpdateNotificationRule(ctx context.Context, vhost, name string, status string, value float64, notified bool) error {
 	start := time.Now()
-	collection := dbc.client.Database(dbc.db).Collection("notifications")
 
-	// ID        string     `json:"id" bson:"_id"`
-	// Name      string     `json:"name" bson:"name"`
-	// Type      string     `json:"type" bson:"type"`
-	// QueueName string     `json:"queue_name,omitempty" bson:"queueName"`
-	// Threshold float64    `json:"threshold,omitempty" bson:"threshold"`
-	// Message   string     `json:"message" bson:"message"`
-	// Enabled   bool       `json:"enabled" bson:"enabled"`
-	// Status    string     `json:"status" bson:"status"`
-	// LastFired *time.Time `json:"last_fired,omitempty" bson:"lastFired"`
-	// LastValue *float64   `json:"last_value,omitempty" bson:"lastValue"`
-	_, err := collection.UpdateOne(
-		ctx,
-		map[string]any{"_id": vhost, "rules.name": name},
-		map[string]any{
-			"$set": map[string]any{
-				"rules.$[rule].status":    status,
-				"rules.$[rule].lastValue": value,
-				"notified":                notified,
-			},
+	filter := map[string]any{"_id": vhost, "rules.name": name}
+	update := map[string]any{
+		"$set": map[string]any{
+			"rules.$[rule].status":    status,
+			"rules.$[rule].lastValue": value,
+			"notified":                notified,
 		},
-	)
-	slog.Info("updated notification status", "runtime", time.Since(start), "name", name, "notified", notified)
+	}
+
+	_, err := dbc.Collections.Notifications.UpdateOne(ctx, filter, update)
+	if err != nil {
+		slog.Error("failed to update notification rule status", "runtime", time.Since(start), "vhost", vhost, "rule", name, "error", err)
+		return err
+	}
+
+	slog.Info("updated notification rule status", "runtime", time.Since(start), "name", name, "notified", notified)
 	return err
 }
 
 func (dbc *Database) ToggleNotificationRule(ctx context.Context, vhost, ruleID string, enabled bool) error {
 	start := time.Now()
-	collection := dbc.client.Database(dbc.db).Collection("notifications")
 
-	_, err := collection.UpdateOne(
-		ctx,
-		map[string]any{"name": vhost, "rules.id": ruleID},
-		map[string]any{
-			"$set": map[string]any{
-				"rules.$.enabled": enabled,
-			},
+	filter := map[string]any{"_id": vhost, "rules.id": ruleID}
+	update := map[string]any{
+		"$set": map[string]any{
+			"rules.$.enabled": enabled,
 		},
-	)
+	}
+	_, err := dbc.Collections.Notifications.UpdateOne(ctx, filter, update)
+	if err != nil {
+		slog.Error("failed to toggle notification rule", "runtime", time.Since(start), "vhost", vhost, "ruleID", ruleID, "enabled", enabled, "error", err)
+		return err
+	}
+
 	slog.Info("toggled notification rule", "runtime", time.Since(start), "vhost", vhost, "ruleID", ruleID, "enabled", enabled)
 	return err
 }
