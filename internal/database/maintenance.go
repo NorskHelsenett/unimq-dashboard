@@ -9,9 +9,9 @@ import (
 	"go.mongodb.org/mongo-driver/v2/bson"
 )
 
-func (dbc *Database) GetMaintenanceAll(ctx context.Context) ([]models.MaintenanceEntry, error) {
+func (dbc *Database) GetMaintenanceAll(ctx context.Context, filter bson.M) ([]models.MaintenanceEntry, error) {
 	start := time.Now()
-	cursor, err := dbc.Collections.Maintenance.Find(ctx, bson.M{})
+	cursor, err := dbc.Collections.Maintenance.Find(ctx, filter)
 	if err != nil {
 		return nil, err
 	}
@@ -25,6 +25,48 @@ func (dbc *Database) GetMaintenanceAll(ctx context.Context) ([]models.Maintenanc
 
 	slog.Info("retrieved maintenance", "runtime", time.Since(start), "count", len(maintenance))
 	return maintenance, nil
+}
+
+func (dbc *Database) GetMaintenanceScheduled(ctx context.Context) ([]models.MaintenanceEntry, error) {
+	return dbc.GetMaintenanceAll(ctx, bson.M{"status": models.MaintenanceStatusScheduled})
+}
+
+func (dbc *Database) GetMaintenanceHistory(ctx context.Context) ([]models.MaintenanceEntry, error) {
+	return dbc.GetMaintenanceAll(ctx, bson.M{"status": bson.M{"$ne": models.MaintenanceStatusScheduled}})
+}
+
+func (dbc *Database) SetMaintenanceEntryStatus(ctx context.Context, id string, status string) error {
+	start := time.Now()
+	collection := dbc.client.Database(dbc.db).Collection("maintenance")
+
+	_, err := collection.UpdateOne(
+		ctx,
+		map[string]any{"id": id},
+		map[string]any{
+			"$set": map[string]any{
+				"status": status,
+			},
+		},
+	)
+	slog.Info("updated maintenance", "runtime", time.Since(start), "id", id, "status", status)
+	return err
+}
+
+func (dbc *Database) SetMaintenanceEntryNotified(ctx context.Context, id string, notified bool) error {
+	start := time.Now()
+	collection := dbc.client.Database(dbc.db).Collection("maintenance")
+
+	_, err := collection.UpdateOne(
+		ctx,
+		map[string]any{"id": id},
+		map[string]any{
+			"$set": map[string]any{
+				"notified": notified,
+			},
+		},
+	)
+	slog.Info("updated maintenance", "runtime", time.Since(start), "id", id, "notified", notified)
+	return err
 }
 
 // TODO: Use Collection object to cursor.

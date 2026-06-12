@@ -8,6 +8,7 @@ import (
 	"github.com/sisneve/rabbitmq-dashboard/internal/config"
 	"github.com/sisneve/rabbitmq-dashboard/internal/database"
 	"github.com/sisneve/rabbitmq-dashboard/internal/models"
+	"go.mongodb.org/mongo-driver/v2/bson"
 )
 
 func TestMaintenance(t *testing.T) {
@@ -53,7 +54,7 @@ func TestMaintenance(t *testing.T) {
 		slog.Info("retrieved entry", "id", entry.ID)
 	}
 
-	entries, err := db.GetMaintenanceAll(ctx)
+	entries, err := db.GetMaintenanceAll(ctx, bson.M{})
 	if err != nil {
 		slog.Error("failed to get test entries", "error", err)
 	} else {
