@@ -135,7 +135,7 @@ func (c *Checker) runChecks() {
 			if shouldNotify {
 				subject := fmt.Sprintf("[UniMQ] Alarm: %s — %s", rule.Name, vhost.Name)
 				body := rule.BuildMessage(vhost.Name)
-				err := sendWebhooks(urls, subject, body)
+				err := notificationhelper.SendWebhooks(urls, subject, body)
 				if err != nil {
 					slog.ErrorContext(c.Ctx, "notify: webhook failed", "rule", rule.Name, "error", err)
 				} else {
