@@ -13,7 +13,6 @@ import (
 	"github.com/sisneve/rabbitmq-dashboard/internal/clients/rabbitmq"
 	"github.com/sisneve/rabbitmq-dashboard/internal/database"
 	"github.com/sisneve/rabbitmq-dashboard/internal/models"
-	"github.com/sisneve/rabbitmq-dashboard/internal/store/notify"
 )
 
 type (
@@ -113,10 +112,10 @@ func (c *Checker) runChecks() {
 			}
 
 			if rule.Status != "firing" && newStatus == "firing" {
-				entry := notify.LogEntry{Timestamp: time.Now(), Event: notify.LogEventFired, Value: value, Threshold: rule.Threshold}
-				alarm := database.AlarmEntry{
+				entry := models.LogEntry{Timestamp: time.Now(), Event: models.LogEventFired, Value: value, Threshold: rule.Threshold}
+				alarm := models.AlarmEntry{
 					AlarmID: rule.ID,
-					Entries: []notify.LogEntry{entry},
+					Entries: []models.LogEntry{entry},
 				}
 				err := c.DB.AddAlarm(c.Ctx, &alarm)
 				if err != nil {
@@ -124,10 +123,10 @@ func (c *Checker) runChecks() {
 				}
 
 			} else if rule.Status == "firing" && newStatus == "ok" {
-				entry := notify.LogEntry{Timestamp: time.Now(), Event: notify.LogEventResolved, Value: value, Threshold: rule.Threshold}
-				alarm := database.AlarmEntry{
+				entry := models.LogEntry{Timestamp: time.Now(), Event: models.LogEventResolved, Value: value, Threshold: rule.Threshold}
+				alarm := models.AlarmEntry{
 					AlarmID: rule.ID,
-					Entries: []notify.LogEntry{entry},
+					Entries: []models.LogEntry{entry},
 				}
 				err = c.DB.AddAlarm(c.Ctx, &alarm)
 				if err != nil {
