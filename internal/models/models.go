@@ -11,11 +11,17 @@ type PageData struct {
 	Limits   Limits
 }
 
+func NewPageData(vhosts []string, selected string, metrics *VhostMetrics, limits Limits) PageData {
+	return PageData{Vhosts: vhosts, Selected: selected, Metrics: metrics, Limits: limits}
+}
+
 type RangeOption struct {
 	Label string
 	Value string
 }
 
+// NotifPageData is the data structure for the notifications page, containing the list of vhosts, the selected vhost, and its associated recipients and alarm rules.
+// I'm unsure why the structure is like this, the original is from Claude.
 type NotifPageData struct {
 	Vhosts     []string
 	Selected   string

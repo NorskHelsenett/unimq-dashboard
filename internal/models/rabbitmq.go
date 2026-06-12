@@ -1,5 +1,11 @@
 package models
 
+import (
+	"html/template"
+
+	"github.com/sisneve/rabbitmq-dashboard/internal/prom"
+)
+
 type VhostMetrics struct {
 	Name        string `json:"name"`
 	Connections int    `json:"connections"`
@@ -24,4 +30,101 @@ type Limits struct {
 	MaxChannels    int
 	MaxConnections int
 	MaxQueues      int
+}
+
+type QueueData struct {
+	Vhost        string
+	Queue        string
+	SeletedRange string
+	Ranges       []RangeOption
+	Samples      template.JS
+	NoData       bool
+}
+
+func NewQueueData(vhost, queue, rangeStr string, samplesJSON string, samples []prom.Sample) QueueData {
+	return QueueData{
+		Vhost:        vhost,
+		Queue:        queue,
+		SeletedRange: rangeStr,
+		Ranges:       TimeRanges,
+		Samples:      template.JS(samplesJSON),
+		NoData:       len(samples) == 0,
+	}
+}
+
+// ClusterStats holds cluster-wide memory and disk info plus per-vhost breakdown.
+type NodeStats struct {
+	Name          string `json:"name"`
+	MemUsed       int64  `json:"mem_used"`
+	MemLimit      int64  `json:"mem_limit"`
+	DiskFree      int64  `json:"disk_free"`
+	DiskFreeLimit int64  `json:"disk_free_limit"`
+}
+
+type VhostResources struct {
+	Name         string `json:"name"`
+	MessageBytes int64  `json:"message_bytes"`
+	DiskBytes    int64  `json:"disk_bytes"`
+}
+
+type ClusterStats struct {
+	Nodes          []NodeStats      `json:"nodes"`
+	TotalMemUsed   int64            `json:"total_mem_used"`
+	TotalMemLimit  int64            `json:"total_mem_limit"`
+	TotalDiskFree  int64            `json:"total_disk_free"`
+	MinDiskLimit   int64            `json:"min_disk_limit"`
+	VhostResources []VhostResources `json:"vhost_resources"`
+}
+
+func NewClusterStats() *ClusterStats {
+	return &ClusterStats{
+		Nodes:          []NodeStats{},
+		TotalMemUsed:   0,
+		TotalMemLimit:  0,
+		TotalDiskFree:  0,
+		MinDiskLimit:   0,
+		VhostResources: []VhostResources{},
+	}
+}
+
+type VhostResponse struct {
+	Name                   string `json:"name"`
+	MessagesUnacknowledged int    `json:"messages_unacknowledged"`
+}
+
+type ConnectionResponse struct {
+	Vhost string `json:"vhost"`
+}
+
+type ChannelResponse struct {
+	Vhost string `json:"vhost"`
+}
+
+type RateDetail struct {
+	Rate float64 `json:"rate"`
+}
+
+type MessageStats struct {
+	PublishDetails RateDetail `json:"publish_details"`
+	DeliverDetails RateDetail `json:"deliver_get_details"`
+	RedelivDetails RateDetail `json:"redeliver_details"`
+}
+
+type QueueAPIResponse struct {
+	Name                   string       `json:"name"`
+	Vhost                  string       `json:"vhost"`
+	Messages               int          `json:"messages"`
+	MessagesUnacknowledged int          `json:"messages_unacknowledged"`
+	Consumers              int          `json:"consumers"`
+	MessageBytes           int64        `json:"message_bytes"`
+	MessageBytesPersistent int64        `json:"message_bytes_persistent"`
+	MessageStats           MessageStats `json:"message_stats"`
+}
+
+type NodeAPIResponse struct {
+	Name          string `json:"name"`
+	MemUsed       int64  `json:"mem_used"`
+	MemLimit      int64  `json:"mem_limit"`
+	DiskFree      int64  `json:"disk_free"`
+	DiskFreeLimit int64  `json:"disk_free_limit"`
 }

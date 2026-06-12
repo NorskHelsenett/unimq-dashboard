@@ -30,4 +30,5 @@ type MaintenanceEntry struct {
 	Start       time.Time         `json:"start" bson:"start"`
 	End         time.Time         `json:"end" bson:"end"`
 	Status      MaintenanceStatus `json:"status" bson:"status"` // "scheduled", "done", "skipped"
+	Notified    bool              `json:"notified" bson:"notified"`
 }
