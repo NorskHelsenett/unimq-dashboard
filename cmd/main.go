@@ -1,8 +1,8 @@
 package main
 
 import (
+	"context"
 	"fmt"
-	"log"
 	"log/slog"
 	"mime"
 	"net/http"
@@ -33,20 +33,21 @@ func main() {
 	checker.StartChecker()
 
 	if err := mime.AddExtensionType(".js", "application/javascript"); err != nil {
-		log.Fatalf("failed to register MIME type: %v", err)
+		slog.Error("failed to register MIME type", "error", err)
 		return
 	}
 
-	routes, err := routes.SetupRoutes(config)
+	ctx := context.Background()
+	routes, err := routes.SetupRoutes(ctx, config)
 	if err != nil {
-		log.Fatalf("failed to set up routes: %v", err)
+		slog.Error("failed to set up routes", "error", err)
 		return
 	}
 
 	slog.Info("starting RabbitMQ Dashboard", "URL", config.BaseURL, "port", config.BasePort)
 	err = http.ListenAndServe(fmt.Sprintf("%v:%d", config.BaseURL, config.BasePort), routes)
 	if err != nil {
-		log.Fatalf("failed to start server: %v", err)
+		slog.Error("failed to start server", "error", err)
 		return
 	}
 
