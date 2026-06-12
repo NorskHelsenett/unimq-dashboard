@@ -8,5 +8,96 @@ services:
     command: dex serve /configs/dex-config.yaml
     volumes:
       - ./volumes-for-compose/dex-config-dev.yaml:/configs/dex-config.yaml
+    networks:
+      - unimq-dashboard-network
 
+  # unimq-dashboard:
+  #   image: ${DOCKER_MIRROR}nhn-unimq/frontend:latest
+  #   restart: unless-stopped
+  #   container_name: unimq-dashboard
+  #   ports:
+  #     - "5173:80"
+  #   environment:
+  #     - VITE_AUTH_ISSUER=http://dex:5556/dex
+  #     - VITE_CLIENT_ID=dummy
+  #     - VITE_CLIENT_SECRET=dummy
+  #   depends_on:
+  #     - dex
+  # unimq-api:
+  #   image: ${DOCKER_MIRROR}nhn-unimq/backend:latest
+  #   restart: unless-stopped
+  #   container_name: unimq-api
+  #   ports:
+  #     - "8080:8080"
+  #   depends_on:
+  #     - rabbitmq
+  #     - prometheus
+  #     - mongodb
+  #
+  rabbitmq:
+    image: ${DOCKER_MIRROR}rabbitmq:4.3.1-management-alpine
+    restart: unless-stopped
+    container_name: unimq-dashboard-rabbitmq
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    environment:
+      - RABBITMQ_DEFAULT_USER=${RABBITMQ_USERNAME:-guest}
+      - RABBITMQ_DEFAULT_PASS=${RABBITMQ_PASSWORD:-guest}
+    networks:
+      - unimq-dashboard-network
 
+  prometheus:
+    image: ${DOCKER_MIRROR}prom/prometheus:v3
+    restart: unless-stopped
+    container_name: unimq-dashboard-prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./volumes-for-compose/prometheus-config.yaml:/etc/prometheus/prometheus.yml
+    networks:
+      - unimq-dashboard-network
+
+  mongodb:
+    image: ${DOCKER_MIRROR}mongo:8.3.2-noble
+    volumes:
+      - ./volumes-for-compose/data/mongodb:/data/db:rw
+      - ./volumes-for-compose/mongodb:/docker-entrypoint-initdb.d:ro
+    restart: unless-stopped
+    container_name: unimq-dashboard-mongodb
+    ports:
+      - "27017:27017"
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=${MONGODB_USERNAME:-admin}
+      - MONGO_INITDB_ROOT_PASSWORD=${MONGODB_PASSWORD:-adminpassword}
+      - MONGO_INITDB_DATABASE=unimq
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 10s
+      retries: 3
+      start_period: 15s
+    networks:
+      - unimq-dashboard-network
+
+  mongo-express:
+    image: ${DOCKER_MIRROR}mongo-express:latest
+    restart: unless-stopped
+    container_name: unimq-dashboard-mongo-express
+    ports:
+      - "8081:8081"
+    environment:
+      - ME_CONFIG_MONGODB_ADMINUSERNAME=${MONGODB_USERNAME:-admin}
+      - ME_CONFIG_MONGODB_ADMINPASSWORD=${MONGODB_PASSWORD:-adminpassword}
+      - ME_CONFIG_MONGODB_SERVER=mongodb
+      - ME_CONFIG_MONBGODB_URL=mongodb://${MONGODb_USERNAME:-admin}:${MONGODB_PASSWORD:-adminpassword}@mongodb:27017/unimq"
+      - ME_CONFIG_BASICAUTH_USERNAME=test
+      - ME_CONFIG_BASICAUTH_PASSWORD=test
+    depends_on:
+      - mongodb
+    networks:
+      - unimq-dashboard-network
+
+networks:
+  unimq-dashboard-network:
+    driver: bridge
