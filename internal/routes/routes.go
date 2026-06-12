@@ -1,6 +1,7 @@
 package routes
 
 import (
+	"context"
 	"fmt"
 	"log/slog"
 	"net/http"
@@ -14,7 +15,7 @@ import (
 	"github.com/sisneve/rabbitmq-dashboard/internal/scraper"
 )
 
-func SetupRoutes(config *config.Config) (chi.Router, error) {
+func SetupRoutes(ctx context.Context, config *config.Config) (chi.Router, error) {
 	r := chi.NewRouter()
 
 	r.Use(middleware.Logger)
@@ -28,7 +29,13 @@ func SetupRoutes(config *config.Config) (chi.Router, error) {
 		return nil, err
 	}
 
-	rmqclient := scraper.NewRestClient(
+	err = db.InitCollections()
+	if err != nil {
+		return nil, err
+	}
+
+	rmqclient, err := scraper.NewRestClient(
+		ctx,
 		fmt.Sprintf("%v:%d/api",
 			config.RabbitMQHost,
 			config.RabbitMQPort,
