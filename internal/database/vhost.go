@@ -32,7 +32,7 @@ func (dbc *Database) CheckVhostExists(ctx context.Context, vhost string) (bool, 
 
 	defer cursor.Close(ctx)
 
-	var alarms []AlarmEntry
+	var alarms []models.AlarmEntry
 	err = cursor.All(ctx, &alarms)
 	if err != nil {
 		return false, err

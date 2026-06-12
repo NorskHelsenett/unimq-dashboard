@@ -7,7 +7,6 @@ import (
 	"time"
 
 	"github.com/sisneve/rabbitmq-dashboard/internal/models"
-	"github.com/sisneve/rabbitmq-dashboard/internal/store/notify"
 	"go.mongodb.org/mongo-driver/v2/mongo"
 )
 
@@ -163,18 +162,18 @@ func (dbc *Database) SeedAlarms(ctx context.Context) error {
 		return fmt.Errorf("failed to check existing alarm entry. %w", err)
 	}
 
-	entry := AlarmEntry{
+	entry := models.AlarmEntry{
 		AlarmID: alarmID,
-		Entries: []notify.LogEntry{
+		Entries: []models.LogEntry{
 			{
 				Timestamp: time.Now(),
-				Event:     notify.LogEvent("Test alarm triggered"),
+				Event:     models.LogEvent("Test alarm triggered"),
 				Value:     nil,
 				Threshold: 0.0,
 			},
 			{
 				Timestamp: time.Now().Add(1 * time.Hour),
-				Event:     notify.LogEvent("Test alarm resolved"),
+				Event:     models.LogEvent("Test alarm resolved"),
 				Value:     nil,
 				Threshold: 0.0,
 			},

@@ -6,16 +6,11 @@ import (
 	"log/slog"
 	"time"
 
-	"github.com/sisneve/rabbitmq-dashboard/internal/store/notify"
+	"github.com/sisneve/rabbitmq-dashboard/internal/models"
 	"go.mongodb.org/mongo-driver/v2/bson"
 )
 
-type AlarmEntry struct {
-	AlarmID string            `bson:"_id"`
-	Entries []notify.LogEntry `bson:"entries"`
-}
-
-func (dbc *Database) GetAlarmsAll(ctx context.Context) ([]AlarmEntry, error) {
+func (dbc *Database) GetAlarmsAll(ctx context.Context) ([]models.AlarmEntry, error) {
 
 	start := time.Now()
 
@@ -25,7 +20,7 @@ func (dbc *Database) GetAlarmsAll(ctx context.Context) ([]AlarmEntry, error) {
 	}
 	defer cursor.Close(ctx)
 
-	var alarms []AlarmEntry
+	var alarms []models.AlarmEntry
 	err = cursor.All(ctx, &alarms)
 	if err != nil {
 		return nil, err
@@ -36,9 +31,9 @@ func (dbc *Database) GetAlarmsAll(ctx context.Context) ([]AlarmEntry, error) {
 	return alarms, nil
 }
 
-func (dbc *Database) GetAlarm(ctx context.Context, id string) (*AlarmEntry, error) {
+func (dbc *Database) GetAlarm(ctx context.Context, id string) (*models.AlarmEntry, error) {
 	start := time.Now()
-	var alarm AlarmEntry
+	var alarm models.AlarmEntry
 
 	err := dbc.Collections.Alarms.FindOne(ctx, bson.M{"id": id}).Decode(&alarm)
 	if err != nil {
@@ -50,7 +45,7 @@ func (dbc *Database) GetAlarm(ctx context.Context, id string) (*AlarmEntry, erro
 	return &alarm, nil
 }
 
-func (dbc *Database) AddAlarm(ctx context.Context, alarm *AlarmEntry) error {
+func (dbc *Database) AddAlarm(ctx context.Context, alarm *models.AlarmEntry) error {
 	start := time.Now()
 	_, err := dbc.Collections.Alarms.InsertOne(ctx, alarm)
 	if err != nil {

@@ -7,7 +7,7 @@ import (
 
 	"github.com/sisneve/rabbitmq-dashboard/internal/config"
 	"github.com/sisneve/rabbitmq-dashboard/internal/database"
-	"github.com/sisneve/rabbitmq-dashboard/internal/store/notify"
+	"github.com/sisneve/rabbitmq-dashboard/internal/models"
 )
 
 func TestAlarms(t *testing.T) {
@@ -37,12 +37,12 @@ func TestAlarms(t *testing.T) {
 	ctx := t.Context()
 
 	value := 42.0
-	err = db.AddAlarm(ctx, &database.AlarmEntry{
+	err = db.AddAlarm(ctx, &models.AlarmEntry{
 		AlarmID: "test-alarm",
-		Entries: []notify.LogEntry{
+		Entries: []models.LogEntry{
 			{
 				Timestamp: time.Now(),
-				Event:     notify.LogEvent("Test alarm triggered"),
+				Event:     models.LogEvent("Test alarm triggered"),
 				Value:     &value,
 				Threshold: 40.0,
 			},
