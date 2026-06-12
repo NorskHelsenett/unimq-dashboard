@@ -20,10 +20,13 @@ type Config struct {
 	MongoDBPassword string `mapstructure:"MONGODB_PASSWORD"`
 	MongoDBDatabase string `mapstructure:"MONGODB_DATABASE"`
 
-	RabbitMQHost     string `mapstructure:"RABBITMQ_HOST"`
-	RabbitMQPort     int    `mapstructure:"RABBITMQ_PORT"`
-	RabbitMQUsername string `mapstructure:"RABBITMQ_USERNAME"`
-	RabbitMQPassword string `mapstructure:"RABBITMQ_PASSWORD"`
+	RabbitMQHost            string `mapstructure:"RABBITMQ_HOST"`
+	RabbitMQPort            int    `mapstructure:"RABBITMQ_PORT"`
+	RabbitMQUsername        string `mapstructure:"RABBITMQ_USERNAME"`
+	RabbitMQPassword        string `mapstructure:"RABBITMQ_PASSWORD"`
+	RabbitMQChannelLimit    int    `mapstructure:"RABBITMQ_CHANNEL_LIMIT"`
+	RabbitMQConnectionLimit int    `mapstructure:"RABBITMQ_CONNECTION_LIMIT"`
+	RabbitMQQueueLimit      int    `mapstructure:"RABBITMQ_QUEUE_LIMIT"`
 
 	PrometheusHost string `mapstructure:"PROMETHEUS_HOST"`
 	PrometheusPort int    `mapstructure:"PROMETHEUS_PORT"`
@@ -31,19 +34,22 @@ type Config struct {
 
 func NewConfig() *Config {
 	c := &Config{
-		BaseURL:          "localhost",
-		BasePort:         8080,
-		MongoDBHost:      "mongodb://localhost",
-		MongoDBPort:      27017,
-		MongoDBUsername:  "",
-		MongoDBPassword:  "",
-		MongoDBDatabase:  "rabbitmq-dashboard",
-		RabbitMQHost:     "http://localhost",
-		RabbitMQPort:     15672,
-		RabbitMQUsername: "",
-		RabbitMQPassword: "",
-		PrometheusHost:   "http://localhost",
-		PrometheusPort:   9090,
+		BaseURL:                 "localhost",
+		BasePort:                8080,
+		MongoDBHost:             "mongodb://localhost",
+		MongoDBPort:             27017,
+		MongoDBUsername:         "",
+		MongoDBPassword:         "",
+		MongoDBDatabase:         "rabbitmq-dashboard",
+		RabbitMQHost:            "http://localhost",
+		RabbitMQPort:            15672,
+		RabbitMQUsername:        "",
+		RabbitMQPassword:        "",
+		RabbitMQChannelLimit:    1000,
+		RabbitMQConnectionLimit: 300,
+		RabbitMQQueueLimit:      150,
+		PrometheusHost:          "http://localhost",
+		PrometheusPort:          9090,
 	}
 	return c
 }
@@ -130,6 +136,9 @@ func (c *Config) loadEnvironmentVariables() {
 	_ = viper.BindEnv("RABBITMQ_PORT")
 	_ = viper.BindEnv("PROMETHEUS_PORT")
 	_ = viper.BindEnv("PROMETHEUS_HOST")
+	_ = viper.BindEnv("RABBITMQ_CHANNEL_LIMIT")
+	_ = viper.BindEnv("RABBITMQ_CONNECTION_LIMIT")
+	_ = viper.BindEnv("RABBITMQ_QUEUE_LIMIT")
 }
 
 func (c *Config) validateConfiguration() error {
@@ -148,6 +157,9 @@ func (c *Config) validateConfiguration() error {
 	parameterChecks["RABBITMQ_PORT"] = isPresent(c.RabbitMQPort)
 	parameterChecks["RABBITMQ_USERNAME"] = isPresent(c.RabbitMQUsername)
 	parameterChecks["RABBITMQ_PASSWORD"] = isPresent(c.RabbitMQPassword)
+	parameterChecks["RABBITMQ_CHANNEL_LIMIT"] = isPresent(c.RabbitMQChannelLimit)
+	parameterChecks["RABBITMQ_CONNECTION_LIMIT"] = isPresent(c.RabbitMQConnectionLimit)
+	parameterChecks["RABBITMQ_QUEUE_LIMIT"] = isPresent(c.RabbitMQQueueLimit)
 	parameterChecks["PROMETHEUS_HOST"] = isPresent(c.PrometheusHost)
 	parameterChecks["PROMETHEUS_PORT"] = isPresent(c.PrometheusPort)
 
