@@ -1,16 +1,17 @@
 package scraper
 
 import (
-	"encoding/json"
 	"net/http"
+
+	"github.com/sisneve/rabbitmq-dashboard/internal/routes/httpsuite"
 )
 
-func (rc *RestClient) GetClusterHandler(w http.ResponseWriter, _ *http.Request) {
-	stats, err := rc.GetClusterStats()
+func (rc *RestClient) GetClusterHandler(w http.ResponseWriter, r *http.Request) {
+	stats, err := rc.RMQClient.GetClusterStats()
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadGateway)
+		httpsuite.WriteJSONError(w, "error fetching cluster stats", http.StatusInternalServerError)
 		return
 	}
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(stats)
+
+	httpsuite.SendResponse(r.Context(), w, "gathered cluster stats", http.StatusOK, stats)
 }

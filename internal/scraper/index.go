@@ -5,13 +5,14 @@ import (
 	"net/http"
 
 	"github.com/sisneve/rabbitmq-dashboard/internal/models"
+	"github.com/sisneve/rabbitmq-dashboard/internal/routes/httpsuite"
 	"github.com/sisneve/rabbitmq-dashboard/internal/templating"
 )
 
 func (rc *RestClient) IndexHandler(w http.ResponseWriter, r *http.Request) {
-	vhosts, err := rc.GetVhosts()
+	vhosts, err := rc.RMQClient.GetVhosts()
 	if err != nil {
-		http.Error(w, "Could not reach RabbitMQ: "+err.Error(), http.StatusBadGateway)
+		httpsuite.WriteJSONError(w, "error fetching vhosts", http.StatusBadGateway)
 		return
 	}
 	selected := r.URL.Query().Get("vhost")
@@ -20,8 +21,9 @@ func (rc *RestClient) IndexHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	data := models.PageData{Vhosts: vhosts, Selected: selected, Limits: *rc.RMQLimits}
 	if selected != "" {
-		if m, err := rc.GetMetrics(selected); err == nil {
-			data.Metrics = m
+		metrics, err := rc.RMQClient.GetMetrics(selected)
+		if err == nil {
+			data.Metrics = metrics
 		}
 	}
 	if err := templating.IndexTmpl.Execute(w, data); err != nil {
