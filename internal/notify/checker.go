@@ -1,51 +1,42 @@
 package notify
 
 import (
+	"bytes"
+	"context"
+	"encoding/json"
 	"fmt"
 	"log"
+	"log/slog"
+	"net/http"
 	"time"
 
-	"github.com/sisneve/rabbitmq-dashboard/internal/config"
+	"github.com/sisneve/rabbitmq-dashboard/internal/clients/rabbitmq"
+	"github.com/sisneve/rabbitmq-dashboard/internal/database"
 	"github.com/sisneve/rabbitmq-dashboard/internal/models"
-	"github.com/sisneve/rabbitmq-dashboard/internal/scraper"
-	"github.com/sisneve/rabbitmq-dashboard/internal/store/maintenance"
 	"github.com/sisneve/rabbitmq-dashboard/internal/store/notify"
 )
 
 type (
 	// Checker periodically evaluates alarm rules against current RabbitMQ metrics and triggers notifications.
 	Checker struct {
-		Config     *config.Config
-		store      *notify.Store
-		logStore   *notify.LogStore
-		maintStore *maintenance.Store
-		interval   time.Duration
+		Ctx       context.Context
+		DB        *database.Database
+		RMQClient *rabbitmq.RMQClient
+		interval  time.Duration
 	}
 
 	CheckerOptions func(*Checker)
 )
 
-func WithConfig(cfg *config.Config) CheckerOptions {
+func WithRMQClient(client *rabbitmq.RMQClient) CheckerOptions {
 	return func(c *Checker) {
-		c.Config = cfg
+		c.RMQClient = client
 	}
 }
 
-func WithStore(s *notify.Store) CheckerOptions {
+func WithDB(db *database.Database) CheckerOptions {
 	return func(c *Checker) {
-		c.store = s
-	}
-}
-
-func WithLogStore(ls *notify.LogStore) CheckerOptions {
-	return func(c *Checker) {
-		c.logStore = ls
-	}
-}
-
-func WithMaintStore(ms *maintenance.Store) CheckerOptions {
-	return func(c *Checker) {
-		c.maintStore = ms
+		c.DB = db
 	}
 }
 
@@ -57,11 +48,7 @@ func WithInterval(d time.Duration) CheckerOptions {
 
 func NewChecker(opts ...CheckerOptions) *Checker {
 	c := &Checker{
-		Config:     config.NewConfig(),
-		store:      nil,
-		logStore:   nil,
-		maintStore: nil,
-		interval:   60 * time.Second,
+		interval: 60 * time.Second,
 	}
 	for _, opt := range opts {
 		opt(c)
@@ -71,6 +58,7 @@ func NewChecker(opts ...CheckerOptions) *Checker {
 
 func (c *Checker) StartChecker() {
 	go func() {
+		// Initial delay to allow other components to start and populate the store before checks run.
 		time.Sleep(15 * time.Second)
 		for {
 			c.runChecks()
@@ -80,72 +68,81 @@ func (c *Checker) StartChecker() {
 }
 
 func (c *Checker) runChecks() {
-	snapshots := c.store.AllSnapshots()
-	for vhost, snap := range snapshots {
-		if len(snap.Rules) == 0 {
+	notifications, err := c.DB.GetNotificationsAll(c.Ctx)
+	if err != nil {
+		slog.ErrorContext(c.Ctx, "Failed to fetch notifications from database", "error", err)
+		return
+	}
+
+	for _, vhost := range notifications {
+		if len(vhost.Rules) == 0 {
 			continue
 		}
-		urls := snap.WebhookURLs()
-		var metrics *models.VhostMetrics
-		var queues []models.QueueDetail
-		fetched := false
-		fetchOnce := func() {
-			if fetched {
-				return
-			}
-			restclient := scraper.NewRestClient(
-				fmt.Sprintf("%v:%d/api",
-					c.Config.RabbitMQHost,
-					c.Config.RabbitMQPort,
-				),
-				c.Config.RabbitMQUsername,
-				c.Config.RabbitMQPassword,
-				c.Config.PrometheusHost,
-				"v1",
-				c.Config.PrometheusPort,
-			)
+		urls := vhost.WebhookURLs()
 
-			metrics, _ = restclient.GetMetrics(vhost)
-			queues, _ = restclient.GetQueueDetails(vhost)
-			fetched = true
+		metrics, err := c.RMQClient.GetMetrics(vhost.Name)
+		if err != nil {
+			slog.ErrorContext(c.Ctx, "Failed to fetch metrics", "vhost", vhost, "error", err)
+			continue
 		}
-		for _, rule := range snap.Rules {
+
+		queues, err := c.RMQClient.GetQueueDetails(vhost.Name)
+		if err != nil {
+			slog.ErrorContext(c.Ctx, "Failed to fetch queue details", "vhost", vhost, "error", err)
+			continue
+		}
+
+		for _, rule := range vhost.Rules {
+
 			if !rule.Enabled {
 				continue
 			}
 			if rule.Type == "maintenance" {
-				checkMaintenanceRule(c.store, vhost, rule, urls, c.maintStore)
+				checkMaintenanceRule(c.Ctx, c.DB, vhost.Name, rule, urls)
 				continue
 			}
-			fetchOnce()
 			triggered, value := evaluate(rule, metrics, queues)
 			newStatus := "ok"
 			if triggered {
 				newStatus = "firing"
 			}
 			shouldNotify := triggered && rule.Status != "firing" && len(urls) > 0
-			if err := c.store.SetRuleStatus(vhost, rule.ID, newStatus, shouldNotify, value); err != nil {
-				log.Printf("notify: set status failed: %v", err)
+			err := c.DB.UpdateNotificationRule(c.Ctx, vhost.Name, rule.ID, newStatus, *value, shouldNotify)
+			if err != nil {
+				log.Printf("notify: database update failed: %v", err)
 			}
-			// Log state transitions
+
 			if rule.Status != "firing" && newStatus == "firing" {
 				entry := notify.LogEntry{Timestamp: time.Now(), Event: notify.LogEventFired, Value: value, Threshold: rule.Threshold}
-				if err := c.logStore.Append(rule.ID, entry); err != nil {
-					log.Printf("notify: log append failed: %v", err)
+				alarm := database.AlarmEntry{
+					AlarmID: rule.ID,
+					Entries: []notify.LogEntry{entry},
 				}
+				err := c.DB.AddAlarm(c.Ctx, &alarm)
+				if err != nil {
+					slog.ErrorContext(c.Ctx, "notify: failed to add alarm entry", "error", err)
+				}
+
 			} else if rule.Status == "firing" && newStatus == "ok" {
 				entry := notify.LogEntry{Timestamp: time.Now(), Event: notify.LogEventResolved, Value: value, Threshold: rule.Threshold}
-				if err := c.logStore.Append(rule.ID, entry); err != nil {
-					log.Printf("notify: log append failed: %v", err)
+				alarm := database.AlarmEntry{
+					AlarmID: rule.ID,
+					Entries: []notify.LogEntry{entry},
+				}
+				err = c.DB.AddAlarm(c.Ctx, &alarm)
+				if err != nil {
+					slog.ErrorContext(c.Ctx, "notify: failed to add alarm entry", "error", err)
 				}
 			}
+
 			if shouldNotify {
-				subject := fmt.Sprintf("[UniMQ] Alarm: %s — %s", rule.Name, vhost)
-				body := rule.BuildMessage(vhost)
-				if err := c.store.SendWebhooks(urls, subject, body); err != nil {
-					log.Printf("notify: webhook failed (rule %s): %v", rule.Name, err)
+				subject := fmt.Sprintf("[UniMQ] Alarm: %s — %s", rule.Name, vhost.Name)
+				body := rule.BuildMessage(vhost.Name)
+				err := sendWebhooks(urls, subject, body)
+				if err != nil {
+					slog.ErrorContext(c.Ctx, "notify: webhook failed", "rule", rule.Name, "error", err)
 				} else {
-					log.Printf("notify: webhook sent for rule %q on vhost %q", rule.Name, vhost)
+					slog.InfoContext(c.Ctx, "notify: webhook sent", "rule", rule.Name, "vhost", vhost)
 				}
 			}
 		}
@@ -200,34 +197,65 @@ func evaluate(rule models.AlarmRule, metrics *models.VhostMetrics, queues []mode
 	return false, nil
 }
 
-func checkMaintenanceRule(store *notify.Store, vhost string, rule models.AlarmRule, urls []string, maintStore *maintenance.Store) {
-	scheduled := maintStore.Scheduled()
+func checkMaintenanceRule(ctx context.Context, db *database.Database, vhost string, rule models.AlarmRule, urls []string) {
+	scheduled, err := db.GetMaintenanceScheduled(ctx)
+	if err != nil {
+		slog.ErrorContext(ctx, "Failed to fetch scheduled maintenance", "error", err)
+		return
+	}
 	fired := false
 	for _, m := range scheduled {
-		if store.IsMaintenanceNotified(m.ID) {
+		if m.Notified {
 			continue
 		}
+
 		body := rule.Message
 		if body == "" {
 			body = fmt.Sprintf(
-				"Nytt vedlikehold er planlagt:\n\n%s\n\nTidspunkt: %s – %s UTC",
+				"New maintenace scheduled:\n\n%s\n\nDate: %s – %s UTC",
 				m.Description,
 				m.Start.Format("2006-01-02 15:04"),
 				m.End.Format("15:04"),
 			)
 		}
-		subject := "[UniMQ] Nytt vedlikehold planlagt"
-		if err := store.SendWebhooks(urls, subject, body); err != nil {
-			log.Printf("notify: maintenance webhook failed: %v", err)
+		subject := "[UniMQ] New maintenance scheduled"
+		if err := sendWebhooks(urls, subject, body); err != nil {
+			slog.ErrorContext(ctx, "notify: maintenance webhook failed", "error", err)
 		} else {
-			log.Printf("notify: maintenance webhook sent for entry %s", m.ID)
+			slog.InfoContext(ctx, "notify: maintenance webhook sent", "id", m.ID)
 		}
-		store.MarkMaintenanceNotified(m.ID)
+		err = db.SetMaintenanceEntryNotified(ctx, m.ID, true)
+		if err != nil {
+			slog.ErrorContext(ctx, "Failed to mark maintenance as notified", "error", err)
+		}
 		fired = true
 	}
+
 	status := "ok"
 	if fired {
 		status = "firing"
 	}
-	store.SetRuleStatus(vhost, rule.ID, status, fired, nil)
+
+	err = db.SetMaintenanceEntryStatus(ctx, vhost, status)
+	if err != nil {
+		slog.ErrorContext(ctx, "Failed to update maintenance status", "error", err)
+	}
+}
+
+func sendWebhooks(urls []string, subject, body string) error {
+	text := subject + "\n\n" + body
+	payload, _ := json.Marshal(map[string]string{"text": text})
+	var lastErr error
+	for _, u := range urls {
+		resp, err := http.Post(u, "application/json", bytes.NewReader(payload))
+		if err != nil {
+			lastErr = err
+			continue
+		}
+		resp.Body.Close()
+		if resp.StatusCode >= 400 {
+			lastErr = fmt.Errorf("webhook returnerte HTTP %d", resp.StatusCode)
+		}
+	}
+	return lastErr
 }
