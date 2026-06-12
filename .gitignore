@@ -1,4 +1,5 @@
 data/
+volumes-for-compose/data/
 main
 .DS_Store
 .env
