@@ -119,20 +119,22 @@ func (dbc *Database) seedMaintenace(ctx context.Context) error {
 
 	name := "test-maintenance"
 	existing, err := dbc.GetMaintenanceEntry(ctx, name)
-	if err == nil {
+	if err != nil {
+		if !errors.Is(err, mongo.ErrNoDocuments) {
+			return fmt.Errorf("failed to check existing maintenance entry. %w", err)
+		}
+	} else {
 		if existing == nil {
 			return fmt.Errorf("unexpected nil maintenance entry")
 		}
-		if existing.ID != "test-maintenance" {
-			return fmt.Errorf("unexpected maintenance entry ID. expected %s, got %s", "test-maintenance", existing.ID)
+		if existing.ID == name {
+			return nil
 		}
-		return nil
+		return fmt.Errorf("unexpected maintenance entry ID. expected %s, got %s", "test-maintenance", existing.ID)
 	}
-	if !errors.Is(err, mongo.ErrNoDocuments) {
-		return fmt.Errorf("failed to check existing maintenance entry. %w", err)
-	}
+
 	maintenance := models.MaintenanceEntry{
-		ID:          "test-maintenance",
+		ID:          name,
 		Description: "Test maintenance entry",
 		Start:       time.Now(),
 		End:         time.Now().Add(2 * time.Hour),
