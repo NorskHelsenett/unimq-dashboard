@@ -8,5 +8,7 @@
 - http.FileServer for static files, should be moved to a separate handler and not used for all routes
 - Swagger documentation for API endpoints
 - Log entry trimming, should be implemented to prevent log bloat and improve readability
+- Retry logic for connecting to RabbitMQ and Prometheus, to handle transient connectivity issues
+- Database queries should use the collections parameter instead of hardcoding collection names
 
 ---
