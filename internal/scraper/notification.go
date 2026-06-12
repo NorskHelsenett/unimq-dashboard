@@ -7,6 +7,7 @@ import (
 	"strconv"
 
 	"github.com/sisneve/rabbitmq-dashboard/internal/models"
+	"github.com/sisneve/rabbitmq-dashboard/internal/notificationhelper"
 	"github.com/sisneve/rabbitmq-dashboard/internal/routes/httpsuite"
 	"github.com/sisneve/rabbitmq-dashboard/internal/templating"
 )
@@ -76,7 +77,12 @@ func (rc *RestClient) PostNotificationsAddRecipientHandler(w http.ResponseWriter
 		return
 	}
 
-	id := strconv.FormatInt(int64(len(templating.NotifyStore.GetVhostCopy(vhost).Recipients)+1), 10)
+	vhostObject, err := rc.DB.GetVhost(r.Context(), vhost)
+	if err != nil {
+		httpsuite.WriteJSONError(w, "error fetching vhost: "+err.Error(), http.StatusInternalServerError)
+		return
+	}
+	id := strconv.FormatInt(int64(len(vhostObject.Recipients)+1), 10)
 
 	recipient := models.Recipient{
 		ID:   id,
@@ -85,7 +91,7 @@ func (rc *RestClient) PostNotificationsAddRecipientHandler(w http.ResponseWriter
 		Type: models.ParseRuleType(typ),
 	}
 
-	err := rc.DB.AddNotificationRecipient(r.Context(), vhost, recipient)
+	err = rc.DB.AddNotificationRecipient(r.Context(), vhost, recipient)
 	if err != nil {
 		httpsuite.WriteJSONError(w, "error adding recipient: "+err.Error(), http.StatusInternalServerError)
 		return
@@ -344,7 +350,7 @@ func (rc *RestClient) PostNotificationsTestHandler(w http.ResponseWriter, r *htt
 
 	subject := "[UniMQ TEST] " + rule.Name + " — " + vhost
 	body := "This is a test message from UniMQ.\n\n" + rule.BuildMessage(vhost)
-	if err := templating.NotifyStore.SendWebhooks(vhostobject.WebhookURLs(), subject, body); err != nil {
+	if err := notificationhelper.SendWebhooks(vhostobject.WebhookURLs(), subject, body); err != nil {
 		httpsuite.WriteJSONError(w, "error sending test notification: "+err.Error(), http.StatusInternalServerError)
 		return
 	}

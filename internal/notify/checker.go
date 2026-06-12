@@ -1,18 +1,16 @@
 package notify
 
 import (
-	"bytes"
 	"context"
-	"encoding/json"
 	"fmt"
 	"log"
 	"log/slog"
-	"net/http"
 	"time"
 
 	"github.com/sisneve/rabbitmq-dashboard/internal/clients/rabbitmq"
 	"github.com/sisneve/rabbitmq-dashboard/internal/database"
 	"github.com/sisneve/rabbitmq-dashboard/internal/models"
+	"github.com/sisneve/rabbitmq-dashboard/internal/notificationhelper"
 )
 
 type (
@@ -218,7 +216,7 @@ func checkMaintenanceRule(ctx context.Context, db *database.Database, vhost stri
 			)
 		}
 		subject := "[UniMQ] New maintenance scheduled"
-		if err := sendWebhooks(urls, subject, body); err != nil {
+		if err := notificationhelper.SendWebhooks(urls, subject, body); err != nil {
 			slog.ErrorContext(ctx, "notify: maintenance webhook failed", "error", err)
 		} else {
 			slog.InfoContext(ctx, "notify: maintenance webhook sent", "id", m.ID)
@@ -239,22 +237,4 @@ func checkMaintenanceRule(ctx context.Context, db *database.Database, vhost stri
 	if err != nil {
 		slog.ErrorContext(ctx, "Failed to update maintenance status", "error", err)
 	}
-}
-
-func sendWebhooks(urls []string, subject, body string) error {
-	text := subject + "\n\n" + body
-	payload, _ := json.Marshal(map[string]string{"text": text})
-	var lastErr error
-	for _, u := range urls {
-		resp, err := http.Post(u, "application/json", bytes.NewReader(payload))
-		if err != nil {
-			lastErr = err
-			continue
-		}
-		resp.Body.Close()
-		if resp.StatusCode >= 400 {
-			lastErr = fmt.Errorf("webhook returnerte HTTP %d", resp.StatusCode)
-		}
-	}
-	return lastErr
 }
