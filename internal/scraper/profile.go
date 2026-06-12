@@ -14,7 +14,7 @@ func (rc *RestClient) GetProfileHandler(w http.ResponseWriter, r *http.Request) 
 	if selected == "" && len(vhosts) > 0 {
 		selected = vhosts[0]
 	}
-	data := models.PageData{Vhosts: vhosts, Selected: selected, Limits: DefaultLimits}
+	data := models.PageData{Vhosts: vhosts, Selected: selected, Limits: *rc.RMQLimits}
 	if err := templating.ProfileTmpl.Execute(w, data); err != nil {
 		log.Printf("template error: %v", err)
 	}

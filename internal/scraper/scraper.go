@@ -9,6 +9,7 @@ import (
 	"sort"
 	"sync"
 
+	"github.com/sisneve/rabbitmq-dashboard/internal/database"
 	"github.com/sisneve/rabbitmq-dashboard/internal/models"
 	"github.com/sisneve/rabbitmq-dashboard/internal/prom"
 )
@@ -29,13 +30,6 @@ func appendHistory(key string, value int) []int {
 	}
 	history.data[key] = h
 	return h
-}
-
-// TODO: Move to env vars or config file
-var DefaultLimits = models.Limits{
-	MaxChannels:    1000,
-	MaxConnections: 300,
-	MaxQueues:      150,
 }
 
 // ClusterStats holds cluster-wide memory and disk info plus per-vhost breakdown.
@@ -110,14 +104,19 @@ type RestClient struct {
 	username   string
 	password   string
 	PromClient *prom.PromClient
+	DB         *database.Database
+	RMQLimits  *models.Limits
 }
 
-func NewRestClient(baseURL, username, password string, promURL, promAPIVersion string, promPort int) *RestClient {
+// TODO: Fix parameter soup to functional parameters.
+func NewRestClient(baseURL, username, password string, promURL, promAPIVersion string, promPort int, db *database.Database, limits *models.Limits) *RestClient {
 	return &RestClient{
 		baseURL:    baseURL,
 		username:   username,
 		password:   password,
 		PromClient: prom.NewPromClient(promURL, promAPIVersion, promPort),
+		DB:         db,
+		RMQLimits:  limits,
 	}
 }
 
@@ -143,6 +142,19 @@ func (r *RestClient) fetch(path string, v any) error {
 	return json.Unmarshal(body, v)
 }
 
+func (r *RestClient) GetVhost(name string) (string, error) {
+	vhosts, err := r.GetVhosts()
+	if err != nil {
+		return "", err
+	}
+	for _, v := range vhosts {
+		if v == name {
+			return v, nil
+		}
+	}
+	return "", fmt.Errorf("vhost %q not found", name)
+}
+
 func (r *RestClient) GetVhosts() ([]string, error) {
 	var vhosts []vhostResponse
 	if err := r.fetch("/vhosts", &vhosts); err != nil {
@@ -155,6 +167,7 @@ func (r *RestClient) GetVhosts() ([]string, error) {
 	return names, nil
 }
 
+// GetMetrics fetches vhost-level metrics by aggregating data from RabbitMQ's REST API.
 func (r *RestClient) GetMetrics(vhost string) (*models.VhostMetrics, error) {
 	encoded := url.PathEscape(vhost)
 
@@ -231,7 +244,14 @@ func (r *RestClient) GetClusterStats() (*ClusterStats, error) {
 		return nil, err
 	}
 
-	stats := &ClusterStats{}
+	stats := &ClusterStats{
+		Nodes:          []NodeStats{},
+		TotalMemUsed:   0,
+		TotalMemLimit:  0,
+		TotalDiskFree:  0,
+		MinDiskLimit:   0,
+		VhostResources: []VhostResources{},
+	}
 	for _, n := range nodes {
 		stats.Nodes = append(stats.Nodes, NodeStats{
 			Name:          n.Name,
