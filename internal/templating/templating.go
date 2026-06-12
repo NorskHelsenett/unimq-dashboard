@@ -3,9 +3,6 @@ package templating
 import (
 	"encoding/json"
 	"html/template"
-
-	"github.com/sisneve/rabbitmq-dashboard/internal/store/maintenance"
-	"github.com/sisneve/rabbitmq-dashboard/internal/store/notify"
 )
 
 func mustTemplate(name string) *template.Template {
@@ -23,10 +20,6 @@ var (
 		},
 		"json": jsonMarshal,
 	}
-
-	MaintStore  *maintenance.Store
-	NotifyStore *notify.Store
-	LogStore    *notify.LogStore
 
 	IndexTmpl      = mustTemplate("index.html")
 	QueueTmpl      = mustTemplate("queue.html")
