@@ -5,11 +5,16 @@ import (
 	"net/http"
 
 	"github.com/sisneve/rabbitmq-dashboard/internal/models"
+	"github.com/sisneve/rabbitmq-dashboard/internal/routes/httpsuite"
 	"github.com/sisneve/rabbitmq-dashboard/internal/templating"
 )
 
 func (rc *RestClient) GetProfileHandler(w http.ResponseWriter, r *http.Request) {
-	vhosts, _ := rc.GetVhosts()
+	vhosts, err := rc.RMQClient.GetVhosts()
+	if err != nil {
+		httpsuite.WriteJSONError(w, "error fetching vhosts", http.StatusBadGateway)
+		return
+	}
 	selected := r.URL.Query().Get("vhost")
 	if selected == "" && len(vhosts) > 0 {
 		selected = vhosts[0]

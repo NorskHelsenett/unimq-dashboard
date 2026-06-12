@@ -22,7 +22,7 @@ func (rc *RestClient) GetNotificationsHandler(w http.ResponseWriter, r *http.Req
 		// slog.ErrorContext(r.Context(), "missing vhost parameter")
 		return
 	}
-	vhosts, err := rc.GetVhosts()
+	vhosts, err := rc.RMQClient.GetVhosts()
 	if err != nil {
 		httpsuite.WriteJSONError(w, "error fetching vhost: "+err.Error(), http.StatusBadGateway)
 		// slog.ErrorContext(r.Context(), "error fetching vhost", "vhost", vhost, "error", err)

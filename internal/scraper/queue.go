@@ -64,7 +64,8 @@ func (rc *RestClient) GetQueuesHandler(w http.ResponseWriter, r *http.Request) {
 		httpsuite.WriteJSONError(w, "missing vhost", http.StatusBadRequest)
 		return
 	}
-	details, err := rc.GetQueueDetails(vhost)
+
+	details, err := rc.RMQClient.GetQueues()
 	if err != nil {
 		httpsuite.WriteJSONError(w, "error fetching queue details", http.StatusInternalServerError)
 		return
