@@ -35,7 +35,7 @@ func (dbc *Database) GetAlarm(ctx context.Context, id string) (*models.AlarmEntr
 	start := time.Now()
 	var alarm models.AlarmEntry
 
-	err := dbc.Collections.Alarms.FindOne(ctx, bson.M{"id": id}).Decode(&alarm)
+	err := dbc.Collections.Alarms.FindOne(ctx, bson.M{"_id": id}).Decode(&alarm)
 	if err != nil {
 		return nil, fmt.Errorf("failed to find alarm. %w", err)
 	}
@@ -57,7 +57,7 @@ func (dbc *Database) AddAlarm(ctx context.Context, alarm *models.AlarmEntry) err
 
 func (dbc *Database) DeleteAlarm(ctx context.Context, alarmID string) error {
 	start := time.Now()
-	_, err := dbc.Collections.Alarms.DeleteOne(ctx, bson.M{"id": alarmID})
+	_, err := dbc.Collections.Alarms.DeleteOne(ctx, bson.M{"_id": alarmID})
 	if err != nil {
 		return fmt.Errorf("failed to delete alarm. %w", err)
 	}
