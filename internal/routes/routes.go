@@ -9,16 +9,24 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/sisneve/rabbitmq-dashboard/internal/config"
+	"github.com/sisneve/rabbitmq-dashboard/internal/database"
+	"github.com/sisneve/rabbitmq-dashboard/internal/models"
 	"github.com/sisneve/rabbitmq-dashboard/internal/scraper"
 )
 
-func SetupRoutes(config *config.Config) chi.Router {
+func SetupRoutes(config *config.Config) (chi.Router, error) {
 	r := chi.NewRouter()
 
 	r.Use(middleware.Logger)
 	r.Use(middleware.Recoverer)
 	r.Use(middleware.Timeout(60 * time.Second))
 	r.Use(middleware.RequestID)
+
+	uri := database.BuildURI(config.MongoDBUsername, config.MongoDBPassword, config.MongoDBHost, config.MongoDBPort)
+	db, err := database.NewDatabase(uri, config.MongoDBDatabase)
+	if err != nil {
+		return nil, err
+	}
 
 	rmqclient := scraper.NewRestClient(
 		fmt.Sprintf("%v:%d/api",
@@ -30,6 +38,12 @@ func SetupRoutes(config *config.Config) chi.Router {
 		config.PrometheusHost,
 		"v1",
 		config.PrometheusPort,
+		db,
+		&models.Limits{
+			MaxChannels:    config.RabbitMQChannelLimit,
+			MaxQueues:      config.RabbitMQQueueLimit,
+			MaxConnections: config.RabbitMQConnectionLimit,
+		},
 	)
 
 	http.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("web/static"))))
@@ -46,23 +60,25 @@ func SetupRoutes(config *config.Config) chi.Router {
 	r.Get("/queue", rmqclient.QueueHandler)
 	r.Get("/maintenance", rmqclient.GetMaintenanceHandler)
 	r.Get("/maintenance/admin", rmqclient.GetMaintenanceAdminHandler)
-	r.Post("/maintenance/add", rmqclient.MaintenanceAddHandler)
-	r.Get("/maintenance/status", rmqclient.MaintenanceStatusHandler)
-	r.Post("/maintenance/delete", rmqclient.MaintenanceDeleteHandler)
+	r.Post("/maintenance/add", rmqclient.PostMaintenanceAddHandler)
+	r.Post("/maintenance/status", rmqclient.PostMaintenanceStatusHandler)
+	r.Post("/maintenance/delete", rmqclient.PostMaintenanceDeleteHandler)
 	r.Get("/notifications", rmqclient.GetNotificationsHandler)
+
 	// TODO: where are recipients listed?
 	r.Post("/notifications/recipients/add", rmqclient.PostNotificationsAddRecipientHandler)
 	r.Post("/notifications/recipients/delete", rmqclient.PostNotificationsDeleteRecipientHandler)
 	r.Post("/notifications/rules/add", rmqclient.PostNotificationsAddRuleHandler)
 	r.Post("/notifications/rules/delete", rmqclient.PostNotificationsDeleteRuleHandler)
 	r.Post("/notifications/rules/update", rmqclient.PostNotificationsUpdateRuleHandler)
+
 	// TODO: Where are rules listed?
 	r.Post("/notifications/rules/toggle", rmqclient.PostNotificationsToggleRuleHandler)
 	r.Post("/notifications/rules/message", rmqclient.PostNotificationsUpdateMessageHandler) // TODO: requires rule ID and vhost query params, likely a Get request
 	r.Post("/notifications/rules/test", rmqclient.PostNotificationsTestHandler)
-	r.HandleFunc("/notifications/rules/logs", rmqclient.NotificationsLogsHandler) // TODO: Likely a Get request, requires an id query param, unsure which id (rule id? vhost? log id?)
-	r.HandleFunc("/notifications/rule", rmqclient.NotificationsRuleHandler)       // TODO: Likely a Get request, requires rule ID and vhost query params
-	r.Get("/profile", rmqclient.GetProfileHandler)                                // TODO: requires vhost query param
+	r.Get("/notifications/rules/logs", rmqclient.NotificationsLogsHandler) // TODO: Likely a Get request, requires an id query param, unsure which id (rule id? vhost? log id?)
+	r.Get("/notifications/rule", rmqclient.NotificationsRuleHandler)       // TODO: Likely a Get request, requires rule ID and vhost query params
+	r.Get("/profile", rmqclient.GetProfileHandler)                         // TODO: requires vhost query param
 
 	// API routes
 	r.Get("/api/queues", rmqclient.GetQueuesHandler) // TODO: Fix required vhost query param
@@ -74,6 +90,6 @@ func SetupRoutes(config *config.Config) chi.Router {
 		return nil
 	})
 
-	return r
+	return r, nil
 
 }
