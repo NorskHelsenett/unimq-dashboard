@@ -6,21 +6,21 @@ import (
 	"time"
 
 	"github.com/sisneve/rabbitmq-dashboard/internal/models"
+	"go.mongodb.org/mongo-driver/v2/bson"
 )
 
 func (dbc *Database) GetVhost(ctx context.Context, vhost string) (*VhostNotification, error) {
 	start := time.Now()
-	// cursor, err := dbc.Collections.Notifications.Find(ctx, map[string]any{})
-	// if err != nil {
-	// 	return nil, err
-	// }
 
-	collection := dbc.client.Database(dbc.db).Collection("notifications")
+	var notification *VhostNotification
+	err := dbc.Collections.Notifications.FindOne(ctx, bson.M{"_id": vhost}).Decode(notification)
+	if err != nil {
+		slog.Info("failed to retrieve vhost", "runtime", time.Since(start), "_id", vhost)
+		return nil, err
+	}
 
-	var notification VhostNotification
-	err := collection.FindOne(ctx, map[string]any{"_id": vhost}).Decode(&notification)
-	slog.Info("retrieved vhost", "runtime", time.Since(start), "id", vhost)
-	return &notification, err
+	slog.Info("retrieved vhost", "runtime", time.Since(start), "_id", vhost)
+	return notification, err
 }
 
 func (dbc *Database) CheckVhostExists(ctx context.Context, vhost string) (bool, error) {
@@ -35,10 +35,11 @@ func (dbc *Database) CheckVhostExists(ctx context.Context, vhost string) (bool, 
 	var alarms []models.AlarmEntry
 	err = cursor.All(ctx, &alarms)
 	if err != nil {
+		slog.Info("checked vhost existence", "runtime", time.Since(start), "_id", vhost, "exists", len(alarms) > 0)
 		return false, err
 	}
 
-	slog.Info("checked vhost existence", "runtime", time.Since(start), "vhost", vhost, "exists", len(alarms) > 0)
+	slog.Info("checked vhost existence", "runtime", time.Since(start), "_id", vhost, "exists", len(alarms) > 0)
 	return len(alarms) > 0, nil
 }
 
@@ -57,7 +58,6 @@ func (dbc *Database) EnsureVhostExists(ctx context.Context, name string) error {
 
 func (dbc *Database) AddVhost(ctx context.Context, name string) error {
 	start := time.Now()
-	collection := dbc.client.Database(dbc.db).Collection("notifications")
 
 	notification := VhostNotification{
 		Name:       name,
@@ -66,7 +66,12 @@ func (dbc *Database) AddVhost(ctx context.Context, name string) error {
 		Notified:   false,
 	}
 
-	_, err := collection.InsertOne(ctx, notification)
-	slog.Info("added vhost", "runtime", time.Since(start), "name", notification.Name)
+	_, err := dbc.Collections.Notifications.InsertOne(ctx, notification)
+	if err != nil {
+		slog.Info("failed to add vhost", "runtime", time.Since(start), "_id", name, "error", err)
+	} else {
+		slog.Info("added vhost", "runtime", time.Since(start), "_id", notification.Name)
+	}
+
 	return err
 }

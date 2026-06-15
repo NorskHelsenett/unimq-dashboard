@@ -40,7 +40,7 @@ func (dbc *Database) GetAlarm(ctx context.Context, id string) (*models.AlarmEntr
 		return nil, fmt.Errorf("failed to find alarm. %w", err)
 	}
 
-	slog.Info("retrieved alarm", "runtime", time.Since(start), "id", id)
+	slog.Info("retrieved alarm", "runtime", time.Since(start), "_id", id)
 
 	return &alarm, nil
 }
@@ -51,7 +51,7 @@ func (dbc *Database) AddAlarm(ctx context.Context, alarm *models.AlarmEntry) err
 	if err != nil {
 		return fmt.Errorf("failed to insert alarm. %w", err)
 	}
-	slog.Info("created alarm", "runtime", time.Since(start), "id", alarm.AlarmID)
+	slog.Info("created alarm", "runtime", time.Since(start), "_id", alarm.AlarmID)
 	return nil
 }
 
@@ -61,6 +61,6 @@ func (dbc *Database) DeleteAlarm(ctx context.Context, alarmID string) error {
 	if err != nil {
 		return fmt.Errorf("failed to delete alarm. %w", err)
 	}
-	slog.Info("deleted alarm", "runtime", time.Since(start), "id", alarmID)
+	slog.Info("deleted alarm", "runtime", time.Since(start), "_id", alarmID)
 	return nil
 }

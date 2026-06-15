@@ -33,7 +33,7 @@ func (dbc *Database) GetNotificationRule(ctx context.Context, vhost string, id s
 				"runtime", time.Since(start),
 				"vhost", vhost,
 				"rule", rule.Name,
-				"id", rule.ID,
+				"_id", rule.ID,
 			)
 			return &rule, nil
 		}
@@ -86,7 +86,7 @@ func (dbc *Database) DeleteNotificationRule(ctx context.Context, vhost string, i
 	slog.Info("deleted notification rule",
 		"runtime", time.Since(start),
 		"vhost", vhost,
-		"id", id,
+		"_id", id,
 	)
 	return nil
 }

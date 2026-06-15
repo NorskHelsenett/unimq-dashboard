@@ -37,39 +37,42 @@ func (dbc *Database) GetMaintenanceHistory(ctx context.Context) ([]models.Mainte
 
 func (dbc *Database) SetMaintenanceEntryStatus(ctx context.Context, id string, status string) error {
 	start := time.Now()
-	collection := dbc.client.Database(dbc.db).Collection("maintenance")
 
-	_, err := collection.UpdateOne(
-		ctx,
-		map[string]any{"_id": id},
-		map[string]any{
-			"$set": map[string]any{
-				"status": status,
-			},
+	filter := map[string]any{"_id": id}
+	update := map[string]any{
+		"$set": map[string]any{
+			"status": status,
 		},
-	)
-	slog.Info("updated maintenance", "runtime", time.Since(start), "id", id, "status", status)
+	}
+	_, err := dbc.Collections.Maintenance.UpdateOne(ctx, filter, update)
+	if err != nil {
+		slog.Error("failed to update maintenance", "runtime", time.Since(start), "_id", id, "status", status, "error", err)
+	} else {
+		slog.Info("updated maintenance", "runtime", time.Since(start), "_id", id, "status", status)
+	}
+
 	return err
 }
 
 func (dbc *Database) SetMaintenanceEntryNotified(ctx context.Context, id string, notified bool) error {
 	start := time.Now()
-	collection := dbc.client.Database(dbc.db).Collection("maintenance")
 
-	_, err := collection.UpdateOne(
-		ctx,
-		map[string]any{"_id": id},
-		map[string]any{
-			"$set": map[string]any{
-				"notified": notified,
-			},
+	filter := map[string]any{"_id": id}
+	update := map[string]any{
+		"$set": map[string]any{
+			"notified": notified,
 		},
-	)
-	slog.Info("updated maintenance", "runtime", time.Since(start), "id", id, "notified", notified)
+	}
+	_, err := dbc.Collections.Maintenance.UpdateOne(ctx, filter, update)
+	if err != nil {
+		slog.Error("failed to update maintenance", "runtime", time.Since(start), "_id", id, "notified", notified, "error", err)
+	} else {
+		slog.Info("updated maintenance", "runtime", time.Since(start), "_id", id, "notified", notified)
+	}
+
 	return err
 }
 
-// TODO: Use Collection object to cursor.
 func (dbc *Database) GetMaintenanceEntry(ctx context.Context, id string) (*models.MaintenanceEntry, error) {
 	start := time.Now()
 
@@ -79,17 +82,21 @@ func (dbc *Database) GetMaintenanceEntry(ctx context.Context, id string) (*model
 		slog.Error("failed to retrieve maintenance", "runtime", time.Since(start), "id", id, "error", err)
 		return nil, err
 	}
+	slog.Info("retrieved maintenance", "runtime", time.Since(start), "_id", id)
 
-	slog.Info("retrieved maintenance", "runtime", time.Since(start), "id", id)
 	return &entry, err
 }
 
 func (dbc *Database) AddMaintenanceEntry(ctx context.Context, entry *models.MaintenanceEntry) error {
 	start := time.Now()
-	collection := dbc.client.Database(dbc.db).Collection("maintenance")
 
-	_, err := collection.InsertOne(ctx, entry)
-	slog.Info("created maintenance", "runtime", time.Since(start), "id", entry.ID)
+	_, err := dbc.Collections.Maintenance.InsertOne(ctx, entry)
+	if err != nil {
+		slog.Error("failed to create maintenance", "runtime", time.Since(start), "_id", entry.ID, "error", err)
+	} else {
+		slog.Info("created maintenance", "runtime", time.Since(start), "_id", entry.ID)
+	}
+
 	return err
 }
 
@@ -105,11 +112,11 @@ func (dbc *Database) UpdateMaintenanceEntry(ctx context.Context, id string, stat
 
 	_, err := dbc.Collections.Maintenance.UpdateOne(ctx, filter, update)
 	if err != nil {
-		slog.Error("failed to update maintenance", "runtime", time.Since(start), "id", id, "error", err)
-		return err
+		slog.Error("failed to update maintenance", "runtime", time.Since(start), "_id", id, "error", err)
+	} else {
+		slog.Info("updated maintenance", "runtime", time.Since(start), "_id", id)
 	}
 
-	slog.Info("updated maintenance", "runtime", time.Since(start), "id", id)
 	return err
 }
 
@@ -118,10 +125,10 @@ func (dbc *Database) DeleteMaintenanceEntry(ctx context.Context, id string) erro
 
 	_, err := dbc.Collections.Maintenance.DeleteOne(ctx, map[string]any{"_id": id})
 	if err != nil {
-		slog.Error("failed to delete maintenance", "runtime", time.Since(start), "id", id, "error", err)
-		return err
+		slog.Error("failed to delete maintenance", "runtime", time.Since(start), "_id", id, "error", err)
+	} else {
+		slog.Info("deleted maintenance", "runtime", time.Since(start), "_id", id)
 	}
 
-	slog.Info("deleted maintenance", "runtime", time.Since(start), "id", id)
 	return err
 }

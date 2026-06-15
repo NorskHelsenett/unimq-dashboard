@@ -29,7 +29,7 @@ func (dbc *Database) GetNotificationRecipient(ctx context.Context, vhost string,
 				"runtime", time.Since(start),
 				"vhost", vhost,
 				"recipient", recipient.Name,
-				"id", recipient.ID,
+				"_id", recipient.ID,
 			)
 			return &recipient, nil
 		}
@@ -59,7 +59,7 @@ func (dbc *Database) AddNotificationRecipient(ctx context.Context, vhost string,
 		"runtime", time.Since(start),
 		"vhost", vhost,
 		"recipient", recipient.Name,
-		"id", recipient.ID,
+		"_id", recipient.ID,
 	)
 	return nil
 }
@@ -83,7 +83,7 @@ func (dbc *Database) DeleteNotificationRecipient(ctx context.Context, vhost stri
 
 	slog.Info("deleted notification recipient",
 		"runtime", time.Since(start),
-		"id", id,
+		"_id", id,
 	)
 	return nil
 }
