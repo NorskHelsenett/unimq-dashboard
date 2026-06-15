@@ -2,8 +2,6 @@ package models
 
 import (
 	"html/template"
-
-	"github.com/sisneve/rabbitmq-dashboard/internal/prom"
 )
 
 type VhostMetrics struct {
@@ -41,7 +39,7 @@ type QueueData struct {
 	NoData       bool
 }
 
-func NewQueueData(vhost, queue, rangeStr string, samplesJSON string, samples []prom.Sample) QueueData {
+func NewQueueData(vhost, queue, rangeStr string, samplesJSON string, samples []Sample) QueueData {
 	return QueueData{
 		Vhost:        vhost,
 		Queue:        queue,
