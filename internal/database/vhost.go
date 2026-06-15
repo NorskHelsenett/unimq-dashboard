@@ -12,15 +12,15 @@ import (
 func (dbc *Database) GetVhost(ctx context.Context, vhost string) (*VhostNotification, error) {
 	start := time.Now()
 
-	var notification *VhostNotification
-	err := dbc.Collections.Notifications.FindOne(ctx, bson.M{"_id": vhost}).Decode(notification)
+	var notification VhostNotification
+	err := dbc.Collections.Notifications.FindOne(ctx, bson.M{"_id": vhost}).Decode(&notification)
 	if err != nil {
-		slog.Info("failed to retrieve vhost", "runtime", time.Since(start), "_id", vhost)
+		slog.Info("failed to retrieve vhost", "runtime", time.Since(start), "_id", vhost, "error", err)
 		return nil, err
 	}
 
 	slog.Info("retrieved vhost", "runtime", time.Since(start), "_id", vhost)
-	return notification, err
+	return &notification, err
 }
 
 func (dbc *Database) CheckVhostExists(ctx context.Context, vhost string) (bool, error) {
@@ -35,7 +35,7 @@ func (dbc *Database) CheckVhostExists(ctx context.Context, vhost string) (bool, 
 	var alarms []models.AlarmEntry
 	err = cursor.All(ctx, &alarms)
 	if err != nil {
-		slog.Info("checked vhost existence", "runtime", time.Since(start), "_id", vhost, "exists", len(alarms) > 0)
+		slog.Info("checked vhost existence", "runtime", time.Since(start), "_id", vhost, "exists", len(alarms) > 0, "error", err)
 		return false, err
 	}
 
