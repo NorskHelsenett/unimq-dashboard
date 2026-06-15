@@ -7,6 +7,7 @@ import (
 
 	"github.com/sisneve/rabbitmq-dashboard/internal/config"
 	"github.com/sisneve/rabbitmq-dashboard/internal/database"
+	"github.com/sisneve/rabbitmq-dashboard/internal/logger"
 )
 
 //	func mustTemplate(name string) *template.Template {
@@ -54,6 +55,8 @@ import (
 
 // This file is used to generate test data for the different stores. It is not used in the actual application.
 func main() {
+
+	logger.SetupLogger()
 
 	config := config.NewConfig()
 	if err := config.Load(); err != nil {

@@ -9,11 +9,14 @@ import (
 	"time"
 
 	"github.com/sisneve/rabbitmq-dashboard/internal/config"
+	"github.com/sisneve/rabbitmq-dashboard/internal/logger"
 	"github.com/sisneve/rabbitmq-dashboard/internal/notify"
 	"github.com/sisneve/rabbitmq-dashboard/internal/routes"
 )
 
 func main() {
+
+	logger.SetupLogger()
 
 	config := config.NewConfig()
 	if err := config.Load(); err != nil {
