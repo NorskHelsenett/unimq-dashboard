@@ -41,7 +41,7 @@ func (dbc *Database) GetNotificationsAll(ctx context.Context) ([]VhostNotificati
 		return nil, err
 	}
 
-	slog.Info("retrieved notifications", "runtime", time.Since(start), "count", len(notifications))
+	slog.InfoContext(ctx, "retrieved notifications", "runtime", time.Since(start), "count", len(notifications))
 	return notifications, nil
 }
 
@@ -52,11 +52,11 @@ func (dbc *Database) GetNotification(ctx context.Context, vhost string) (*VhostN
 	var notification VhostNotification
 	err := dbc.Collections.Notifications.FindOne(ctx, bson.M{"_id": vhost}).Decode(&notification)
 	if err != nil {
-		slog.Error("failed to retrieve notification", "runtime", time.Since(start), "_id", vhost, "error", err)
+		slog.ErrorContext(ctx, "failed to retrieve notification", "runtime", time.Since(start), "_id", vhost, "error", err)
 		return nil, err
 	}
 
-	slog.Info("retrieved notification", "runtime", time.Since(start), "_id", vhost)
+	slog.InfoContext(ctx, "retrieved notification", "runtime", time.Since(start), "_id", vhost)
 	return &notification, nil
 }
 
@@ -66,11 +66,11 @@ func (dbc *Database) AddNotification(ctx context.Context, notification VhostNoti
 
 	_, err := dbc.Collections.Notifications.InsertOne(ctx, notification)
 	if err != nil {
-		slog.Error("failed to add notification", "runtime", time.Since(start), "name", notification.Name, "error", err)
+		slog.ErrorContext(ctx, "failed to add notification", "runtime", time.Since(start), "name", notification.Name, "error", err)
 		return err
 	}
 
-	slog.Info("added notification", "runtime", time.Since(start), "name", notification.Name)
+	slog.InfoContext(ctx, "added notification", "runtime", time.Since(start), "name", notification.Name)
 	return err
 }
 
@@ -84,9 +84,9 @@ func (dbc *Database) UpdateNotification(ctx context.Context, name string, notifi
 
 	_, err := dbc.Collections.Notifications.UpdateOne(ctx, filter, update)
 	if err != nil {
-		slog.Error("failed to update notification", "runtime", time.Since(start), "_id", name, "error", err)
+		slog.ErrorContext(ctx, "failed to update notification", "runtime", time.Since(start), "_id", name, "error", err)
 	} else {
-		slog.Info("updated notification", "runtime", time.Since(start), "_id", notification.Name)
+		slog.InfoContext(ctx, "updated notification", "runtime", time.Since(start), "_id", notification.Name)
 	}
 
 	return err
@@ -97,9 +97,9 @@ func (dbc *Database) DeleteNotification(ctx context.Context, id string) error {
 
 	_, err := dbc.Collections.Notifications.DeleteOne(ctx, bson.M{"_id": id})
 	if err != nil {
-		slog.Error("failed to delete notification", "runtime", time.Since(start), "_id", id, "error", err)
+		slog.ErrorContext(ctx, "failed to delete notification", "runtime", time.Since(start), "_id", id, "error", err)
 	} else {
-		slog.Info("deleted notification", "runtime", time.Since(start), "_id", id)
+		slog.InfoContext(ctx, "deleted notification", "runtime", time.Since(start), "_id", id)
 	}
 
 	return err
@@ -116,9 +116,9 @@ func (dbc *Database) UpdateNotificationRuleThreshold(ctx context.Context, vhost,
 	}
 	_, err := dbc.Collections.Notifications.UpdateOne(ctx, filter, update)
 	if err != nil {
-		slog.Error("failed to update notification rule", "runtime", time.Since(start), "vhost", vhost, "ruleID", ruleID, "error", err)
+		slog.ErrorContext(ctx, "failed to update notification rule", "runtime", time.Since(start), "vhost", vhost, "ruleID", ruleID, "error", err)
 	} else {
-		slog.Info("updated notification rule", "runtime", time.Since(start), "vhost", vhost, "ruleID", ruleID)
+		slog.InfoContext(ctx, "updated notification rule", "runtime", time.Since(start), "vhost", vhost, "ruleID", ruleID)
 	}
 
 	return err
@@ -136,9 +136,9 @@ func (dbc *Database) UpdateNotificationRuleMessage(ctx context.Context, vhost, r
 
 	_, err := dbc.Collections.Notifications.UpdateOne(ctx, filter, update)
 	if err != nil {
-		slog.Error("failed to update notification rule message", "runtime", time.Since(start), "_id", vhost, "ruleID", ruleID, "error", err)
+		slog.ErrorContext(ctx, "failed to update notification rule message", "runtime", time.Since(start), "_id", vhost, "ruleID", ruleID, "error", err)
 	} else {
-		slog.Info("updated notification rule message", "runtime", time.Since(start), "_id", vhost, "ruleID", ruleID)
+		slog.InfoContext(ctx, "updated notification rule message", "runtime", time.Since(start), "_id", vhost, "ruleID", ruleID)
 	}
 
 	return err
@@ -158,10 +158,10 @@ func (dbc *Database) UpdateNotificationRule(ctx context.Context, vhost, name str
 
 	_, err := dbc.Collections.Notifications.UpdateOne(ctx, filter, update)
 	if err != nil {
-		slog.Error("failed to update notification rule status", "runtime", time.Since(start), "_id", vhost, "rule", name, "error", err)
+		slog.ErrorContext(ctx, "failed to update notification rule status", "runtime", time.Since(start), "_id", vhost, "rule", name, "error", err)
 		return err
 	} else {
-		slog.Info("updated notification rule status", "runtime", time.Since(start), "_id", vhost, "name", name, "notified", notified)
+		slog.InfoContext(ctx, "updated notification rule status", "runtime", time.Since(start), "_id", vhost, "name", name, "notified", notified)
 	}
 
 	return err
@@ -178,10 +178,10 @@ func (dbc *Database) ToggleNotificationRule(ctx context.Context, vhost, ruleID s
 	}
 	_, err := dbc.Collections.Notifications.UpdateOne(ctx, filter, update)
 	if err != nil {
-		slog.Error("failed to toggle notification rule", "runtime", time.Since(start), "_id", vhost, "ruleID", ruleID, "enabled", enabled, "error", err)
+		slog.ErrorContext(ctx, "failed to toggle notification rule", "runtime", time.Since(start), "_id", vhost, "ruleID", ruleID, "enabled", enabled, "error", err)
 		return err
 	}
 
-	slog.Info("toggled notification rule", "runtime", time.Since(start), "_id", vhost, "ruleID", ruleID, "enabled", enabled)
+	slog.InfoContext(ctx, "toggled notification rule", "runtime", time.Since(start), "_id", vhost, "ruleID", ruleID, "enabled", enabled)
 	return err
 }

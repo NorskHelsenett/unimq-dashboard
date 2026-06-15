@@ -23,10 +23,11 @@ func (dbc *Database) GetAlarmsAll(ctx context.Context) ([]models.AlarmEntry, err
 	var alarms []models.AlarmEntry
 	err = cursor.All(ctx, &alarms)
 	if err != nil {
+		slog.ErrorContext(ctx, "failed to decode alarms", "runtime", time.Since(start), "error", err)
 		return nil, err
 	}
 
-	slog.Info("retrieved alarms", "runtime", time.Since(start), "count", len(alarms))
+	slog.InfoContext(ctx, "retrieved alarms", "runtime", time.Since(start), "count", len(alarms))
 
 	return alarms, nil
 }
@@ -37,10 +38,11 @@ func (dbc *Database) GetAlarm(ctx context.Context, id string) (*models.AlarmEntr
 
 	err := dbc.Collections.Alarms.FindOne(ctx, bson.M{"_id": id}).Decode(&alarm)
 	if err != nil {
+		slog.ErrorContext(ctx, "failed to find alarm", "runtime", time.Since(start), "_id", id, "error", err)
 		return nil, fmt.Errorf("failed to find alarm. %w", err)
 	}
 
-	slog.Info("retrieved alarm", "runtime", time.Since(start), "_id", id)
+	slog.InfoContext(ctx, "retrieved alarm", "runtime", time.Since(start), "_id", id)
 
 	return &alarm, nil
 }
@@ -49,18 +51,21 @@ func (dbc *Database) AddAlarm(ctx context.Context, alarm *models.AlarmEntry) err
 	start := time.Now()
 	_, err := dbc.Collections.Alarms.InsertOne(ctx, alarm)
 	if err != nil {
-		return fmt.Errorf("failed to insert alarm. %w", err)
+		slog.ErrorContext(ctx, "failed to create alarm", "runtime", time.Since(start), "_id", alarm.AlarmID, "error", err)
+	} else {
+		slog.InfoContext(ctx, "created alarm", "runtime", time.Since(start), "_id", alarm.AlarmID)
+
 	}
-	slog.Info("created alarm", "runtime", time.Since(start), "_id", alarm.AlarmID)
-	return nil
+	return err
 }
 
 func (dbc *Database) DeleteAlarm(ctx context.Context, alarmID string) error {
 	start := time.Now()
 	_, err := dbc.Collections.Alarms.DeleteOne(ctx, bson.M{"_id": alarmID})
 	if err != nil {
-		return fmt.Errorf("failed to delete alarm. %w", err)
+		slog.ErrorContext(ctx, "failed to delete alarm", "runtime", time.Since(start), "_id", alarmID, "error", err)
+	} else {
+		slog.InfoContext(ctx, "deleted alarm", "runtime", time.Since(start), "_id", alarmID)
 	}
-	slog.Info("deleted alarm", "runtime", time.Since(start), "_id", alarmID)
-	return nil
+	return err
 }

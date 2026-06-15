@@ -24,7 +24,7 @@ func (dbc *Database) GetNotificationRecipient(ctx context.Context, vhost string,
 
 	for _, recipient := range notification.Recipients {
 		if recipient.ID == id {
-			slog.Info("retrieved notification recipient",
+			slog.InfoContext(ctx, "retrieved notification recipient",
 				"runtime", time.Since(start),
 				"_id", vhost,
 				"recipient", recipient.Name,
@@ -49,7 +49,7 @@ func (dbc *Database) AddNotificationRecipient(ctx context.Context, vhost string,
 
 	_, err := dbc.Collections.Notifications.UpdateOne(ctx, filter, update)
 	if err != nil {
-		slog.Info("failed to add notification recipient",
+		slog.InfoContext(ctx, "failed to add notification recipient",
 			"runtime", time.Since(start),
 			"_id", vhost,
 			"recipient", recipient.Name,
@@ -57,7 +57,7 @@ func (dbc *Database) AddNotificationRecipient(ctx context.Context, vhost string,
 			"error", err,
 		)
 	} else {
-		slog.Info("added notification recipient",
+		slog.InfoContext(ctx, "added notification recipient",
 			"runtime", time.Since(start),
 			"_id", vhost,
 			"recipient", recipient.Name,
@@ -80,14 +80,14 @@ func (dbc *Database) DeleteNotificationRecipient(ctx context.Context, vhost stri
 
 	_, err := dbc.Collections.Notifications.UpdateOne(ctx, filter, update)
 	if err != nil {
-		slog.Error("failed to delete notification recipient",
+		slog.ErrorContext(ctx, "failed to delete notification recipient",
 			"runtime", time.Since(start),
 			"_id", vhost,
 			"id", id,
 			"error", err,
 		)
 	} else {
-		slog.Info("deleted notification recipient",
+		slog.InfoContext(ctx, "deleted notification recipient",
 			"runtime", time.Since(start),
 			"_id", id,
 		)

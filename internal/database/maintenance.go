@@ -20,10 +20,11 @@ func (dbc *Database) GetMaintenanceAll(ctx context.Context, filter bson.M) ([]mo
 	var maintenance []models.MaintenanceEntry
 	err = cursor.All(ctx, &maintenance)
 	if err != nil {
+		slog.ErrorContext(ctx, "failed to decode maintenance", "runtime", time.Since(start), "error", err)
 		return nil, err
 	}
 
-	slog.Info("retrieved maintenance", "runtime", time.Since(start), "count", len(maintenance))
+	slog.InfoContext(ctx, "retrieved maintenance", "runtime", time.Since(start), "count", len(maintenance))
 	return maintenance, nil
 }
 
@@ -46,9 +47,9 @@ func (dbc *Database) SetMaintenanceEntryStatus(ctx context.Context, id string, s
 	}
 	_, err := dbc.Collections.Maintenance.UpdateOne(ctx, filter, update)
 	if err != nil {
-		slog.Error("failed to update maintenance", "runtime", time.Since(start), "_id", id, "status", status, "error", err)
+		slog.ErrorContext(ctx, "failed to update maintenance", "runtime", time.Since(start), "_id", id, "status", status, "error", err)
 	} else {
-		slog.Info("updated maintenance", "runtime", time.Since(start), "_id", id, "status", status)
+		slog.InfoContext(ctx, "updated maintenance", "runtime", time.Since(start), "_id", id, "status", status)
 	}
 
 	return err
@@ -65,9 +66,9 @@ func (dbc *Database) SetMaintenanceEntryNotified(ctx context.Context, id string,
 	}
 	_, err := dbc.Collections.Maintenance.UpdateOne(ctx, filter, update)
 	if err != nil {
-		slog.Error("failed to update maintenance", "runtime", time.Since(start), "_id", id, "notified", notified, "error", err)
+		slog.ErrorContext(ctx, "failed to update maintenance", "runtime", time.Since(start), "_id", id, "notified", notified, "error", err)
 	} else {
-		slog.Info("updated maintenance", "runtime", time.Since(start), "_id", id, "notified", notified)
+		slog.InfoContext(ctx, "updated maintenance", "runtime", time.Since(start), "_id", id, "notified", notified)
 	}
 
 	return err
@@ -79,10 +80,10 @@ func (dbc *Database) GetMaintenanceEntry(ctx context.Context, id string) (*model
 	var entry models.MaintenanceEntry
 	err := dbc.Collections.Maintenance.FindOne(ctx, map[string]any{"_id": id}).Decode(&entry)
 	if err != nil {
-		slog.Error("failed to retrieve maintenance", "runtime", time.Since(start), "id", id, "error", err)
+		slog.ErrorContext(ctx, "failed to retrieve maintenance", "runtime", time.Since(start), "id", id, "error", err)
 		return nil, err
 	}
-	slog.Info("retrieved maintenance", "runtime", time.Since(start), "_id", id)
+	slog.InfoContext(ctx, "retrieved maintenance", "runtime", time.Since(start), "_id", id)
 
 	return &entry, err
 }
@@ -92,9 +93,9 @@ func (dbc *Database) AddMaintenanceEntry(ctx context.Context, entry *models.Main
 
 	_, err := dbc.Collections.Maintenance.InsertOne(ctx, entry)
 	if err != nil {
-		slog.Error("failed to create maintenance", "runtime", time.Since(start), "_id", entry.ID, "error", err)
+		slog.ErrorContext(ctx, "failed to create maintenance", "runtime", time.Since(start), "_id", entry.ID, "error", err)
 	} else {
-		slog.Info("created maintenance", "runtime", time.Since(start), "_id", entry.ID)
+		slog.InfoContext(ctx, "created maintenance", "runtime", time.Since(start), "_id", entry.ID)
 	}
 
 	return err
@@ -112,9 +113,9 @@ func (dbc *Database) UpdateMaintenanceEntry(ctx context.Context, id string, stat
 
 	_, err := dbc.Collections.Maintenance.UpdateOne(ctx, filter, update)
 	if err != nil {
-		slog.Error("failed to update maintenance", "runtime", time.Since(start), "_id", id, "error", err)
+		slog.ErrorContext(ctx, "failed to update maintenance", "runtime", time.Since(start), "_id", id, "error", err)
 	} else {
-		slog.Info("updated maintenance", "runtime", time.Since(start), "_id", id)
+		slog.InfoContext(ctx, "updated maintenance", "runtime", time.Since(start), "_id", id)
 	}
 
 	return err
@@ -125,9 +126,9 @@ func (dbc *Database) DeleteMaintenanceEntry(ctx context.Context, id string) erro
 
 	_, err := dbc.Collections.Maintenance.DeleteOne(ctx, map[string]any{"_id": id})
 	if err != nil {
-		slog.Error("failed to delete maintenance", "runtime", time.Since(start), "_id", id, "error", err)
+		slog.ErrorContext(ctx, "failed to delete maintenance", "runtime", time.Since(start), "_id", id, "error", err)
 	} else {
-		slog.Info("deleted maintenance", "runtime", time.Since(start), "_id", id)
+		slog.InfoContext(ctx, "deleted maintenance", "runtime", time.Since(start), "_id", id)
 	}
 
 	return err

@@ -15,11 +15,11 @@ func (dbc *Database) GetVhost(ctx context.Context, vhost string) (*VhostNotifica
 	var notification VhostNotification
 	err := dbc.Collections.Notifications.FindOne(ctx, bson.M{"_id": vhost}).Decode(&notification)
 	if err != nil {
-		slog.Info("failed to retrieve vhost", "runtime", time.Since(start), "_id", vhost, "error", err)
+		slog.ErrorContext(ctx, "failed to retrieve vhost", "runtime", time.Since(start), "_id", vhost, "error", err)
 		return nil, err
 	}
 
-	slog.Info("retrieved vhost", "runtime", time.Since(start), "_id", vhost)
+	slog.InfoContext(ctx, "retrieved vhost", "runtime", time.Since(start), "_id", vhost)
 	return &notification, err
 }
 
@@ -35,11 +35,11 @@ func (dbc *Database) CheckVhostExists(ctx context.Context, vhost string) (bool, 
 	var alarms []models.AlarmEntry
 	err = cursor.All(ctx, &alarms)
 	if err != nil {
-		slog.Info("checked vhost existence", "runtime", time.Since(start), "_id", vhost, "exists", len(alarms) > 0, "error", err)
+		slog.ErrorContext(ctx, "checked vhost existence", "runtime", time.Since(start), "_id", vhost, "exists", len(alarms) > 0, "error", err)
 		return false, err
 	}
 
-	slog.Info("checked vhost existence", "runtime", time.Since(start), "_id", vhost, "exists", len(alarms) > 0)
+	slog.InfoContext(ctx, "checked vhost existence", "runtime", time.Since(start), "_id", vhost, "exists", len(alarms) > 0)
 	return len(alarms) > 0, nil
 }
 
@@ -68,9 +68,9 @@ func (dbc *Database) AddVhost(ctx context.Context, name string) error {
 
 	_, err := dbc.Collections.Notifications.InsertOne(ctx, notification)
 	if err != nil {
-		slog.Info("failed to add vhost", "runtime", time.Since(start), "_id", name, "error", err)
+		slog.ErrorContext(ctx, "failed to add vhost", "runtime", time.Since(start), "_id", name, "error", err)
 	} else {
-		slog.Info("added vhost", "runtime", time.Since(start), "_id", notification.Name)
+		slog.InfoContext(ctx, "added vhost", "runtime", time.Since(start), "_id", notification.Name)
 	}
 
 	return err

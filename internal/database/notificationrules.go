@@ -16,7 +16,7 @@ func (dbc *Database) GetNotificationRules(ctx context.Context, id string) ([]mod
 		return nil, err
 	}
 
-	slog.Info("retrieved notification rules", "runtime", time.Since(start), "_id", id, "count", len(notification.Rules))
+	slog.InfoContext(ctx, "retrieved notification rules", "runtime", time.Since(start), "_id", id, "count", len(notification.Rules))
 	return notification.Rules, nil
 }
 
@@ -29,7 +29,7 @@ func (dbc *Database) GetNotificationRule(ctx context.Context, vhost string, rule
 
 	for _, rule := range notification.Rules {
 		if rule.ID == ruleid {
-			slog.Info("retrieved notification rule",
+			slog.InfoContext(ctx, "retrieved notification rule",
 				"runtime", time.Since(start),
 				"vhost", vhost,
 				"rule", rule.Name,
