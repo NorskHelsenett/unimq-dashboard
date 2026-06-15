@@ -35,7 +35,7 @@ func (rc *RestClient) QueueHandler(w http.ResponseWriter, r *http.Request) {
 		rangeStr = "1h"
 	}
 
-	samples, err := rc.PromClient.QueryRange(prom.RangeOptions{
+	samples, err := rc.PromClient.QueryRange(models.RangeOptions{
 		Vhost: vhost,
 		Queue: queue,
 		Since: since,

@@ -9,6 +9,8 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
+	"github.com/sisneve/rabbitmq-dashboard/internal/clients/prometheus"
+	"github.com/sisneve/rabbitmq-dashboard/internal/clients/rabbitmq"
 	"github.com/sisneve/rabbitmq-dashboard/internal/config"
 	"github.com/sisneve/rabbitmq-dashboard/internal/database"
 	"github.com/sisneve/rabbitmq-dashboard/internal/models"
@@ -34,23 +36,28 @@ func SetupRoutes(ctx context.Context, config *config.Config) (chi.Router, error)
 		return nil, err
 	}
 
+	rmqurl := fmt.Sprintf("%v:%d/api", config.RabbitMQHost, config.RabbitMQPort)
+	rmq, err := rabbitmq.NewRMQClient(ctx, rmqurl, config.RabbitMQUsername, config.RabbitMQPassword)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create RabbitMQ client: %w", err)
+	}
+	prom, err := prometheus.NewPromClient(config.PrometheusHost, "v1", "", "", config.PrometheusPort)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create Prometheus client: %w", err)
+	}
+
+	limits := &models.Limits{
+		MaxChannels:    config.RabbitMQChannelLimit,
+		MaxConnections: config.RabbitMQConnectionLimit,
+		MaxQueues:      config.RabbitMQQueueLimit,
+	}
+
 	rmqclient, err := scraper.NewRestClient(
-		ctx,
-		fmt.Sprintf("%v:%d/api",
-			config.RabbitMQHost,
-			config.RabbitMQPort,
-		),
-		config.RabbitMQUsername,
-		config.RabbitMQPassword,
-		config.PrometheusHost,
-		"v1",
-		config.PrometheusPort,
-		db,
-		&models.Limits{
-			MaxChannels:    config.RabbitMQChannelLimit,
-			MaxQueues:      config.RabbitMQQueueLimit,
-			MaxConnections: config.RabbitMQConnectionLimit,
-		},
+		scraper.WithContext(ctx),
+		scraper.WithRabbitMQClient(rmq),
+		scraper.WithPromClient(prom),
+		scraper.WithDatabase(db),
+		scraper.WithRMQLimits(limits),
 	)
 
 	http.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("web/static"))))
