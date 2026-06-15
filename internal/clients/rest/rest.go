@@ -1,3 +1,5 @@
+// rest is a generic rest client that can be set up towards any REST API.
+// The implementation is generic toward any API without a specific focus on a product.
 package rest
 
 import (
