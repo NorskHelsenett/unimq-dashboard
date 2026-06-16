@@ -72,8 +72,8 @@ func (rc *RestClient) PostNotificationsAddRecipientHandler(w http.ResponseWriter
 		return
 	}
 
-	if slices.Contains(models.GetRuleTypes(), models.RuleType(typ)) == false {
-		httpsuite.WriteJSONError(w, "invalid type parameter, expected one of "+models.GetRuleTypesString(), http.StatusBadRequest)
+	if slices.Contains(models.GetReceipientTypes(), models.RecipientType(typ)) == false {
+		httpsuite.WriteJSONError(w, "invalid type parameter, expected one of "+models.GetRecipientTypesString(), http.StatusBadRequest)
 		return
 	}
 
@@ -88,7 +88,7 @@ func (rc *RestClient) PostNotificationsAddRecipientHandler(w http.ResponseWriter
 		ID:   id,
 		Name: name,
 		URL:  urlP,
-		Type: models.ParseRuleType(typ),
+		Type: models.ParseRecipientType(typ),
 	}
 
 	err = rc.DB.AddNotificationRecipient(r.Context(), vhost, recipient)
@@ -159,7 +159,7 @@ func (rc *RestClient) PostNotificationsAddRuleHandler(w http.ResponseWriter, r *
 
 	rule := models.AlarmRule{
 		Name:      name,
-		Type:      typ,
+		Type:      models.AlarmType(typ),
 		QueueName: queueName,
 		Threshold: threshold,
 		Message:   message,
