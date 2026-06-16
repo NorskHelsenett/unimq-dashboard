@@ -12,7 +12,7 @@ import (
 type Response[T any] struct {
 	Code    int    `json:"code"`
 	Message string `json:"message"`
-	Body    T      `json:"body,omitempty"`
+	Body    T      `json:"body"`
 }
 
 type emptyResponse struct{}
