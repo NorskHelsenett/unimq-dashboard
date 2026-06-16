@@ -103,7 +103,7 @@ func (dbc *Database) seedNotificationRules(ctx context.Context, name string) err
 		ID:        ruleID,
 		Name:      "forks",
 		Threshold: 10.0,
-		Type:      "equal",
+		Type:      models.AlarmTypeChannels,
 		Message:   "Test rule triggered",
 		Enabled:   true,
 		Status:    "active",

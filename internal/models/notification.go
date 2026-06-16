@@ -7,31 +7,31 @@ import (
 )
 
 type Recipient struct {
-	ID   string   `json:"id"`
-	Name string   `json:"name"`
-	URL  string   `json:"url"`
-	Type RuleType `json:"type"` // "slack", "teams", "webhook"
+	ID   string        `json:"id"`
+	Name string        `json:"name"`
+	URL  string        `json:"url"`
+	Type RecipientType `json:"type"` // "slack", "teams", "webhook"
 }
 
-type RuleType string
+type RecipientType string
 
 const (
-	RuleTypeSlack   RuleType = "slack"
-	RuleTypeTeams   RuleType = "teams"
-	RuleTypeWebhook RuleType = "webhook"
-	RuleTypeUnknown RuleType = "unknown"
+	RecipientTypeSlack   RecipientType = "slack"
+	RecipientTypeTeams   RecipientType = "teams"
+	RecipientTypeWebhook RecipientType = "webhook"
+	RecipientTypeUnknown RecipientType = "unknown"
 )
 
-func GetRuleTypes() []RuleType {
-	return []RuleType{
-		RuleTypeSlack,
-		RuleTypeTeams,
-		RuleTypeWebhook,
+func GetReceipientTypes() []RecipientType {
+	return []RecipientType{
+		RecipientTypeSlack,
+		RecipientTypeTeams,
+		RecipientTypeWebhook,
 	}
 }
 
-func GetRuleTypesString() string {
-	types := GetRuleTypes()
+func GetRecipientTypesString() string {
+	types := GetReceipientTypes()
 	strs := make([]string, len(types))
 	for i, t := range types {
 		strs[i] = string(t)
@@ -39,23 +39,23 @@ func GetRuleTypesString() string {
 	return fmt.Sprintf("[%s]", strings.Join(strs, ", "))
 }
 
-func ParseRuleType(s string) RuleType {
+func ParseRecipientType(s string) RecipientType {
 	switch s {
 	case "slack":
-		return RuleTypeSlack
+		return RecipientTypeSlack
 	case "teams":
-		return RuleTypeTeams
+		return RecipientTypeTeams
 	case "webhook":
-		return RuleTypeWebhook
+		return RecipientTypeWebhook
 	default:
-		return RuleTypeUnknown
+		return RecipientTypeUnknown
 	}
 }
 
 type AlarmRule struct {
 	ID        string     `json:"id" bson:"_id"`
 	Name      string     `json:"name" bson:"name"`
-	Type      string     `json:"type" bson:"type"`
+	Type      AlarmType  `json:"type" bson:"type"`
 	QueueName string     `json:"queue_name,omitempty" bson:"queueName"`
 	Threshold float64    `json:"threshold,omitempty" bson:"threshold"`
 	Message   string     `json:"message" bson:"message"`
@@ -64,6 +64,19 @@ type AlarmRule struct {
 	LastFired *time.Time `json:"last_fired,omitempty" bson:"lastFired"`
 	LastValue *float64   `json:"last_value,omitempty" bson:"lastValue"`
 }
+
+type AlarmType string
+
+const (
+	AlarmTypeChannels      AlarmType = "channels"
+	AlarmTypeConnections   AlarmType = "connections"
+	AlarmTypeQueues        AlarmType = "queues"
+	AlarmTypeUnacked       AlarmType = "unacked"
+	AlarmTypeQueueMessages AlarmType = "queue_messages"
+	AlarmTypeQueueSize     AlarmType = "queue_size"
+	AlarmTypeNoConsumer    AlarmType = "no_consumer"
+	AlarmTypeMaintenance   AlarmType = "maintenance"
+)
 
 // func (r AlarmRule) TypeLabel() string {
 // 	switch r.Type {

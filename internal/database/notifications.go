@@ -19,7 +19,7 @@ type VhostNotification struct {
 func (vn *VhostNotification) WebhookURLs() []string {
 	urls := make([]string, 0, len(vn.Recipients))
 	for _, r := range vn.Recipients {
-		if r.Type == models.RuleTypeWebhook {
+		if r.Type == models.RecipientTypeWebhook {
 			urls = append(urls, r.URL)
 		}
 	}
@@ -150,9 +150,9 @@ func (dbc *Database) UpdateNotificationRule(ctx context.Context, vhost, name str
 	filter := map[string]any{"_id": vhost, "rules.name": name}
 	update := map[string]any{
 		"$set": map[string]any{
-			"rules.$[rule].status":    status,
-			"rules.$[rule].lastValue": value,
-			"notified":                notified,
+			"rules.$.status":    status,
+			"rules.$.lastValue": value,
+			"notified":          notified,
 		},
 	}
 
