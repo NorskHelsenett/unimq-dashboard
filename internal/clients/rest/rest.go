@@ -95,11 +95,13 @@ func NewRestClient(baseURL string, opts ...ConfigOption) (*RestClient, error) {
 	for _, opt := range opts {
 		opt(config)
 	}
+
 	restClient := RestClient{
 		BaseURL: baseURL,
 		HTTPClient: &http.Client{
 			Timeout: config.Timeout,
 		},
+		Context:      config.context,
 		AuthProvider: config.authProvider,
 	}
 	if restClient.BaseURL == "" {
@@ -114,11 +116,11 @@ func (r *RestClient) request(method string, url string, body *[]byte, out any, r
 
 	u, err := neturl.ParseRequestURI(url)
 	if err != nil {
-		return http.StatusInternalServerError, fmt.Errorf("uable to parse relative url %v. %w", u, err)
+		return http.StatusInternalServerError, fmt.Errorf("unable to parse relative url %v. %w", u, err)
 	}
 	endpoint, err := neturl.ParseRequestURI(r.BaseURL + u.String())
 	if err != nil {
-		return http.StatusInternalServerError, fmt.Errorf("uable to parse absolute url %v. %w", endpoint, err)
+		return http.StatusInternalServerError, fmt.Errorf("unable to parse absolute url %v. %w", endpoint, err)
 	}
 	var req *http.Request
 	if body == nil {
@@ -128,7 +130,7 @@ func (r *RestClient) request(method string, url string, body *[]byte, out any, r
 	}
 	if err != nil {
 		return http.StatusInternalServerError,
-			fmt.Errorf("uable to create new request of method %v with endpoint %v. %w",
+			fmt.Errorf("unable to create new request of method %v with endpoint %v. %w",
 				http.MethodPost,
 				endpoint,
 				err,
@@ -142,10 +144,10 @@ func (r *RestClient) request(method string, url string, body *[]byte, out any, r
 	resp, err := r.HTTPClient.Do(req)
 	if err != nil && resp != nil {
 		berr := resp.Body.Close()
-		return http.StatusInternalServerError, fmt.Errorf("uable to Do request. %w, %w", err, berr)
+		return http.StatusInternalServerError, fmt.Errorf("unable to Do request. %w, %w", err, berr)
 	}
 	if err != nil && resp == nil {
-		return http.StatusInternalServerError, fmt.Errorf("uable to Do request. %w", err)
+		return http.StatusInternalServerError, fmt.Errorf("unable to Do request. %w", err)
 	}
 	defer func() {
 		berr := resp.Body.Close()
@@ -169,7 +171,7 @@ func (r *RestClient) request(method string, url string, body *[]byte, out any, r
 	}
 	err = json.NewDecoder(resp.Body).Decode(&out)
 	if err != nil {
-		return http.StatusInternalServerError, fmt.Errorf("uable to read body of response. %w", err)
+		return http.StatusInternalServerError, fmt.Errorf("unable to read body of response. %w", err)
 
 	}
 	return resp.StatusCode, nil
