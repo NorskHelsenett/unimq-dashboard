@@ -2,6 +2,34 @@ unimq:
   vite:
     auth_issuer: ""
     client_id: ""
+  backend:
+    # API connection settings
+    base_url: "localhost"
+    base_port: "8080"
+
+    # Log level settings, valid values: -8 (trace), -4 (debug), 0 (info), 4 (warn), 8 (error)
+    log_level: "0"
+
+    # mongodb connection settings
+    mongodb_host: "localhost"
+    mongodb_port: "27017"
+    mongodb_username: "admin"
+    mongodb_password: "password"
+    mongodb_database: "unimq"
+
+    # rabbitmq connection settings
+    rabbitmq_host: "http://localhost"
+    rabbitmq_port: "15672"
+    rabbitmq_username: "guest"
+    rabbitmq_password: "guest"
+
+    rabbitmq_channel_limit: 1000
+    rabbitmq_connection_limit: 300
+    rabbitmq_queue_limit: 150
+
+    # prometheus connection settings
+    prometheus_host: "http://localhost"
+    prometheus_port: "9090"
 
 image:
   repository: ghcr.io/norskhelsenett/unimq
