@@ -32,6 +32,10 @@ func SetupLogger() {
 
 func UpdateLogLevel(level slog.Level) {
 
+	if slog.Default().Enabled(context.TODO(), level) {
+		return
+	}
+
 	slog.Error("updating log level", "level", level.String())
 
 	handlerOpts := getHandlerOpts(level)
