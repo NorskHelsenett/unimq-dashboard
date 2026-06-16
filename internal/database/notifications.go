@@ -60,7 +60,6 @@ func (dbc *Database) GetNotification(ctx context.Context, vhost string) (*VhostN
 	return &notification, nil
 }
 
-// TODO: Handle insertOne result object for better logging and error handling.
 func (dbc *Database) AddNotification(ctx context.Context, notification VhostNotification) error {
 	start := time.Now()
 
