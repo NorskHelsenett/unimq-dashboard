@@ -32,6 +32,8 @@ func SetupLogger() {
 
 func UpdateLogLevel(level slog.Level) {
 
+	slog.Error("updating log level", "level", level.String())
+
 	handlerOpts := getHandlerOpts(level)
 
 	handler := slog.NewTextHandler(os.Stdout, handlerOpts)
