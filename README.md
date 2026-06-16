@@ -109,3 +109,9 @@ docker-compose up -d
 ```bash
 go run ./cmd/unimq/main.go
 ```
+
+## Build with docker-bake
+
+```bash
+docker buildx bake all
+```
