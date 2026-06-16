@@ -1,4 +1,4 @@
-package scraper
+package api
 
 import (
 	"encoding/json"
@@ -11,7 +11,18 @@ import (
 	"github.com/sisneve/rabbitmq-dashboard/internal/templating"
 )
 
-func (rc *RestClient) QueueHandler(w http.ResponseWriter, r *http.Request) {
+// @Summary Get Queue Metrics for a specific queue in the specified virtual host
+// @Description Fetches time-series metrics for a specific RabbitMQ queue over a specified time range.
+// @Tags Metrics
+// @Produce html
+// @Param vhost query string true "Virtual Host"
+// @Param name query string true "Queue Name"
+// @Param range query string false "Time Range (e.g., 1h, 24h, 7d)" default(1h)
+// @Success 200 {string} string "HTML page with queue metrics"
+// @Failure 400 {object} httpsuite.ErrorResponse "Bad Request"
+// @Failure 500 {object} httpsuite.ErrorResponse "Internal Server Error"
+// @Router /queue [get]
+func (rc *APIService) QueueHandler(w http.ResponseWriter, r *http.Request) {
 	vhost := r.URL.Query().Get("vhost")
 	if vhost == "" {
 		httpsuite.WriteJSONError(w, "missing vhost", http.StatusBadRequest)
@@ -58,7 +69,16 @@ func (rc *RestClient) QueueHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (rc *RestClient) GetQueuesHandler(w http.ResponseWriter, r *http.Request) {
+// @Summary Get All Queues to a specified virtual host
+// @Description Fetches details of all queues in a specified virtual host.
+// @Tags Queues
+// @Produce json
+// @Param vhost query string true "Virtual Host"
+// @Success 200 {array} models.QueueDetail "List of queue details"
+// @Failure 400 {object} httpsuite.ErrorResponse "Bad Request"
+// @Failure 500 {object} httpsuite.ErrorResponse "Internal Server Error"
+// @Router /queues [get]
+func (rc *APIService) GetQueuesHandler(w http.ResponseWriter, r *http.Request) {
 	vhost := r.URL.Query().Get("vhost")
 	if vhost == "" {
 		httpsuite.WriteJSONError(w, "missing vhost", http.StatusBadRequest)

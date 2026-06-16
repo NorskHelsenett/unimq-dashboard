@@ -1,4 +1,4 @@
-package scraper
+package api
 
 import (
 	"net/http"
@@ -14,7 +14,7 @@ import (
 
 // TODO: Use the Validator package to validate input requirements.
 
-func (rc *RestClient) GetNotificationsHandler(w http.ResponseWriter, r *http.Request) {
+func (rc *APIService) GetNotificationsHandler(w http.ResponseWriter, r *http.Request) {
 
 	vhost := r.URL.Query().Get("vhost")
 	if vhost == "" {
@@ -47,7 +47,7 @@ func (rc *RestClient) GetNotificationsHandler(w http.ResponseWriter, r *http.Req
 	}
 }
 
-func (rc *RestClient) PostNotificationsAddRecipientHandler(w http.ResponseWriter, r *http.Request) {
+func (rc *APIService) PostNotificationsAddRecipientHandler(w http.ResponseWriter, r *http.Request) {
 	vhost := r.FormValue("vhost")
 	if vhost == "" {
 		httpsuite.WriteJSONError(w, "missing required vhost parameter", http.StatusBadRequest)
@@ -100,7 +100,7 @@ func (rc *RestClient) PostNotificationsAddRecipientHandler(w http.ResponseWriter
 	http.Redirect(w, r, "/notifications?vhost="+url.QueryEscape(vhost), http.StatusSeeOther)
 }
 
-func (rc *RestClient) PostNotificationsDeleteRecipientHandler(w http.ResponseWriter, r *http.Request) {
+func (rc *APIService) PostNotificationsDeleteRecipientHandler(w http.ResponseWriter, r *http.Request) {
 	vhost := r.FormValue("vhost")
 	if vhost == "" {
 		httpsuite.WriteJSONError(w, "missing required vhost parameter", http.StatusBadRequest)
@@ -121,7 +121,7 @@ func (rc *RestClient) PostNotificationsDeleteRecipientHandler(w http.ResponseWri
 	http.Redirect(w, r, "/notifications?vhost="+url.QueryEscape(vhost), http.StatusSeeOther)
 }
 
-func (rc *RestClient) PostNotificationsAddRuleHandler(w http.ResponseWriter, r *http.Request) {
+func (rc *APIService) PostNotificationsAddRuleHandler(w http.ResponseWriter, r *http.Request) {
 	vhost := r.FormValue("vhost")
 	if vhost == "" {
 		httpsuite.WriteJSONError(w, "missing required vhost parameter", http.StatusBadRequest)
@@ -174,7 +174,7 @@ func (rc *RestClient) PostNotificationsAddRuleHandler(w http.ResponseWriter, r *
 	http.Redirect(w, r, "/notifications?vhost="+url.QueryEscape(vhost), http.StatusSeeOther)
 }
 
-func (rc *RestClient) PostNotificationsDeleteRuleHandler(w http.ResponseWriter, r *http.Request) {
+func (rc *APIService) PostNotificationsDeleteRuleHandler(w http.ResponseWriter, r *http.Request) {
 	vhost := r.FormValue("vhost")
 	if vhost == "" {
 		httpsuite.WriteJSONError(w, "missing required vhost parameter", http.StatusBadRequest)
@@ -194,7 +194,7 @@ func (rc *RestClient) PostNotificationsDeleteRuleHandler(w http.ResponseWriter, 
 	http.Redirect(w, r, "/notifications?vhost="+url.QueryEscape(vhost), http.StatusSeeOther)
 }
 
-func (rc *RestClient) PostNotificationsUpdateRuleHandler(w http.ResponseWriter, r *http.Request) {
+func (rc *APIService) PostNotificationsUpdateRuleHandler(w http.ResponseWriter, r *http.Request) {
 	vhost := r.FormValue("vhost")
 	if vhost == "" {
 		httpsuite.WriteJSONError(w, "missing required vhost parameter", http.StatusBadRequest)
@@ -240,7 +240,7 @@ func (rc *RestClient) PostNotificationsUpdateRuleHandler(w http.ResponseWriter, 
 	w.WriteHeader(http.StatusOK)
 }
 
-func (rc *RestClient) PostNotificationsToggleRuleHandler(w http.ResponseWriter, r *http.Request) {
+func (rc *APIService) PostNotificationsToggleRuleHandler(w http.ResponseWriter, r *http.Request) {
 	vhost := r.FormValue("vhost")
 	if vhost == "" {
 		httpsuite.WriteJSONError(w, "missing required vhost parameter", http.StatusBadRequest)
@@ -273,7 +273,7 @@ func (rc *RestClient) PostNotificationsToggleRuleHandler(w http.ResponseWriter, 
 	http.Redirect(w, r, "/notifications?vhost="+url.QueryEscape(vhost), http.StatusSeeOther)
 }
 
-func (rc *RestClient) NotificationsRuleHandler(w http.ResponseWriter, r *http.Request) {
+func (rc *APIService) NotificationsRuleHandler(w http.ResponseWriter, r *http.Request) {
 	vhost := r.URL.Query().Get("vhost")
 	if vhost == "" {
 		httpsuite.WriteJSONError(w, "missing required vhost parameter", http.StatusBadRequest)
@@ -301,7 +301,7 @@ func (rc *RestClient) NotificationsRuleHandler(w http.ResponseWriter, r *http.Re
 	}
 }
 
-func (rc *RestClient) PostNotificationsUpdateMessageHandler(w http.ResponseWriter, r *http.Request) {
+func (rc *APIService) PostNotificationsUpdateMessageHandler(w http.ResponseWriter, r *http.Request) {
 	vhost := r.FormValue("vhost")
 	if vhost == "" {
 		httpsuite.WriteJSONError(w, "missing required vhost parameter", http.StatusBadRequest)
@@ -323,7 +323,7 @@ func (rc *RestClient) PostNotificationsUpdateMessageHandler(w http.ResponseWrite
 	http.Redirect(w, r, "/notifications/rule?vhost="+url.QueryEscape(vhost)+"&id="+id+"&msg=saved", http.StatusSeeOther)
 }
 
-func (rc *RestClient) PostNotificationsTestHandler(w http.ResponseWriter, r *http.Request) {
+func (rc *APIService) PostNotificationsTestHandler(w http.ResponseWriter, r *http.Request) {
 	vhost := r.FormValue("vhost")
 	if vhost == "" {
 		httpsuite.WriteJSONError(w, "missing required vhost parameter", http.StatusBadRequest)
@@ -363,7 +363,7 @@ func (rc *RestClient) PostNotificationsTestHandler(w http.ResponseWriter, r *htt
 	httpsuite.SendResponse(r.Context(), w, "Testing notification...", http.StatusOK, &response)
 }
 
-func (rc *RestClient) NotificationsLogsHandler(w http.ResponseWriter, r *http.Request) {
+func (rc *APIService) NotificationsLogsHandler(w http.ResponseWriter, r *http.Request) {
 	id := r.URL.Query().Get("id")
 	if id == "" {
 		httpsuite.WriteJSONError(w, "missing required id parameter", http.StatusBadRequest)

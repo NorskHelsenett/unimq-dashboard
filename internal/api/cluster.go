@@ -1,4 +1,4 @@
-package scraper
+package api
 
 import (
 	"net/http"
@@ -6,7 +6,7 @@ import (
 	"github.com/sisneve/rabbitmq-dashboard/internal/routes/httpsuite"
 )
 
-func (rc *RestClient) GetClusterHandler(w http.ResponseWriter, r *http.Request) {
+func (rc *APIService) GetClusterHandler(w http.ResponseWriter, r *http.Request) {
 	stats, err := rc.RMQClient.GetClusterStats()
 	if err != nil {
 		httpsuite.WriteJSONError(w, "error fetching cluster stats", http.StatusInternalServerError)

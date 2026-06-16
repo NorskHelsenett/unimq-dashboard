@@ -1,4 +1,4 @@
-package scraper
+package api
 
 import (
 	"log"
@@ -16,7 +16,7 @@ type maintenanceData struct {
 	History   []models.MaintenanceEntry
 }
 
-func (rc *RestClient) GetMaintenanceHandler(w http.ResponseWriter, r *http.Request) {
+func (rc *APIService) GetMaintenanceHandler(w http.ResponseWriter, r *http.Request) {
 
 	scheduled, err := rc.DB.GetMaintenanceScheduled(r.Context())
 	if err != nil {
@@ -46,7 +46,7 @@ type maintenanceAdminData struct {
 	Entries []models.MaintenanceEntry
 }
 
-func (rc *RestClient) GetMaintenanceAdminHandler(w http.ResponseWriter, r *http.Request) {
+func (rc *APIService) GetMaintenanceAdminHandler(w http.ResponseWriter, r *http.Request) {
 
 	maintenanceAll, err := rc.DB.GetMaintenanceAll(r.Context(), bson.M{})
 	if err != nil {
@@ -66,7 +66,7 @@ func (rc *RestClient) GetMaintenanceAdminHandler(w http.ResponseWriter, r *http.
 	w.WriteHeader(http.StatusOK)
 }
 
-func (rc *RestClient) PostMaintenanceAddHandler(w http.ResponseWriter, r *http.Request) {
+func (rc *APIService) PostMaintenanceAddHandler(w http.ResponseWriter, r *http.Request) {
 	description := r.FormValue("description")
 	if description == "" {
 		httpsuite.WriteJSONError(w, "description is required", http.StatusBadRequest)
@@ -107,7 +107,7 @@ func (rc *RestClient) PostMaintenanceAddHandler(w http.ResponseWriter, r *http.R
 	http.Redirect(w, r, "/maintenance/admin", http.StatusSeeOther)
 }
 
-func (rc *RestClient) PostMaintenanceStatusHandler(w http.ResponseWriter, r *http.Request) {
+func (rc *APIService) PostMaintenanceStatusHandler(w http.ResponseWriter, r *http.Request) {
 	id := r.FormValue("id")
 	if id == "" {
 		httpsuite.WriteJSONError(w, "id is required", http.StatusBadRequest)
@@ -130,7 +130,7 @@ func (rc *RestClient) PostMaintenanceStatusHandler(w http.ResponseWriter, r *htt
 	http.Redirect(w, r, "/maintenance/admin", http.StatusSeeOther)
 }
 
-func (rc *RestClient) PostMaintenanceDeleteHandler(w http.ResponseWriter, r *http.Request) {
+func (rc *APIService) PostMaintenanceDeleteHandler(w http.ResponseWriter, r *http.Request) {
 	id := r.FormValue("id")
 	if id == "" {
 		httpsuite.WriteJSONError(w, "id is required", http.StatusBadRequest)

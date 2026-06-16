@@ -1,4 +1,4 @@
-package scraper
+package api
 
 import (
 	"log"
@@ -9,7 +9,7 @@ import (
 	"github.com/sisneve/rabbitmq-dashboard/internal/templating"
 )
 
-func (rc *RestClient) IndexHandler(w http.ResponseWriter, r *http.Request) {
+func (rc *APIService) GetProfileHandler(w http.ResponseWriter, r *http.Request) {
 	vhosts, err := rc.RMQClient.GetVhosts()
 	if err != nil {
 		httpsuite.WriteJSONError(w, "error fetching vhosts", http.StatusBadGateway)
@@ -20,13 +20,7 @@ func (rc *RestClient) IndexHandler(w http.ResponseWriter, r *http.Request) {
 		selected = vhosts[0]
 	}
 	data := models.PageData{Vhosts: vhosts, Selected: selected, Limits: *rc.RMQLimits}
-	if selected != "" {
-		metrics, err := rc.RMQClient.GetMetrics(selected)
-		if err == nil {
-			data.Metrics = metrics
-		}
-	}
-	if err := templating.IndexTmpl.Execute(w, data); err != nil {
+	if err := templating.ProfileTmpl.Execute(w, data); err != nil {
 		log.Printf("template error: %v", err)
 	}
 }
