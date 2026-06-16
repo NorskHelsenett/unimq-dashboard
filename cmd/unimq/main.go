@@ -68,11 +68,23 @@ func main() {
 	slog.Info("starting RabbitMQ Dashboard", "URL", config.BaseURL, "port", config.BasePort)
 	wg := &sync.WaitGroup{}
 
+	server := &http.Server{
+		Addr:         fmt.Sprintf("%v:%d", config.BaseURL, config.BasePort),
+		Handler:      routes,
+		ReadTimeout:  30 * time.Second,
+		WriteTimeout: 30 * time.Second,
+	}
+
 	wg.Add(1)
 	wg.Go(func() {
 		defer wg.Done()
-		err = http.ListenAndServe(fmt.Sprintf("%v:%d", config.BaseURL, config.BasePort), routes)
+
+		err = server.ListenAndServe()
 		if err != nil {
+			if err == http.ErrServerClosed {
+				slog.Info("http server closed")
+				return
+			}
 			slog.Error("failed to start server", "error", err)
 			return
 		}
@@ -82,18 +94,34 @@ func main() {
 		notify.WithDB(db),
 		notify.WithRMQClient(rmq),
 		notify.WithInterval(60*time.Second),
+		notify.WithContext(ctx),
 	)
-	checker.StartChecker()
+
+	wg.Add(1)
+	checker.StartChecker(wg)
 
 	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
 
-	<-quit
+	select {
+	case <-quit:
+	case <-ctx.Done():
+	}
+
 	slog.Info("shutting down server...")
 	cancel()
-
-	wg.Wait()
-
-	slog.Info("server stopped gracefully, good bye :)")
+	timeoutCtx, timeoutCancel := context.WithTimeout(context.Background(), 30*time.Second)
+	defer timeoutCancel()
+	err = server.Shutdown(timeoutCtx)
+	if err != nil {
+		slog.Error("failed to shut down server gracefully", "error", err)
+		err = server.Close()
+		if err != nil {
+			slog.Error("forced shutdown of server", "error", err)
+		}
+	} else {
+		wg.Wait()
+		slog.Info("server stopped gracefully, good bye :)")
+	}
 
 }
