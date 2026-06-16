@@ -3,7 +3,6 @@ package notify
 import (
 	"context"
 	"fmt"
-	"log"
 	"log/slog"
 	"sync"
 	"time"
@@ -134,6 +133,17 @@ func (c *Checker) runChecks() {
 				newStatus = "firing"
 			}
 			shouldNotify := triggered && rule.Status != "firing" && len(urls) > 0
+			slog.DebugContext(c.Ctx, "Evaluating rule",
+				"vhost", vhost.Name,
+				"rule", rule.Name,
+				"type", rule.Type,
+				"value", *value,
+				"threshold", rule.Threshold,
+				"triggered", triggered,
+				"urls", len(urls),
+			)
+
+			// TODO: This shouldn't run on every check, only on status changes.
 			err := c.DB.UpdateNotificationRule(
 				c.Ctx,
 				vhost.Name,
@@ -143,7 +153,7 @@ func (c *Checker) runChecks() {
 				shouldNotify,
 			)
 			if err != nil {
-				log.Printf("notify: database update failed: %v", err)
+				slog.ErrorContext(c.Ctx, "Failed to update notification rule status", "vhost", vhost.Name, "rule", rule.Name, "error", err)
 			}
 
 			if rule.Status != "firing" && newStatus == "firing" {
