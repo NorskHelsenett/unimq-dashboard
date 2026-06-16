@@ -29,11 +29,6 @@ func TestAlarms(t *testing.T) {
 		panic(err)
 	}
 
-	err = db.InitCollections()
-	if err != nil {
-		panic(err)
-	}
-
 	ctx := t.Context()
 
 	value := 42.0

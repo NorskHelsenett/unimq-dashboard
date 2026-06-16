@@ -3,6 +3,7 @@ package database
 import (
 	"context"
 	"fmt"
+	"log/slog"
 	"time"
 
 	"go.mongodb.org/mongo-driver/v2/mongo"
@@ -33,6 +34,7 @@ func BuildURI(host, username, password string, port int) string {
 
 func NewDatabase(uri, db string) (*Database, error) {
 
+	slog.Info("connecting to mongodb", "uri", uri, "db", db)
 	client, err := mongo.Connect(
 		options.Client().ApplyURI(uri),
 		options.Client().SetTimeout(10*time.Second),
@@ -48,26 +50,32 @@ func NewDatabase(uri, db string) (*Database, error) {
 		Collections: nil,
 	}
 
+	err = dbc.initCollections()
+	if err != nil {
+		return nil, fmt.Errorf("failed to initialize database collections. %w", err)
+	}
+
 	return &dbc, nil
 }
 
-func (dbc *Database) InitCollections() error {
+func (dbc *Database) initCollections() error {
+
 	client, err := mongo.Connect(
 		options.Client().ApplyURI(dbc.uri),
-		options.Client().SetTimeout(10*time.Second),
+		options.Client().SetTimeout(30*time.Second),
 	)
 	if err != nil {
 		return err
 	}
-
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	defer cancel()
 
 	dbc.Collections = &Collections{
 		Alarms:        client.Database(dbc.db).Collection("alarms"),
 		Maintenance:   client.Database(dbc.db).Collection("maintenance"),
 		Notifications: client.Database(dbc.db).Collection("notifications"),
 	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	defer cancel()
 
 	if err = client.Ping(ctx, nil); err != nil {
 		return fmt.Errorf("failed to verify connection to mongodb. %w", err)
