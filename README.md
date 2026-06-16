@@ -5,13 +5,16 @@ Et overvåkingsdashboard og varslingsside for UniMQ. Viser metrikker per vhost, 
 ---
 
 ## Kjøre dashboardet med ny Dex authentication
+
 For å få tilgang til dashboardet er det nå nødvendig og også spinne opp en container som kjører dex.
 
 Slik det er satt opp nå kjører man denne containeren, Go applikasjonen og Vite dev server samtidig ved å kjøre:
+
 ```bash
 cd web-src
 npm run dev:all
 ```
+
 ---
 
 ## Funksjonalitet
@@ -23,8 +26,8 @@ npm run dev:all
 - **Alarmer** — Konfigurerbare alarmer for connections, channels, køer, unacked, meldinger i kø, kø-størrelse, ingen consumer og vedlikehold
 - **Webhook-varsling** — Alarmer kan sende varsler til Slack, Microsoft Teams eller andre tjenester via innkommende webhooks ved alarmutløsning. Meldinger sendes som HTTP POST med JSON-payload:
   `json
-    { "text": "[UniMQ] Alarm: <navn> — <vhost>\n\n<beskrivelse>" }
-    `
+{ "text": "[UniMQ] Alarm: <navn> — <vhost>\n\n<beskrivelse>" }
+`
 - **Vedlikehold** — Synliggjøre vedlikeholdsvindu og eventuelle endringer i forbindelse med oppdatering av RabbitMQ og OS. Leveranseteam integrasjon skal kunne publisere endringer.
 
 ---
@@ -34,17 +37,29 @@ npm run dev:all
 ```
 unimq-dashboard/
 ├── cmd/
-│   └── main.go                    # HTTP-server, ruter og side-handlere
+│   ├── unimq/
+│   │   └── main.go                # Main application that starts the API server and background tasks
+│   └── generator/
+│       └── main.go                # Generates mock data for testing and development (optional)
 ├── internal/
-│   ├── scraper/
-│   │   └── scraper.go             # Henter metrikker fra RabbitMQ Management API
-│   ├── prom/
-│   │   └── prom.go                # Henter historiske data fra Prometheus
-│   ├── maintenance/
-│   │   └── store.go               # Lagrer og leser vedlikeholdsoppføringer (JSON)
-│   └── notify/
-│       ├── store.go               # Alarm- og mottakerdata, webhook-utsending
-│       └── checker.go             # Bakgrunnssjekk av alarmer hvert 60. sekund
+│   ├── api/                       # API handlers and business logic for the HTTP server
+│   ├── clients/
+│   │   ├── prometheus/            # Prometheus HTTP client
+│   │   ├── rabbitmq/              # RabbitMQ HTTP client (Management API)
+│   │   └── rest/                  # Generic REST client for making HTTP requests
+│   │       └── httpauthproviders/ # Auth providers for http client (basic auth, bearer token, etc.)
+│   ├── config/                    # Configuration loading from environment variables
+│   ├── database/                  # Database quries for data persistence (alarms, maintenance, etc.)
+│   ├── logger/                    # Logger setup and utilities
+│   ├── models/                    # Data models for everything used in the application (alarms, maintenance, API responses, etc.)
+│   ├── notificationhelper/        # Helper functions for formatting and sending notifications (e.g., to Slack, Teams)
+│   ├── notify/                    # Checker for alarms and sending notifications
+│   ├── routes/                    # HTTP route handlers for the API endpoints
+│   │   └── httpsuite/             # generic http handler for responses, errors
+│   └── templating/                # Helper functions for rendering HTML templates
+├── scripts/
+├── unimq/                         # helm charts for deployment of UniMQ
+├── volumes-for-compose/           # Docker files and volumes for local development environment
 ├── web/
 │   ├── static/
 │   │   ├── style.css              # All CSS for dashboardet
@@ -56,65 +71,41 @@ unimq-dashboard/
 │       ├── maintenance_admin.html # Admin-side for å legge til/endre vedlikehold
 │       ├── notifications.html     # Alarmkonfigurasjon og webhook-mottakere
 │       └── notification_rule.html # Detaljside for én alarm (rediger, test, sist utløst)
-├── data/
-│   ├── maintenance.json           # Persistent lagring av vedlikeholdsoppføringer
-│   └── notifications.json        # Persistent lagring av alarmer og mottakere
-└── go.mod
+├── web-src/
+├── docker-bake.hcl
+└── docker-compose.yaml
 ```
 
 ---
 
-## Kom i gang
+## Development environment - Backend
 
-### Forutsetninger
+### Prerequisites
 
-- [Go](https://go.dev/) 1.21 eller nyere
-- RabbitMQ med Management Plugin aktivert (`rabbitmq-plugins enable rabbitmq_management`)
-- Prometheus med RabbitMQ-eksporter (valgfritt — kreves for historiske kø-grafer)
+- [Go](https://go.dev/) 1.26.4 or newer
+- Docker and Docker Compose for running RabbitMQ, Prometheus, mongodb, and Dex locally
 
-### 1. Klon repoet
+### 1. Clone the repo
 
 ```bash
 git clone https://github.com/NorskHelsenett/unimq-dashboard.git
 cd unimq-dashboard
 ```
 
-### 2. Opprett data-mappen
+### 2. Copy the .env.example file and update the environment variables as needed
 
 ```bash
-mkdir -p data
+cp .env.example .env
 ```
 
-### 3. Konfigurer tilkoblinger
-
-Åpne filene under og oppdater tilkoblingsdetaljer for ditt miljø:
-
-**`internal/scraper/scraper.go`**
-
-```go
-baseURL  = "http://localhost:15672/api"  // RabbitMQ Management API
-username = "guest"
-password = "guest"
-```
-
-**`internal/prom/prom.go`**
-
-```go
-baseURL = "http://localhost:9090/api/v1"  // Prometheus
-```
-
-**`cmd/main.go`**
-
-```go
-http.ListenAndServe(":8080", nil)  // Port dashboardet kjører på
-```
-
-### 4. Start dashboardet
+### 3. Start the local development environment with Docker Compose
 
 ```bash
-go run ./cmd/main.go
+docker-compose up -d
 ```
 
-Åpne [http://localhost:8080](http://localhost:8080) i nettleseren.
+### 4. Start the dashboard application
 
----
+```bash
+go run ./cmd/unimq/main.go
+```
