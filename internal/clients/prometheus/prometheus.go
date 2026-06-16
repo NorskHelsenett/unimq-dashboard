@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/sisneve/rabbitmq-dashboard/internal/clients/rest"
+	"github.com/sisneve/rabbitmq-dashboard/internal/clients/rest/httpauthproviders"
 	"github.com/sisneve/rabbitmq-dashboard/internal/models"
 )
 
@@ -22,7 +23,10 @@ type PromClient struct {
 
 func NewPromClient(baseURL, apiVersion, username, password string, port int) (*PromClient, error) {
 	url := fmt.Sprintf("%v:%d/api/%v", baseURL, port, apiVersion)
-	restclient, err := rest.NewRestClient(url, rest.WithUsername(username), rest.WithPassword(password))
+	restclient, err := rest.NewRestClient(url,
+		rest.WithAuthProvider(httpauthproviders.NewBasicAuthProvider(username, password)),
+	)
+
 	if err != nil {
 		return nil, err
 	}

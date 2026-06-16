@@ -2,11 +2,13 @@ package rabbitmq
 
 import (
 	"context"
+	"fmt"
 	"net/url"
 	"sort"
 	"sync"
 
 	"github.com/sisneve/rabbitmq-dashboard/internal/clients/rest"
+	"github.com/sisneve/rabbitmq-dashboard/internal/clients/rest/httpauthproviders"
 	"github.com/sisneve/rabbitmq-dashboard/internal/models"
 )
 
@@ -35,7 +37,12 @@ func appendHistory(key string, value int) []int {
 }
 
 func NewRMQClient(ctx context.Context, url, username, password string) (*RMQClient, error) {
-	restclient, err := rest.NewRestClient(url, rest.WithContext(ctx), rest.WithUsername(username), rest.WithPassword(password))
+	restclient, err := rest.NewRestClient(url,
+		rest.WithContext(ctx),
+		rest.WithUsername(username),
+		rest.WithPassword(password),
+		rest.WithAuthProvider(httpauthproviders.NewBasicAuthProvider(username, password)),
+	)
 	if err != nil {
 		return nil, err
 	}
@@ -111,12 +118,12 @@ func (r *RMQClient) GetMetrics(vhost string) (*models.VhostMetrics, error) {
 
 	vhostObject, err := r.GetVhost(vhost)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("error fetching vhost data: %w", err)
 	}
 
 	connections, err := r.GetConnections()
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("error fetching connections: %w", err)
 	}
 	connCount := 0
 	for _, c := range connections {
