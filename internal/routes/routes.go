@@ -17,7 +17,7 @@ import (
 	"github.com/sisneve/rabbitmq-dashboard/internal/scraper"
 )
 
-func SetupRoutes(ctx context.Context, config *config.Config) (chi.Router, error) {
+func SetupRoutes(ctx context.Context, config *config.Config, db *database.Database, rmq *rabbitmq.RMQClient) (chi.Router, error) {
 	r := chi.NewRouter()
 
 	r.Use(middleware.Logger)
@@ -25,22 +25,6 @@ func SetupRoutes(ctx context.Context, config *config.Config) (chi.Router, error)
 	r.Use(middleware.Timeout(60 * time.Second))
 	r.Use(middleware.RequestID)
 
-	uri := database.BuildURI(config.MongoDBUsername, config.MongoDBPassword, config.MongoDBHost, config.MongoDBPort)
-	db, err := database.NewDatabase(uri, config.MongoDBDatabase)
-	if err != nil {
-		return nil, err
-	}
-
-	err = db.InitCollections()
-	if err != nil {
-		return nil, err
-	}
-
-	rmqurl := fmt.Sprintf("%v:%d/api", config.RabbitMQHost, config.RabbitMQPort)
-	rmq, err := rabbitmq.NewRMQClient(ctx, rmqurl, config.RabbitMQUsername, config.RabbitMQPassword)
-	if err != nil {
-		return nil, fmt.Errorf("failed to create RabbitMQ client: %w", err)
-	}
 	prom, err := prometheus.NewPromClient(config.PrometheusHost, "v1", "", "", config.PrometheusPort)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create Prometheus client: %w", err)
@@ -60,11 +44,11 @@ func SetupRoutes(ctx context.Context, config *config.Config) (chi.Router, error)
 		scraper.WithRMQLimits(limits),
 	)
 
-	http.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("web/static"))))
-	// Serve the callback page so oidc-client-ts can complete the OIDC flow client-side.
-	http.HandleFunc("/callback", func(w http.ResponseWriter, r *http.Request) {
-		http.ServeFile(w, r, "web/templates/callback.html")
-	})
+	// http.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("web/static"))))
+	// // Serve the callback page so oidc-client-ts can complete the OIDC flow client-side.
+	// http.HandleFunc("/callback", func(w http.ResponseWriter, r *http.Request) {
+	// 	http.ServeFile(w, r, "web/templates/callback.html")
+	// })
 
 	// TODO: group into v1, v2, etc. as needed for API versioning and better organization
 	// TODO: correct the methods for these routes (e.g. POST for add/delete operations)
