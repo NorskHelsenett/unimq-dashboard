@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"log/slog"
+	"sync"
 	"time"
 
 	"github.com/sisneve/rabbitmq-dashboard/internal/clients/rabbitmq"
@@ -43,6 +44,12 @@ func WithInterval(d time.Duration) CheckerOptions {
 	}
 }
 
+func WithContext(ctx context.Context) CheckerOptions {
+	return func(c *Checker) {
+		c.Ctx = ctx
+	}
+}
+
 func NewChecker(opts ...CheckerOptions) *Checker {
 	c := &Checker{
 		interval: 60 * time.Second,
@@ -53,18 +60,41 @@ func NewChecker(opts ...CheckerOptions) *Checker {
 	return c
 }
 
-func (c *Checker) StartChecker() {
+func (c *Checker) StartChecker(wg *sync.WaitGroup) {
 	go func() {
+		defer wg.Done()
 		// Initial delay to allow other components to start and populate the store before checks run.
 		time.Sleep(15 * time.Second)
+
+		ticker := time.NewTicker(c.interval)
 		for {
-			c.runChecks()
-			time.Sleep(c.interval)
+
+			select {
+			case <-ticker.C:
+				slog.DebugContext(c.Ctx, "Checker tick")
+			case <-c.Ctx.Done():
+				slog.InfoContext(c.Ctx, "Checker stopped")
+				return
+			}
+
+			select {
+			case <-c.Ctx.Done():
+				slog.InfoContext(c.Ctx, "Checker stopped")
+				return
+			default:
+				c.runChecks()
+			}
 		}
 	}()
 }
 
+// runChecks fetches notifications and metrics, evaluates rules, updates statuses, and sends notifications as needed.
+// We don't return an error as we don't care about individual failures here - we just want to log them and keep going.
 func (c *Checker) runChecks() {
+	if c.DB.Inialized == false {
+		slog.WarnContext(c.Ctx, "Checker: database not initialized")
+		return
+	}
 	notifications, err := c.DB.GetNotificationsAll(c.Ctx)
 	if err != nil {
 		slog.ErrorContext(c.Ctx, "Failed to fetch notifications from database", "error", err)
