@@ -5,7 +5,10 @@ import (
 	"fmt"
 	"log/slog"
 	"net/http"
+	"os"
+	"os/signal"
 	"sync"
+	"syscall"
 	"time"
 
 	"github.com/sisneve/rabbitmq-dashboard/internal/clients/rabbitmq"
@@ -46,7 +49,8 @@ func main() {
 		return
 	}
 
-	ctx := context.Background()
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
 
 	rmqurl := fmt.Sprintf("%v:%d/api", config.RabbitMQHost, config.RabbitMQPort)
 	rmq, err := rabbitmq.NewRMQClient(ctx, rmqurl, config.RabbitMQUsername, config.RabbitMQPassword)
@@ -80,6 +84,16 @@ func main() {
 		notify.WithInterval(60*time.Second),
 	)
 	checker.StartChecker()
+
+	quit := make(chan os.Signal, 1)
+	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
+
+	<-quit
+	slog.Info("shutting down server...")
+	cancel()
+
 	wg.Wait()
+
+	slog.Info("server stopped gracefully, good bye :)")
 
 }
