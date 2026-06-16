@@ -189,9 +189,6 @@ func isPresent(value any) bool {
 		}
 		return true
 	case int:
-		if value == 0 {
-			return false
-		}
 		return true
 	default:
 		panic(fmt.Sprintf("Unsupported type check of type %v", v))
