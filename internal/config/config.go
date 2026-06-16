@@ -3,6 +3,7 @@ package config
 import (
 	"errors"
 	"fmt"
+	"log/slog"
 	"net"
 	"strings"
 	"time"
@@ -13,6 +14,8 @@ import (
 type Config struct {
 	BaseURL  string `mapstructure:"BASE_URL"`
 	BasePort int    `mapstructure:"BASE_PORT"`
+
+	LogLevel int `mapstructure:"LOG_LEVEL"`
 
 	MongoDBHost     string `mapstructure:"MONGODB_HOST"`
 	MongoDBPort     int    `mapstructure:"MONGODB_PORT"`
@@ -36,6 +39,7 @@ func NewConfig() *Config {
 	c := &Config{
 		BaseURL:                 "localhost",
 		BasePort:                8080,
+		LogLevel:                0,
 		MongoDBHost:             "mongodb://localhost",
 		MongoDBPort:             27017,
 		MongoDBUsername:         "",
@@ -80,6 +84,7 @@ func (c *Config) CheckURLs() error {
 	if err != nil {
 		return fmt.Errorf("failed to connect to RabbitMQ URL: %w", err)
 	}
+	slog.Info("successfully connected to RabbitMQ URL", "host", c.RabbitMQHost, "port", c.RabbitMQPort)
 
 	prom := strings.TrimPrefix(c.PrometheusHost, "http://")
 	prom = strings.TrimPrefix(prom, "https://")
@@ -87,12 +92,14 @@ func (c *Config) CheckURLs() error {
 	if err != nil {
 		return fmt.Errorf("failed to connect to Prometheus URL: %w", err)
 	}
+	slog.Info("successfully connected to Prometheus URL", "host", c.PrometheusHost, "port", c.PrometheusPort)
 
 	mdb := strings.TrimPrefix(c.MongoDBHost, "mongodb://")
 	_, err = net.DialTimeout("tcp", fmt.Sprintf("%s:%d", mdb, c.MongoDBPort), 5*time.Second)
 	if err != nil {
 		return fmt.Errorf("failed to connect to MongoDB URL: %w", err)
 	}
+	slog.Info("successfully connected to MongoDB URL", "host", c.MongoDBHost, "port", c.MongoDBPort)
 
 	return nil
 }
@@ -130,6 +137,7 @@ func (c *Config) loadEnvironmentVariables() {
 	// Defaulted values
 	_ = viper.BindEnv("BASE_URL")
 	_ = viper.BindEnv("BASE_PORT")
+	_ = viper.BindEnv("LOG_LEVEL")
 	_ = viper.BindEnv("MONGODB_HOST")
 	_ = viper.BindEnv("MONGODB_PORT")
 	_ = viper.BindEnv("RABBITMQ_HOST")
@@ -148,6 +156,7 @@ func (c *Config) validateConfiguration() error {
 
 	parameterChecks["BASE_URL"] = isPresent(c.BaseURL)
 	parameterChecks["BASE_PORT"] = isPresent(c.BasePort)
+	parameterChecks["LOG_LEVEL"] = isPresent(c.LogLevel)
 	parameterChecks["MONGODB_HOST"] = isPresent(c.MongoDBHost)
 	parameterChecks["MONGODB_PORT"] = isPresent(c.MongoDBPort)
 	parameterChecks["MONGODB_USERNAME"] = isPresent(c.MongoDBUsername)

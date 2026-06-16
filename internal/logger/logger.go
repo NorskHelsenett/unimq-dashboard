@@ -22,6 +22,26 @@ func (h *ContextHandler) Handle(ctx context.Context, record slog.Record) error {
 
 func SetupLogger() {
 
+	handlerOpts := getHandlerOpts(slog.LevelInfo)
+
+	handler := slog.NewTextHandler(os.Stdout, handlerOpts)
+	logger := slog.New(&ContextHandler{Handler: handler})
+
+	slog.SetDefault(logger)
+}
+
+func UpdateLogLevel(level slog.Level) {
+
+	handlerOpts := getHandlerOpts(level)
+
+	handler := slog.NewTextHandler(os.Stdout, handlerOpts)
+	logger := slog.New(&ContextHandler{Handler: handler})
+
+	slog.SetDefault(logger)
+}
+
+func getHandlerOpts(loglevel slog.Level) *slog.HandlerOptions {
+
 	handlerOpts := &slog.HandlerOptions{
 		AddSource: true,
 		ReplaceAttr: func(groups []string, a slog.Attr) slog.Attr {
@@ -31,10 +51,8 @@ func SetupLogger() {
 			}
 			return a
 		},
+		Level: loglevel,
 	}
 
-	handler := slog.NewTextHandler(os.Stdout, handlerOpts)
-	logger := slog.New(&ContextHandler{Handler: handler})
-
-	slog.SetDefault(logger)
+	return handlerOpts
 }
