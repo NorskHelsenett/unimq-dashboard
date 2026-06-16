@@ -15,7 +15,7 @@ fi
 
 # Start the Go application
 echo "  Starting Go backend..."
-go run ./cmd/main.go &
+go run ./cmd/unimq/main.go &
 BACKEND_PID=$!
 
 # Start the React application
