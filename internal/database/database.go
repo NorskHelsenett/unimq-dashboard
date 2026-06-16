@@ -15,6 +15,7 @@ type Database struct {
 	db          string
 	client      *mongo.Client
 	Collections *Collections
+	Inialized   bool
 }
 
 type Collections struct {
@@ -80,6 +81,8 @@ func (dbc *Database) initCollections() error {
 	if err = client.Ping(ctx, nil); err != nil {
 		return fmt.Errorf("failed to verify connection to mongodb. %w", err)
 	}
+
+	dbc.Inialized = true
 
 	return nil
 }
