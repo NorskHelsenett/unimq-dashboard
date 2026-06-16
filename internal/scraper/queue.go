@@ -5,8 +5,8 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/sisneve/rabbitmq-dashboard/internal/clients/prometheus"
 	"github.com/sisneve/rabbitmq-dashboard/internal/models"
-	"github.com/sisneve/rabbitmq-dashboard/internal/prom"
 	"github.com/sisneve/rabbitmq-dashboard/internal/routes/httpsuite"
 	"github.com/sisneve/rabbitmq-dashboard/internal/templating"
 )
@@ -39,7 +39,7 @@ func (rc *RestClient) QueueHandler(w http.ResponseWriter, r *http.Request) {
 		Vhost: vhost,
 		Queue: queue,
 		Since: since,
-		Step:  prom.StepFor(since),
+		Step:  prometheus.StepFor(since),
 	})
 
 	if err != nil {
