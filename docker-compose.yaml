@@ -19,21 +19,37 @@ services:
   #     - "5173:80"
   #   environment:
   #     - VITE_AUTH_ISSUER=http://dex:5556/dex
-  #     - VITE_CLIENT_ID=dummy
-  #     - VITE_CLIENT_SECRET=dummy
+  #     - VITE_CLIENT_ID=unimq-dashboard
+  #     - VITE_CLIENT_SECRET=O8jad9kl1PD1er
   #   depends_on:
   #     - dex
-  # unimq-api:
-  #   image: ${DOCKER_MIRROR}nhn-unimq/backend:latest
-  #   restart: unless-stopped
-  #   container_name: unimq-api
-  #   ports:
-  #     - "8080:8080"
-  #   depends_on:
-  #     - rabbitmq
-  #     - prometheus
-  #     - mongodb
-  #
+  #   networks:
+  #     - unimq-dashboard-network
+
+  unimq-api:
+    image: ${DOCKER_MIRROR}nhn-unimq/backend:latest
+    restart: unless-stopped
+    container_name: unimq-api
+    ports:
+      - "8080:8080"
+    depends_on:
+      - rabbitmq
+      - prometheus
+      - mongodb
+    environment:
+      - RABBITMQ_HOST=rabbitmq
+      - RABBITMQ_PORT=15672
+      - RABBITMQ_USERNAME=${RABBITMQ_USERNAME:-guest}
+      - RABBITMQ_PASSWORD=${RABBITMQ_PASSWORD:-guest}
+      - PROMETHEUS_HOST=prometheus
+      - PROMETHEUS_PORT=9090
+      - MONGODB_HOST=mongodb
+      - MONGODB_PORT=27017
+      - MONGODB_USERNAME=${MONGODB_USERNAME:-admin}
+      - MONGODB_PASSWORD=${MONGODB_PASSWORD:-adminpassword}
+    networks:
+      - unimq-dashboard-network
+
   rabbitmq:
     image: ${DOCKER_MIRROR}rabbitmq:4.3.1-management-alpine
     restart: unless-stopped
