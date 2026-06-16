@@ -1,14 +1,13 @@
-- Golangci-lint
+# TODO: This should be moved to issues or discarded based
+
+- Swagger documentation for API endpoints
+
+## Low priority ToDo's:
+
+- Retry logic for connecting to RabbitMQ and Prometheus, to handle transient connectivity issues
 - Watchers for mongodb, rabbitmq, prometheus to cover connectivity loss
-
-- Context in Golang for clean shutdown
-
+- More comprehensive unit tests for all packages, especially the notify and scraper packages
+- Checker does unnecessary updates, should only update when there are changes to the alarm state (e.g., from not triggered to triggered, or vice versa)
 - api/queues require vhost parameter, should return all and use below example for filtering
 - api/queues/{vhost} require queue name parameter
-- http.FileServer for static files, should be moved to a separate handler and not used for all routes
-- Swagger documentation for API endpoints
-- Log entry trimming, should be implemented to prevent log bloat and improve readability
-- Retry logic for connecting to RabbitMQ and Prometheus, to handle transient connectivity issues
-- Database queries should use the collections parameter instead of hardcoding collection names
-
----
+- Golangci-lint
