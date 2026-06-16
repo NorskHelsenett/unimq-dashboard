@@ -3,7 +3,6 @@ package database
 import (
 	"context"
 	"fmt"
-	"log/slog"
 	"time"
 
 	"go.mongodb.org/mongo-driver/v2/mongo"
@@ -35,7 +34,6 @@ func BuildURI(host, username, password string, port int) string {
 
 func NewDatabase(uri, db string) (*Database, error) {
 
-	slog.Info("connecting to mongodb", "uri", uri, "db", db)
 	client, err := mongo.Connect(
 		options.Client().ApplyURI(uri),
 		options.Client().SetTimeout(10*time.Second),
