@@ -60,7 +60,7 @@ type AlarmRule struct {
 	Threshold float64    `json:"threshold,omitempty" bson:"threshold"`
 	Message   string     `json:"message" bson:"message"`
 	Enabled   bool       `json:"enabled" bson:"enabled"`
-	Status    string     `json:"status" bson:"status"`
+	Status    string     `json:"status" bson:"status"` // TODO: Enum "active", "inactive", "fired"
 	LastFired *time.Time `json:"last_fired,omitempty" bson:"lastFired"`
 	LastValue *float64   `json:"last_value,omitempty" bson:"lastValue"`
 }
