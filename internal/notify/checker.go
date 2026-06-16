@@ -79,13 +79,13 @@ func (c *Checker) runChecks() {
 
 		metrics, err := c.RMQClient.GetMetrics(vhost.Name)
 		if err != nil {
-			slog.ErrorContext(c.Ctx, "Failed to fetch metrics", "vhost", vhost, "error", err)
+			slog.ErrorContext(c.Ctx, "Failed to fetch metrics", "vhost", vhost.Name, "error", err)
 			continue
 		}
 
 		queues, err := c.RMQClient.GetQueueDetails(vhost.Name)
 		if err != nil {
-			slog.ErrorContext(c.Ctx, "Failed to fetch queue details", "vhost", vhost, "error", err)
+			slog.ErrorContext(c.Ctx, "Failed to fetch queue details", "vhost", vhost.Name, "error", err)
 			continue
 		}
 
@@ -104,7 +104,14 @@ func (c *Checker) runChecks() {
 				newStatus = "firing"
 			}
 			shouldNotify := triggered && rule.Status != "firing" && len(urls) > 0
-			err := c.DB.UpdateNotificationRule(c.Ctx, vhost.Name, rule.ID, newStatus, *value, shouldNotify)
+			err := c.DB.UpdateNotificationRule(
+				c.Ctx,
+				vhost.Name,
+				rule.ID,
+				newStatus,
+				*value,
+				shouldNotify,
+			)
 			if err != nil {
 				log.Printf("notify: database update failed: %v", err)
 			}
@@ -190,7 +197,12 @@ func evaluate(rule models.AlarmRule, metrics *models.VhostMetrics, queues []mode
 				return q.Messages > 0 && q.Consumers == 0, val(v)
 			}
 		}
+	default:
+		slog.Error("Unknown rule type", "type", rule.Type)
+		v := float64(0)
+		return false, val(v)
 	}
+
 	return false, nil
 }
 
