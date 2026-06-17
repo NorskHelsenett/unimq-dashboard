@@ -4,17 +4,6 @@ import (
 	"time"
 )
 
-type PageData struct {
-	Vhosts   []string
-	Selected string
-	Metrics  *VhostMetrics
-	Limits   Limits
-}
-
-func NewPageData(vhosts []string, selected string, metrics *VhostMetrics, limits Limits) PageData {
-	return PageData{Vhosts: vhosts, Selected: selected, Metrics: metrics, Limits: limits}
-}
-
 type RangeOption struct {
 	Label string
 	Value string
