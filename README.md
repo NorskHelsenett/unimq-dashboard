@@ -72,16 +72,31 @@ unimq-dashboard/
 │       ├── notifications.html     # Alarmkonfigurasjon og webhook-mottakere
 │       └── notification_rule.html # Detaljside for én alarm (rediger, test, sist utløst)
 ├── web-src/
-├── docker-bake.hcl
-└── docker-compose.yaml
+│   └── .env.local.example         # Environment variables for frontend
+├── docker-bake.hcl                # Docker bake file for building backend and frontend images
+├── docker-compose.yaml            # Docker Compose file for local development environment (RabbitMQ, Prometheus, mongodb, Dex)
+└── .env.example                   # Environment variables for backend and docker compose.
+
 ```
 
 ---
 
 ## Build with docker-bake
 
+To build all images:
+
 ```bash
 docker buildx bake all
+```
+
+To build individual images:
+
+```bash
+docker buildx bake backend
+```
+
+```bash
+docker buildx bake frontend
 ```
 
 ## Development environment - Backend
@@ -114,4 +129,37 @@ docker-compose up -d
 
 ```bash
 go run ./cmd/unimq/main.go
+```
+
+## Development environment - Frontend
+
+### Prerequisites
+
+- Placeholder
+
+### 1. Clone the repo
+
+```bash
+git clone https://githu.com/NorskHelsenett/unimq-dashboard.git
+cd unimq-dashboard
+```
+
+### 2. Copy the .env.example file and update the environment variables as needed
+
+```bash
+cp .env.example .env
+```
+
+```bash
+cp ./web-src/.env.local.example ./web-src/.env
+```
+
+### 3. Start the Vite development server
+
+This will start the Vite dev server for the frontend, the Go backend server, and the Dex authentication server simultaneously.
+
+```bash
+cd web-src
+npm install
+npm run dev:all
 ```
