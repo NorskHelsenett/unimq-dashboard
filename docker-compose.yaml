@@ -15,6 +15,8 @@ services:
   #   image: ${DOCKER_MIRROR}nhn-unimq/frontend:latest
   #   restart: unless-stopped
   #   container_name: unimq-dashboard
+  #   volumes:
+  #     - ./volumes-for-compose/nginx-config.conf:/etc/nginx/conf.d/default.conf:ro
   #   ports:
   #     - "5173:80"
   #   environment:
