@@ -1,6 +1,9 @@
 package models
 
-import "time"
+import (
+	"slices"
+	"time"
+)
 
 type MaintenanceStatus string
 
@@ -22,6 +25,32 @@ func ParseMaintenanceStatus(s string) MaintenanceStatus {
 	default:
 		return MaintenanceStatusUnknown
 	}
+}
+
+func GetMaintenanceStatusAll() []MaintenanceStatus {
+	return []MaintenanceStatus{
+		MaintenanceStatusScheduled,
+		MaintenanceStatusDone,
+		MaintenanceStatusSkipped,
+	}
+}
+
+func GetMaintenanceStatusAllString() []string {
+	status := GetMaintenanceStatusAll()
+	out := make([]string, len(status))
+	for i, s := range status {
+		out[i] = string(s)
+	}
+	return out
+}
+
+func IsValidMaintenanceStatus(s string) bool {
+	statuses := GetMaintenanceStatusAll()
+
+	if slices.Contains(statuses, MaintenanceStatus(s)) {
+		return true
+	}
+	return false
 }
 
 type MaintenanceEntry struct {
