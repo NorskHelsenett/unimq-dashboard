@@ -4,7 +4,6 @@ import (
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
-	"github.com/sisneve/rabbitmq-dashboard/internal/models"
 	"github.com/sisneve/rabbitmq-dashboard/internal/routes/httpsuite"
 )
 
@@ -16,11 +15,6 @@ func (rc *APIService) VhostsHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	httpsuite.SendResponse(r.Context(), w, "", http.StatusOK, &vhosts)
-}
-
-type vhostResponse struct {
-	Vhost   *models.Vhost        `json:"vhost"`
-	Metrics *models.VhostMetrics `json:"metrics"`
 }
 
 func (rc *APIService) VhostHandler(w http.ResponseWriter, r *http.Request) {
@@ -36,16 +30,5 @@ func (rc *APIService) VhostHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	metrics, err := rc.RMQClient.GetMetrics(vhostName)
-	if err != nil {
-		httpsuite.WriteJSONError(w, "error fetching vhost metrics", http.StatusBadGateway)
-		return
-	}
-
-	response := vhostResponse{
-		Vhost:   vhostData,
-		Metrics: metrics,
-	}
-
-	httpsuite.SendResponse(r.Context(), w, "", http.StatusOK, &response)
+	httpsuite.SendResponse(r.Context(), w, "", http.StatusOK, &vhostData)
 }
