@@ -4,6 +4,33 @@ import (
 	"html/template"
 )
 
+type Vhost struct {
+	Messages                      int               `json:"messages"`
+	Name                          string            `json:"name"`
+	Description                   string            `json:"description"`
+	Metadata                      Metadata          `json:"metadata"`
+	Tags                          []string          `json:"tags"`
+	DefaultQueueType              string            `json:"default_queue_type"`
+	MessagesReady                 int               `json:"messages_ready"`
+	MessagesUnacknowledged        int               `json:"messages_unacknowledged"`
+	ProtectedFromDeletion         bool              `json:"protected_from_deletion"`
+	Tracing                       bool              `json:"tracing"`
+	ClusterState                  map[string]string `json:"cluster_state"`
+	MessagesDetails               MessageRate       `json:"messages_details"`
+	MessagesUnacknowledgedDetails MessageRate       `json:"messages_unacknowledged_details"`
+	MessagesReadyDetails          MessageRate       `json:"messages_ready_details"`
+}
+
+type Metadata struct {
+	Description      string   `json:"description"`
+	Tags             []string `json:"tags"`
+	DefaultQueueType string   `json:"default_queue_type"`
+}
+
+type MessageRate struct {
+	Rate float64 `json:"rate"`
+}
+
 type VhostMetrics struct {
 	Name        string `json:"name"`
 	Connections int    `json:"connections"`
