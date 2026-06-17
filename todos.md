@@ -12,3 +12,4 @@
 - api/queues require vhost parameter, should return all and use below example for filtering
 - api/queues/{vhost} require queue name parameter
 - Golangci-lint
+- More seeding data
