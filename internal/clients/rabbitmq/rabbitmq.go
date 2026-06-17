@@ -49,8 +49,8 @@ func NewRMQClient(ctx context.Context, url, username, password string) (*RMQClie
 	return &RMQClient{restClient: restclient}, nil
 }
 
-func (r *RMQClient) GetVhosts() ([]string, error) {
-	var vhosts []string
+func (r *RMQClient) GetVhosts() ([]models.Vhost, error) {
+	var vhosts []models.Vhost
 	_, err := r.restClient.Get("/vhosts", &vhosts)
 	if err != nil {
 		return nil, err
@@ -58,15 +58,15 @@ func (r *RMQClient) GetVhosts() ([]string, error) {
 	return vhosts, nil
 }
 
-func (r *RMQClient) GetVhost(name string) (*models.VhostResponse, error) {
+func (r *RMQClient) GetVhost(name string) (*models.Vhost, error) {
 
-	var vhostData models.VhostResponse
-	_, err := r.restClient.Get("/vhosts/"+url.PathEscape(name), &vhostData)
+	var vhost models.Vhost
+	_, err := r.restClient.Get("/vhosts/"+url.PathEscape(name), &vhost)
 	if err != nil {
 		return nil, err
 	}
 
-	return &vhostData, nil
+	return &vhost, nil
 }
 
 func (r *RMQClient) GetConnections() ([]models.ConnectionResponse, error) {
@@ -103,6 +103,15 @@ func (r *RMQClient) GetQueue(vhost string) ([]models.QueueAPIResponse, error) {
 		return nil, err
 	}
 	return queues, nil
+}
+
+func (r *RMQClient) GetQueueByName(vhost string, name string) (*models.QueueAPIResponse, error) {
+	var queues models.QueueAPIResponse
+	_, err := r.restClient.Get("/queues/"+url.PathEscape(vhost)+"/"+url.PathEscape(name), &queues)
+	if err != nil {
+		return nil, err
+	}
+	return &queues, nil
 }
 
 func (r *RMQClient) GetNodes() ([]models.NodeAPIResponse, error) {
