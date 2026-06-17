@@ -1,0 +1,17 @@
+version: "2"
+
+linters:
+  enable:
+    - govet
+    - staticcheck
+    - gocritic
+    - gosec
+    - gofmt
+    - goimports
+    - errcheck
+    - gosimple
+    - unused
+    - unconvert
+    - goconst
+    - gocyclo
+    - revive
