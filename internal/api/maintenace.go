@@ -1,13 +1,13 @@
 package api
 
 import (
-	"log"
 	"net/http"
+	"strings"
 	"time"
 
+	"github.com/go-chi/chi/v5"
 	"github.com/sisneve/rabbitmq-dashboard/internal/models"
 	"github.com/sisneve/rabbitmq-dashboard/internal/routes/httpsuite"
-	"github.com/sisneve/rabbitmq-dashboard/internal/templating"
 	"go.mongodb.org/mongo-driver/v2/bson"
 )
 
@@ -16,19 +16,24 @@ type maintenanceData struct {
 	History   []models.MaintenanceEntry
 }
 
+// @Summary Get scheduled  maintenance information and history
+// @Description Get scheduled  maintenance information and history
+// @Tags Maintenance
+// @Produce json
+// @Success 200 {object} maintenanceData
+// @Failure 500 {object} httpsuite.ErrorResponse
+// @Router /maintenance [get]
 func (rc *APIService) GetMaintenanceHandler(w http.ResponseWriter, r *http.Request) {
 
 	scheduled, err := rc.DB.GetMaintenanceScheduled(r.Context())
 	if err != nil {
 		httpsuite.WriteJSONError(w, "error fetching scheduled maintenance", http.StatusInternalServerError)
-		// slog.ErrorContext(r.Context(), "error fetching scheduled maintenance", "error", err)
 		return
 	}
 
 	maintenanceHistory, err := rc.DB.GetMaintenanceHistory(r.Context())
 	if err != nil {
 		httpsuite.WriteJSONError(w, "error fetching maintenance history", http.StatusInternalServerError)
-		// slog.ErrorContext(r.Context(), "error fetching maintenance history", "error", err)
 		maintenanceHistory = []models.MaintenanceEntry{}
 	}
 
@@ -37,36 +42,35 @@ func (rc *APIService) GetMaintenanceHandler(w http.ResponseWriter, r *http.Reque
 		History:   maintenanceHistory,
 	}
 
-	if err := templating.MaintTmpl.Execute(w, data); err != nil {
-		log.Printf("template error: %v", err)
-	}
+	httpsuite.SendResponse(r.Context(), w, "", http.StatusOK, &data)
 }
 
 type maintenanceAdminData struct {
 	Entries []models.MaintenanceEntry
 }
 
+// @Summary Get all maintenance entries
+// @Description Get all maintenance entries for admin view
+// @Tags Maintenance
+// @Produce json
+// @Success 200 {object} maintenanceAdminData
+// @Failure 500 {object} httpsuite.ErrorResponse
+// @Router /maintenance/admin [get]
 func (rc *APIService) GetMaintenanceAdminHandler(w http.ResponseWriter, r *http.Request) {
 
 	maintenanceAll, err := rc.DB.GetMaintenanceAll(r.Context(), bson.M{})
 	if err != nil {
 		httpsuite.WriteJSONError(w, "error fetching maintenance", http.StatusInternalServerError)
-		// slog.ErrorContext(r.Context(), "error fetching maintenance", "error", err)
 		return
 	}
 	adminData := maintenanceAdminData{
 		Entries: maintenanceAll,
 	}
 
-	if err := templating.MaintAdminTmpl.Execute(w, adminData); err != nil {
-		httpsuite.WriteJSONError(w, "error rendering maintenance admin template", http.StatusInternalServerError)
-		// slog.ErrorContext(r.Context(), "error rendering maintenance admin template", "error", err)
-		return
-	}
-	w.WriteHeader(http.StatusOK)
+	httpsuite.SendResponse(r.Context(), w, "", http.StatusOK, &adminData)
 }
 
-func (rc *APIService) PostMaintenanceAddHandler(w http.ResponseWriter, r *http.Request) {
+func (rc *APIService) AddMaintenanceHandler(w http.ResponseWriter, r *http.Request) {
 	description := r.FormValue("description")
 	if description == "" {
 		httpsuite.WriteJSONError(w, "description is required", http.StatusBadRequest)
@@ -100,17 +104,17 @@ func (rc *APIService) PostMaintenanceAddHandler(w http.ResponseWriter, r *http.R
 		Description: description,
 		Start:       startTime,
 		End:         endTime,
-		Status:      "scheduled",
+		Status:      models.MaintenanceStatusScheduled,
 	}
 	rc.DB.AddMaintenanceEntry(r.Context(), &entry)
 
 	http.Redirect(w, r, "/maintenance/admin", http.StatusSeeOther)
 }
 
-func (rc *APIService) PostMaintenanceStatusHandler(w http.ResponseWriter, r *http.Request) {
-	id := r.FormValue("id")
+func (rc *APIService) UpdateMaintenanceStatusHandler(w http.ResponseWriter, r *http.Request) {
+	id := chi.URLParam(r, "maintenance")
 	if id == "" {
-		httpsuite.WriteJSONError(w, "id is required", http.StatusBadRequest)
+		httpsuite.WriteJSONError(w, "maintenance id is required", http.StatusBadRequest)
 		return
 	}
 
@@ -120,20 +124,24 @@ func (rc *APIService) PostMaintenanceStatusHandler(w http.ResponseWriter, r *htt
 		return
 	}
 
+	if models.IsValidMaintenanceStatus(status) == false {
+		httpsuite.WriteJSONError(w, "invalid status value, expected any of "+strings.Join(models.GetMaintenanceStatusAllString(), ", "), http.StatusBadRequest)
+		return
+	}
+
 	err := rc.DB.SetMaintenanceEntryStatus(r.Context(), id, status)
 	if err != nil {
 		httpsuite.WriteJSONError(w, "error updating maintenance status", http.StatusInternalServerError)
-		// slog.ErrorContext(r.Context(), "error updating maintenance status", "error", err)
 		return
 	}
 
 	http.Redirect(w, r, "/maintenance/admin", http.StatusSeeOther)
 }
 
-func (rc *APIService) PostMaintenanceDeleteHandler(w http.ResponseWriter, r *http.Request) {
-	id := r.FormValue("id")
+func (rc *APIService) DeleteMaintenanceHandler(w http.ResponseWriter, r *http.Request) {
+	id := chi.URLParam(r, "maintenance")
 	if id == "" {
-		httpsuite.WriteJSONError(w, "id is required", http.StatusBadRequest)
+		httpsuite.WriteJSONError(w, "maintenance id is required", http.StatusBadRequest)
 		return
 	}
 

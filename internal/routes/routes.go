@@ -44,43 +44,32 @@ func SetupRoutes(ctx context.Context, config *config.Config, db *database.Databa
 		api.WithRMQLimits(limits),
 	)
 
-	// http.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("web/static"))))
-	// // Serve the callback page so oidc-client-ts can complete the OIDC flow client-side.
-	// http.HandleFunc("/callback", func(w http.ResponseWriter, r *http.Request) {
-	// 	http.ServeFile(w, r, "web/templates/callback.html")
-	// })
+	r.Get("/api/v1/vhosts", apiservice.VhostsHandler)
+	r.Get("/api/v1/vhosts/{vhost}", apiservice.VhostHandler)
+	r.Get("/api/v1/vhosts/{vhost}/metrics", apiservice.MetricHandler)
+	r.Get("/api/v1/vhosts/{vhost}/queues", apiservice.GetQueuesHandler)
+	r.Get("/api/v1/vhosts/{vhost}/queues/{queue}", apiservice.GetQueuesByNameHandler)
 
-	// TODO: group into v1, v2, etc. as needed for API versioning and better organization
-	// TODO: correct the methods for these routes (e.g. POST for add/delete operations)
+	r.Get("/api/v1/vhosts/{vhost}/notifications", apiservice.GetNotificationsHandler)
+	r.Post("/api/v1/vhosts/{vhost}/notifications/recipients", apiservice.AddNotificationsRecipientHandler)
+	r.Delete("/api/v1/vhosts/{vhost}/notifications/recipients/{recipient}", apiservice.DeleteNotificationsRecipientHandler)
 
-	// HTML routes
-	r.Get("/", apiservice.IndexHandler)
-	r.Get("/queue", apiservice.QueueHandler)
-	r.Get("/maintenance", apiservice.GetMaintenanceHandler)
-	r.Get("/maintenance/admin", apiservice.GetMaintenanceAdminHandler)
-	r.Post("/maintenance/add", apiservice.PostMaintenanceAddHandler)
-	r.Post("/maintenance/status", apiservice.PostMaintenanceStatusHandler)
-	r.Post("/maintenance/delete", apiservice.PostMaintenanceDeleteHandler)
-	r.Get("/notifications", apiservice.GetNotificationsHandler)
+	r.Post("/api/v1/vhosts/{vhost}/notifications/rules", apiservice.AddNotificationsRuleHandler)
+	r.Post("/api/v1/vhosts/{vhost}/notifications/rules/{rule}", apiservice.PostNotificationsUpdateRuleHandler)
+	r.Post("/api/v1/vhosts/{vhost}/notifications/rules/{rule}/toggle", apiservice.ToggleNotificationsRuleHandler)
+	r.Post("/api/v1/vhosts/{vhost}/notifications/rules/{rule}/message", apiservice.PostNotificationsUpdateMessageHandler)
+	r.Post("/api/v1/vhosts/{vhost}/notifications/rules/{rule}/test", apiservice.PostNotificationsTestHandler)
+	r.Delete("/api/v1/vhosts/{vhost}/notifications/rules/{rule}", apiservice.DeleteNotificationsRuleHandler)
 
-	// TODO: where are recipients listed?
-	r.Post("/notifications/recipients/add", apiservice.PostNotificationsAddRecipientHandler)
-	r.Post("/notifications/recipients/delete", apiservice.PostNotificationsDeleteRecipientHandler)
-	r.Post("/notifications/rules/add", apiservice.PostNotificationsAddRuleHandler)
-	r.Post("/notifications/rules/delete", apiservice.PostNotificationsDeleteRuleHandler)
-	r.Post("/notifications/rules/update", apiservice.PostNotificationsUpdateRuleHandler)
+	r.Get("/api/v1/vhosts/{vhost}/notifications/logs", apiservice.NotificationsLogsHandler)
 
-	// TODO: Where are rules listed?
-	r.Post("/notifications/rules/toggle", apiservice.PostNotificationsToggleRuleHandler)
-	r.Post("/notifications/rules/message", apiservice.PostNotificationsUpdateMessageHandler) // TODO: requires rule ID and vhost query params, likely a Get request
-	r.Post("/notifications/rules/test", apiservice.PostNotificationsTestHandler)
-	r.Get("/notifications/rules/logs", apiservice.NotificationsLogsHandler) // TODO: Likely a Get request, requires an id query param, unsure which id (rule id? vhost? log id?)
-	r.Get("/notifications/rule", apiservice.NotificationsRuleHandler)       // TODO: Likely a Get request, requires rule ID and vhost query params
-	r.Get("/profile", apiservice.GetProfileHandler)                         // TODO: requires vhost query param
+	r.Get("/api/v1/maintenance", apiservice.GetMaintenanceHandler)
+	r.Get("/api/v1/maintenance/admin", apiservice.GetMaintenanceAdminHandler)
+	r.Post("/api/v1/maintenance", apiservice.AddMaintenanceHandler)
+	r.Post("/api/v1/maintenance/{maintenance}", apiservice.UpdateMaintenanceStatusHandler)
+	r.Delete("/api/v1/maintenance/{maintenance}", apiservice.DeleteMaintenanceHandler)
 
-	// API routes
-	r.Get("/api/queues", apiservice.GetQueuesHandler) // TODO: Fix required vhost query param
-	r.Get("/api/cluster", apiservice.GetClusterHandler)
+	r.Get("/api/v1/cluster", apiservice.GetClusterHandler)
 
 	// Logs every route implicitly or explicitly defined above with its method, path, and number of middlewares.
 	chi.Walk(r, func(method string, route string, handler http.Handler, middlewares ...func(http.Handler) http.Handler) error {
