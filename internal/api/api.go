@@ -65,7 +65,6 @@ func newAPIServiceConfig() *APIService {
 	}
 }
 
-// func NewAPIService(ctx context.Context, baseURL, username, password string, promURL, promAPIVersion string, promPort int, db *database.Database, limits *models.Limits) (*APIService, error) {
 func NewAPIService(opts ...APIServiceOption) (*APIService, error) {
 	rc := newAPIServiceConfig()
 	for _, opt := range opts {
