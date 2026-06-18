@@ -11,7 +11,7 @@ import (
 )
 
 func (dbc *Database) Seed(ctx context.Context) error {
-	// Seed notifications
+
 	err := dbc.seedNotifications(ctx)
 	if err != nil {
 		return err
