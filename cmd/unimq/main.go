@@ -19,6 +19,16 @@ import (
 	"github.com/sisneve/rabbitmq-dashboard/internal/routes"
 )
 
+//@ title RabbitMQ Dashboard API
+//@ version 1.0
+//@ description API for RabbitMQ Dashboard application.
+
+//@ contact.name Norsk helsenett SF
+//@ contact.url https://github.com/NorskHelsenett/unimq-dashboard
+
+//@ basePath /api
+//@ securityDefinitions none
+
 func main() {
 
 	logger.SetupLogger()
@@ -36,11 +46,6 @@ func main() {
 		slog.Error("failed to validate URLs", "error", err)
 		return
 	}
-
-	// if err := mime.AddExtensionType(".js", "application/javascript"); err != nil {
-	// 	slog.Error("failed to register MIME type", "error", err)
-	// 	return
-	// }
 
 	uri := database.BuildURI(config.MongoDBHost, config.MongoDBUsername, config.MongoDBPassword, config.MongoDBPort)
 	db, err := database.NewDatabase(uri, config.MongoDBDatabase)
