@@ -1,21 +1,10 @@
 package models
 
-import (
-	"time"
-)
+import "time"
 
 type RangeOption struct {
 	Label string
 	Value string
-}
-
-// NotifPageData is the data structure for the notifications page, containing the list of vhosts, the selected vhost, and its associated recipients and alarm rules.
-// I'm unsure why the structure is like this, the original is from Claude.
-type NotifPageData struct {
-	Vhosts     []string
-	Selected   string
-	Recipients []Recipient
-	Rules      []AlarmRule
 }
 
 var RangeDurations = map[string]time.Duration{
