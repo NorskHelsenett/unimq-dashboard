@@ -16,7 +16,7 @@ var (
 func (dbc *Database) GetNotificationRecipient(ctx context.Context, vhost string, id string) (*models.Recipient, error) {
 	start := time.Now()
 
-	var notification VhostNotification
+	var notification models.VhostNotification
 	err := dbc.Collections.Notifications.FindOne(ctx, map[string]any{"_id": vhost}).Decode(&notification)
 	if err != nil {
 		return nil, fmt.Errorf("failed to retrieve notification recipient %v. %w", vhost, err)

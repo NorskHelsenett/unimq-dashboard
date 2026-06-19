@@ -9,24 +9,7 @@ import (
 	"go.mongodb.org/mongo-driver/v2/bson"
 )
 
-type VhostNotification struct {
-	Name       string             `bson:"_id"`
-	Recipients []models.Recipient `bson:"recipients"`
-	Rules      []models.AlarmRule `bson:"rules"`
-	Notified   bool               `bson:"notified"`
-}
-
-func (vn *VhostNotification) WebhookURLs() []string {
-	urls := make([]string, 0, len(vn.Recipients))
-	for _, r := range vn.Recipients {
-		if r.Type == models.RecipientTypeWebhook {
-			urls = append(urls, r.URL)
-		}
-	}
-	return urls
-}
-
-func (dbc *Database) GetNotificationsAll(ctx context.Context) ([]VhostNotification, error) {
+func (dbc *Database) GetNotificationsAll(ctx context.Context) ([]models.VhostNotification, error) {
 	start := time.Now()
 
 	cursor, err := dbc.Collections.Notifications.Find(ctx, bson.M{})
@@ -35,7 +18,7 @@ func (dbc *Database) GetNotificationsAll(ctx context.Context) ([]VhostNotificati
 	}
 	defer cursor.Close(ctx)
 
-	var notifications []VhostNotification
+	var notifications []models.VhostNotification
 	err = cursor.All(ctx, &notifications)
 	if err != nil {
 		return nil, err
@@ -46,10 +29,10 @@ func (dbc *Database) GetNotificationsAll(ctx context.Context) ([]VhostNotificati
 }
 
 // Probably unnecessary as vhost functions already cover this.
-func (dbc *Database) GetNotification(ctx context.Context, vhost string) (*VhostNotification, error) {
+func (dbc *Database) GetNotification(ctx context.Context, vhost string) (*models.VhostNotification, error) {
 	start := time.Now()
 
-	var notification VhostNotification
+	var notification models.VhostNotification
 	err := dbc.Collections.Notifications.FindOne(ctx, bson.M{"_id": vhost}).Decode(&notification)
 	if err != nil {
 		slog.ErrorContext(ctx, "failed to retrieve notification", "runtime", time.Since(start), "_id", vhost, "error", err)
@@ -60,7 +43,7 @@ func (dbc *Database) GetNotification(ctx context.Context, vhost string) (*VhostN
 	return &notification, nil
 }
 
-func (dbc *Database) AddNotification(ctx context.Context, notification VhostNotification) error {
+func (dbc *Database) AddNotification(ctx context.Context, notification models.VhostNotification) error {
 	start := time.Now()
 
 	_, err := dbc.Collections.Notifications.InsertOne(ctx, notification)
@@ -73,7 +56,7 @@ func (dbc *Database) AddNotification(ctx context.Context, notification VhostNoti
 	return err
 }
 
-func (dbc *Database) UpdateNotification(ctx context.Context, name string, notification VhostNotification) error {
+func (dbc *Database) UpdateNotification(ctx context.Context, name string, notification models.VhostNotification) error {
 	start := time.Now()
 
 	filter := map[string]any{"_id": name}
