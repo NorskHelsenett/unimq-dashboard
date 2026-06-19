@@ -3,13 +3,23 @@ package api
 import (
 	"net/http"
 	"net/url"
-	"strconv"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/sisneve/rabbitmq-dashboard/internal/models"
 	"github.com/sisneve/rabbitmq-dashboard/internal/routes/httpsuite"
 )
 
+// @ Summary		Add a new notification rule
+// @ Description	Add a new notification rule for a specific vhost
+// @ Tags			Notifications
+// @ Accept		json
+// @ Produce		json
+// @ Param			vhost	path	string	true	"Vhost Name"
+// @ Param			rule	body	models.AlarmRule	true	"Notification Rule Object"
+// @ Success		303	{string}	string	"Redirect to notifications page"
+// @ Failure		400	{object}	httpsuite.APIError
+// @ Failure		500	{object}	httpsuite.APIError
+// @ Router			/v1/notifications/{vhost}/rules [post]
 func (rc *APIService) AddNotificationsRuleHandler(w http.ResponseWriter, r *http.Request) {
 	vhost := chi.URLParam(r, "vhost")
 	if vhost == "" {
@@ -17,41 +27,11 @@ func (rc *APIService) AddNotificationsRuleHandler(w http.ResponseWriter, r *http
 		return
 	}
 
-	threshold, err := strconv.ParseFloat(r.FormValue("threshold"), 64)
+	var rule models.AlarmRule
+	err := httpsuite.ReadResponse(r, &rule)
 	if err != nil {
-		httpsuite.WriteJSONError(w, "invalid threshold value: "+err.Error(), http.StatusBadRequest)
+		httpsuite.WriteJSONError(w, "invalid request body: "+err.Error(), http.StatusBadRequest)
 		return
-	}
-
-	name := r.FormValue("name")
-	if name == "" {
-		httpsuite.WriteJSONError(w, "missing required name parameter", http.StatusBadRequest)
-		return
-	}
-
-	typ := r.FormValue("type")
-	if typ == "" {
-		httpsuite.WriteJSONError(w, "missing required type parameter", http.StatusBadRequest)
-		return
-	}
-
-	queueName := r.FormValue("queue_name")
-	if typ == "queue_length" && queueName == "" {
-		httpsuite.WriteJSONError(w, "missing required queue_name parameter for queue_length type", http.StatusBadRequest)
-		return
-	}
-	message := r.FormValue("message")
-	if message == "" {
-		httpsuite.WriteJSONError(w, "missing required message parameter", http.StatusBadRequest)
-		return
-	}
-
-	rule := models.AlarmRule{
-		Name:      name,
-		Type:      models.AlarmType(typ),
-		QueueName: queueName,
-		Threshold: threshold,
-		Message:   message,
 	}
 
 	err = rc.DB.AddNotificationRule(r.Context(), vhost, rule)
@@ -63,6 +43,15 @@ func (rc *APIService) AddNotificationsRuleHandler(w http.ResponseWriter, r *http
 	http.Redirect(w, r, "/notifications?vhost="+url.QueryEscape(vhost), http.StatusSeeOther)
 }
 
+// @ Summary		Delete a notification rule
+// @ Description	Delete a specific notification rule for a vhost
+// @ Tags			Notifications
+// @ Param			vhost	path	string	true	"Vhost Name"
+// @ Param			recipient	path	string	true	"Notification Rule ID"
+// @ Success		303	{string}	string	"Redirect to notifications page"
+// @ Failure		400	{object}	httpsuite.APIError
+// @ Failure		500	{object}	httpsuite.APIError
+// @ Router			/v1/notifications/{vhost}/rules/{recipient} [delete]
 func (rc *APIService) DeleteNotificationsRuleHandler(w http.ResponseWriter, r *http.Request) {
 	vhost := chi.URLParam(r, "vhost")
 	if vhost == "" {
@@ -83,7 +72,12 @@ func (rc *APIService) DeleteNotificationsRuleHandler(w http.ResponseWriter, r *h
 	http.Redirect(w, r, "/notifications?vhost="+url.QueryEscape(vhost), http.StatusSeeOther)
 }
 
-func (rc *APIService) PostNotificationsUpdateRuleHandler(w http.ResponseWriter, r *http.Request) {
+// @ Summary		Delete a notification rule
+// @ Description	Delete a specific notification rule for a vhost
+// @ Tags			Notifications
+// @ Param			vhost	path	string	true	"Vhost Name"
+// @ Param			recipient	path	string	true	"Notification Rule ID"
+func (rc *APIService) UpdateNotificationsRuleHandler(w http.ResponseWriter, r *http.Request) {
 	vhost := chi.URLParam(r, "vhost")
 	if vhost == "" {
 		httpsuite.WriteJSONError(w, "missing required vhost parameter", http.StatusBadRequest)
@@ -96,31 +90,20 @@ func (rc *APIService) PostNotificationsUpdateRuleHandler(w http.ResponseWriter, 
 		return
 	}
 
-	thresholdStr := r.FormValue("threshold")
-	if thresholdStr == "" {
-		httpsuite.WriteJSONError(w, "missing required threshold parameter", http.StatusBadRequest)
-		return
-	}
-
-	threshold, err := strconv.ParseFloat(r.FormValue("threshold"), 64)
+	var rule models.AlarmRuleUpdate
+	err := httpsuite.ReadResponse(r, &rule)
 	if err != nil {
-		httpsuite.WriteJSONError(w, "invalid threshold value: "+err.Error(), http.StatusBadRequest)
+		httpsuite.WriteJSONError(w, "invalid request body: "+err.Error(), http.StatusBadRequest)
 		return
 	}
 
-	message := r.FormValue("message")
-	if message == "" {
-		httpsuite.WriteJSONError(w, "missing required message parameter", http.StatusBadRequest)
-		return
-	}
-
-	err = rc.DB.UpdateNotificationRuleThreshold(r.Context(), vhost, id, threshold)
+	err = rc.DB.UpdateNotificationRuleThreshold(r.Context(), vhost, id, rule.Threshold)
 	if err != nil {
 		httpsuite.WriteJSONError(w, "error updating rule threshold: "+err.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	err = rc.DB.UpdateNotificationRuleMessage(r.Context(), vhost, id, message)
+	err = rc.DB.UpdateNotificationRuleMessage(r.Context(), vhost, id, rule.Message)
 	if err != nil {
 		httpsuite.WriteJSONError(w, "error updating rule message: "+err.Error(), http.StatusInternalServerError)
 		return
@@ -129,6 +112,15 @@ func (rc *APIService) PostNotificationsUpdateRuleHandler(w http.ResponseWriter, 
 	w.WriteHeader(http.StatusOK)
 }
 
+// @ Summary		Toggle a notification rule
+// @ Description	Enable or disable a specific notification rule for a vhost
+// @ Tags			Notifications
+// @ Param			vhost	path	string	true	"Vhost Name"
+// @ Param			rule	path	string	true	"Notification Rule ID"
+// @ Success		303	{string}	string	"Redirect to notifications page"
+// @ Failure		400	{object}	httpsuite.APIError
+// @ Failure		500	{object}	httpsuite.APIError
+// @ Router			/v1/notifications/{vhost}/rules/{rule}/toggle [post]
 func (rc *APIService) ToggleNotificationsRuleHandler(w http.ResponseWriter, r *http.Request) {
 	vhost := chi.URLParam(r, "vhost")
 	if vhost == "" {
@@ -162,6 +154,15 @@ func (rc *APIService) ToggleNotificationsRuleHandler(w http.ResponseWriter, r *h
 	http.Redirect(w, r, "/notifications?vhost="+url.QueryEscape(vhost), http.StatusSeeOther)
 }
 
+// @ Summary		Toggle a notification rule
+// @ Description	Enable or disable a specific notification rule for a vhost
+// @ Tags			Notifications
+// @ Param			vhost	path	string	true	"Vhost Name"
+// @ Param			rule	path	string	true	"Notification Rule ID"
+// @ Success		303	{string}	string	"Redirect to notifications page"
+// @ Failure		400	{object}	httpsuite.APIError
+// @ Failure		500	{object}	httpsuite.APIError
+// @ Router			/v1/notifications/{vhost}/rules/{rule}/toggle [post]
 func (rc *APIService) NotificationsRuleHandler(w http.ResponseWriter, r *http.Request) {
 	vhost := chi.URLParam(r, "vhost")
 	if vhost == "" {
@@ -169,7 +170,7 @@ func (rc *APIService) NotificationsRuleHandler(w http.ResponseWriter, r *http.Re
 		return
 	}
 
-	id := r.URL.Query().Get("id")
+	id := chi.URLParam(r, "id")
 	if id == "" {
 		httpsuite.WriteJSONError(w, "missing required id parameter", http.StatusBadRequest)
 		return
