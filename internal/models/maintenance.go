@@ -1,6 +1,8 @@
 package models
 
 import (
+	"encoding/json"
+	"fmt"
 	"slices"
 	"time"
 )
@@ -58,6 +60,66 @@ type MaintenanceEntry struct {
 	Description string            `json:"description" bson:"description"`
 	Start       time.Time         `json:"start" bson:"start"`
 	End         time.Time         `json:"end" bson:"end"`
-	Status      MaintenanceStatus `json:"status" bson:"status"` // "scheduled", "done", "skipped"
+	Status      MaintenanceStatus `json:"status" bson:"status"`
 	Notified    bool              `json:"notified" bson:"notified"`
+}
+
+func (e *MaintenanceEntry) UnmarshalJSON(data []byte) error {
+	var aux struct {
+		ID          string            `json:"id"`
+		Description string            `json:"description"`
+		Start       string            `json:"start"`
+		End         string            `json:"end"`
+		Status      MaintenanceStatus `json:"status"`
+		Notified    bool              `json:"notified"`
+	}
+
+	if err := json.Unmarshal(data, &aux); err != nil {
+		return err
+	}
+
+	var err error
+	e.Start, err = time.Parse(time.RFC3339, aux.Start)
+	if err != nil {
+		return fmt.Errorf("invalid start time format: %w", err)
+	}
+
+	e.End, err = time.Parse(time.RFC3339, aux.End)
+	if err != nil {
+		return fmt.Errorf("invalid end time format: %w", err)
+	}
+
+	return nil
+}
+
+func NewMaintenanceEntry(description string, start time.Time, end time.Time) *MaintenanceEntry {
+	return &MaintenanceEntry{
+		Description: description,
+		Start:       start,
+		End:         end,
+		Status:      MaintenanceStatusScheduled,
+		Notified:    false,
+	}
+}
+
+type MaintenanceAdminResponse struct {
+	Entries []MaintenanceEntry
+}
+
+func NewMaintenanceAdminResponse(entries []MaintenanceEntry) *MaintenanceAdminResponse {
+	return &MaintenanceAdminResponse{
+		Entries: entries,
+	}
+}
+
+type MaintenanceResponse struct {
+	Scheduled []MaintenanceEntry
+	History   []MaintenanceEntry
+}
+
+func NewMaintenanceResponse(scheduled []MaintenanceEntry, history []MaintenanceEntry) *MaintenanceResponse {
+	return &MaintenanceResponse{
+		Scheduled: scheduled,
+		History:   history,
+	}
 }
