@@ -77,7 +77,7 @@ lint: golangci-lint ## Run linting with golangci-lint
 # Generate Swagger documentation
 generate-swagger: check-go check-swag ## Generate Swagger documentation
 	@echo "${YELLOW}Generating Swagger docs...${RESET}"
-	swag init -g ${MAIN_PATH}/main.go -o ./internal/docs --dir ./ --parseInternal
+	swag init -g ${MAIN_PATH}/main.go -o ./internal/docs --parseInternal
 	@echo "${GREEN}Swagger documentation generated!${RESET}"
 
 # Format swagger documentation
