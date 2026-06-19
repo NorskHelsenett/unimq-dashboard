@@ -112,11 +112,6 @@ func NewClusterStats() *ClusterStats {
 	}
 }
 
-type VhostResponse struct {
-	Name                   string `json:"name"`
-	MessagesUnacknowledged int    `json:"messages_unacknowledged"`
-}
-
 type ConnectionResponse struct {
 	Vhost string `json:"vhost"`
 }
