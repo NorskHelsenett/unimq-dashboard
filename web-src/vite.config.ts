@@ -35,13 +35,13 @@ export default defineConfig({
       "/notifications/rule": {
         target: "http://localhost:8080",
         bypass: (req) => {
-          if (req.method === "GET") return "/notification_rule.html"
-          return null
+          if (req.method === "GET") return "/notification_rule.html";
+          return null;
         },
       },
       // "/notifications": "http://localhost:8080",
       "/notifications/": "http://localhost:8080",
-      "/maintenance": "http://localhost:8080",
+      "/maintenance/": "http://localhost:8080",
       "/static/logo": "http://localhost:8080",
     },
   },

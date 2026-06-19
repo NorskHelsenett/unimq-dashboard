@@ -1,4 +1,24 @@
 <!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Maintenance — UniMQ</title>
+    <link rel="stylesheet" href="/static/dist/jsx-runtime.css">
+</head>
+
+<body>
+    <script>
+        window.__DATA__ = {{json .}}
+    </script>
+    <div id="app"></div>
+    <script type="module" src="/static/dist/maintenance.js"></script>
+</body>
+
+</html>
+
+<!-- <!DOCTYPE html>
 <html lang="no">
 <head>
     <meta charset="UTF-8">
@@ -23,9 +43,9 @@
             </a>
         </nav>
 
-        <main>
+        <main> -->
             <!-- Scheduled Maintenance -->
-            <section class="maint-section">
+            <!-- <section class="maint-section">
                 <div class="maint-section-header">
                     <h2>Scheduled Maintenance</h2>
                     <a href="/maintenance/admin" class="admin-btn">Administrer</a>
@@ -51,10 +71,10 @@
                 {{else}}
                 <p class="maint-empty">Ingen planlagt vedlikehold.</p>
                 {{end}}
-            </section>
+            </section> -->
 
             <!-- Maintenance History -->
-            <section class="maint-section">
+            <!-- <section class="maint-section">
                 <h2>Maintenance History</h2>
 
                 {{if .History}}
@@ -86,4 +106,4 @@
         </main>
     </div>
 </body>
-</html>
+</html> -->

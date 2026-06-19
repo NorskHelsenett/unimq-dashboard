@@ -4,6 +4,7 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { fmtBytes, fmtRate } from '@/lib/format'
 import { cn } from '@/lib/utils'
 import { Tooltip, TooltipContent, TooltipTrigger } from '../ui/tooltip'
+import { cellPaddingStyling, HeaderCell, SubHeaderCell } from '../layout/TableCells'
 
 interface QueueDetail {
     name: string
@@ -21,7 +22,6 @@ interface QueuesCardProps {
     vhost: string
 }
 
-const cellPaddingStyling = "py-2.5 px-3"
 const subHeaderCellPaddingStyling = "px-3"
 const monoFontStyling = "text-center text-sm font-mono tabular-nums"
 
@@ -81,22 +81,6 @@ function QueueRow({ queue, vhost }: { queue: QueueDetail; vhost: string }) {
                 {fmtRate(queue.redeliver_rate)}
             </td>
         </tr>
-    )
-}
-
-function HeaderCell({ children, className, colSpan }: { children?: React.ReactNode; className?: string; colSpan?: number }) {
-    return (
-        <th colSpan={colSpan} className={cn('py-2 text-xs font-bold uppercase tracking-wide text-text bg-brand/30', className)}>
-            {children}
-        </th>
-    )
-}
-
-function SubHeaderCell({ children, className }: { children?: React.ReactNode; className?: string }) {
-    return (
-        <th className={cn('py-1 text-[10px] font-semibold text-text bg-brand/15', className)}>
-            {children}
-        </th>
     )
 }
 

@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Maintenance — UniMQ</title>
+</head>
+
+<body>
+    <script>
+        window.__DATA__ = {
+            "Vhosts": ["/", "test"],
+            "Selected": "/",
+            "Scheduled": [
+                {
+                    "id": "20260520100000",
+                    "description": "Upgrade to RabbitMQ 4.3.0",
+                    "start": "2026-05-20T10:00:00Z",
+                    "end": "2026-05-20T11:30:00Z",
+                    "status": "scheduled"
+                },
+                {
+                    "id": "20260525080000",
+                    "description": "OS security patch — node 2",
+                    "start": "2026-05-25T08:00:00Z",
+                    "end": "2026-05-25T09:00:00Z",
+                    "status": "scheduled"
+                }
+            ],
+            "History": [
+                {
+                    "id": "20260113120000",
+                    "description": "Upgrade to RabbitMQ 4.2.2 and OS patch",
+                    "start": "2026-01-13T12:00:00Z",
+                    "end": "2026-01-13T13:00:00Z",
+                    "status": "done"
+                },
+                {
+                    "id": "20251210090000",
+                    "description": "Disk expansion on node 1",
+                    "start": "2025-12-10T09:00:00Z",
+                    "end": "2025-12-10T10:00:00Z",
+                    "status": "skipped"
+                }
+            ]
+        }
+    </script>
+    <div id="app"></div>
+    <script type="module" src="/src/pages/Maintenance.tsx"></script>
+</body>
+
+</html>
