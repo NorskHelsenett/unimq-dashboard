@@ -16,6 +16,7 @@ import { getPageData } from '@/lib/pageData'
 import { Layout } from '@/components/layout/Layout'
 import { ScheduledSection, HistoryTable } from '@/components/maintenance/MaintenanceCard'
 import type { MaintenanceEntry } from '@/types/maintenance'
+import { RequireAuth } from '@/auth/RequireAuth'
 
 interface MaintenanceData {
     Vhosts: string[]

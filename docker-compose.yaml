@@ -1,0 +1,12 @@
+services:
+  dex:
+    image: ${DOCKER_MIRROR}dexidp/dex:v2.42.1-alpine
+    restart: unless-stopped
+    container_name: unimq-dashboard-dex
+    ports:
+      - "5556:5556"
+    command: dex serve /configs/dex-config.yaml
+    volumes:
+      - ./volumes-for-compose/dex-config-dev.yaml:/configs/dex-config.yaml
+
+
