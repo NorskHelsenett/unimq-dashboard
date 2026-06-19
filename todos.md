@@ -1,6 +1,6 @@
 # TODO: This should be moved to issues or discarded based
 
-- Swagger documentation for API endpoints
+- Golangci-lint
 - Helm chart variables updated with new environment variables and configuration options
 
 ## Low priority ToDo's:
@@ -11,5 +11,4 @@
 - Checker does unnecessary updates, should only update when there are changes to the alarm state (e.g., from not triggered to triggered, or vice versa)
 - api/queues require vhost parameter, should return all and use below example for filtering
 - api/queues/{vhost} require queue name parameter
-- Golangci-lint
 - More seeding data
