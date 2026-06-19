@@ -26,6 +26,7 @@ import (
 //@ contact.name Norsk helsenett SF
 //@ contact.url https://github.com/NorskHelsenett/unimq-dashboard
 
+//@ host localhost:8080
 //@ basePath /api
 //@ securityDefinitions none
 
@@ -71,6 +72,7 @@ func main() {
 	}
 
 	slog.Info("starting RabbitMQ Dashboard", "URL", config.BaseURL, "port", config.BasePort)
+	slog.Info("Swagger documentation available at", "URL", fmt.Sprintf("http://%v:%d/api/swagger/index.html", config.BaseURL, config.BasePort))
 	wg := &sync.WaitGroup{}
 
 	server := &http.Server{
