@@ -3,7 +3,6 @@ package api
 import (
 	"net/http"
 	"net/url"
-	"slices"
 	"strconv"
 
 	"github.com/go-chi/chi/v5"
@@ -11,6 +10,17 @@ import (
 	"github.com/sisneve/rabbitmq-dashboard/internal/routes/httpsuite"
 )
 
+// @ Summary		Add a new notification recipient
+// @ Description	Add a new notification recipient for a specific vhost
+// @ Tags			Notifications
+// @ Accept		json
+// @ Produce		json
+// @ Param			vhost	path	string	true	"Vhost Name"
+// @ Param			recipient	body	models.Recipient	true	"Notification Recipient Object"
+// @ Success		303	{string}	string	"Redirect to notifications page"
+// @ Failure		400	{object}	httpsuite.APIError
+// @ Failure		500	{object}	httpsuite.APIError
+// @ Router			/v1/notifications/{vhost}/recipients [post]
 func (rc *APIService) AddNotificationsRecipientHandler(w http.ResponseWriter, r *http.Request) {
 	vhost := chi.URLParam(r, "vhost")
 	if vhost == "" {
@@ -18,26 +28,10 @@ func (rc *APIService) AddNotificationsRecipientHandler(w http.ResponseWriter, r 
 		return
 	}
 
-	name := r.FormValue("name")
-	if name == "" {
-		httpsuite.WriteJSONError(w, "missing required name parameter", http.StatusBadRequest)
-		return
-	}
-
-	urlP := r.FormValue("url")
-	if urlP == "" {
-		httpsuite.WriteJSONError(w, "missing required url parameter", http.StatusBadRequest)
-		return
-	}
-
-	typ := r.FormValue("type")
-	if typ == "" {
-		httpsuite.WriteJSONError(w, "missing required type parameter", http.StatusBadRequest)
-		return
-	}
-
-	if slices.Contains(models.GetReceipientTypes(), models.RecipientType(typ)) == false {
-		httpsuite.WriteJSONError(w, "invalid type parameter, expected one of "+models.GetRecipientTypesString(), http.StatusBadRequest)
+	var recipient models.Recipient
+	err := httpsuite.ReadResponse(r, &recipient)
+	if err != nil {
+		httpsuite.WriteJSONError(w, "invalid request body: "+err.Error(), http.StatusBadRequest)
 		return
 	}
 
@@ -47,13 +41,7 @@ func (rc *APIService) AddNotificationsRecipientHandler(w http.ResponseWriter, r 
 		return
 	}
 	id := strconv.FormatInt(int64(len(vhostObject.Recipients)+1), 10)
-
-	recipient := models.Recipient{
-		ID:   id,
-		Name: name,
-		URL:  urlP,
-		Type: models.ParseRecipientType(typ),
-	}
+	recipient.ID = id
 
 	err = rc.DB.AddNotificationRecipient(r.Context(), vhost, recipient)
 	if err != nil {
@@ -64,6 +52,15 @@ func (rc *APIService) AddNotificationsRecipientHandler(w http.ResponseWriter, r 
 	http.Redirect(w, r, "/notifications?vhost="+url.QueryEscape(vhost), http.StatusSeeOther)
 }
 
+// @ Summary		Delete a notification recipient
+// @ Description	Delete a specific notification recipient for a vhost
+// @ Tags			Notifications
+// @ Param			vhost	path	string	true	"Vhost Name"
+// @ Param			recipient	path	string	true	"Recipient ID"
+// @ Success		303	{string}	string	"Redirect to notifications page"
+// @ Failure		400	{object}	httpsuite.APIError
+// @ Failure		500	{object}	httpsuite.APIError
+// @ Router			/v1/notifications/{vhost}/recipients/{recipient} [delete]
 func (rc *APIService) DeleteNotificationsRecipientHandler(w http.ResponseWriter, r *http.Request) {
 	vhost := chi.URLParam(r, "vhost")
 	if vhost == "" {
