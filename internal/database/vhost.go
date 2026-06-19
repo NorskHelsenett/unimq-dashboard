@@ -9,10 +9,10 @@ import (
 	"go.mongodb.org/mongo-driver/v2/bson"
 )
 
-func (dbc *Database) GetVhost(ctx context.Context, vhost string) (*VhostNotification, error) {
+func (dbc *Database) GetVhost(ctx context.Context, vhost string) (*models.VhostNotification, error) {
 	start := time.Now()
 
-	var notification VhostNotification
+	var notification models.VhostNotification
 	err := dbc.Collections.Notifications.FindOne(ctx, bson.M{"_id": vhost}).Decode(&notification)
 	if err != nil {
 		slog.ErrorContext(ctx, "failed to retrieve vhost", "runtime", time.Since(start), "_id", vhost, "error", err)
@@ -59,13 +59,7 @@ func (dbc *Database) EnsureVhostExists(ctx context.Context, name string) error {
 func (dbc *Database) AddVhost(ctx context.Context, name string) error {
 	start := time.Now()
 
-	notification := VhostNotification{
-		Name:       name,
-		Recipients: []models.Recipient{},
-		Rules:      []models.AlarmRule{},
-		Notified:   false,
-	}
-
+	notification := models.NewVhostNotification(name)
 	_, err := dbc.Collections.Notifications.InsertOne(ctx, notification)
 	if err != nil {
 		slog.ErrorContext(ctx, "failed to add vhost", "runtime", time.Since(start), "_id", name, "error", err)
