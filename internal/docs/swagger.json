@@ -123,6 +123,526 @@
                 }
             }
         },
+        "/v1/maintenance/{maintenance}": {
+            "delete": {
+                "description": "Delete a specific maintenance entry by ID",
+                "tags": [
+                    "Maintenance"
+                ],
+                "summary": "Delete a maintenance entry",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Maintenance Entry ID",
+                        "name": "maintenance",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "303": {
+                        "description": "Redirect to maintenance admin page with success message",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/httpsuite.APIError"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/httpsuite.APIError"
+                        }
+                    }
+                }
+            }
+        },
+        "/v1/maintenance/{maintenance}/status": {
+            "put": {
+                "description": "Update the status of a maintenance entry (e.g., scheduled, in-progress, completed)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Maintenance"
+                ],
+                "summary": "Update maintenance entry status",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Maintenance Entry ID",
+                        "name": "maintenance",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Updated Maintenance Status",
+                        "name": "status",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/models.UpdateMaintenance"
+                        }
+                    }
+                ],
+                "responses": {
+                    "303": {
+                        "description": "Redirect to maintenance admin page with success message",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/httpsuite.APIError"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/httpsuite.APIError"
+                        }
+                    }
+                }
+            }
+        },
+        "/v1/notifications/{vhost}": {
+            "get": {
+                "description": "Get notification rules and settings for a specific vhost",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Notifications"
+                ],
+                "summary": "Get Notifications",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Vhost Name",
+                        "name": "vhost",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/models.NotificationResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/httpsuite.APIError"
+                        }
+                    },
+                    "502": {
+                        "description": "Bad Gateway",
+                        "schema": {
+                            "$ref": "#/definitions/httpsuite.APIError"
+                        }
+                    }
+                }
+            }
+        },
+        "/v1/notifications/{vhost}/logs": {
+            "get": {
+                "description": "Fetch logs of notifications sent for a specific vhost, including timestamps and message details",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Notifications"
+                ],
+                "summary": "Get Notification Logs",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Vhost Name",
+                        "name": "vhost",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "List of notification log entries",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/models.VhostNotification"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/httpsuite.APIError"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/httpsuite.APIError"
+                        }
+                    }
+                }
+            }
+        },
+        "/v1/notifications/{vhost}/recipients": {
+            "post": {
+                "description": "Add a new notification recipient for a specific vhost",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Notifications"
+                ],
+                "summary": "Add a new notification recipient",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Vhost Name",
+                        "name": "vhost",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Notification Recipient Object",
+                        "name": "recipient",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/models.Recipient"
+                        }
+                    }
+                ],
+                "responses": {
+                    "303": {
+                        "description": "Redirect to notifications page",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/httpsuite.APIError"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/httpsuite.APIError"
+                        }
+                    }
+                }
+            }
+        },
+        "/v1/notifications/{vhost}/recipients/{recipient}": {
+            "delete": {
+                "description": "Delete a specific notification recipient for a vhost",
+                "tags": [
+                    "Notifications"
+                ],
+                "summary": "Delete a notification recipient",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Vhost Name",
+                        "name": "vhost",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Recipient ID",
+                        "name": "recipient",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "303": {
+                        "description": "Redirect to notifications page",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/httpsuite.APIError"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/httpsuite.APIError"
+                        }
+                    }
+                }
+            }
+        },
+        "/v1/notifications/{vhost}/rules": {
+            "post": {
+                "description": "Add a new notification rule for a specific vhost",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Notifications"
+                ],
+                "summary": "Add a new notification rule",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Vhost Name",
+                        "name": "vhost",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Notification Rule Object",
+                        "name": "rule",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/models.AlarmRule"
+                        }
+                    }
+                ],
+                "responses": {
+                    "303": {
+                        "description": "Redirect to notifications page",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/httpsuite.APIError"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/httpsuite.APIError"
+                        }
+                    }
+                }
+            }
+        },
+        "/v1/notifications/{vhost}/rules/{recipient}": {
+            "delete": {
+                "description": "Delete a specific notification rule for a vhost",
+                "tags": [
+                    "Notifications"
+                ],
+                "summary": "Delete a notification rule",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Vhost Name",
+                        "name": "vhost",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Notification Rule ID",
+                        "name": "recipient",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "303": {
+                        "description": "Redirect to notifications page",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/httpsuite.APIError"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/httpsuite.APIError"
+                        }
+                    }
+                }
+            }
+        },
+        "/v1/notifications/{vhost}/rules/{rule}/message": {
+            "post": {
+                "description": "Update the custom message template for a specific notification rule",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Notifications"
+                ],
+                "summary": "Update Notification Rule Message",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Vhost Name",
+                        "name": "vhost",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Notification Rule ID",
+                        "name": "rule",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "New Message Template",
+                        "name": "message",
+                        "in": "formData",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "303": {
+                        "description": "Redirect to notification rule page with success message",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/httpsuite.APIError"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/httpsuite.APIError"
+                        }
+                    }
+                }
+            }
+        },
+        "/v1/notifications/{vhost}/rules/{rule}/test": {
+            "post": {
+                "description": "Send a test notification using the specified rule to verify its configuration",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Notifications"
+                ],
+                "summary": "Test Notification Rule",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Vhost Name",
+                        "name": "vhost",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Notification Rule ID",
+                        "name": "rule",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Test notification sent successfully",
+                        "schema": {
+                            "$ref": "#/definitions/models.TestNotificationResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/httpsuite.APIError"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/httpsuite.APIError"
+                        }
+                    }
+                }
+            }
+        },
+        "/v1/notifications/{vhost}/rules/{rule}/toggle": {
+            "post": {
+                "description": "Enable or disable a specific notification rule for a vhost",
+                "tags": [
+                    "Notifications"
+                ],
+                "summary": "Toggle a notification rule",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Vhost Name",
+                        "name": "vhost",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Notification Rule ID",
+                        "name": "rule",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "303": {
+                        "description": "Redirect to notifications page",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/httpsuite.APIError"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/httpsuite.APIError"
+                        }
+                    }
+                }
+            }
+        },
         "/v1/vhosts": {
             "get": {
                 "description": "Get a list of all vhosts in the RabbitMQ cluster",
@@ -179,6 +699,47 @@
                         "description": "OK",
                         "schema": {
                             "$ref": "#/definitions/models.Vhost"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/httpsuite.APIError"
+                        }
+                    },
+                    "502": {
+                        "description": "Bad Gateway",
+                        "schema": {
+                            "$ref": "#/definitions/httpsuite.APIError"
+                        }
+                    }
+                }
+            }
+        },
+        "/v1/vhosts/{vhost}/metrics": {
+            "get": {
+                "description": "Get real-time metrics for a specific vhost, including queue lengths, message rates, and resource usage",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Metrics"
+                ],
+                "summary": "Get Vhost Metrics",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Vhost Name",
+                        "name": "vhost",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/models.VhostMetrics"
                         }
                     },
                     "400": {
@@ -304,6 +865,78 @@
                     "type": "string"
                 }
             }
+        },
+        "models.AlarmRule": {
+            "description": "ID unique identifier for the alarm rule Name human-readable name for the alarm rule Type type of the alarm (e.g., \"channels\", \"connections\", \"queues\", etc.) QueueName optional name of the queue - required for \"queues\" alarm types Threshold numeric threshold that triggers the alarm Message custom message to include in the notification when the alarm is triggered Enabled indicates whether the alarm rule is active",
+            "type": "object",
+            "properties": {
+                "enabled": {
+                    "type": "boolean"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "last_fired": {
+                    "type": "string"
+                },
+                "last_value": {
+                    "type": "number"
+                },
+                "message": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "queue_name": {
+                    "type": "string"
+                },
+                "status": {
+                    "$ref": "#/definitions/models.AlarmStatus"
+                },
+                "threshold": {
+                    "type": "number"
+                },
+                "type": {
+                    "$ref": "#/definitions/models.AlarmType"
+                }
+            }
+        },
+        "models.AlarmStatus": {
+            "type": "string",
+            "enum": [
+                "active",
+                "inactive",
+                "fired"
+            ],
+            "x-enum-varnames": [
+                "Active",
+                "Inactive",
+                "Fired"
+            ]
+        },
+        "models.AlarmType": {
+            "type": "string",
+            "enum": [
+                "channels",
+                "connections",
+                "queues",
+                "unacked",
+                "queue_messages",
+                "queue_size",
+                "no_consumer",
+                "maintenance"
+            ],
+            "x-enum-varnames": [
+                "Channels",
+                "Connections",
+                "Queues",
+                "Unacked_Messages",
+                "Queue_Messages",
+                "Queue_Size",
+                "No_Consumer",
+                "Maintenance"
+            ]
         },
         "models.ClusterStats": {
             "type": "object",
@@ -445,6 +1078,17 @@
                 }
             }
         },
+        "models.NotificationResponse": {
+            "type": "object",
+            "properties": {
+                "notifications": {
+                    "$ref": "#/definitions/models.VhostNotification"
+                },
+                "vhost": {
+                    "$ref": "#/definitions/models.Vhost"
+                }
+            }
+        },
         "models.QueueDetail": {
             "type": "object",
             "properties": {
@@ -477,6 +1121,57 @@
                 },
                 "redeliver_rate": {
                     "type": "number"
+                }
+            }
+        },
+        "models.Recipient": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "type": {
+                    "$ref": "#/definitions/models.RecipientType"
+                },
+                "url": {
+                    "type": "string"
+                }
+            }
+        },
+        "models.RecipientType": {
+            "type": "string",
+            "enum": [
+                "slack",
+                "teams",
+                "webhook",
+                "unknown"
+            ],
+            "x-enum-varnames": [
+                "Slack",
+                "Teams",
+                "Webhook",
+                "RecipientTypeUnknown"
+            ]
+        },
+        "models.TestNotificationResponse": {
+            "type": "object",
+            "properties": {
+                "message": {
+                    "type": "string"
+                },
+                "success": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "models.UpdateMaintenance": {
+            "type": "object",
+            "properties": {
+                "status": {
+                    "$ref": "#/definitions/models.MaintenanceStatus"
                 }
             }
         },
@@ -530,6 +1225,49 @@
                 },
                 "tracing": {
                     "type": "boolean"
+                }
+            }
+        },
+        "models.VhostMetrics": {
+            "type": "object",
+            "properties": {
+                "channels": {
+                    "type": "integer"
+                },
+                "connections": {
+                    "type": "integer"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "queues": {
+                    "type": "integer"
+                },
+                "unacked": {
+                    "type": "integer"
+                }
+            }
+        },
+        "models.VhostNotification": {
+            "type": "object",
+            "properties": {
+                "name": {
+                    "type": "string"
+                },
+                "notified": {
+                    "type": "boolean"
+                },
+                "recipients": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/models.Recipient"
+                    }
+                },
+                "rules": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/models.AlarmRule"
+                    }
                 }
             }
         },
