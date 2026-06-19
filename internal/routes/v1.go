@@ -1,0 +1,48 @@
+package routes
+
+import (
+	"github.com/go-chi/chi/v5"
+	"github.com/sisneve/rabbitmq-dashboard/internal/api"
+)
+
+func SetupV1Routes(r chi.Router, apiservice *api.APIService) {
+
+	r.Route("/v1", func(r chi.Router) {
+		r.Route("/vhosts", func(r chi.Router) {
+			r.Get("/", apiservice.VhostsHandler)
+			r.Get("/{vhost}", apiservice.VhostHandler)
+			r.Get("/{vhost}/metrics", apiservice.MetricHandler)
+
+			r.Route("/{vhost}/queues", func(r chi.Router) {
+				r.Get("/", apiservice.GetQueuesHandler)
+				r.Get("/{queue}", apiservice.GetQueuesByNameHandler)
+			})
+
+			r.Route("/{vhost}/notifications", func(r chi.Router) {
+				r.Get("/", apiservice.GetNotificationsHandler)
+				r.Post("/recipients", apiservice.AddNotificationsRecipientHandler)
+				r.Delete("/recipients/{recipient}", apiservice.DeleteNotificationsRecipientHandler)
+
+				r.Post("/rules", apiservice.AddNotificationsRuleHandler)
+				r.Post("/rules/{rule}", apiservice.UpdateNotificationsRuleHandler)
+				r.Post("/rules/{rule}/toggle", apiservice.ToggleNotificationsRuleHandler)
+				r.Post("/rules/{rule}/message", apiservice.UpdateNotificationsMessageHandler)
+				r.Post("/rules/{rule}/test", apiservice.TestNotificationsHandler)
+				r.Delete("/rules/{rule}", apiservice.DeleteNotificationsRuleHandler)
+
+				r.Get("/logs", apiservice.NotificationsLogsHandler)
+			})
+
+			r.Route("/maintenance", func(r chi.Router) {
+				r.Get("/", apiservice.GetMaintenanceHandler)
+				r.Get("/admin", apiservice.GetMaintenanceAdminHandler)
+				r.Post("/", apiservice.AddMaintenanceHandler)
+				r.Post("/{maintenance}", apiservice.UpdateMaintenanceStatusHandler)
+				r.Delete("/{maintenance}", apiservice.DeleteMaintenanceHandler)
+			})
+
+			r.Get("/cluster", apiservice.GetClusterHandler)
+		})
+	})
+
+}

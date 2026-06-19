@@ -9,12 +9,14 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
+	_ "github.com/sisneve/rabbitmq-dashboard/docs"
 	"github.com/sisneve/rabbitmq-dashboard/internal/api"
 	"github.com/sisneve/rabbitmq-dashboard/internal/clients/prometheus"
 	"github.com/sisneve/rabbitmq-dashboard/internal/clients/rabbitmq"
 	"github.com/sisneve/rabbitmq-dashboard/internal/config"
 	"github.com/sisneve/rabbitmq-dashboard/internal/database"
 	"github.com/sisneve/rabbitmq-dashboard/internal/models"
+	httpSwagger "github.com/swaggo/http-swagger/v2"
 )
 
 func SetupRoutes(ctx context.Context, config *config.Config, db *database.Database, rmq *rabbitmq.RMQClient) (chi.Router, error) {
@@ -44,32 +46,10 @@ func SetupRoutes(ctx context.Context, config *config.Config, db *database.Databa
 		api.WithRMQLimits(limits),
 	)
 
-	r.Get("/api/v1/vhosts", apiservice.VhostsHandler)
-	r.Get("/api/v1/vhosts/{vhost}", apiservice.VhostHandler)
-	r.Get("/api/v1/vhosts/{vhost}/metrics", apiservice.MetricHandler)
-	r.Get("/api/v1/vhosts/{vhost}/queues", apiservice.GetQueuesHandler)
-	r.Get("/api/v1/vhosts/{vhost}/queues/{queue}", apiservice.GetQueuesByNameHandler)
-
-	r.Get("/api/v1/vhosts/{vhost}/notifications", apiservice.GetNotificationsHandler)
-	r.Post("/api/v1/vhosts/{vhost}/notifications/recipients", apiservice.AddNotificationsRecipientHandler)
-	r.Delete("/api/v1/vhosts/{vhost}/notifications/recipients/{recipient}", apiservice.DeleteNotificationsRecipientHandler)
-
-	r.Post("/api/v1/vhosts/{vhost}/notifications/rules", apiservice.AddNotificationsRuleHandler)
-	r.Post("/api/v1/vhosts/{vhost}/notifications/rules/{rule}", apiservice.PostNotificationsUpdateRuleHandler)
-	r.Post("/api/v1/vhosts/{vhost}/notifications/rules/{rule}/toggle", apiservice.ToggleNotificationsRuleHandler)
-	r.Post("/api/v1/vhosts/{vhost}/notifications/rules/{rule}/message", apiservice.PostNotificationsUpdateMessageHandler)
-	r.Post("/api/v1/vhosts/{vhost}/notifications/rules/{rule}/test", apiservice.PostNotificationsTestHandler)
-	r.Delete("/api/v1/vhosts/{vhost}/notifications/rules/{rule}", apiservice.DeleteNotificationsRuleHandler)
-
-	r.Get("/api/v1/vhosts/{vhost}/notifications/logs", apiservice.NotificationsLogsHandler)
-
-	r.Get("/api/v1/maintenance", apiservice.GetMaintenanceHandler)
-	r.Get("/api/v1/maintenance/admin", apiservice.GetMaintenanceAdminHandler)
-	r.Post("/api/v1/maintenance", apiservice.AddMaintenanceHandler)
-	r.Post("/api/v1/maintenance/{maintenance}", apiservice.UpdateMaintenanceStatusHandler)
-	r.Delete("/api/v1/maintenance/{maintenance}", apiservice.DeleteMaintenanceHandler)
-
-	r.Get("/api/v1/cluster", apiservice.GetClusterHandler)
+	r.Route("/api", func(r chi.Router) {
+		r.Get("/swagger/*", httpSwagger.WrapHandler)
+		SetupV1Routes(r, apiservice)
+	})
 
 	// Logs every route implicitly or explicitly defined above with its method, path, and number of middlewares.
 	chi.Walk(r, func(method string, route string, handler http.Handler, middlewares ...func(http.Handler) http.Handler) error {
