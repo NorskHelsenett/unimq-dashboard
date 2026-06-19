@@ -1,24 +1,51 @@
 package models
 
 import (
+	"encoding/json"
 	"fmt"
 	"strings"
 	"time"
 )
 
+// @ ID unique identifier for the recipient
+// @ Name human-readable name for the recipient
+// @ URL webhook URL for the recipient - Slack, Teams
+// @ Type type of the recipient - "slack", "teams", "webhook"
 type Recipient struct {
 	ID   string        `json:"id"`
 	Name string        `json:"name"`
 	URL  string        `json:"url"`
-	Type RecipientType `json:"type"` // "slack", "teams", "webhook"
+	Type RecipientType `json:"type"`
+}
+
+func (r *Recipient) UnmarshalJSON(data []byte) error {
+	var aux struct {
+		ID   string `json:"id"`
+		Name string `json:"name"`
+		URL  string `json:"url"`
+		Type string `json:"type"`
+	}
+	if err := json.Unmarshal(data, &aux); err != nil {
+		return err
+	}
+
+	r.ID = aux.ID
+	r.Name = aux.Name
+	r.URL = aux.URL
+	r.Type = ParseRecipientType(aux.Type)
+	if r.Type == RecipientTypeUnknown {
+		return fmt.Errorf("invalid recipient type: %s, expected one of %s", aux.Type, GetRecipientTypesString())
+	}
+
+	return nil
 }
 
 type RecipientType string
 
 const (
-	RecipientTypeSlack   RecipientType = "slack"
-	RecipientTypeTeams   RecipientType = "teams"
-	RecipientTypeWebhook RecipientType = "webhook"
+	RecipientTypeSlack   RecipientType = "slack"   //	@name	Slack
+	RecipientTypeTeams   RecipientType = "teams"   //	@name	Teams
+	RecipientTypeWebhook RecipientType = "webhook" //	@name	Webhook
 	RecipientTypeUnknown RecipientType = "unknown"
 )
 
@@ -52,99 +79,139 @@ func ParseRecipientType(s string) RecipientType {
 	}
 }
 
+// Alarm rule definition
+// @ Description ID unique identifier for the alarm rule
+// @ Description Name human-readable name for the alarm rule
+// @ Description Type type of the alarm (e.g., "channels", "connections", "queues", etc.)
+// @ Description QueueName optional name of the queue - required for "queues" alarm types
+// @ Description Threshold numeric threshold that triggers the alarm
+// @ Description Message custom message to include in the notification when the alarm is triggered
+// @ Description Enabled indicates whether the alarm rule is active
 type AlarmRule struct {
-	ID        string     `json:"id" bson:"_id"`
-	Name      string     `json:"name" bson:"name"`
-	Type      AlarmType  `json:"type" bson:"type"`
-	QueueName string     `json:"queue_name,omitempty" bson:"queueName"`
-	Threshold float64    `json:"threshold,omitempty" bson:"threshold"`
-	Message   string     `json:"message" bson:"message"`
-	Enabled   bool       `json:"enabled" bson:"enabled"`
-	Status    string     `json:"status" bson:"status"` // TODO: Enum "active", "inactive", "fired"
-	LastFired *time.Time `json:"last_fired,omitempty" bson:"lastFired"`
-	LastValue *float64   `json:"last_value,omitempty" bson:"lastValue"`
+	ID        string      `json:"id" bson:"_id"`
+	Name      string      `json:"name" bson:"name"`
+	Type      AlarmType   `json:"type" bson:"type"`
+	QueueName string      `json:"queue_name,omitempty" bson:"queueName"`
+	Threshold float64     `json:"threshold,omitempty" bson:"threshold"`
+	Message   string      `json:"message" bson:"message"`
+	Enabled   bool        `json:"enabled" bson:"enabled"`
+	Status    AlarmStatus `json:"status" bson:"status"`
+	LastFired *time.Time  `json:"last_fired,omitempty" bson:"lastFired"`
+	LastValue *float64    `json:"last_value,omitempty" bson:"lastValue"`
 }
+
+type AlarmRuleUpdate struct {
+	Threshold float64 `json:"threshold" bson:"threshold"`
+	Message   string  `json:"message" bson:"message"`
+}
+
+func (a *AlarmRule) UnmarshalJSON(data []byte) error {
+	var Alias struct {
+		ID        string      `json:"id" bson:"_id"`
+		Name      string      `json:"name" bson:"name"`
+		Type      AlarmType   `json:"type" bson:"type"`
+		QueueName string      `json:"queue_name" bson:"queueName"`
+		Threshold float64     `json:"threshold" bson:"threshold"`
+		Message   string      `json:"message" bson:"message"`
+		Enabled   bool        `json:"enabled" bson:"enabled"`
+		Status    AlarmStatus `json:"status" bson:"status"`
+		LastFired string      `json:"last_fired" bson:"lastFired"`
+		LastValue *float64    `json:"last_value" bson:"lastValue"`
+	}
+	if err := json.Unmarshal(data, &Alias); err != nil {
+		return err
+	}
+
+	a.ID = Alias.ID
+	a.Name = Alias.Name
+	if !isValidAlarmType(string(Alias.Type)) {
+		return fmt.Errorf("invalid alarm type: %s", Alias.Type)
+	}
+	a.Type = Alias.Type
+	a.QueueName = Alias.QueueName
+	a.Threshold = Alias.Threshold
+	a.Message = Alias.Message
+	a.Enabled = Alias.Enabled
+	a.Status = Alias.Status
+	time, err := time.Parse(time.RFC3339, Alias.LastFired)
+	if err != nil {
+		return fmt.Errorf("invalid time format for last_fired: %w", err)
+	}
+	a.LastFired = &time
+	a.LastValue = Alias.LastValue
+
+	return nil
+}
+
+type AlarmStatus string
+
+const (
+	AlarmStatusActive   AlarmStatus = "active"   // @ name Active
+	AlarmStatusInactive AlarmStatus = "inactive" // @ name Inactive
+	AlarmStatusFired    AlarmStatus = "fired"    // @ name Fired
+)
 
 type AlarmType string
 
 const (
-	AlarmTypeChannels      AlarmType = "channels"
-	AlarmTypeConnections   AlarmType = "connections"
-	AlarmTypeQueues        AlarmType = "queues"
-	AlarmTypeUnacked       AlarmType = "unacked"
-	AlarmTypeQueueMessages AlarmType = "queue_messages"
-	AlarmTypeQueueSize     AlarmType = "queue_size"
-	AlarmTypeNoConsumer    AlarmType = "no_consumer"
-	AlarmTypeMaintenance   AlarmType = "maintenance"
+	AlarmTypeChannels      AlarmType = "channels"       //	@name	Channels
+	AlarmTypeConnections   AlarmType = "connections"    //	@name	Connections
+	AlarmTypeQueues        AlarmType = "queues"         //	@name	Queues
+	AlarmTypeUnacked       AlarmType = "unacked"        //	@name	Unacked_Messages
+	AlarmTypeQueueMessages AlarmType = "queue_messages" //	@name	Queue_Messages
+	AlarmTypeQueueSize     AlarmType = "queue_size"     //	@name	Queue_Size
+	AlarmTypeNoConsumer    AlarmType = "no_consumer"    //	@name	No_Consumer
+	AlarmTypeMaintenance   AlarmType = "maintenance"    //	@name	Maintenance
 )
 
-// func (r AlarmRule) TypeLabel() string {
-// 	switch r.Type {
-// 	case "channels":
-// 		return "Channels"
-// 	case "connections":
-// 		return "Connections"
-// 	case "queues":
-// 		return "Køer"
-// 	case "unacked":
-// 		return "Unacked meldinger"
-// 	case "queue_messages":
-// 		return "Meldinger i kø"
-// 	case "queue_size":
-// 		return "Kø-størrelse"
-// 	case "no_consumer":
-// 		return "Ingen consumer"
-// 	case "maintenance":
-// 		return "Vedlikeholdsmelding"
-// 	}
-// 	return r.Type
-// }
+func GetAlarmTypes() []AlarmType {
+	return []AlarmType{
+		AlarmTypeChannels,
+		AlarmTypeConnections,
+		AlarmTypeQueues,
+		AlarmTypeUnacked,
+		AlarmTypeQueueMessages,
+		AlarmTypeQueueSize,
+		AlarmTypeNoConsumer,
+		AlarmTypeMaintenance,
+	}
+}
 
-// func (r AlarmRule) HasQueue() bool {
-// 	return r.Type == "queue_messages" || r.Type == "queue_size" || r.Type == "no_consumer"
-// }
-//
-// func (r AlarmRule) HasThreshold() bool {
-// 	return r.Type != "no_consumer" && r.Type != "maintenance"
-// }
-//
-// func (r AlarmRule) LastFiredStr() string {
-// 	if r.LastFired == nil {
-// 		return "—"
-// 	}
-// 	return r.LastFired.Format("2006-01-02 15:04")
-// }
-//
-// func (r *AlarmRule) CurrentValueStr() string {
-// 	if r.LastValue == nil {
-// 		return ""
-// 	}
-// 	return fmt.Sprintf("%.0f", *r.LastValue)
-// }
+func isValidAlarmType(s string) bool {
+	for _, t := range GetAlarmTypes() {
+		if string(t) == s {
+			return true
+		}
+	}
+	return false
+}
 
+// TODO: Rewrite to english and if possible make more generic
 func (r *AlarmRule) BuildMessage(vhost string) string {
 	if r.Message != "" {
 		return r.Message
 	}
+	base := fmt.Sprintf("Alarm «%s» triggered for vhost '%s'", r.Name, vhost)
+	trigger := fmt.Sprintf("Number of %v has reached the threshold of %.0f.", r.Type, r.Threshold)
 	switch r.Type {
 	case "channels":
-		return fmt.Sprintf("Alarm utløst for vhost «%s».\n\nAntall channels har nådd grensen på %.0f.", vhost, r.Threshold)
+		return fmt.Sprintf("%v.\n\n%v", base, trigger)
 	case "connections":
-		return fmt.Sprintf("Alarm utløst for vhost «%s».\n\nAntall connections har nådd grensen på %.0f.", vhost, r.Threshold)
+		return fmt.Sprintf("%v.\n\n%v", base, trigger)
 	case "queues":
-		return fmt.Sprintf("Alarm utløst for vhost «%s».\n\nAntall køer har nådd grensen på %.0f.", vhost, r.Threshold)
+		return fmt.Sprintf("%v.\n\n%v", base, trigger)
 	case "unacked":
-		return fmt.Sprintf("Alarm utløst for vhost «%s».\n\nAntall unacked meldinger har nådd grensen på %.0f.", vhost, r.Threshold)
+		return fmt.Sprintf("%v.\n\n%v", base, trigger)
 	case "queue_messages":
-		return fmt.Sprintf("Alarm utløst for vhost «%s», kø «%s».\n\nAntall meldinger har nådd grensen på %.0f.", vhost, r.QueueName, r.Threshold)
+		return fmt.Sprintf("%v, queue '%s'.\n\n%v", base, r.QueueName, trigger)
 	case "queue_size":
-		return fmt.Sprintf("Alarm utløst for vhost «%s», kø «%s».\n\nKø-størrelse har nådd grensen på %.0f bytes.", vhost, r.QueueName, r.Threshold)
+		return fmt.Sprintf("%v, queue '%s'.\n\n%v", base, r.QueueName, trigger)
 	case "no_consumer":
-		return fmt.Sprintf("Alarm utløst for vhost «%s», kø «%s».\n\nDet er meldinger i køen, men ingen aktive consumers.", vhost, r.QueueName)
+		return fmt.Sprintf("%v, queue '%s'.\n\nThere's messages in the queue, but no consumers.", base, r.QueueName)
 	case "maintenance":
-		return fmt.Sprintf("Alarm utløst for vhost «%s».\n\nDet er lagt ut en ny vedlikeholdsmelding.", vhost)
+		return fmt.Sprintf("%v.\n\nA new maintenance window has been scheduled.", base)
 	}
-	return fmt.Sprintf("Alarm «%s» ble utløst for vhost «%s».", r.Name, vhost)
+	return fmt.Sprintf("Alarm '%s' has been triggered for vhost '%s'.", r.Name, vhost)
 }
 
 type (
@@ -183,4 +250,47 @@ func (vc VhostConfig) WebhookURLs() []string {
 		}
 	}
 	return urls
+}
+
+type TestNotificationResponse struct {
+	Success bool   `json:"success"`
+	Message string `json:"message"`
+}
+
+type VhostNotification struct {
+	Name       string      `bson:"_id"`
+	Recipients []Recipient `bson:"recipients"`
+	Rules      []AlarmRule `bson:"rules"`
+	Notified   bool        `bson:"notified"`
+}
+
+func NewVhostNotification(name string) *VhostNotification {
+	return &VhostNotification{
+		Name:       name,
+		Recipients: make([]Recipient, 0),
+		Rules:      make([]AlarmRule, 0),
+		Notified:   false,
+	}
+}
+
+func (vn *VhostNotification) WebhookURLs() []string {
+	urls := make([]string, 0, len(vn.Recipients))
+	for _, r := range vn.Recipients {
+		if r.Type == RecipientTypeWebhook {
+			urls = append(urls, r.URL)
+		}
+	}
+	return urls
+}
+
+type NotificationResponse struct {
+	Vhost         *Vhost             `json:"vhost"`
+	Notifications *VhostNotification `json:"notifications"`
+}
+
+func NewNotificationResponse(vhost *Vhost, notifications *VhostNotification) *NotificationResponse {
+	return &NotificationResponse{
+		Vhost:         vhost,
+		Notifications: notifications,
+	}
 }
