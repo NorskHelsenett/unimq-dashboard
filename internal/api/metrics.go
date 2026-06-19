@@ -7,15 +7,15 @@ import (
 	"github.com/sisneve/rabbitmq-dashboard/internal/routes/httpsuite"
 )
 
-// @Summary Get Vhost Metrics
-// @Description Get real-time metrics for a specific vhost, including queue lengths, message rates, and resource usage
-// @Tags Metrics
-// @Produce json
-// @Param vhost path string true "Vhost Name"
-// @Success 200 {object} models.VhostMetrics
-// @Failure 400 {object} httpsuite.APIError
-// @Failure 502 {object} httpsuite.APIError
-// @Router /v1/vhosts/{vhost}/metrics [get]
+// @Summary		Get Vhost Metrics
+// @Description	Get real-time metrics for a specific vhost, including queue lengths, message rates, and resource usage
+// @Tags			Metrics
+// @Produce		json
+// @Param			vhost	path		string	true	"Vhost Name"
+// @Success		200		{object}	models.VhostMetrics
+// @Failure		400		{object}	httpsuite.APIError
+// @Failure		502		{object}	httpsuite.APIError
+// @Router			/v1/vhosts/{vhost}/metrics [get]
 func (rc *APIService) MetricHandler(w http.ResponseWriter, r *http.Request) {
 	vhostName := chi.URLParam(r, "vhost")
 	if vhostName == "" {

@@ -495,6 +495,60 @@
                 }
             }
         },
+        "/v1/notifications/{vhost}/rules/{rule}": {
+            "put": {
+                "description": "Delete a specific notification rule for a vhost",
+                "tags": [
+                    "Notifications"
+                ],
+                "summary": "Delete a notification rule",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Vhost Name",
+                        "name": "vhost",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Notification Rule ID",
+                        "name": "recipient",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Updated Notification Rule Object",
+                        "name": "rule",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/models.AlarmRuleUpdate"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Rule updated successfully",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/httpsuite.APIError"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/httpsuite.APIError"
+                        }
+                    }
+                }
+            }
+        },
         "/v1/notifications/{vhost}/rules/{rule}/message": {
             "post": {
                 "description": "Update the custom message template for a specific notification rule",
@@ -899,6 +953,17 @@
                 },
                 "type": {
                     "$ref": "#/definitions/models.AlarmType"
+                }
+            }
+        },
+        "models.AlarmRuleUpdate": {
+            "type": "object",
+            "properties": {
+                "message": {
+                    "type": "string"
+                },
+                "threshold": {
+                    "type": "number"
                 }
             }
         },

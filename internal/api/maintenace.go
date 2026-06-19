@@ -84,13 +84,13 @@ func (rc *APIService) AddMaintenanceHandler(w http.ResponseWriter, r *http.Reque
 // @Summary		Update maintenance entry status
 // @Description	Update the status of a maintenance entry (e.g., scheduled, in-progress, completed)
 // @Tags			Maintenance
-// @Accept		json
+// @Accept			json
 // @Produce		json
-// @Param			maintenance	path	string	true	"Maintenance Entry ID"
-// @Param			status	body	models.UpdateMaintenance	true	"Updated Maintenance Status"
-// @Success		303	{string}	string	"Redirect to maintenance admin page with success message"
-// @Failure		400	{object}	httpsuite.APIError
-// @Failure		500	{object}	httpsuite.APIError
+// @Param			maintenance	path		string						true	"Maintenance Entry ID"
+// @Param			status		body		models.UpdateMaintenance	true	"Updated Maintenance Status"
+// @Success		303			{string}	string						"Redirect to maintenance admin page with success message"
+// @Failure		400			{object}	httpsuite.APIError
+// @Failure		500			{object}	httpsuite.APIError
 // @Router			/v1/maintenance/{maintenance}/status [put]
 func (rc *APIService) UpdateMaintenanceStatusHandler(w http.ResponseWriter, r *http.Request) {
 	id := chi.URLParam(r, "maintenance")
@@ -118,10 +118,10 @@ func (rc *APIService) UpdateMaintenanceStatusHandler(w http.ResponseWriter, r *h
 // @Summary		Delete a maintenance entry
 // @Description	Delete a specific maintenance entry by ID
 // @Tags			Maintenance
-// @Param			maintenance	path	string	true	"Maintenance Entry ID"
-// @Success		303	{string}	string	"Redirect to maintenance admin page with success message"
-// @Failure		400	{object}	httpsuite.APIError
-// @Failure		500	{object}	httpsuite.APIError
+// @Param			maintenance	path		string	true	"Maintenance Entry ID"
+// @Success		303			{string}	string	"Redirect to maintenance admin page with success message"
+// @Failure		400			{object}	httpsuite.APIError
+// @Failure		500			{object}	httpsuite.APIError
 // @Router			/v1/maintenance/{maintenance} [delete]
 func (rc *APIService) DeleteMaintenanceHandler(w http.ResponseWriter, r *http.Request) {
 	id := chi.URLParam(r, "maintenance")

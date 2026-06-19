@@ -10,15 +10,15 @@ import (
 	"github.com/sisneve/rabbitmq-dashboard/internal/routes/httpsuite"
 )
 
-// @Summary Get Notifications
-// @Description Get notification rules and settings for a specific vhost
-// @Tags Notifications
-// @Produce json
-// @Param vhost path string true "Vhost Name"
-// @Success 200 {object} models.NotificationResponse
-// @Failure 400 {object} httpsuite.APIError
-// @Failure 502 {object} httpsuite.APIError
-// @Router /v1/notifications/{vhost} [get]
+// @Summary		Get Notifications
+// @Description	Get notification rules and settings for a specific vhost
+// @Tags			Notifications
+// @Produce		json
+// @Param			vhost	path		string	true	"Vhost Name"
+// @Success		200		{object}	models.NotificationResponse
+// @Failure		400		{object}	httpsuite.APIError
+// @Failure		502		{object}	httpsuite.APIError
+// @Router			/v1/notifications/{vhost} [get]
 func (rc *APIService) GetNotificationsHandler(w http.ResponseWriter, r *http.Request) {
 
 	vhostName := chi.URLParam(r, "vhost")
@@ -43,17 +43,17 @@ func (rc *APIService) GetNotificationsHandler(w http.ResponseWriter, r *http.Req
 	httpsuite.SendResponse(r.Context(), w, "Gathered notifications on vhost", http.StatusOK, response)
 }
 
-// @Summary Update Notification Rule Message
-// @Description Update the custom message template for a specific notification rule
-// @Tags Notifications
-// @Produce json
-// @Param vhost path string true "Vhost Name"
-// @Param rule path string true "Notification Rule ID"
-// @Param message formData string true "New Message Template"
-// @Success 303 {string} string "Redirect to notification rule page with success message"
-// @Failure 400 {object} httpsuite.APIError
-// @Failure 500 {object} httpsuite.APIError
-// @Router /v1/notifications/{vhost}/rules/{rule}/message [post]
+// @Summary		Update Notification Rule Message
+// @Description	Update the custom message template for a specific notification rule
+// @Tags			Notifications
+// @Produce		json
+// @Param			vhost	path		string	true	"Vhost Name"
+// @Param			rule	path		string	true	"Notification Rule ID"
+// @Param			message	formData	string	true	"New Message Template"
+// @Success		303		{string}	string	"Redirect to notification rule page with success message"
+// @Failure		400		{object}	httpsuite.APIError
+// @Failure		500		{object}	httpsuite.APIError
+// @Router			/v1/notifications/{vhost}/rules/{rule}/message [post]
 func (rc *APIService) UpdateNotificationsMessageHandler(w http.ResponseWriter, r *http.Request) {
 	vhost := chi.URLParam(r, "vhost")
 	if vhost == "" {
@@ -76,16 +76,16 @@ func (rc *APIService) UpdateNotificationsMessageHandler(w http.ResponseWriter, r
 	http.Redirect(w, r, "/notifications/rule?vhost="+url.QueryEscape(vhost)+"&id="+id+"&msg=saved", http.StatusSeeOther)
 }
 
-// @Summary Test Notification Rule
-// @Description Send a test notification using the specified rule to verify its configuration
-// @Tags Notifications
-// @Produce json
-// @Param vhost path string true "Vhost Name"
-// @Param rule path string true "Notification Rule ID"
-// @Success 200 {object} models.TestNotificationResponse "Test notification sent successfully"
-// @Failure 400 {object} httpsuite.APIError
-// @Failure 500 {object} httpsuite.APIError
-// @Router /v1/notifications/{vhost}/rules/{rule}/test [post]
+// @Summary		Test Notification Rule
+// @Description	Send a test notification using the specified rule to verify its configuration
+// @Tags			Notifications
+// @Produce		json
+// @Param			vhost	path		string							true	"Vhost Name"
+// @Param			rule	path		string							true	"Notification Rule ID"
+// @Success		200		{object}	models.TestNotificationResponse	"Test notification sent successfully"
+// @Failure		400		{object}	httpsuite.APIError
+// @Failure		500		{object}	httpsuite.APIError
+// @Router			/v1/notifications/{vhost}/rules/{rule}/test [post]
 func (rc *APIService) TestNotificationsHandler(w http.ResponseWriter, r *http.Request) {
 	vhost := chi.URLParam(r, "vhost")
 	if vhost == "" {
@@ -126,15 +126,15 @@ func (rc *APIService) TestNotificationsHandler(w http.ResponseWriter, r *http.Re
 	httpsuite.SendResponse(r.Context(), w, "Testing notification...", http.StatusOK, &response)
 }
 
-// @Summary Get Notification Logs
-// @Description Fetch logs of notifications sent for a specific vhost, including timestamps and message details
-// @Tags Notifications
-// @Produce json
-// @Param vhost path string true "Vhost Name"
-// @Success 200 {array} models.VhostNotification "List of notification log entries"
-// @Failure 400 {object} httpsuite.APIError
-// @Failure 500 {object} httpsuite.APIError
-// @Router /v1/notifications/{vhost}/logs [get]
+// @Summary		Get Notification Logs
+// @Description	Fetch logs of notifications sent for a specific vhost, including timestamps and message details
+// @Tags			Notifications
+// @Produce		json
+// @Param			vhost	path		string						true	"Vhost Name"
+// @Success		200		{array}		models.VhostNotification	"List of notification log entries"
+// @Failure		400		{object}	httpsuite.APIError
+// @Failure		500		{object}	httpsuite.APIError
+// @Router			/v1/notifications/{vhost}/logs [get]
 func (rc *APIService) NotificationsLogsHandler(w http.ResponseWriter, r *http.Request) {
 	id := chi.URLParam(r, "vhost")
 	if id == "" {

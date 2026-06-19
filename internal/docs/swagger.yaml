@@ -33,6 +33,13 @@ definitions:
       type:
         $ref: '#/definitions/models.AlarmType'
     type: object
+  models.AlarmRuleUpdate:
+    properties:
+      message:
+        type: string
+      threshold:
+        type: number
+    type: object
   models.AlarmStatus:
     enum:
     - active
@@ -610,6 +617,42 @@ paths:
       responses:
         "303":
           description: Redirect to notifications page
+          schema:
+            type: string
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/httpsuite.APIError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/httpsuite.APIError'
+      summary: Delete a notification rule
+      tags:
+      - Notifications
+  /v1/notifications/{vhost}/rules/{rule}:
+    put:
+      description: Delete a specific notification rule for a vhost
+      parameters:
+      - description: Vhost Name
+        in: path
+        name: vhost
+        required: true
+        type: string
+      - description: Notification Rule ID
+        in: path
+        name: recipient
+        required: true
+        type: string
+      - description: Updated Notification Rule Object
+        in: body
+        name: rule
+        required: true
+        schema:
+          $ref: '#/definitions/models.AlarmRuleUpdate'
+      responses:
+        "200":
+          description: Rule updated successfully
           schema:
             type: string
         "400":

@@ -12,13 +12,13 @@ import (
 // @Summary		Add a new notification rule
 // @Description	Add a new notification rule for a specific vhost
 // @Tags			Notifications
-// @Accept		json
+// @Accept			json
 // @Produce		json
-// @Param			vhost	path	string	true	"Vhost Name"
-// @Param			rule	body	models.AlarmRule	true	"Notification Rule Object"
-// @Success		303	{string}	string	"Redirect to notifications page"
-// @Failure		400	{object}	httpsuite.APIError
-// @Failure		500	{object}	httpsuite.APIError
+// @Param			vhost	path		string				true	"Vhost Name"
+// @Param			rule	body		models.AlarmRule	true	"Notification Rule Object"
+// @Success		303		{string}	string				"Redirect to notifications page"
+// @Failure		400		{object}	httpsuite.APIError
+// @Failure		500		{object}	httpsuite.APIError
 // @Router			/v1/notifications/{vhost}/rules [post]
 func (rc *APIService) AddNotificationsRuleHandler(w http.ResponseWriter, r *http.Request) {
 	vhost := chi.URLParam(r, "vhost")
@@ -46,11 +46,11 @@ func (rc *APIService) AddNotificationsRuleHandler(w http.ResponseWriter, r *http
 // @Summary		Delete a notification rule
 // @Description	Delete a specific notification rule for a vhost
 // @Tags			Notifications
-// @Param			vhost	path	string	true	"Vhost Name"
-// @Param			recipient	path	string	true	"Notification Rule ID"
-// @Success		303	{string}	string	"Redirect to notifications page"
-// @Failure		400	{object}	httpsuite.APIError
-// @Failure		500	{object}	httpsuite.APIError
+// @Param			vhost		path		string	true	"Vhost Name"
+// @Param			recipient	path		string	true	"Notification Rule ID"
+// @Success		303			{string}	string	"Redirect to notifications page"
+// @Failure		400			{object}	httpsuite.APIError
+// @Failure		500			{object}	httpsuite.APIError
 // @Router			/v1/notifications/{vhost}/rules/{recipient} [delete]
 func (rc *APIService) DeleteNotificationsRuleHandler(w http.ResponseWriter, r *http.Request) {
 	vhost := chi.URLParam(r, "vhost")
@@ -75,8 +75,13 @@ func (rc *APIService) DeleteNotificationsRuleHandler(w http.ResponseWriter, r *h
 // @Summary		Delete a notification rule
 // @Description	Delete a specific notification rule for a vhost
 // @Tags			Notifications
-// @Param			vhost	path	string	true	"Vhost Name"
-// @Param			recipient	path	string	true	"Notification Rule ID"
+// @Param			vhost		path		string					true	"Vhost Name"
+// @Param			recipient	path		string					true	"Notification Rule ID"
+// @Param			rule		body		models.AlarmRuleUpdate	true	"Updated Notification Rule Object"
+// @Success		200			{string}	string					"Rule updated successfully"
+// @Failure		400			{object}	httpsuite.APIError
+// @Failure		500			{object}	httpsuite.APIError
+// @Router			/v1/notifications/{vhost}/rules/{rule} [put]
 func (rc *APIService) UpdateNotificationsRuleHandler(w http.ResponseWriter, r *http.Request) {
 	vhost := chi.URLParam(r, "vhost")
 	if vhost == "" {
@@ -115,11 +120,11 @@ func (rc *APIService) UpdateNotificationsRuleHandler(w http.ResponseWriter, r *h
 // @Summary		Toggle a notification rule
 // @Description	Enable or disable a specific notification rule for a vhost
 // @Tags			Notifications
-// @Param			vhost	path	string	true	"Vhost Name"
-// @Param			rule	path	string	true	"Notification Rule ID"
-// @Success		303	{string}	string	"Redirect to notifications page"
-// @Failure		400	{object}	httpsuite.APIError
-// @Failure		500	{object}	httpsuite.APIError
+// @Param			vhost	path		string	true	"Vhost Name"
+// @Param			rule	path		string	true	"Notification Rule ID"
+// @Success		303		{string}	string	"Redirect to notifications page"
+// @Failure		400		{object}	httpsuite.APIError
+// @Failure		500		{object}	httpsuite.APIError
 // @Router			/v1/notifications/{vhost}/rules/{rule}/toggle [post]
 func (rc *APIService) ToggleNotificationsRuleHandler(w http.ResponseWriter, r *http.Request) {
 	vhost := chi.URLParam(r, "vhost")
