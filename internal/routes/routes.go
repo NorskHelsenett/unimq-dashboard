@@ -9,12 +9,12 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
-	_ "github.com/sisneve/rabbitmq-dashboard/docs"
 	"github.com/sisneve/rabbitmq-dashboard/internal/api"
 	"github.com/sisneve/rabbitmq-dashboard/internal/clients/prometheus"
 	"github.com/sisneve/rabbitmq-dashboard/internal/clients/rabbitmq"
 	"github.com/sisneve/rabbitmq-dashboard/internal/config"
 	"github.com/sisneve/rabbitmq-dashboard/internal/database"
+	_ "github.com/sisneve/rabbitmq-dashboard/internal/docs"
 	"github.com/sisneve/rabbitmq-dashboard/internal/models"
 	httpSwagger "github.com/swaggo/http-swagger/v2"
 )
