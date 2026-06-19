@@ -10,17 +10,17 @@ import (
 	"github.com/sisneve/rabbitmq-dashboard/internal/routes/httpsuite"
 )
 
-// @ Summary		Add a new notification recipient
-// @ Description	Add a new notification recipient for a specific vhost
-// @ Tags			Notifications
-// @ Accept		json
-// @ Produce		json
-// @ Param			vhost	path	string	true	"Vhost Name"
-// @ Param			recipient	body	models.Recipient	true	"Notification Recipient Object"
-// @ Success		303	{string}	string	"Redirect to notifications page"
-// @ Failure		400	{object}	httpsuite.APIError
-// @ Failure		500	{object}	httpsuite.APIError
-// @ Router			/v1/notifications/{vhost}/recipients [post]
+// @Summary		Add a new notification recipient
+// @Description	Add a new notification recipient for a specific vhost
+// @Tags			Notifications
+// @Accept		json
+// @Produce		json
+// @Param			vhost	path	string	true	"Vhost Name"
+// @Param			recipient	body	models.Recipient	true	"Notification Recipient Object"
+// @Success		303	{string}	string	"Redirect to notifications page"
+// @Failure		400	{object}	httpsuite.APIError
+// @Failure		500	{object}	httpsuite.APIError
+// @Router			/v1/notifications/{vhost}/recipients [post]
 func (rc *APIService) AddNotificationsRecipientHandler(w http.ResponseWriter, r *http.Request) {
 	vhost := chi.URLParam(r, "vhost")
 	if vhost == "" {
@@ -52,15 +52,15 @@ func (rc *APIService) AddNotificationsRecipientHandler(w http.ResponseWriter, r 
 	http.Redirect(w, r, "/notifications?vhost="+url.QueryEscape(vhost), http.StatusSeeOther)
 }
 
-// @ Summary		Delete a notification recipient
-// @ Description	Delete a specific notification recipient for a vhost
-// @ Tags			Notifications
-// @ Param			vhost	path	string	true	"Vhost Name"
-// @ Param			recipient	path	string	true	"Recipient ID"
-// @ Success		303	{string}	string	"Redirect to notifications page"
-// @ Failure		400	{object}	httpsuite.APIError
-// @ Failure		500	{object}	httpsuite.APIError
-// @ Router			/v1/notifications/{vhost}/recipients/{recipient} [delete]
+// @Summary		Delete a notification recipient
+// @Description	Delete a specific notification recipient for a vhost
+// @Tags			Notifications
+// @Param			vhost	path	string	true	"Vhost Name"
+// @Param			recipient	path	string	true	"Recipient ID"
+// @Success		303	{string}	string	"Redirect to notifications page"
+// @Failure		400	{object}	httpsuite.APIError
+// @Failure		500	{object}	httpsuite.APIError
+// @Router			/v1/notifications/{vhost}/recipients/{recipient} [delete]
 func (rc *APIService) DeleteNotificationsRecipientHandler(w http.ResponseWriter, r *http.Request) {
 	vhost := chi.URLParam(r, "vhost")
 	if vhost == "" {

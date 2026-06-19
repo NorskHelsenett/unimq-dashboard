@@ -7,10 +7,10 @@ import (
 	"time"
 )
 
-// @ ID unique identifier for the recipient
-// @ Name human-readable name for the recipient
-// @ URL webhook URL for the recipient - Slack, Teams
-// @ Type type of the recipient - "slack", "teams", "webhook"
+// @ID unique identifier for the recipient
+// @Name human-readable name for the recipient
+// @URL webhook URL for the recipient - Slack, Teams
+// @Type type of the recipient - "slack", "teams", "webhook"
 type Recipient struct {
 	ID   string        `json:"id"`
 	Name string        `json:"name"`
@@ -80,13 +80,13 @@ func ParseRecipientType(s string) RecipientType {
 }
 
 // Alarm rule definition
-// @ Description ID unique identifier for the alarm rule
-// @ Description Name human-readable name for the alarm rule
-// @ Description Type type of the alarm (e.g., "channels", "connections", "queues", etc.)
-// @ Description QueueName optional name of the queue - required for "queues" alarm types
-// @ Description Threshold numeric threshold that triggers the alarm
-// @ Description Message custom message to include in the notification when the alarm is triggered
-// @ Description Enabled indicates whether the alarm rule is active
+// @Description ID unique identifier for the alarm rule
+// @Description Name human-readable name for the alarm rule
+// @Description Type type of the alarm (e.g., "channels", "connections", "queues", etc.)
+// @Description QueueName optional name of the queue - required for "queues" alarm types
+// @Description Threshold numeric threshold that triggers the alarm
+// @Description Message custom message to include in the notification when the alarm is triggered
+// @Description Enabled indicates whether the alarm rule is active
 type AlarmRule struct {
 	ID        string      `json:"id" bson:"_id"`
 	Name      string      `json:"name" bson:"name"`
@@ -146,9 +146,9 @@ func (a *AlarmRule) UnmarshalJSON(data []byte) error {
 type AlarmStatus string
 
 const (
-	AlarmStatusActive   AlarmStatus = "active"   // @ name Active
-	AlarmStatusInactive AlarmStatus = "inactive" // @ name Inactive
-	AlarmStatusFired    AlarmStatus = "fired"    // @ name Fired
+	AlarmStatusActive   AlarmStatus = "active"   // @name Active
+	AlarmStatusInactive AlarmStatus = "inactive" // @name Inactive
+	AlarmStatusFired    AlarmStatus = "fired"    // @name Fired
 )
 
 type AlarmType string
