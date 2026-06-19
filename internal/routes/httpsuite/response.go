@@ -62,3 +62,18 @@ func writeJSONResponse[T any](ctx context.Context, w http.ResponseWriter, r *Res
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 	}
 }
+
+func ReadResponse(r *http.Request, out any) error {
+	defer func() {
+		err := r.Body.Close()
+		if err != nil {
+			slog.ErrorContext(r.Context(), "error closing response body", "error", err)
+		}
+	}()
+
+	if err := json.NewDecoder(r.Body).Decode(out); err != nil {
+		return fmt.Errorf("error decoding response body: %v", err)
+	}
+
+	return nil
+}
