@@ -20,7 +20,7 @@ import (
 // @Success		303			{string}	string				"Redirect to notifications page"
 // @Failure		400			{object}	httpsuite.APIError
 // @Failure		500			{object}	httpsuite.APIError
-// @Router			/v1/notifications/{vhost}/recipients [post]
+// @Router			/v1/notifications/{vhost-name}/recipients [post]
 func (rc *APIService) AddNotificationsRecipientHandler(w http.ResponseWriter, r *http.Request) {
 	vhost := chi.URLParam(r, "vhost")
 	if vhost == "" {
@@ -60,7 +60,7 @@ func (rc *APIService) AddNotificationsRecipientHandler(w http.ResponseWriter, r 
 // @Success		303			{string}	string	"Redirect to notifications page"
 // @Failure		400			{object}	httpsuite.APIError
 // @Failure		500			{object}	httpsuite.APIError
-// @Router			/v1/notifications/{vhost}/recipients/{recipient} [delete]
+// @Router			/v1/notifications/{vhost-name}/recipients/{recipient-id} [delete]
 func (rc *APIService) DeleteNotificationsRecipientHandler(w http.ResponseWriter, r *http.Request) {
 	vhost := chi.URLParam(r, "vhost")
 	if vhost == "" {

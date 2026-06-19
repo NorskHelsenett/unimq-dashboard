@@ -18,7 +18,7 @@ import (
 // @Success		200		{object}	models.NotificationResponse
 // @Failure		400		{object}	httpsuite.APIError
 // @Failure		502		{object}	httpsuite.APIError
-// @Router			/v1/notifications/{vhost} [get]
+// @Router			/v1/notifications/{vhost-name} [get]
 func (rc *APIService) GetNotificationsHandler(w http.ResponseWriter, r *http.Request) {
 
 	vhostName := chi.URLParam(r, "vhost")
@@ -53,7 +53,7 @@ func (rc *APIService) GetNotificationsHandler(w http.ResponseWriter, r *http.Req
 // @Success		303		{string}	string	"Redirect to notification rule page with success message"
 // @Failure		400		{object}	httpsuite.APIError
 // @Failure		500		{object}	httpsuite.APIError
-// @Router			/v1/notifications/{vhost}/rules/{rule}/message [post]
+// @Router			/v1/notifications/{vhost-name}/rules/{rule-id}/message [post]
 func (rc *APIService) UpdateNotificationsMessageHandler(w http.ResponseWriter, r *http.Request) {
 	vhost := chi.URLParam(r, "vhost")
 	if vhost == "" {
@@ -85,7 +85,7 @@ func (rc *APIService) UpdateNotificationsMessageHandler(w http.ResponseWriter, r
 // @Success		200		{object}	models.TestNotificationResponse	"Test notification sent successfully"
 // @Failure		400		{object}	httpsuite.APIError
 // @Failure		500		{object}	httpsuite.APIError
-// @Router			/v1/notifications/{vhost}/rules/{rule}/test [post]
+// @Router			/v1/notifications/{vhost-name}/rules/{rule-id}/test [post]
 func (rc *APIService) TestNotificationsHandler(w http.ResponseWriter, r *http.Request) {
 	vhost := chi.URLParam(r, "vhost")
 	if vhost == "" {
@@ -134,7 +134,7 @@ func (rc *APIService) TestNotificationsHandler(w http.ResponseWriter, r *http.Re
 // @Success		200		{array}		models.VhostNotification	"List of notification log entries"
 // @Failure		400		{object}	httpsuite.APIError
 // @Failure		500		{object}	httpsuite.APIError
-// @Router			/v1/notifications/{vhost}/logs [get]
+// @Router			/v1/notifications/{vhost-name}/logs [get]
 func (rc *APIService) NotificationsLogsHandler(w http.ResponseWriter, r *http.Request) {
 	id := chi.URLParam(r, "vhost")
 	if id == "" {

@@ -91,7 +91,7 @@ func (rc *APIService) AddMaintenanceHandler(w http.ResponseWriter, r *http.Reque
 // @Success		303			{string}	string						"Redirect to maintenance admin page with success message"
 // @Failure		400			{object}	httpsuite.APIError
 // @Failure		500			{object}	httpsuite.APIError
-// @Router			/v1/maintenance/{maintenance}/status [put]
+// @Router			/v1/maintenance/{maintenance-id}/status [put]
 func (rc *APIService) UpdateMaintenanceStatusHandler(w http.ResponseWriter, r *http.Request) {
 	id := chi.URLParam(r, "maintenance")
 	if id == "" {
@@ -122,7 +122,7 @@ func (rc *APIService) UpdateMaintenanceStatusHandler(w http.ResponseWriter, r *h
 // @Success		303			{string}	string	"Redirect to maintenance admin page with success message"
 // @Failure		400			{object}	httpsuite.APIError
 // @Failure		500			{object}	httpsuite.APIError
-// @Router			/v1/maintenance/{maintenance} [delete]
+// @Router			/v1/maintenance/{maintenance-id} [delete]
 func (rc *APIService) DeleteMaintenanceHandler(w http.ResponseWriter, r *http.Request) {
 	id := chi.URLParam(r, "maintenance")
 	if id == "" {
