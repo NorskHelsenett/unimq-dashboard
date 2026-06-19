@@ -50,6 +50,7 @@ unimq-dashboard/
 │   │       └── httpauthproviders/ # Auth providers for http client (basic auth, bearer token, etc.)
 │   ├── config/                    # Configuration loading from environment variables
 │   ├── database/                  # Database quries for data persistence (alarms, maintenance, etc.)
+│   ├── docs/                      # Swagger/OpenAPI documentation for the API
 │   ├── logger/                    # Logger setup and utilities
 │   ├── models/                    # Data models for everything used in the application (alarms, maintenance, API responses, etc.)
 │   ├── notificationhelper/        # Helper functions for formatting and sending notifications (e.g., to Slack, Teams)
@@ -77,6 +78,27 @@ unimq-dashboard/
 ├── docker-compose.yaml            # Docker Compose file for local development environment (RabbitMQ, Prometheus, mongodb, Dex)
 └── .env.example                   # Environment variables for backend and docker compose.
 
+```
+
+## Swagger documentation
+
+The API documentation is available at at `/api/swagger/index.html`.
+For local development, you can access it at `http://localhost:8080/api/swagger/index.html` after starting the backend server.
+
+### Generating Swagger docs
+
+The Swagger documentation is generated using `swaggo/swag`. To generate chanages into the documentation, see the makefile swagger commands below.
+
+## Makefile
+
+To simplify common tasks, a Makefile is included in the project. Here are some useful commands:
+
+```
+# Generate Swagger documentation
+make docs-run
+
+# Format swagger documentation
+make docs-fmt
 ```
 
 ---
