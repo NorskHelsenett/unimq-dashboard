@@ -1,0 +1,364 @@
+definitions:
+  httpsuite.APIError:
+    properties:
+      error:
+        type: string
+    type: object
+  models.ClusterStats:
+    properties:
+      min_disk_limit:
+        type: integer
+      nodes:
+        items:
+          $ref: '#/definitions/models.NodeStats'
+        type: array
+      total_disk_free:
+        type: integer
+      total_mem_limit:
+        type: integer
+      total_mem_used:
+        type: integer
+      vhost_resources:
+        items:
+          $ref: '#/definitions/models.VhostResources'
+        type: array
+    type: object
+  models.MaintenanceAdminResponse:
+    properties:
+      entries:
+        items:
+          $ref: '#/definitions/models.MaintenanceEntry'
+        type: array
+    type: object
+  models.MaintenanceEntry:
+    properties:
+      description:
+        type: string
+      end:
+        type: string
+      id:
+        type: string
+      notified:
+        type: boolean
+      start:
+        type: string
+      status:
+        $ref: '#/definitions/models.MaintenanceStatus'
+    type: object
+  models.MaintenanceResponse:
+    properties:
+      history:
+        items:
+          $ref: '#/definitions/models.MaintenanceEntry'
+        type: array
+      scheduled:
+        items:
+          $ref: '#/definitions/models.MaintenanceEntry'
+        type: array
+    type: object
+  models.MaintenanceStatus:
+    enum:
+    - scheduled
+    - done
+    - skipped
+    - unknown
+    type: string
+    x-enum-varnames:
+    - MaintenanceStatusScheduled
+    - MaintenanceStatusDone
+    - MaintenanceStatusSkipped
+    - MaintenanceStatusUnknown
+  models.MessageRate:
+    properties:
+      rate:
+        type: number
+    type: object
+  models.Metadata:
+    properties:
+      default_queue_type:
+        type: string
+      description:
+        type: string
+      tags:
+        items:
+          type: string
+        type: array
+    type: object
+  models.NodeStats:
+    properties:
+      disk_free:
+        type: integer
+      disk_free_limit:
+        type: integer
+      mem_limit:
+        type: integer
+      mem_used:
+        type: integer
+      name:
+        type: string
+    type: object
+  models.QueueDetail:
+    properties:
+      consumers:
+        type: integer
+      deliver_rate:
+        type: number
+      history:
+        items:
+          type: integer
+        type: array
+      message_bytes:
+        type: integer
+      messages:
+        type: integer
+      messages_unacknowledged:
+        type: integer
+      name:
+        type: string
+      publish_rate:
+        type: number
+      redeliver_rate:
+        type: number
+    type: object
+  models.Vhost:
+    properties:
+      cluster_state:
+        additionalProperties:
+          type: string
+        type: object
+      default_queue_type:
+        type: string
+      description:
+        type: string
+      messages:
+        type: integer
+      messages_details:
+        $ref: '#/definitions/models.MessageRate'
+      messages_ready:
+        type: integer
+      messages_ready_details:
+        $ref: '#/definitions/models.MessageRate'
+      messages_unacknowledged:
+        type: integer
+      messages_unacknowledged_details:
+        $ref: '#/definitions/models.MessageRate'
+      metadata:
+        $ref: '#/definitions/models.Metadata'
+      name:
+        type: string
+      protected_from_deletion:
+        type: boolean
+      tags:
+        items:
+          type: string
+        type: array
+      tracing:
+        type: boolean
+    type: object
+  models.VhostResources:
+    properties:
+      disk_bytes:
+        type: integer
+      message_bytes:
+        type: integer
+      name:
+        type: string
+    type: object
+info:
+  contact: {}
+paths:
+  /v1/cluster:
+    get:
+      description: Get overall cluster statistics and health information
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.ClusterStats'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/httpsuite.APIError'
+      summary: Get Cluster Stats
+      tags:
+      - Cluster
+  /v1/maintenance:
+    get:
+      description: Get scheduled  maintenance information and history
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.MaintenanceResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/httpsuite.APIError'
+      summary: Get scheduled  maintenance information and history
+      tags:
+      - Maintenance
+    post:
+      description: Add new maintenance entry with description, start time, and end
+        time
+      parameters:
+      - description: Maintenance Entry Data
+        in: body
+        name: entry
+        required: true
+        schema:
+          $ref: '#/definitions/models.MaintenanceEntry'
+      produces:
+      - application/json
+      responses:
+        "303":
+          description: Redirect to maintenance admin page with success message
+          schema:
+            type: string
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/httpsuite.APIError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/httpsuite.APIError'
+      summary: Add new maintenance entry
+      tags:
+      - Maintenance
+  /v1/maintenance/admin:
+    get:
+      description: Get all maintenance entries for admin view
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.MaintenanceAdminResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/httpsuite.APIError'
+      summary: Get all maintenance entries
+      tags:
+      - Maintenance
+  /v1/vhosts:
+    get:
+      description: Get a list of all vhosts in the RabbitMQ cluster
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              items:
+                $ref: '#/definitions/models.Vhost'
+              type: array
+            type: array
+        "502":
+          description: Bad Gateway
+          schema:
+            $ref: '#/definitions/httpsuite.APIError'
+      summary: Get all vhosts
+      tags:
+      - Vhosts
+  /v1/vhosts/{vhost}:
+    get:
+      description: Get details of a specific vhost by name
+      parameters:
+      - description: Vhost Name
+        in: path
+        name: vhost
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.Vhost'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/httpsuite.APIError'
+        "502":
+          description: Bad Gateway
+          schema:
+            $ref: '#/definitions/httpsuite.APIError'
+      summary: Get vhost details
+      tags:
+      - Vhosts
+  /v1/vhosts/{vhost}/queues:
+    get:
+      description: Fetches time-series metrics for a specific RabbitMQ queue over
+        a specified time range.
+      parameters:
+      - description: Virtual Host
+        in: query
+        name: vhost
+        required: true
+        type: string
+      - description: Queue Name
+        in: query
+        name: name
+        required: true
+        type: string
+      - default: 1h
+        description: Time Range (e.g., 1h, 24h, 7d)
+        in: query
+        name: range
+        type: string
+      produces:
+      - text/html
+      responses:
+        "200":
+          description: HTML page with queue metrics
+          schema:
+            type: string
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/httpsuite.APIError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/httpsuite.APIError'
+      summary: Get Queue Metrics for a specific queue in the specified virtual host
+      tags:
+      - Metrics
+  /v1/vhosts/{vhost}/queues/{queue}:
+    get:
+      description: Fetches details of all queues in a specified virtual host.
+      parameters:
+      - description: Virtual Host
+        in: query
+        name: vhost
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: List of queue details
+          schema:
+            items:
+              $ref: '#/definitions/models.QueueDetail'
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/httpsuite.APIError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/httpsuite.APIError'
+      summary: Get All Queues to a specified virtual host
+      tags:
+      - Queues
+swagger: "2.0"
