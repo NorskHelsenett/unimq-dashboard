@@ -123,3 +123,24 @@ func NewMaintenanceResponse(scheduled []MaintenanceEntry, history []MaintenanceE
 		History:   history,
 	}
 }
+
+type UpdateMaintenance struct {
+	Status MaintenanceStatus `json:"status"`
+}
+
+func (u *UpdateMaintenance) UnmarshalJSON(data []byte) error {
+	var aux struct {
+		Status string `json:"status"`
+	}
+
+	if err := json.Unmarshal(data, &aux); err != nil {
+		return err
+	}
+
+	if !IsValidMaintenanceStatus(aux.Status) {
+		return fmt.Errorf("invalid maintenance status: %s", aux.Status)
+	}
+
+	u.Status = ParseMaintenanceStatus(aux.Status)
+	return nil
+}

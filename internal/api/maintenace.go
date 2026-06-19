@@ -2,8 +2,6 @@ package api
 
 import (
 	"net/http"
-	"strings"
-	"time"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/sisneve/rabbitmq-dashboard/internal/models"
@@ -11,18 +9,13 @@ import (
 	"go.mongodb.org/mongo-driver/v2/bson"
 )
 
-type maintenanceData struct {
-	Scheduled []models.MaintenanceEntry
-	History   []models.MaintenanceEntry
-}
-
-// @Summary Get scheduled  maintenance information and history
-// @Description Get scheduled  maintenance information and history
-// @Tags Maintenance
-// @Produce json
-// @Success 200 {object} maintenanceData
-// @Failure 500 {object} httpsuite.ErrorResponse
-// @Router /maintenance [get]
+// @Summary		Get scheduled  maintenance information and history
+// @Description	Get scheduled  maintenance information and history
+// @Tags			Maintenance
+// @Produce		json
+// @Success		200	{object}	models.MaintenanceResponse
+// @Failure		500	{object}	httpsuite.APIError
+// @Router			/v1/maintenance [get]
 func (rc *APIService) GetMaintenanceHandler(w http.ResponseWriter, r *http.Request) {
 
 	scheduled, err := rc.DB.GetMaintenanceScheduled(r.Context())
@@ -37,25 +30,17 @@ func (rc *APIService) GetMaintenanceHandler(w http.ResponseWriter, r *http.Reque
 		maintenanceHistory = []models.MaintenanceEntry{}
 	}
 
-	data := maintenanceData{
-		Scheduled: scheduled,
-		History:   maintenanceHistory,
-	}
-
-	httpsuite.SendResponse(r.Context(), w, "", http.StatusOK, &data)
+	response := models.NewMaintenanceResponse(scheduled, maintenanceHistory)
+	httpsuite.SendResponse(r.Context(), w, "", http.StatusOK, &response)
 }
 
-type maintenanceAdminData struct {
-	Entries []models.MaintenanceEntry
-}
-
-// @Summary Get all maintenance entries
-// @Description Get all maintenance entries for admin view
-// @Tags Maintenance
-// @Produce json
-// @Success 200 {object} maintenanceAdminData
-// @Failure 500 {object} httpsuite.ErrorResponse
-// @Router /maintenance/admin [get]
+// @Summary		Get all maintenance entries
+// @Description	Get all maintenance entries for admin view
+// @Tags			Maintenance
+// @Produce		json
+// @Success		200	{object}	models.MaintenanceAdminResponse
+// @Failure		500	{object}	httpsuite.APIError
+// @Router			/v1/maintenance/admin [get]
 func (rc *APIService) GetMaintenanceAdminHandler(w http.ResponseWriter, r *http.Request) {
 
 	maintenanceAll, err := rc.DB.GetMaintenanceAll(r.Context(), bson.M{})
@@ -63,54 +48,50 @@ func (rc *APIService) GetMaintenanceAdminHandler(w http.ResponseWriter, r *http.
 		httpsuite.WriteJSONError(w, "error fetching maintenance", http.StatusInternalServerError)
 		return
 	}
-	adminData := maintenanceAdminData{
-		Entries: maintenanceAll,
-	}
 
-	httpsuite.SendResponse(r.Context(), w, "", http.StatusOK, &adminData)
+	response := models.NewMaintenanceAdminResponse(maintenanceAll)
+	httpsuite.SendResponse(r.Context(), w, "", http.StatusOK, &response)
 }
 
+// @Summary		Add new maintenance entry
+// @Description	Add new maintenance entry with description, start time, and end time
+// @Tags			Maintenance
+// @Produce		json
+// @Param			entry	body		models.MaintenanceEntry	true	"Maintenance Entry Data"
+// @Success		303		{string}	string					"Redirect to maintenance admin page with success message"
+// @Failure		400		{object}	httpsuite.APIError
+// @Failure		500		{object}	httpsuite.APIError
+// @Router			/v1/maintenance [post]
 func (rc *APIService) AddMaintenanceHandler(w http.ResponseWriter, r *http.Request) {
-	description := r.FormValue("description")
-	if description == "" {
-		httpsuite.WriteJSONError(w, "description is required", http.StatusBadRequest)
-		return
-	}
 
-	start := r.FormValue("start")
-	if start == "" {
-		httpsuite.WriteJSONError(w, "start time is required", http.StatusBadRequest)
-		return
-	}
-
-	end := r.FormValue("end")
-	if end == "" {
-		httpsuite.WriteJSONError(w, "end time is required", http.StatusBadRequest)
-		return
-	}
-
-	startTime, err := time.ParseInLocation("2006-01-02T15:04", start, time.Local)
+	var entry models.MaintenanceEntry
+	err := httpsuite.ReadResponse(r, &entry)
 	if err != nil {
-		httpsuite.WriteJSONError(w, "invalid start time format", http.StatusBadRequest)
-		return
-	}
-	endTime, err := time.ParseInLocation("2006-01-02T15:04", end, time.Local)
-	if err != nil {
-		httpsuite.WriteJSONError(w, "invalid end time format", http.StatusBadRequest)
+		httpsuite.WriteJSONError(w, "invalid request body: "+err.Error(), http.StatusBadRequest)
 		return
 	}
 
-	entry := models.MaintenanceEntry{
-		Description: description,
-		Start:       startTime,
-		End:         endTime,
-		Status:      models.MaintenanceStatusScheduled,
+	if entry.Description == "" || entry.Start.IsZero() || entry.End.IsZero() {
+		httpsuite.WriteJSONError(w, "description, start time, and end time are required", http.StatusBadRequest)
+		return
 	}
+
 	rc.DB.AddMaintenanceEntry(r.Context(), &entry)
 
 	http.Redirect(w, r, "/maintenance/admin", http.StatusSeeOther)
 }
 
+// @ Summary		Update maintenance entry status
+// @ Description	Update the status of a maintenance entry (e.g., scheduled, in-progress, completed)
+// @ Tags			Maintenance
+// @ Accept		json
+// @ Produce		json
+// @ Param			maintenance	path	string	true	"Maintenance Entry ID"
+// @ Param			status	body	models.UpdateMaintenance	true	"Updated Maintenance Status"
+// @ Success		303	{string}	string	"Redirect to maintenance admin page with success message"
+// @ Failure		400	{object}	httpsuite.APIError
+// @ Failure		500	{object}	httpsuite.APIError
+// @ Router			/v1/maintenance/{maintenance}/status [put]
 func (rc *APIService) UpdateMaintenanceStatusHandler(w http.ResponseWriter, r *http.Request) {
 	id := chi.URLParam(r, "maintenance")
 	if id == "" {
@@ -118,18 +99,14 @@ func (rc *APIService) UpdateMaintenanceStatusHandler(w http.ResponseWriter, r *h
 		return
 	}
 
-	status := r.FormValue("status")
-	if status == "" {
-		httpsuite.WriteJSONError(w, "status is required", http.StatusBadRequest)
+	var request models.UpdateMaintenance
+	err := httpsuite.ReadResponse(r, &request)
+	if err != nil {
+		httpsuite.WriteJSONError(w, "invalid request body: "+err.Error(), http.StatusBadRequest)
 		return
 	}
 
-	if models.IsValidMaintenanceStatus(status) == false {
-		httpsuite.WriteJSONError(w, "invalid status value, expected any of "+strings.Join(models.GetMaintenanceStatusAllString(), ", "), http.StatusBadRequest)
-		return
-	}
-
-	err := rc.DB.SetMaintenanceEntryStatus(r.Context(), id, status)
+	err = rc.DB.SetMaintenanceEntryStatus(r.Context(), id, string(request.Status))
 	if err != nil {
 		httpsuite.WriteJSONError(w, "error updating maintenance status", http.StatusInternalServerError)
 		return
@@ -138,6 +115,14 @@ func (rc *APIService) UpdateMaintenanceStatusHandler(w http.ResponseWriter, r *h
 	http.Redirect(w, r, "/maintenance/admin", http.StatusSeeOther)
 }
 
+// @ Summary		Delete a maintenance entry
+// @ Description	Delete a specific maintenance entry by ID
+// @ Tags			Maintenance
+// @ Param			maintenance	path	string	true	"Maintenance Entry ID"
+// @ Success		303	{string}	string	"Redirect to maintenance admin page with success message"
+// @ Failure		400	{object}	httpsuite.APIError
+// @ Failure		500	{object}	httpsuite.APIError
+// @ Router			/v1/maintenance/{maintenance} [delete]
 func (rc *APIService) DeleteMaintenanceHandler(w http.ResponseWriter, r *http.Request) {
 	id := chi.URLParam(r, "maintenance")
 	if id == "" {
@@ -148,7 +133,6 @@ func (rc *APIService) DeleteMaintenanceHandler(w http.ResponseWriter, r *http.Re
 	err := rc.DB.DeleteMaintenanceEntry(r.Context(), id)
 	if err != nil {
 		httpsuite.WriteJSONError(w, "error deleting maintenance entry", http.StatusInternalServerError)
-		// slog.ErrorContext(r.Context(), "error deleting maintenance entry", "error", err)
 		return
 	}
 
