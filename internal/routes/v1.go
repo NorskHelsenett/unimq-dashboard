@@ -18,21 +18,6 @@ func SetupV1Routes(r chi.Router, apiservice *api.APIService) {
 				r.Get("/{queue}", apiservice.GetQueuesByNameHandler)
 			})
 
-			r.Route("/{vhost}/notifications", func(r chi.Router) {
-				r.Get("/", apiservice.GetNotificationsHandler)
-				r.Post("/recipients", apiservice.AddNotificationsRecipientHandler)
-				r.Delete("/recipients/{recipient}", apiservice.DeleteNotificationsRecipientHandler)
-
-				r.Post("/rules", apiservice.AddNotificationsRuleHandler)
-				r.Post("/rules/{rule}", apiservice.UpdateNotificationsRuleHandler)
-				r.Post("/rules/{rule}/toggle", apiservice.ToggleNotificationsRuleHandler)
-				r.Post("/rules/{rule}/message", apiservice.UpdateNotificationsMessageHandler)
-				r.Post("/rules/{rule}/test", apiservice.TestNotificationsHandler)
-				r.Delete("/rules/{rule}", apiservice.DeleteNotificationsRuleHandler)
-
-				r.Get("/logs", apiservice.NotificationsLogsHandler)
-			})
-
 			r.Route("/maintenance", func(r chi.Router) {
 				r.Get("/", apiservice.GetMaintenanceHandler)
 				r.Get("/admin", apiservice.GetMaintenanceAdminHandler)
@@ -42,6 +27,21 @@ func SetupV1Routes(r chi.Router, apiservice *api.APIService) {
 			})
 
 			r.Get("/cluster", apiservice.GetClusterHandler)
+		})
+
+		r.Route("/notifications/{vhost}", func(r chi.Router) {
+			r.Get("/", apiservice.GetNotificationsHandler)
+			r.Post("/recipients", apiservice.AddNotificationsRecipientHandler)
+			r.Delete("/recipients/{recipient}", apiservice.DeleteNotificationsRecipientHandler)
+
+			r.Post("/rules", apiservice.AddNotificationsRuleHandler)
+			r.Post("/rules/{rule}", apiservice.UpdateNotificationsRuleHandler)
+			r.Post("/rules/{rule}/toggle", apiservice.ToggleNotificationsRuleHandler)
+			r.Post("/rules/{rule}/message", apiservice.UpdateNotificationsMessageHandler)
+			r.Post("/rules/{rule}/test", apiservice.TestNotificationsHandler)
+			r.Delete("/rules/{rule}", apiservice.DeleteNotificationsRuleHandler)
+
+			r.Get("/logs", apiservice.NotificationsLogsHandler)
 		})
 	})
 
