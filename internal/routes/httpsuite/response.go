@@ -17,7 +17,7 @@ type Response[T any] struct {
 
 type emptyResponse struct{}
 
-func GetEmptyResponse() *emptyResponse {
+func NewEmptyResponse() *emptyResponse {
 	return &emptyResponse{}
 }
 
@@ -63,7 +63,7 @@ func writeJSONResponse[T any](ctx context.Context, w http.ResponseWriter, r *Res
 		writeJSONResponse(ctx, w, &Response[emptyResponse]{
 			Code:    http.StatusInternalServerError,
 			Message: "Internal Server Error",
-			Body:    emptyResponse{},
+			Body:    *NewEmptyResponse(),
 		})
 	}
 }
