@@ -1,9 +1,5 @@
 package models
 
-import (
-	"html/template"
-)
-
 type Vhost struct {
 	Messages                      int               `json:"messages"`
 	Name                          string            `json:"name"`
@@ -57,27 +53,6 @@ type Limits struct {
 	MaxQueues      int
 }
 
-type QueueData struct {
-	Vhost        string
-	Queue        string
-	SeletedRange string
-	Ranges       []RangeOption
-	Samples      template.JS
-	NoData       bool
-}
-
-func NewQueueData(vhost, queue, rangeStr string, samplesJSON string, samples []Sample) QueueData {
-	return QueueData{
-		Vhost:        vhost,
-		Queue:        queue,
-		SeletedRange: rangeStr,
-		Ranges:       TimeRanges,
-		Samples:      template.JS(samplesJSON),
-		NoData:       len(samples) == 0,
-	}
-}
-
-// ClusterStats holds cluster-wide memory and disk info plus per-vhost breakdown.
 type NodeStats struct {
 	Name          string `json:"name"`
 	MemUsed       int64  `json:"mem_used"`
