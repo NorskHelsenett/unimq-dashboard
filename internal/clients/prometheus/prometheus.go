@@ -11,6 +11,7 @@ import (
 
 	"github.com/sisneve/rabbitmq-dashboard/internal/clients/rest"
 	"github.com/sisneve/rabbitmq-dashboard/internal/clients/rest/httpauthproviders"
+	"github.com/sisneve/rabbitmq-dashboard/internal/helpers/bodycloserhelper"
 	"github.com/sisneve/rabbitmq-dashboard/internal/models"
 )
 
@@ -55,7 +56,7 @@ func (pc *PromClient) QueryRange(opts models.RangeOptions) ([]models.Sample, err
 	if err != nil {
 		return nil, fmt.Errorf("prometheus unreachable: %w", err)
 	}
-	defer resp.Body.Close()
+	defer bodycloserhelper.BodyCloseResponse(resp.Body.Close())
 
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
