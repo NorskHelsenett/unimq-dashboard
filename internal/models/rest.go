@@ -6,8 +6,10 @@ import "net/http"
 // Types:
 //
 // - BearerTokenProvider
+// - BasicAuthProvider
+// - NoAuthProvider
 //
-// - NoAuthProvider.
+// Which allows us to modify the headers per our required implementation.
 type HTTPAuthProvider interface {
 	AddAuthHeaders(req *http.Request)
 }
