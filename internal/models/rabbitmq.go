@@ -140,11 +140,3 @@ type QueueAPIResponse struct {
 	MessageBytesPersistent int64        `json:"message_bytes_persistent"`
 	MessageStats           MessageStats `json:"message_stats"`
 }
-
-type NodeAPIResponse struct {
-	Name          string `json:"name"`
-	MemUsed       int64  `json:"mem_used"`
-	MemLimit      int64  `json:"mem_limit"`
-	DiskFree      int64  `json:"disk_free"`
-	DiskFreeLimit int64  `json:"disk_free_limit"`
-}
