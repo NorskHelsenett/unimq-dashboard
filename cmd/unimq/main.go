@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log/slog"
 	"net/http"
@@ -19,16 +20,16 @@ import (
 	"github.com/sisneve/rabbitmq-dashboard/internal/routes"
 )
 
-//@ title RabbitMQ Dashboard API
-//@ version 1.0
-//@ description API for RabbitMQ Dashboard application.
+// @title RabbitMQ Dashboard API
+// @version 1.0
+// @description API for RabbitMQ Dashboard application.
 
-//@ contact.name Norsk helsenett SF
-//@ contact.url https://github.com/NorskHelsenett/unimq-dashboard
+// @contact.name Norsk helsenett SF
+// @contact.url https://github.com/NorskHelsenett/unimq-dashboard
 
-//@ host localhost:8080
-//@ basePath /api
-//@ securityDefinitions none
+// @host localhost:8080
+// @basePath /api
+// @securityDefinitions none
 
 func main() {
 
@@ -88,7 +89,7 @@ func main() {
 
 		err = server.ListenAndServe()
 		if err != nil {
-			if err == http.ErrServerClosed {
+			if errors.Is(err, http.ErrServerClosed) {
 				slog.Info("http server closed")
 				return
 			}
