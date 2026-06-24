@@ -76,7 +76,11 @@ func (rc *APIService) AddMaintenanceHandler(w http.ResponseWriter, r *http.Reque
 		return
 	}
 
-	rc.DB.AddMaintenanceEntry(r.Context(), &entry)
+	err = rc.DB.AddMaintenanceEntry(r.Context(), &entry)
+	if err != nil {
+		httpsuite.WriteJSONError(w, "error adding maintenance entry", http.StatusInternalServerError)
+		return
+	}
 
 	http.Redirect(w, r, "/maintenance/admin", http.StatusSeeOther)
 }
@@ -106,7 +110,7 @@ func (rc *APIService) UpdateMaintenanceStatusHandler(w http.ResponseWriter, r *h
 		return
 	}
 
-	err = rc.DB.SetMaintenanceEntryStatus(r.Context(), id, string(request.Status))
+	err = rc.DB.SetMaintenanceEntryStatus(r.Context(), id, request.Status)
 	if err != nil {
 		httpsuite.WriteJSONError(w, "error updating maintenance status", http.StatusInternalServerError)
 		return
