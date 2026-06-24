@@ -26,7 +26,7 @@ func GetEmptyResponse() *emptyResponse {
 func (r *Response[T]) Marshal() ([]byte, error) {
 	jsonResponse, err := json.Marshal(r)
 	if err != nil {
-		return nil, fmt.Errorf("failed to marshal response: %v", err)
+		return nil, fmt.Errorf("failed to marshal response: %w", err)
 	}
 
 	return jsonResponse, nil
@@ -57,9 +57,14 @@ func writeJSONResponse[T any](ctx context.Context, w http.ResponseWriter, r *Res
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(r.Code)
 
-	if _, err := w.Write(jsonResponse); err != nil {
+	_, err = w.Write(jsonResponse)
+	if err != nil {
 		slog.ErrorContext(ctx, "error writing response", "error", err)
-		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		writeJSONResponse(ctx, w, &Response[emptyResponse]{
+			Code:    http.StatusInternalServerError,
+			Message: "Internal Server Error",
+			Body:    emptyResponse{},
+		})
 	}
 }
 
@@ -72,7 +77,7 @@ func ReadResponse(r *http.Request, out any) error {
 	}()
 
 	if err := json.NewDecoder(r.Body).Decode(out); err != nil {
-		return fmt.Errorf("error decoding response body: %v", err)
+		return fmt.Errorf("error decoding response body: %w", err)
 	}
 
 	return nil

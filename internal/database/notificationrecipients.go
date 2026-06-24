@@ -30,7 +30,7 @@ func (dbc *Database) GetNotificationRecipient(ctx context.Context, vhost string,
 				"recipient", recipient.Name,
 				"id", recipient.ID,
 			)
-			return &recipient, nil
+			return recipient, nil
 		}
 	}
 

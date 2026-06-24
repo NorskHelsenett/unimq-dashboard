@@ -99,7 +99,7 @@ func (dbc *Database) seedNotificationRules(ctx context.Context, name string) err
 		}
 	}
 
-	err = dbc.AddNotificationRule(ctx, name, models.AlarmRule{
+	err = dbc.AddNotificationRule(ctx, name, &models.AlarmRule{
 		ID:        ruleID,
 		Name:      "forks",
 		Threshold: 10.0,

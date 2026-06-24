@@ -6,6 +6,7 @@ import (
 	"log/slog"
 	"time"
 
+	"github.com/sisneve/rabbitmq-dashboard/internal/helpers/bodycloserhelper"
 	"github.com/sisneve/rabbitmq-dashboard/internal/models"
 	"go.mongodb.org/mongo-driver/v2/bson"
 )
@@ -18,7 +19,7 @@ func (dbc *Database) GetAlarmsAll(ctx context.Context) ([]models.AlarmEntry, err
 	if err != nil {
 		return nil, fmt.Errorf("failed to find alarms. %w", err)
 	}
-	defer cursor.Close(ctx)
+	defer bodycloserhelper.BodyCloseResponse(cursor.Close(ctx))
 
 	var alarms []models.AlarmEntry
 	err = cursor.All(ctx, &alarms)

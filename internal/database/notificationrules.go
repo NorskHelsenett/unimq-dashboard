@@ -9,7 +9,7 @@ import (
 	"github.com/sisneve/rabbitmq-dashboard/internal/models"
 )
 
-func (dbc *Database) GetNotificationRules(ctx context.Context, id string) ([]models.AlarmRule, error) {
+func (dbc *Database) GetNotificationRules(ctx context.Context, id string) ([]*models.AlarmRule, error) {
 	start := time.Now()
 	notification, err := dbc.GetVhost(ctx, id)
 	if err != nil {
@@ -35,13 +35,13 @@ func (dbc *Database) GetNotificationRule(ctx context.Context, vhost string, rule
 				"rule", rule.Name,
 				"_id", rule.ID,
 			)
-			return &rule, nil
+			return rule, nil
 		}
 	}
 	return nil, fmt.Errorf("notification rule not found")
 }
 
-func (dbc *Database) AddNotificationRule(ctx context.Context, vhost string, rule models.AlarmRule) error {
+func (dbc *Database) AddNotificationRule(ctx context.Context, vhost string, rule *models.AlarmRule) error {
 	start := time.Now()
 
 	filter := map[string]any{"_id": vhost}

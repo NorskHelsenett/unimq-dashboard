@@ -5,6 +5,7 @@ import (
 	"log/slog"
 	"time"
 
+	"github.com/sisneve/rabbitmq-dashboard/internal/helpers/bodycloserhelper"
 	"github.com/sisneve/rabbitmq-dashboard/internal/models"
 	"go.mongodb.org/mongo-driver/v2/bson"
 )
@@ -16,7 +17,7 @@ func (dbc *Database) GetNotificationsAll(ctx context.Context) ([]models.VhostNot
 	if err != nil {
 		return nil, err
 	}
-	defer cursor.Close(ctx)
+	defer bodycloserhelper.BodyCloseResponse(cursor.Close(ctx))
 
 	var notifications []models.VhostNotification
 	err = cursor.All(ctx, &notifications)
@@ -126,7 +127,7 @@ func (dbc *Database) UpdateNotificationRuleMessage(ctx context.Context, vhost, r
 	return err
 }
 
-func (dbc *Database) UpdateNotificationRule(ctx context.Context, vhost, name string, status string, value float64, notified bool) error {
+func (dbc *Database) UpdateNotificationRule(ctx context.Context, vhost, name string, status models.AlarmStatus, value float64, notified bool) error {
 	start := time.Now()
 
 	filter := map[string]any{"_id": vhost, "rules.name": name}

@@ -2,6 +2,7 @@ package httpsuite
 
 import (
 	"encoding/json"
+	"log/slog"
 	"net/http"
 )
 
@@ -12,5 +13,9 @@ type APIError struct {
 func WriteJSONError(w http.ResponseWriter, msg string, status int) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(status)
-	json.NewEncoder(w).Encode(APIError{Error: msg})
+	err := json.NewEncoder(w).Encode(APIError{Error: msg})
+	if err != nil {
+		http.Error(w, "failed to write error response", http.StatusInternalServerError)
+		slog.Error("failed to write error response", "error", err)
+	}
 }

@@ -5,6 +5,7 @@ import (
 	"log/slog"
 	"time"
 
+	"github.com/sisneve/rabbitmq-dashboard/internal/helpers/bodycloserhelper"
 	"github.com/sisneve/rabbitmq-dashboard/internal/models"
 	"go.mongodb.org/mongo-driver/v2/bson"
 )
@@ -15,7 +16,7 @@ func (dbc *Database) GetMaintenanceAll(ctx context.Context, filter bson.M) ([]mo
 	if err != nil {
 		return nil, err
 	}
-	defer cursor.Close(ctx)
+	defer bodycloserhelper.BodyCloseResponse(cursor.Close(ctx))
 
 	var maintenance []models.MaintenanceEntry
 	err = cursor.All(ctx, &maintenance)
@@ -36,7 +37,7 @@ func (dbc *Database) GetMaintenanceHistory(ctx context.Context) ([]models.Mainte
 	return dbc.GetMaintenanceAll(ctx, bson.M{"status": bson.M{"$ne": models.MaintenanceStatusScheduled}})
 }
 
-func (dbc *Database) SetMaintenanceEntryStatus(ctx context.Context, id string, status string) error {
+func (dbc *Database) SetMaintenanceEntryStatus(ctx context.Context, id string, status models.MaintenanceStatus) error {
 	start := time.Now()
 
 	filter := map[string]any{"_id": id}
