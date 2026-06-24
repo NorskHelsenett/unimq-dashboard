@@ -114,8 +114,8 @@ func (r *RMQClient) GetQueueByName(vhost string, name string) (*models.QueueAPIR
 	return &queues, nil
 }
 
-func (r *RMQClient) GetNodes() ([]models.NodeAPIResponse, error) {
-	var nodes []models.NodeAPIResponse
+func (r *RMQClient) GetNodes() ([]models.NodeStats, error) {
+	var nodes []models.NodeStats
 	_, err := r.restClient.Get("/nodes", &nodes)
 	if err != nil {
 		return nil, err
@@ -199,13 +199,7 @@ func (r *RMQClient) GetClusterStats() (*models.ClusterStats, error) {
 
 	stats := models.NewClusterStats()
 	for _, n := range nodes {
-		stats.Nodes = append(stats.Nodes, models.NodeStats{
-			Name:          n.Name,
-			MemUsed:       n.MemUsed,
-			MemLimit:      n.MemLimit,
-			DiskFree:      n.DiskFree,
-			DiskFreeLimit: n.DiskFreeLimit,
-		})
+		stats.Nodes = append(stats.Nodes, n)
 		stats.TotalMemUsed += n.MemUsed
 		stats.TotalMemLimit += n.MemLimit
 		stats.TotalDiskFree += n.DiskFree
