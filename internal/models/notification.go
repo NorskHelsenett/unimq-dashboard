@@ -190,7 +190,6 @@ func isValidAlarmType(s string) bool {
 	return false
 }
 
-// TODO: Rewrite to english and if possible make more generic
 func (r *AlarmRule) BuildMessage(vhost string) string {
 	if r.Message != "" {
 		return r.Message
@@ -216,44 +215,6 @@ func (r *AlarmRule) BuildMessage(vhost string) string {
 		return fmt.Sprintf("%v.\n\nA new maintenance window has been scheduled.", base)
 	}
 	return fmt.Sprintf("Alarm '%s' has been triggered for vhost '%s'.", r.Name, vhost)
-}
-
-type (
-	VhostConfig struct {
-		Recipients []Recipient `json:"recipients"`
-		Rules      []AlarmRule `json:"rules"`
-	}
-	VhostConfigOptions func(*VhostConfig)
-)
-
-func WithRecipients(recipients []Recipient) VhostConfigOptions {
-	return func(vc *VhostConfig) {
-		vc.Recipients = recipients
-	}
-}
-
-func WithRules(rules []AlarmRule) VhostConfigOptions {
-	return func(vc *VhostConfig) {
-		vc.Rules = rules
-	}
-}
-
-func NewVhostConfig(opts ...VhostConfigOptions) *VhostConfig {
-	vc := &VhostConfig{}
-	for _, opt := range opts {
-		opt(vc)
-	}
-	return vc
-}
-
-func (vc VhostConfig) WebhookURLs() []string {
-	var urls []string
-	for _, r := range vc.Recipients {
-		if r.URL != "" {
-			urls = append(urls, r.URL)
-		}
-	}
-	return urls
 }
 
 type TestNotificationResponse struct {
