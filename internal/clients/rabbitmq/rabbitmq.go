@@ -16,7 +16,9 @@ type RMQClient struct {
 	restClient *rest.RestClient
 }
 
-// TODO: Figure out if this is necessary.
+// TODO: Figure out if the history is necessary.
+// If it is, the history should be stored in the database, not in memory, as it will be lost on restart.
+// The history length should also be moved to the config.
 
 const historySize = 20
 
@@ -28,6 +30,7 @@ var history = struct {
 func appendHistory(key string, value int) []int {
 	history.mu.Lock()
 	defer history.mu.Unlock()
+	// nolint:gocritic // leaving this for now, as use is unclear.
 	h := append(history.data[key], value)
 	if len(h) > historySize {
 		h = h[len(h)-historySize:]
