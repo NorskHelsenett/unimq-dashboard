@@ -11,6 +11,7 @@ type ContextHandler struct {
 	slog.Handler
 }
 
+// nolint:gocritic // interface implementation requires no pointer receiver.
 func (h *ContextHandler) Handle(ctx context.Context, record slog.Record) error {
 
 	if requestID, ok := ctx.Value("request_id").(string); ok {
