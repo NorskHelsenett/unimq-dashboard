@@ -49,10 +49,7 @@ func GetMaintenanceStatusAllString() []string {
 func IsValidMaintenanceStatus(s string) bool {
 	statuses := GetMaintenanceStatusAll()
 
-	if slices.Contains(statuses, MaintenanceStatus(s)) {
-		return true
-	}
-	return false
+	return slices.Contains(statuses, MaintenanceStatus(s))
 }
 
 type MaintenanceEntry struct {
