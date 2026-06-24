@@ -34,7 +34,7 @@ func (rc *APIService) AddNotificationsRuleHandler(w http.ResponseWriter, r *http
 		return
 	}
 
-	err = rc.DB.AddNotificationRule(r.Context(), vhost, rule)
+	err = rc.DB.AddNotificationRule(r.Context(), vhost, &rule)
 	if err != nil {
 		httpsuite.WriteJSONError(w, "error adding rule: "+err.Error(), http.StatusInternalServerError)
 		return

@@ -147,9 +147,12 @@ func (a *AlarmRule) UnmarshalJSON(data []byte) error {
 type AlarmStatus string
 
 const (
+	AlarmStatusOK       AlarmStatus = "ok"       //	@name	OK
 	AlarmStatusActive   AlarmStatus = "active"   //	@name	Active
 	AlarmStatusInactive AlarmStatus = "inactive" //	@name	Inactive
+	AlarmStatusFiring   AlarmStatus = "firing"   //	@name	Firing
 	AlarmStatusFired    AlarmStatus = "fired"    //	@name	Fired
+	AlarmStatusUnknown  AlarmStatus = "unknown"  //
 )
 
 type AlarmType string
@@ -259,17 +262,17 @@ type TestNotificationResponse struct {
 }
 
 type VhostNotification struct {
-	Name       string      `bson:"_id"`
-	Recipients []Recipient `bson:"recipients"`
-	Rules      []AlarmRule `bson:"rules"`
-	Notified   bool        `bson:"notified"`
+	Name       string       `bson:"_id"`
+	Recipients []*Recipient `bson:"recipients"`
+	Rules      []*AlarmRule `bson:"rules"`
+	Notified   bool         `bson:"notified"`
 }
 
 func NewVhostNotification(name string) *VhostNotification {
 	return &VhostNotification{
 		Name:       name,
-		Recipients: make([]Recipient, 0),
-		Rules:      make([]AlarmRule, 0),
+		Recipients: make([]*Recipient, 0),
+		Rules:      make([]*AlarmRule, 0),
 		Notified:   false,
 	}
 }

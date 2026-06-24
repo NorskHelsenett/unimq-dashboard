@@ -5,8 +5,8 @@ import (
 	"net/url"
 
 	"github.com/go-chi/chi/v5"
+	"github.com/sisneve/rabbitmq-dashboard/internal/helpers/notificationhelper"
 	"github.com/sisneve/rabbitmq-dashboard/internal/models"
-	"github.com/sisneve/rabbitmq-dashboard/internal/notificationhelper"
 	"github.com/sisneve/rabbitmq-dashboard/internal/routes/httpsuite"
 )
 
