@@ -45,6 +45,9 @@ func SetupRoutes(ctx context.Context, config *config.Config, db *database.Databa
 		api.WithDatabase(db),
 		api.WithRMQLimits(limits),
 	)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create API service: %w", err)
+	}
 
 	r.Route("/api", func(r chi.Router) {
 		r.Get("/swagger/*", httpSwagger.WrapHandler)
@@ -52,10 +55,13 @@ func SetupRoutes(ctx context.Context, config *config.Config, db *database.Databa
 	})
 
 	// Logs every route implicitly or explicitly defined above with its method, path, and number of middlewares.
-	chi.Walk(r, func(method string, route string, handler http.Handler, middlewares ...func(http.Handler) http.Handler) error {
+	err = chi.Walk(r, func(method string, route string, handler http.Handler, middlewares ...func(http.Handler) http.Handler) error {
 		slog.Info("route info", "method", method, "route", route, "middlewares", len(r.Middlewares()))
 		return nil
 	})
+	if err != nil {
+		return nil, fmt.Errorf("failed to walk routes: %w", err)
+	}
 
 	return r, nil
 
