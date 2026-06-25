@@ -39,6 +39,7 @@ func (rc *APIService) GetQueuesHandler(w http.ResponseWriter, r *http.Request) {
 // @Tags			Queues
 // @Produce		json
 // @Param			vhost	query		string				true	"Virtual Host"
+// @Param			queue	query		string				true	"Queue Name"
 // @Success		200		{array}		models.QueueDetail	"List of queue details"
 // @Failure		400		{object}	httpsuite.APIError	"Bad Request"
 // @Failure		500		{object}	httpsuite.APIError	"Internal Server Error"
