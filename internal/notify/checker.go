@@ -65,6 +65,8 @@ func (c *Checker) StartChecker(wg *sync.WaitGroup) {
 
 		// Initial delay to allow other components to start and populate the store before checks run.
 		initTicker := time.NewTicker(15 * time.Second)
+		defer initTicker.Stop()
+
 		select {
 		case <-initTicker.C:
 			slog.InfoContext(c.Ctx, "Checker started")
@@ -74,6 +76,7 @@ func (c *Checker) StartChecker(wg *sync.WaitGroup) {
 		}
 
 		ticker := time.NewTicker(c.interval)
+		defer ticker.Stop()
 		for {
 
 			select {
@@ -89,6 +92,7 @@ func (c *Checker) StartChecker(wg *sync.WaitGroup) {
 				slog.InfoContext(c.Ctx, "Checker stopped")
 				return
 			default:
+				slog.InfoContext(c.Ctx, "Checker checking notifications and metrics values")
 				c.runChecks()
 			}
 		}
