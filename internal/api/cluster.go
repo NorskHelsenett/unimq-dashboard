@@ -8,11 +8,11 @@ import (
 
 // @Summary		Get Cluster Stats
 // @Description	Get overall cluster statistics and health information
-// @Tags			Cluster
+// @Tags		Cluster
 // @Produce		json
 // @Success		200	{object}	models.ClusterStats
 // @Failure		500	{object}	httpsuite.APIError
-// @Router			/v1/cluster [get]
+// @Router		/v1/cluster [get]
 func (rc *APIService) GetClusterHandler(w http.ResponseWriter, r *http.Request) {
 	stats, err := rc.RMQClient.GetClusterStats()
 	if err != nil {
