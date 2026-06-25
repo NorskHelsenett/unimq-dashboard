@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"log/slog"
 	"net/http"
 	"net/url"
 	"strconv"
@@ -11,7 +12,6 @@ import (
 
 	"github.com/sisneve/rabbitmq-dashboard/internal/clients/rest"
 	"github.com/sisneve/rabbitmq-dashboard/internal/clients/rest/httpauthproviders"
-	"github.com/sisneve/rabbitmq-dashboard/internal/helpers/bodycloserhelper"
 	"github.com/sisneve/rabbitmq-dashboard/internal/models"
 )
 
@@ -56,7 +56,12 @@ func (pc *PromClient) QueryRange(opts models.RangeOptions) ([]models.Sample, err
 	if err != nil {
 		return nil, fmt.Errorf("prometheus unreachable: %w", err)
 	}
-	defer bodycloserhelper.BodyCloseResponse(resp.Body.Close())
+	defer func() {
+		err := resp.Body.Close()
+		if err != nil {
+			slog.Error("failed to close cursor", "runtime", time.Since(start), "error", err)
+		}
+	}()
 
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
