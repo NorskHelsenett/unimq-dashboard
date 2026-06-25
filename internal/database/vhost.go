@@ -5,7 +5,6 @@ import (
 	"log/slog"
 	"time"
 
-	"github.com/sisneve/rabbitmq-dashboard/internal/helpers/bodycloserhelper"
 	"github.com/sisneve/rabbitmq-dashboard/internal/models"
 	"go.mongodb.org/mongo-driver/v2/bson"
 )
@@ -31,7 +30,12 @@ func (dbc *Database) CheckVhostExists(ctx context.Context, vhost string) (bool, 
 		return false, err
 	}
 
-	defer bodycloserhelper.BodyCloseResponse(cursor.Close(ctx))
+	defer func() {
+		err := cursor.Close(ctx)
+		if err != nil {
+			slog.ErrorContext(ctx, "failed to close cursor", "runtime", time.Since(start), "error", err)
+		}
+	}()
 
 	var alarms []models.AlarmEntry
 	err = cursor.All(ctx, &alarms)

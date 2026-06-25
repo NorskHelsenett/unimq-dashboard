@@ -5,7 +5,6 @@ import (
 	"log/slog"
 	"time"
 
-	"github.com/sisneve/rabbitmq-dashboard/internal/helpers/bodycloserhelper"
 	"github.com/sisneve/rabbitmq-dashboard/internal/models"
 	"go.mongodb.org/mongo-driver/v2/bson"
 )
@@ -17,7 +16,13 @@ func (dbc *Database) GetNotificationsAll(ctx context.Context) ([]models.VhostNot
 	if err != nil {
 		return nil, err
 	}
-	defer bodycloserhelper.BodyCloseResponse(cursor.Close(ctx))
+
+	defer func() {
+		err := cursor.Close(ctx)
+		if err != nil {
+			slog.ErrorContext(ctx, "failed to close cursor", "runtime", time.Since(start), "error", err)
+		}
+	}()
 
 	var notifications []models.VhostNotification
 	err = cursor.All(ctx, &notifications)
