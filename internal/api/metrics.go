@@ -9,7 +9,7 @@ import (
 
 // @Summary		Get Vhost Metrics
 // @Description	Get real-time metrics for a specific vhost, including queue lengths, message rates, and resource usage
-// @Tags			Metrics
+// @Tags			Vhosts
 // @Produce		json
 // @Param			vhost	path		string	true	"Vhost Name"
 // @Success		200		{object}	models.VhostMetrics
