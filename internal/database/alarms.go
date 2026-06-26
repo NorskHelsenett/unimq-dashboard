@@ -33,7 +33,7 @@ func (dbc *Database) GetAlarmsAll(ctx context.Context) ([]models.AlarmEntry, err
 		return nil, err
 	}
 
-	slog.InfoContext(ctx, "retrieved alarms", "runtime", time.Since(start), "count", len(alarms))
+	slog.DebugContext(ctx, "retrieved alarms", "runtime", time.Since(start), "count", len(alarms))
 
 	return alarms, nil
 }
@@ -48,7 +48,7 @@ func (dbc *Database) GetAlarm(ctx context.Context, id string) (*models.AlarmEntr
 		return nil, fmt.Errorf("failed to find alarm. %w", err)
 	}
 
-	slog.InfoContext(ctx, "retrieved alarm", "runtime", time.Since(start), "_id", id)
+	slog.DebugContext(ctx, "retrieved alarm", "runtime", time.Since(start), "_id", id)
 
 	return &alarm, nil
 }
@@ -59,7 +59,7 @@ func (dbc *Database) AddAlarm(ctx context.Context, alarm *models.AlarmEntry) err
 	if err != nil {
 		slog.ErrorContext(ctx, "failed to create alarm", "runtime", time.Since(start), "_id", alarm.AlarmID, "error", err)
 	} else {
-		slog.InfoContext(ctx, "created alarm", "runtime", time.Since(start), "_id", alarm.AlarmID)
+		slog.DebugContext(ctx, "created alarm", "runtime", time.Since(start), "_id", alarm.AlarmID)
 
 	}
 	return err
@@ -71,7 +71,7 @@ func (dbc *Database) DeleteAlarm(ctx context.Context, alarmID string) error {
 	if err != nil {
 		slog.ErrorContext(ctx, "failed to delete alarm", "runtime", time.Since(start), "_id", alarmID, "error", err)
 	} else {
-		slog.InfoContext(ctx, "deleted alarm", "runtime", time.Since(start), "_id", alarmID)
+		slog.DebugContext(ctx, "deleted alarm", "runtime", time.Since(start), "_id", alarmID)
 	}
 	return err
 }

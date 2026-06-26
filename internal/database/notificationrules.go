@@ -16,7 +16,7 @@ func (dbc *Database) GetNotificationRules(ctx context.Context, id string) ([]*mo
 		return nil, err
 	}
 
-	slog.InfoContext(ctx, "retrieved notification rules", "runtime", time.Since(start), "_id", id, "count", len(notification.Rules))
+	slog.DebugContext(ctx, "retrieved notification rules", "runtime", time.Since(start), "_id", id, "count", len(notification.Rules))
 	return notification.Rules, nil
 }
 
@@ -29,7 +29,7 @@ func (dbc *Database) GetNotificationRule(ctx context.Context, vhost string, rule
 
 	for _, rule := range notification.Rules {
 		if rule.ID == ruleid {
-			slog.InfoContext(ctx, "retrieved notification rule",
+			slog.DebugContext(ctx, "retrieved notification rule",
 				"runtime", time.Since(start),
 				"vhost", vhost,
 				"rule", rule.Name,
@@ -61,7 +61,7 @@ func (dbc *Database) AddNotificationRule(ctx context.Context, vhost string, rule
 			"error", err,
 		)
 	} else {
-		slog.InfoContext(ctx, "added notification rule",
+		slog.DebugContext(ctx, "added notification rule",
 			"runtime", time.Since(start),
 			"vhost", vhost,
 			"rule", rule.Name,
@@ -92,7 +92,7 @@ func (dbc *Database) DeleteNotificationRule(ctx context.Context, vhost string, i
 		return fmt.Errorf("failed to delete notification rule. %w", err)
 	}
 
-	slog.InfoContext(ctx, "deleted notification rule",
+	slog.DebugContext(ctx, "deleted notification rule",
 		"runtime", time.Since(start),
 		"vhost", vhost,
 		"_id", id,

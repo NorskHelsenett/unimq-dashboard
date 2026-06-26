@@ -19,7 +19,7 @@ func (dbc *Database) GetVhost(ctx context.Context, vhost string) (*models.VhostN
 		return nil, err
 	}
 
-	slog.InfoContext(ctx, "retrieved vhost", "runtime", time.Since(start), "_id", vhost)
+	slog.DebugContext(ctx, "retrieved vhost", "runtime", time.Since(start), "_id", vhost)
 	return &notification, err
 }
 
@@ -44,7 +44,7 @@ func (dbc *Database) CheckVhostExists(ctx context.Context, vhost string) (bool, 
 		return false, err
 	}
 
-	slog.InfoContext(ctx, "checked vhost existence", "runtime", time.Since(start), "_id", vhost, "exists", len(alarms) > 0)
+	slog.DebugContext(ctx, "checked vhost existence", "runtime", time.Since(start), "_id", vhost, "exists", len(alarms) > 0)
 	return len(alarms) > 0, nil
 }
 
@@ -69,7 +69,7 @@ func (dbc *Database) AddVhost(ctx context.Context, name string) error {
 	if err != nil {
 		slog.ErrorContext(ctx, "failed to add vhost", "runtime", time.Since(start), "_id", name, "error", err)
 	} else {
-		slog.InfoContext(ctx, "added vhost", "runtime", time.Since(start), "_id", notification.Name)
+		slog.DebugContext(ctx, "added vhost", "runtime", time.Since(start), "_id", notification.Name)
 	}
 
 	return err

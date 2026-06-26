@@ -30,7 +30,7 @@ func (dbc *Database) GetMaintenanceAll(ctx context.Context, filter bson.D) ([]mo
 		return nil, err
 	}
 
-	slog.InfoContext(ctx, "retrieved maintenance", "runtime", time.Since(start), "count", len(maintenance))
+	slog.DebugContext(ctx, "retrieved maintenance", "runtime", time.Since(start), "count", len(maintenance))
 	return maintenance, nil
 }
 
@@ -70,7 +70,7 @@ func (dbc *Database) SetMaintenanceEntryStatus(ctx context.Context, id string, s
 	if err != nil {
 		slog.ErrorContext(ctx, "failed to update maintenance", "runtime", time.Since(start), "_id", id, "status", status, "error", err)
 	} else {
-		slog.InfoContext(ctx, "updated maintenance", "runtime", time.Since(start), "_id", id, "status", status)
+		slog.DebugContext(ctx, "updated maintenance", "runtime", time.Since(start), "_id", id, "status", status)
 	}
 
 	return err
@@ -89,7 +89,7 @@ func (dbc *Database) SetMaintenanceEntryNotified(ctx context.Context, id string,
 	if err != nil {
 		slog.ErrorContext(ctx, "failed to update maintenance", "runtime", time.Since(start), "_id", id, "notified", notified, "error", err)
 	} else {
-		slog.InfoContext(ctx, "updated maintenance", "runtime", time.Since(start), "_id", id, "notified", notified)
+		slog.DebugContext(ctx, "updated maintenance", "runtime", time.Since(start), "_id", id, "notified", notified)
 	}
 
 	return err
@@ -104,7 +104,7 @@ func (dbc *Database) GetMaintenanceEntry(ctx context.Context, id string) (*model
 		slog.ErrorContext(ctx, "failed to retrieve maintenance", "runtime", time.Since(start), "id", id, "error", err)
 		return nil, err
 	}
-	slog.InfoContext(ctx, "retrieved maintenance", "runtime", time.Since(start), "_id", id)
+	slog.DebugContext(ctx, "retrieved maintenance", "runtime", time.Since(start), "_id", id)
 
 	return &entry, err
 }
@@ -116,7 +116,7 @@ func (dbc *Database) AddMaintenanceEntry(ctx context.Context, entry *models.Main
 	if err != nil {
 		slog.ErrorContext(ctx, "failed to create maintenance", "runtime", time.Since(start), "_id", entry.ID, "error", err)
 	} else {
-		slog.InfoContext(ctx, "created maintenance", "runtime", time.Since(start), "_id", entry.ID)
+		slog.DebugContext(ctx, "created maintenance", "runtime", time.Since(start), "_id", entry.ID)
 	}
 
 	return err
@@ -136,7 +136,7 @@ func (dbc *Database) UpdateMaintenanceEntry(ctx context.Context, id string, stat
 	if err != nil {
 		slog.ErrorContext(ctx, "failed to update maintenance", "runtime", time.Since(start), "_id", id, "error", err)
 	} else {
-		slog.InfoContext(ctx, "updated maintenance", "runtime", time.Since(start), "_id", id)
+		slog.DebugContext(ctx, "updated maintenance", "runtime", time.Since(start), "_id", id)
 	}
 
 	return err
@@ -159,6 +159,6 @@ func (dbc *Database) DeleteMaintenanceEntry(ctx context.Context, id string) erro
 		return fmt.Errorf("%w, with id: %s", ErrMaintenanceNotFound, id)
 	}
 
-	slog.InfoContext(ctx, "deleted maintenance", "runtime", time.Since(start), "_id", id)
+	slog.DebugContext(ctx, "deleted maintenance", "runtime", time.Since(start), "_id", id)
 	return nil
 }
