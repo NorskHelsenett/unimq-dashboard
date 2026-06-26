@@ -9,7 +9,7 @@ import (
 
 // @Summary		Get Queue Metrics for a specific queue in the specified virtual host
 // @Description	Fetches time-series metrics for a specific RabbitMQ queue over a specified time range.
-// @Tags			Metrics
+// @Tags			Queues
 // @Produce		html
 // @Param			vhost	query		string				true	"Virtual Host"
 // @Param			name	query		string				true	"Queue Name"
@@ -17,7 +17,7 @@ import (
 // @Success		200		{string}	string				"HTML page with queue metrics"
 // @Failure		400		{object}	httpsuite.APIError	"Bad Request"
 // @Failure		500		{object}	httpsuite.APIError	"Internal Server Error"
-// @Router			/v1/vhosts/{vhost}/queues [get]
+// @Router			/v1/vhosts/{vhost-name}/queues [get]
 func (rc *APIService) GetQueuesHandler(w http.ResponseWriter, r *http.Request) {
 	vhost := chi.URLParam(r, "vhost")
 	if vhost == "" {
@@ -43,7 +43,7 @@ func (rc *APIService) GetQueuesHandler(w http.ResponseWriter, r *http.Request) {
 // @Success		200		{array}		models.QueueDetail	"List of queue details"
 // @Failure		400		{object}	httpsuite.APIError	"Bad Request"
 // @Failure		500		{object}	httpsuite.APIError	"Internal Server Error"
-// @Router			/v1/vhosts/{vhost}/queues/{queue-id} [get]
+// @Router			/v1/vhosts/{vhost-name}/queues/{queue-id} [get]
 func (rc *APIService) GetQueuesByNameHandler(w http.ResponseWriter, r *http.Request) {
 	vhost := chi.URLParam(r, "vhost")
 	if vhost == "" {
