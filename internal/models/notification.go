@@ -9,7 +9,7 @@ import (
 
 // @ID		unique identifier for the recipient
 // @Name	human-readable name for the recipient
-// @URL		webhook URL for the recipient - Slack, Teams
+// @URL	webhook URL for the recipient - Slack, Teams
 // @Type	type of the recipient - "slack", "teams", "webhook"
 type Recipient struct {
 	ID   string        `json:"id"`
