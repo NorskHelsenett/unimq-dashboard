@@ -2,6 +2,7 @@ package database
 
 import (
 	"context"
+	"fmt"
 	"log/slog"
 	"time"
 
@@ -141,15 +142,23 @@ func (dbc *Database) UpdateMaintenanceEntry(ctx context.Context, id string, stat
 	return err
 }
 
+var (
+	ErrMaintenanceNotFound = fmt.Errorf("maintenance entry not found")
+)
+
 func (dbc *Database) DeleteMaintenanceEntry(ctx context.Context, id string) error {
 	start := time.Now()
 
-	_, err := dbc.Collections.Maintenance.DeleteOne(ctx, map[string]any{"_id": id})
+	status, err := dbc.Collections.Maintenance.DeleteOne(ctx, map[string]any{"_id": id})
 	if err != nil {
 		slog.ErrorContext(ctx, "failed to delete maintenance", "runtime", time.Since(start), "_id", id, "error", err)
-	} else {
-		slog.InfoContext(ctx, "deleted maintenance", "runtime", time.Since(start), "_id", id)
+		return err
+	}
+	if status.DeletedCount == 0 {
+		slog.ErrorContext(ctx, "no maintenance entry found to delete", "runtime", time.Since(start), "_id", id)
+		return fmt.Errorf("%w, with id: %s", ErrMaintenanceNotFound, id)
 	}
 
-	return err
+	slog.InfoContext(ctx, "deleted maintenance", "runtime", time.Since(start), "_id", id)
+	return nil
 }
