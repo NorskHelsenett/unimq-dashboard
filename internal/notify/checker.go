@@ -82,7 +82,6 @@ func (c *Checker) StartChecker(wg *sync.WaitGroup) {
 			select {
 			case <-ticker.C:
 				timer := time.Now()
-				slog.InfoContext(c.Ctx, "Checker checking notifications and metrics values")
 				c.runChecks()
 				slog.InfoContext(c.Ctx, "finished checking notifications and metrics values", "runtime", time.Since(timer))
 			case <-c.Ctx.Done():
