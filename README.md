@@ -32,7 +32,7 @@ npm run dev:all
 
 ---
 
-## Prosjektstruktur
+## Project structure
 
 ```
 unimq-dashboard/
@@ -88,6 +88,7 @@ For local development, you can access it at `http://localhost:8080/api/swagger/i
 ### Generating Swagger docs
 
 The Swagger documentation is generated using `swaggo/swag`. To generate chanages into the documentation, see the makefile swagger commands below.
+If any changes are done to the comments in the code that start with `// @`, you can you need to regenerate the Swagger documentation.
 
 ## Makefile
 
@@ -99,6 +100,47 @@ make docs-run
 
 # Format swagger documentation
 make docs-fmt
+```
+
+## Makerfile
+
+This project includes a Makefile to simplify common tasks.
+The following commands are available:
+
+## Runs go vet to check for potential issues in the code.
+
+```bash
+make vet
+```
+
+# Runs golangci-lint to check for code issues and potential bugs.
+
+```bash
+make lint
+```
+
+# Generates the Swagger documentation.
+
+```bash
+make docs-run
+```
+
+# Formats the Swagger documentation.
+
+```bash
+make docs-fmt
+```
+
+# Starts the backend server.
+
+```bash
+make run
+```
+
+# Runs the generator to create mock data in the mongoDB.
+
+```bash
+make generate
 ```
 
 ---
