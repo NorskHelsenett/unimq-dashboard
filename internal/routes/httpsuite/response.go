@@ -46,6 +46,17 @@ func SendResponse[T any](ctx context.Context, w http.ResponseWriter, message str
 	writeJSONResponse(ctx, w, response)
 }
 
+// SendEmptyResponse creates a Response struct with an empty body, serializes it to JSON, and writes it to the provided http.ResponseWriter.
+func SendEmptyResponse(ctx context.Context, w http.ResponseWriter, message string, code int) {
+	response := &Response[emptyResponse]{
+		Code:    code,
+		Message: message,
+		Body:    *NewEmptyResponse(),
+	}
+
+	writeJSONResponse(ctx, w, response)
+}
+
 // writeResponse serializes a Response and writes it to the http.ResponseWriter with appropriate headers.
 // If an error occurs during the write, it logs the error and sends a 500 Internal Server Error response.
 func writeJSONResponse[T any](ctx context.Context, w http.ResponseWriter, r *Response[T]) {
