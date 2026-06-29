@@ -10,9 +10,10 @@ import (
 )
 
 // PostRecipient is used for creating a new recipient
-// @Name	human-readable name for the recipient
-// @URL	webhook URL for the recipient - Slack, Teams
-// @Type	type of the recipient - "slack", "teams", "webhook"
+//
+//	@Name	human-readable name for the recipient
+//	@URL	webhook URL for the recipient - Slack, Teams
+//	@Type	type of the recipient - "slack", "teams", "webhook"
 type PostRecipient struct {
 	Name string        `json:"name" bson:"name" example:"Slack Channel to team"`
 	URL  string        `json:"url" bson:"url" example:"https://hooks.slack.com/services"`

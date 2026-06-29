@@ -54,6 +54,8 @@ func IsValidMaintenanceStatus(s string) bool {
 	return slices.Contains(statuses, MaintenanceStatus(s))
 }
 
+// PostMaintenanceEntry is the model for creating a new maintenance entry
+// The start and end time must follow the format "2006-01-02 15:04:05"
 type PostMaintenanceEntry struct {
 	Description string `json:"description" bson:"description" example:"maintenance for server upgrade"`
 	Start       string `json:"start" bson:"start" example:"2024-06-01 10:00:00"`
@@ -161,7 +163,8 @@ func NewMaintenanceResponse(scheduled []MaintenanceEntry, history []MaintenanceE
 }
 
 // Update status model for maintenance entry
-// @Description	Update the status of a maintenance entry (scheduled, done, skipped)
+//
+//	@Description	Update the status of a maintenance entry (scheduled, done, skipped)
 type UpdateMaintenance struct {
 	Status MaintenanceStatus `json:"status"` // Enums - scheduled, done, skipped
 }
