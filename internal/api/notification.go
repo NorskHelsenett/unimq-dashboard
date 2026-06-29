@@ -32,9 +32,9 @@ func (rc *APIService) GetNotificationsHandler(w http.ResponseWriter, r *http.Req
 // @Tags			Notifications
 // @Produce		json
 // @Param			vhost-name	path		string	true	"Vhost Name"
-// @Success		200		{object}	models.VhostNotification
-// @Failure		400		{object}	httpsuite.APIError
-// @Failure		502		{object}	httpsuite.APIError
+// @Success		200			{object}	models.VhostNotification
+// @Failure		400			{object}	httpsuite.APIError
+// @Failure		502			{object}	httpsuite.APIError
 // @Router			/v1/notifications/{vhost-name} [get]
 func (rc *APIService) GetNotificationsVhostHandler(w http.ResponseWriter, r *http.Request) {
 
@@ -58,9 +58,9 @@ func (rc *APIService) GetNotificationsVhostHandler(w http.ResponseWriter, r *htt
 // @Tags			Notifications
 // @Produce		json
 // @Param			vhost-name	path		string	true	"Vhost Name"
-// @Success		200		{object}	httpsuite.EmptyResponse
-// @Failure		400		{object}	httpsuite.APIError
-// @Failure		502		{object}	httpsuite.APIError
+// @Success		200			{object}	string
+// @Failure		400			{object}	httpsuite.APIError
+// @Failure		502			{object}	httpsuite.APIError
 // @Router			/v1/notifications/{vhost-name} [delete]
 func (rc *APIService) DeleteNotificationsHandler(w http.ResponseWriter, r *http.Request) {
 	vhost := chi.URLParam(r, "vhost")
@@ -83,11 +83,11 @@ func (rc *APIService) DeleteNotificationsHandler(w http.ResponseWriter, r *http.
 // @Tags			Notifications
 // @Produce		json
 // @Param			vhost-name	path		string	true	"Vhost Name"
-// @Param			rule-id	path		string	true	"Notification Rule ID"
-// @Param			message	formData	string	true	"New Message Template"
-// @Success		303		{string}	string	"Redirect to notification rule page with success message"
-// @Failure		400		{object}	httpsuite.APIError
-// @Failure		500		{object}	httpsuite.APIError
+// @Param			rule-id		path		string	true	"Notification Rule ID"
+// @Param			message		formData	string	true	"New Message Template"
+// @Success		303			{string}	string	"Redirect to notification rule page with success message"
+// @Failure		400			{object}	httpsuite.APIError
+// @Failure		500			{object}	httpsuite.APIError
 // @Router			/v1/notifications/{vhost-name}/rules/{rule-id}/message [post]
 func (rc *APIService) UpdateNotificationsMessageHandler(w http.ResponseWriter, r *http.Request) {
 	vhost := chi.URLParam(r, "vhost")
@@ -116,10 +116,10 @@ func (rc *APIService) UpdateNotificationsMessageHandler(w http.ResponseWriter, r
 // @Tags			Notifications
 // @Produce		json
 // @Param			vhost-name	path		string							true	"Vhost Name"
-// @Param			rule-id	path		string							true	"Notification Rule ID"
-// @Success		200		{object}	models.TestNotificationResponse	"Test notification sent successfully"
-// @Failure		400		{object}	httpsuite.APIError
-// @Failure		500		{object}	httpsuite.APIError
+// @Param			rule-id		path		string							true	"Notification Rule ID"
+// @Success		200			{object}	models.TestNotificationResponse	"Test notification sent successfully"
+// @Failure		400			{object}	httpsuite.APIError
+// @Failure		500			{object}	httpsuite.APIError
 // @Router			/v1/notifications/{vhost-name}/rules/{rule-id}/test [post]
 func (rc *APIService) TestNotificationsHandler(w http.ResponseWriter, r *http.Request) {
 	vhost := chi.URLParam(r, "vhost")
