@@ -2,7 +2,6 @@ package api
 
 import (
 	"net/http"
-	"net/url"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/sisneve/rabbitmq-dashboard/internal/helpers/notificationhelper"
@@ -36,6 +35,15 @@ func (rc *APIService) GetNotificationsHandler(w http.ResponseWriter, r *http.Req
 	httpsuite.SendResponse(r.Context(), w, "Gathered notifications on vhost", http.StatusOK, notification)
 }
 
+// @Summary		Delete Notifications
+// @Description	Delete all notification rules and settings for a specific vhost
+// @Tags			Notifications
+// @Produce		json
+// @Param			vhost-name	path		string	true	"Vhost Name"
+// @Success		200		{object}	httpsuite.EmptyResponse
+// @Failure		400		{object}	httpsuite.APIError
+// @Failure		502		{object}	httpsuite.APIError
+// @Router			/v1/notifications/{vhost-name} [delete]
 func (rc *APIService) DeleteNotificationsHandler(w http.ResponseWriter, r *http.Request) {
 	vhost := chi.URLParam(r, "vhost")
 	if vhost == "" {
@@ -49,8 +57,7 @@ func (rc *APIService) DeleteNotificationsHandler(w http.ResponseWriter, r *http.
 		return
 	}
 
-	httpsuite.SendResponse(r.Context(), w, "Deleted notifications on vhost", http.StatusOK, httpsuite.NewEmptyResponse())
-
+	httpsuite.SendEmptyResponse(r.Context(), w, "Deleted notifications on vhost", http.StatusOK)
 }
 
 // @Summary		Update Notification Rule Message
@@ -83,7 +90,7 @@ func (rc *APIService) UpdateNotificationsMessageHandler(w http.ResponseWriter, r
 		return
 	}
 
-	http.Redirect(w, r, "/notifications/rule?vhost="+url.QueryEscape(vhost)+"&id="+id+"&msg=saved", http.StatusSeeOther)
+	httpsuite.SendEmptyResponse(r.Context(), w, "notification rule message updated successfully", http.StatusOK)
 }
 
 // @Summary		Test Notification Rule
