@@ -11,7 +11,7 @@ import (
 // @Description	Get real-time metrics for a specific vhost, including queue lengths, message rates, and resource usage
 // @Tags			Vhosts
 // @Produce		json
-// @Param			vhost	path		string	true	"Vhost Name"
+// @Param			vhost-name	path		string	true	"Vhost Name"
 // @Success		200		{object}	models.VhostMetrics
 // @Failure		400		{object}	httpsuite.APIError
 // @Failure		502		{object}	httpsuite.APIError
@@ -24,7 +24,7 @@ func (rc *APIService) MetricHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	metrics, err := rc.RMQClient.GetMetrics(vhostName)
 	if err != nil {
-		httpsuite.WriteJSONError(w, "error fetching metrics for vhost", http.StatusBadGateway)
+		httpsuite.WriteJSONError(w, "error fetching metrics for vhost. "+err.Error(), http.StatusInternalServerError)
 		return
 	}
 	httpsuite.SendResponse(r.Context(), w, "", http.StatusOK, &metrics)
