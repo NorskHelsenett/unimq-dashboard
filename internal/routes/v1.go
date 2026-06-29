@@ -30,6 +30,7 @@ func SetupV1Routes(r chi.Router, apiservice *api.APIService) {
 		r.Get("/cluster", apiservice.GetClusterHandler)
 		r.Route("/notifications/{vhost}", func(r chi.Router) {
 			r.Get("/", apiservice.GetNotificationsHandler)
+			r.Delete("/", apiservice.DeleteNotificationsHandler)
 			r.Post("/recipients", apiservice.AddNotificationsRecipientHandler)
 			r.Delete("/recipients/{recipient}", apiservice.DeleteNotificationsRecipientHandler)
 

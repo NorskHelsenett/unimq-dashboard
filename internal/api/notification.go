@@ -36,6 +36,23 @@ func (rc *APIService) GetNotificationsHandler(w http.ResponseWriter, r *http.Req
 	httpsuite.SendResponse(r.Context(), w, "Gathered notifications on vhost", http.StatusOK, notification)
 }
 
+func (rc *APIService) DeleteNotificationsHandler(w http.ResponseWriter, r *http.Request) {
+	vhost := chi.URLParam(r, "vhost")
+	if vhost == "" {
+		httpsuite.WriteJSONError(w, "missing required vhost parameter", http.StatusBadRequest)
+		return
+	}
+
+	err := rc.DB.DeleteNotification(r.Context(), vhost)
+	if err != nil {
+		httpsuite.WriteJSONError(w, "error deleting notification config: "+err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	httpsuite.SendResponse(r.Context(), w, "Deleted notifications on vhost", http.StatusOK, httpsuite.NewEmptyResponse())
+
+}
+
 // @Summary		Update Notification Rule Message
 // @Description	Update the custom message template for a specific notification rule
 // @Tags			Notifications

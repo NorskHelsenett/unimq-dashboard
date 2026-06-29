@@ -2,11 +2,14 @@ package database
 
 import (
 	"context"
+	"errors"
+	"fmt"
 	"log/slog"
 	"time"
 
 	"github.com/sisneve/rabbitmq-dashboard/internal/models"
 	"go.mongodb.org/mongo-driver/v2/bson"
+	"go.mongodb.org/mongo-driver/v2/mongo"
 )
 
 func (dbc *Database) GetNotificationsAll(ctx context.Context) ([]models.VhostNotification, error) {
@@ -41,8 +44,12 @@ func (dbc *Database) GetNotification(ctx context.Context, vhost string) (*models
 	var notification models.VhostNotification
 	err := dbc.Collections.Notifications.FindOne(ctx, bson.M{"_id": vhost}).Decode(&notification)
 	if err != nil {
+		if errors.Is(err, mongo.ErrNoDocuments) {
+			slog.DebugContext(ctx, "notification not found", "runtime", time.Since(start), "_id", vhost)
+			return nil, fmt.Errorf("notification not found for vhost %s. %w", vhost, err)
+		}
 		slog.ErrorContext(ctx, "failed to retrieve notification", "runtime", time.Since(start), "_id", vhost, "error", err)
-		return nil, err
+		return nil, fmt.Errorf("failed to retrieve notification for vhost %s. %w", vhost, err)
 	}
 
 	slog.DebugContext(ctx, "retrieved notification", "runtime", time.Since(start), "_id", vhost)
@@ -83,14 +90,20 @@ func (dbc *Database) UpdateNotification(ctx context.Context, name string, notifi
 func (dbc *Database) DeleteNotification(ctx context.Context, id string) error {
 	start := time.Now()
 
-	_, err := dbc.Collections.Notifications.DeleteOne(ctx, bson.M{"_id": id})
+	status, err := dbc.Collections.Notifications.DeleteOne(ctx, bson.M{"_id": id})
 	if err != nil {
 		slog.ErrorContext(ctx, "failed to delete notification", "runtime", time.Since(start), "_id", id, "error", err)
-	} else {
-		slog.DebugContext(ctx, "deleted notification", "runtime", time.Since(start), "_id", id)
+		return err
 	}
 
-	return err
+	if status.DeletedCount == 0 {
+		slog.ErrorContext(ctx, "no notification found to delete", "runtime", time.Since(start), "_id", id)
+		return fmt.Errorf("notification not found for vhost %s. %w", id, mongo.ErrNoDocuments)
+	}
+
+	slog.DebugContext(ctx, "deleted notification", "runtime", time.Since(start), "_id", id)
+
+	return nil
 }
 
 func (dbc *Database) UpdateNotificationRuleThreshold(ctx context.Context, vhost, ruleID string, threshold float64) error {
