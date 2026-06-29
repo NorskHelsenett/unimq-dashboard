@@ -10,6 +10,24 @@ import (
 )
 
 // @Summary		Get Notifications
+// @Description	Get all notification vhosts and settings
+// @Tags			Notifications
+// @Produce		json
+// @Success		200	{object}	[]models.VhostNotification
+// @Failure		502	{object}	httpsuite.APIError
+// @Router			/v1/notifications [get]
+func (rc *APIService) GetNotificationsHandler(w http.ResponseWriter, r *http.Request) {
+
+	notifications, err := rc.DB.GetNotificationsAll(r.Context())
+	if err != nil {
+		httpsuite.WriteJSONError(w, "error fetching notification configs: "+err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	httpsuite.SendResponse(r.Context(), w, "Gathered notifications", http.StatusOK, &notifications)
+}
+
+// @Summary		Get Notification on Vhost
 // @Description	Get notification rules and settings for a specific vhost
 // @Tags			Notifications
 // @Produce		json
@@ -18,7 +36,7 @@ import (
 // @Failure		400		{object}	httpsuite.APIError
 // @Failure		502		{object}	httpsuite.APIError
 // @Router			/v1/notifications/{vhost-name} [get]
-func (rc *APIService) GetNotificationsHandler(w http.ResponseWriter, r *http.Request) {
+func (rc *APIService) GetNotificationsVhostHandler(w http.ResponseWriter, r *http.Request) {
 
 	vhostName := chi.URLParam(r, "vhost")
 	if vhostName == "" {
@@ -36,7 +54,7 @@ func (rc *APIService) GetNotificationsHandler(w http.ResponseWriter, r *http.Req
 }
 
 // @Summary		Delete Notifications
-// @Description	Delete all notification rules and settings for a specific vhost
+// @Description	Deletes the notification configuration for a specific vhost
 // @Tags			Notifications
 // @Produce		json
 // @Param			vhost-name	path		string	true	"Vhost Name"
