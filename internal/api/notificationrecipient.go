@@ -2,7 +2,6 @@ package api
 
 import (
 	"net/http"
-	"net/url"
 	"strconv"
 
 	"github.com/go-chi/chi/v5"
@@ -15,9 +14,9 @@ import (
 // @Tags			Notifications
 // @Accept			json
 // @Produce		json
-// @Param			vhost		path		string				true	"Vhost Name"
-// @Param			recipient	body		models.Recipient	true	"Notification Recipient Object"
-// @Success		303			{string}	string				"Redirect to notifications page"
+// @Param			vhost-name	path		string					true	"Vhost Name"
+// @Param			recipient	body		models.PostRecipient	true	"Notification Recipient Object"
+// @Success		201			{object}	string					"Recipient added successfully"
 // @Failure		400			{object}	httpsuite.APIError
 // @Failure		500			{object}	httpsuite.APIError
 // @Router			/v1/notifications/{vhost-name}/recipients [post]
@@ -28,38 +27,44 @@ func (rc *APIService) AddNotificationsRecipientHandler(w http.ResponseWriter, r 
 		return
 	}
 
-	var recipient models.Recipient
+	var recipient models.PostRecipient
 	err := httpsuite.ReadResponse(r, &recipient)
 	if err != nil {
 		httpsuite.WriteJSONError(w, "invalid request body: "+err.Error(), http.StatusBadRequest)
 		return
 	}
+	out, err := recipient.ToRecipient()
+	if err != nil {
+		httpsuite.WriteJSONError(w, "invalid recipient data: "+err.Error(), http.StatusBadRequest)
+		return
+	}
 
-	vhostObject, err := rc.DB.GetVhost(r.Context(), vhost)
+	vhostNotification, err := rc.ensureNotificationHostExists(r.Context(), vhost)
 	if err != nil {
 		httpsuite.WriteJSONError(w, "error fetching vhost: "+err.Error(), http.StatusInternalServerError)
 		return
 	}
-	id := strconv.FormatInt(int64(len(vhostObject.Recipients)+1), 10)
-	recipient.ID = id
 
-	err = rc.DB.AddNotificationRecipient(r.Context(), vhost, recipient)
+	id := strconv.FormatInt(int64(len(vhostNotification.Recipients)+1), 10)
+	out.ID = id
+
+	err = rc.DB.AddNotificationRecipient(r.Context(), vhost, out)
 	if err != nil {
 		httpsuite.WriteJSONError(w, "error adding recipient: "+err.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	http.Redirect(w, r, "/notifications?vhost="+url.QueryEscape(vhost), http.StatusSeeOther)
+	httpsuite.SendEmptyResponse(r.Context(), w, "Recipient added successfully", http.StatusCreated)
 }
 
 // @Summary		Delete a notification recipient
 // @Description	Delete a specific notification recipient for a vhost
 // @Tags			Notifications
-// @Param			vhost		path		string	true	"Vhost Name"
-// @Param			recipient	path		string	true	"Recipient ID"
-// @Success		303			{string}	string	"Redirect to notifications page"
-// @Failure		400			{object}	httpsuite.APIError
-// @Failure		500			{object}	httpsuite.APIError
+// @Param			vhost-name		path		string	true	"Vhost Name"
+// @Param			recipient-id	path		string	true	"Recipient ID"
+// @Success		200				{string}	string	"Recipient deleted successfully"
+// @Failure		400				{object}	httpsuite.APIError
+// @Failure		500				{object}	httpsuite.APIError
 // @Router			/v1/notifications/{vhost-name}/recipients/{recipient-id} [delete]
 func (rc *APIService) DeleteNotificationsRecipientHandler(w http.ResponseWriter, r *http.Request) {
 	vhost := chi.URLParam(r, "vhost")
@@ -79,5 +84,5 @@ func (rc *APIService) DeleteNotificationsRecipientHandler(w http.ResponseWriter,
 		return
 	}
 
-	http.Redirect(w, r, "/notifications?vhost="+url.QueryEscape(vhost), http.StatusSeeOther)
+	httpsuite.SendEmptyResponse(r.Context(), w, "Recipient deleted successfully", http.StatusOK)
 }
