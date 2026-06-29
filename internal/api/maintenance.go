@@ -97,11 +97,11 @@ func (rc *APIService) AddMaintenanceHandler(w http.ResponseWriter, r *http.Reque
 // @Accept			json
 // @Produce		json
 // @Param			maintenance-id	path		string						true	"Maintenance Entry ID"
-// @Param			status		body		models.UpdateMaintenance	true	"New Maintenance Status"
-// @Success		200			{string}	string						"Maintenance status updated successfully"
-// @Failure		400			{object}	httpsuite.APIError
-// @Failure		404			{object}	httpsuite.APIError
-// @Failure		500			{object}	httpsuite.APIError
+// @Param			status			body		models.UpdateMaintenance	true	"New Maintenance Status"
+// @Success		200				{string}	string						"Maintenance status updated successfully"
+// @Failure		400				{object}	httpsuite.APIError
+// @Failure		404				{object}	httpsuite.APIError
+// @Failure		500				{object}	httpsuite.APIError
 // @Router			/v1/maintenance/{maintenance-id} [put]
 func (rc *APIService) UpdateMaintenanceStatusHandler(w http.ResponseWriter, r *http.Request) {
 	id := chi.URLParam(r, "maintenance")
@@ -129,12 +129,12 @@ func (rc *APIService) UpdateMaintenanceStatusHandler(w http.ResponseWriter, r *h
 // @Summary		Delete a maintenance entry
 // @Description	Delete a specific maintenance entry by ID
 // @Tags			Maintenance
-// @Param			maintenance-id	path		string	true	"Maintenance Entry ID"
+// @Param			maintenance-id	path	string	true	"Maintenance Entry ID"
 // @Produce		json
-// @Success		200			{string}	string	"Maintenance entry deleted successfully"
-// @Failure		400			{object}	httpsuite.APIError
-// @Failure		404			{object}	httpsuite.APIError
-// @Failure		500			{object}	httpsuite.APIError
+// @Success		200	{string}	string	"Maintenance entry deleted successfully"
+// @Failure		400	{object}	httpsuite.APIError
+// @Failure		404	{object}	httpsuite.APIError
+// @Failure		500	{object}	httpsuite.APIError
 // @Router			/v1/maintenance/{maintenance-id} [delete]
 func (rc *APIService) DeleteMaintenanceHandler(w http.ResponseWriter, r *http.Request) {
 	id := chi.URLParam(r, "maintenance")

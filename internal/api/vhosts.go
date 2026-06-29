@@ -29,9 +29,9 @@ func (rc *APIService) VhostsHandler(w http.ResponseWriter, r *http.Request) {
 // @Tags			Vhosts
 // @Produce		json
 // @Param			vhost-name	path		string	true	"Vhost Name"
-// @Success		200		{object}	models.Vhost
-// @Failure		400		{object}	httpsuite.APIError
-// @Failure		502		{object}	httpsuite.APIError
+// @Success		200			{object}	models.Vhost
+// @Failure		400			{object}	httpsuite.APIError
+// @Failure		502			{object}	httpsuite.APIError
 // @Router			/v1/vhosts/{vhost-name} [get]
 func (rc *APIService) VhostHandler(w http.ResponseWriter, r *http.Request) {
 	vhostName := chi.URLParam(r, "vhost")

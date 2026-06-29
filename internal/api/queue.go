@@ -11,11 +11,11 @@ import (
 // @Description	Fetches a list of all queues in a specified virtual host.
 // @Tags			Queues
 // @Produce		json
-// @Param			vhost-name	query		string				true	"Virtual Host"
-// @Success		200		{object}	[]models.QueueAPIResponse				"HTML page with queue metrics"
-// @Failure		400		{object}	httpsuite.APIError	"Bad Request"
-// @Failure		404		{object}	httpsuite.APIError	"Not Found"
-// @Failure		500		{object}	httpsuite.APIError	"Internal Server Error"
+// @Param			vhost-name	query		string						true	"Virtual Host"
+// @Success		200			{object}	[]models.QueueAPIResponse	"HTML page with queue metrics"
+// @Failure		400			{object}	httpsuite.APIError			"Bad Request"
+// @Failure		404			{object}	httpsuite.APIError			"Not Found"
+// @Failure		500			{object}	httpsuite.APIError			"Internal Server Error"
 // @Router			/v1/vhosts/{vhost-name}/queues [get]
 func (rc *APIService) GetQueuesHandler(w http.ResponseWriter, r *http.Request) {
 	vhost := chi.URLParam(r, "vhost")
@@ -39,10 +39,10 @@ func (rc *APIService) GetQueuesHandler(w http.ResponseWriter, r *http.Request) {
 // @Produce		json
 // @Param			vhost-name	path		string				true	"Virtual Host"
 // @Param			queue-id	path		string				true	"Queue Name"
-// @Success		200		{array}		models.QueueDetail	"List of queue details"
-// @Failure		400		{object}	httpsuite.APIError	"Bad Request"
-// @Failure		404		{object}	httpsuite.APIError	"Not Found"
-// @Failure		500		{object}	httpsuite.APIError	"Internal Server Error"
+// @Success		200			{array}		models.QueueDetail	"List of queue details"
+// @Failure		400			{object}	httpsuite.APIError	"Bad Request"
+// @Failure		404			{object}	httpsuite.APIError	"Not Found"
+// @Failure		500			{object}	httpsuite.APIError	"Internal Server Error"
 // @Router			/v1/vhosts/{vhost-name}/queues/{queue-id} [get]
 func (rc *APIService) GetQueuesByNameHandler(w http.ResponseWriter, r *http.Request) {
 	vhost := chi.URLParam(r, "vhost")
