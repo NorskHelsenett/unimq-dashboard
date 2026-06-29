@@ -23,7 +23,7 @@ func SetupV1Routes(r chi.Router, apiservice *api.APIService) {
 			r.Get("/", apiservice.GetMaintenanceHandler)
 			r.Get("/admin", apiservice.GetMaintenanceAdminHandler)
 			r.Post("/", apiservice.AddMaintenanceHandler)
-			r.Post("/{maintenance}", apiservice.UpdateMaintenanceStatusHandler)
+			r.Put("/{maintenance}", apiservice.UpdateMaintenanceStatusHandler)
 			r.Delete("/{maintenance}", apiservice.DeleteMaintenanceHandler)
 		})
 
@@ -39,8 +39,6 @@ func SetupV1Routes(r chi.Router, apiservice *api.APIService) {
 			r.Post("/rules/{rule}/message", apiservice.UpdateNotificationsMessageHandler)
 			r.Post("/rules/{rule}/test", apiservice.TestNotificationsHandler)
 			r.Delete("/rules/{rule}", apiservice.DeleteNotificationsRuleHandler)
-
-			r.Get("/logs", apiservice.NotificationsLogsHandler)
 		})
 	})
 
