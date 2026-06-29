@@ -28,7 +28,7 @@ func (rc *APIService) VhostsHandler(w http.ResponseWriter, r *http.Request) {
 // @Description	Get details of a specific vhost by name
 // @Tags			Vhosts
 // @Produce		json
-// @Param			vhost	path		string	true	"Vhost Name"
+// @Param			vhost-name	path		string	true	"Vhost Name"
 // @Success		200		{object}	models.Vhost
 // @Failure		400		{object}	httpsuite.APIError
 // @Failure		502		{object}	httpsuite.APIError
