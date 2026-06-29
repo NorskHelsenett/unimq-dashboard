@@ -5,7 +5,33 @@ import (
 	"fmt"
 	"strings"
 	"time"
+
+	"github.com/google/uuid"
 )
+
+// PostRecipient is used for creating a new recipient
+// @Name	human-readable name for the recipient
+// @URL	webhook URL for the recipient - Slack, Teams
+// @Type	type of the recipient - "slack", "teams", "webhook"
+type PostRecipient struct {
+	Name string        `json:"name" bson:"name" example:"Slack Channel to team"`
+	URL  string        `json:"url" bson:"url" example:"https://hooks.slack.com/services"`
+	Type RecipientType `json:"type" bson:"type" example:"slack"`
+}
+
+func (p *PostRecipient) ToRecipient() (*Recipient, error) {
+
+	typ := ParseRecipientType(string(p.Type))
+	if typ == RecipientTypeUnknown {
+		return nil, fmt.Errorf("invalid recipient type: %s, expected one of %s", p.Type, GetRecipientTypesString())
+	}
+	return &Recipient{
+		ID:   uuid.New().String(),
+		Name: p.Name,
+		URL:  p.URL,
+		Type: typ,
+	}, nil
+}
 
 // @ID		unique identifier for the recipient
 // @Name	human-readable name for the recipient
@@ -80,16 +106,35 @@ func ParseRecipientType(s string) RecipientType {
 }
 
 // Alarm rule definition
-//
-//	@Description	ID unique identifier for the alarm rule
-//	@Description	Name human-readable name for the alarm rule
-//	@Description	Type type of the alarm (e.g., "channels", "connections", "queues", etc.)
-//	@Description	QueueName optional name of the queue - required for "queues" alarm types
-//	@Description	Threshold numeric threshold that triggers the alarm
-//	@Description	Message custom message to include in the notification when the alarm is triggered
-//	@Description	Enabled indicates whether the alarm rule is active
+type PostAlarmRule struct {
+	Name      string    `json:"name" bson:"name" example:"High Queue Size"`
+	Type      AlarmType `json:"type" bson:"type" example:"queue_size"`
+	QueueName string    `json:"queue_name,omitempty" bson:"queueName" example:"my-queue"`
+	Threshold float64   `json:"threshold,omitempty" bson:"threshold" example:"1000"`
+	Message   string    `json:"message" bson:"message" example:"Queue size has exceeded the threshold"`
+	Enabled   bool      `json:"enabled" bson:"enabled" example:"true"`
+}
+
+func (p *PostAlarmRule) ToAlarmRule() (*AlarmRule, error) {
+	if !isValidAlarmType(string(p.Type)) {
+		return nil, fmt.Errorf("invalid alarm type: %s", p.Type)
+	}
+	return &AlarmRule{
+		ID:        uuid.New().String(),
+		Name:      p.Name,
+		Type:      p.Type,
+		QueueName: p.QueueName,
+		Threshold: p.Threshold,
+		Message:   p.Message,
+		Enabled:   p.Enabled,
+		Status:    AlarmStatusInactive,
+		LastFired: nil,
+		LastValue: nil,
+	}, nil
+}
+
 type AlarmRule struct {
-	ID        string      `json:"id" bson:"_id"`
+	ID        string      `json:"id" bson:"id"`
 	Name      string      `json:"name" bson:"name"`
 	Type      AlarmType   `json:"type" bson:"type"`
 	QueueName string      `json:"queue_name,omitempty" bson:"queueName"`
@@ -104,44 +149,6 @@ type AlarmRule struct {
 type AlarmRuleUpdate struct {
 	Threshold float64 `json:"threshold" bson:"threshold"`
 	Message   string  `json:"message" bson:"message"`
-}
-
-func (a *AlarmRule) UnmarshalJSON(data []byte) error {
-	var Alias struct {
-		ID        string      `json:"id" bson:"_id"`
-		Name      string      `json:"name" bson:"name"`
-		Type      AlarmType   `json:"type" bson:"type"`
-		QueueName string      `json:"queue_name" bson:"queueName"`
-		Threshold float64     `json:"threshold" bson:"threshold"`
-		Message   string      `json:"message" bson:"message"`
-		Enabled   bool        `json:"enabled" bson:"enabled"`
-		Status    AlarmStatus `json:"status" bson:"status"`
-		LastFired string      `json:"last_fired" bson:"lastFired"`
-		LastValue *float64    `json:"last_value" bson:"lastValue"`
-	}
-	if err := json.Unmarshal(data, &Alias); err != nil {
-		return err
-	}
-
-	a.ID = Alias.ID
-	a.Name = Alias.Name
-	if !isValidAlarmType(string(Alias.Type)) {
-		return fmt.Errorf("invalid alarm type: %s", Alias.Type)
-	}
-	a.Type = Alias.Type
-	a.QueueName = Alias.QueueName
-	a.Threshold = Alias.Threshold
-	a.Message = Alias.Message
-	a.Enabled = Alias.Enabled
-	a.Status = Alias.Status
-	time, err := time.Parse(time.RFC3339, Alias.LastFired)
-	if err != nil {
-		return fmt.Errorf("invalid time format for last_fired: %w", err)
-	}
-	a.LastFired = &time
-	a.LastValue = Alias.LastValue
-
-	return nil
 }
 
 type AlarmStatus string
@@ -246,16 +253,4 @@ func (vn *VhostNotification) WebhookURLs() []string {
 		}
 	}
 	return urls
-}
-
-type NotificationResponse struct {
-	Vhost         *Vhost             `json:"vhost"`
-	Notifications *VhostNotification `json:"notifications"`
-}
-
-func NewNotificationResponse(vhost *Vhost, notifications *VhostNotification) *NotificationResponse {
-	return &NotificationResponse{
-		Vhost:         vhost,
-		Notifications: notifications,
-	}
 }
