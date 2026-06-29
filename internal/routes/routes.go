@@ -54,14 +54,18 @@ func SetupRoutes(ctx context.Context, config *config.Config, db *database.Databa
 		SetupV1Routes(r, apiservice)
 	})
 
+	routeCount := 0
 	// Logs every route implicitly or explicitly defined above with its method, path, and number of middlewares.
 	err = chi.Walk(r, func(method string, route string, handler http.Handler, middlewares ...func(http.Handler) http.Handler) error {
+		routeCount++
 		slog.Info("route info", "method", method, "route", route, "middlewares", len(r.Middlewares()))
 		return nil
 	})
 	if err != nil {
 		return nil, fmt.Errorf("failed to walk routes: %w", err)
 	}
+
+	slog.Info("total routes registered", "count", routeCount)
 
 	return r, nil
 
