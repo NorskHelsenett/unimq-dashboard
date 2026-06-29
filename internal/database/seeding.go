@@ -53,7 +53,7 @@ func (dbc *Database) seedNotifications(ctx context.Context) error {
 
 func (dbc *Database) seedNotificationRecipients(ctx context.Context, name string) error {
 
-	recipientID := "test-recipient"
+	recipientID := "1"
 	recipient, err := dbc.GetNotificationRecipient(ctx, name, recipientID)
 	if err == nil {
 		if recipient == nil {
@@ -69,7 +69,7 @@ func (dbc *Database) seedNotificationRecipients(ctx context.Context, name string
 		return fmt.Errorf("failed to check existing recipient entry. %w", err)
 	}
 
-	err = dbc.AddNotificationRecipient(ctx, name, models.Recipient{
+	err = dbc.AddNotificationRecipient(ctx, name, &models.Recipient{
 		ID:   recipientID,
 		Name: "Matias",
 		Type: "email",
@@ -83,7 +83,7 @@ func (dbc *Database) seedNotificationRecipients(ctx context.Context, name string
 
 func (dbc *Database) seedNotificationRules(ctx context.Context, name string) error {
 
-	ruleID := "test-rule"
+	ruleID := "090e10a0-4c2c-46e4-8870-9e354232a037"
 	rules, err := dbc.GetNotificationRules(ctx, name)
 	if err != nil {
 		if !errors.Is(err, mongo.ErrNoDocuments) {
@@ -117,8 +117,8 @@ func (dbc *Database) seedNotificationRules(ctx context.Context, name string) err
 
 func (dbc *Database) seedMaintenace(ctx context.Context) error {
 
-	name := "test-maintenance"
-	existing, err := dbc.GetMaintenanceEntry(ctx, name)
+	id := "e45957ef-b817-414e-95e8-c4ea89c4ad3e"
+	existing, err := dbc.GetMaintenanceEntry(ctx, id)
 	if err != nil {
 		if !errors.Is(err, mongo.ErrNoDocuments) {
 			return fmt.Errorf("failed to check existing maintenance entry. %w", err)
@@ -127,14 +127,14 @@ func (dbc *Database) seedMaintenace(ctx context.Context) error {
 		if existing == nil {
 			return fmt.Errorf("unexpected nil maintenance entry")
 		}
-		if existing.ID == name {
+		if existing.ID == id {
 			return nil
 		}
 		return fmt.Errorf("unexpected maintenance entry ID. expected %s, got %s", "test-maintenance", existing.ID)
 	}
 
 	maintenance := models.MaintenanceEntry{
-		ID:          name,
+		ID:          id,
 		Description: "Test maintenance entry",
 		Start:       time.Now(),
 		End:         time.Now().Add(2 * time.Hour),
