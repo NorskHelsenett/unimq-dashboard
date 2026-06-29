@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/sisneve/rabbitmq-dashboard/internal/clients/rabbitmq"
 	"github.com/sisneve/rabbitmq-dashboard/internal/models"
 	"go.mongodb.org/mongo-driver/v2/mongo"
 )
@@ -21,13 +22,22 @@ func (rc *APIService) ensureNotificationHostExists(ctx context.Context, vhost st
 	vhostNotification, err := rc.DB.GetNotification(ctx, vhost)
 	if err != nil {
 		if errors.Is(err, mongo.ErrNoDocuments) {
+
+			// Ensure the vhost exists in RabbitMQ before creating a notification host for it.
+			vhostObject, err := rc.RMQClient.GetVhost(vhost)
+			if err != nil {
+				if errors.Is(err, rabbitmq.ErrVhostNotFound) {
+					return nil, fmt.Errorf("%w. %w", errFailedToCreateNotificationHost, err)
+				}
+				return nil, fmt.Errorf("%w. %w", errFailedToCreateNotificationHost, err)
+			}
 			vhostNotification = &models.VhostNotification{
-				Name:       vhost,
+				Name:       vhostObject.Name,
 				Rules:      []*models.AlarmRule{},
 				Recipients: []*models.Recipient{},
 				Notified:   false,
 			}
-			err := rc.DB.AddNotification(ctx, *vhostNotification)
+			err = rc.DB.AddNotification(ctx, *vhostNotification)
 			if err != nil {
 				return nil, fmt.Errorf("%w. %w", errFailedToCreateNotificationHost, err)
 			}
