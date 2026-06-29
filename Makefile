@@ -33,7 +33,7 @@ BLUE := \033[0;34m
 RESET := \033[0m
 
 GO_VERSION := $(shell awk '/^go /{print $$2}' go.mod)
-GOLANGCI_LINT = $(LOCALBIN)/golangci-lint
+GOLANGCI_LINT = golangci-lint
 GOLANGCI_LINT_VERSION ?= latest
 
 ##@ Prerequisites
@@ -60,6 +60,10 @@ check-swag: ## Check if swag is installed, install if not
 		echo "${GREEN}swag is installed${RESET}"; \
 	fi
 
+.PHONY: golangci-lint
+golangci-lint: $(LOCALBIN) ## Download golangci-lint locally if necessary.
+	$(call go-install-tool,$(GOLANGCI_LINT),github.com/golangci/golangci-lint/v2/cmd/golangci-lint,$(GOLANGCI_LINT_VERSION))
+
 ##@ Build and test stuff
 
 # Run go vet
@@ -71,30 +75,26 @@ vet: check-go ## Run go vet to catch potential issues
 # Run linting
 lint: golangci-lint ## Run linting with golangci-lint
 	@echo "${YELLOW}Running linter...${RESET}"
-	$(GOLANGCI_LINT) run --timeout 5m ./... --config .golangci.yml
+	$(GOLANGCI_LINT) run --timeout 5m ./... --config .golangci.yaml
 	@echo "${GREEN}Linting completed!${RESET}"
 
 # Generate Swagger documentation
-generate-swagger: check-go check-swag ## Generate Swagger documentation
+docs-run: check-go check-swag ## Generate Swagger documentation
 	@echo "${YELLOW}Generating Swagger docs...${RESET}"
 	swag init -g ${MAIN_PATH}/main.go -o ./internal/docs --parseInternal
 	@echo "${GREEN}Swagger documentation generated!${RESET}"
 
 # Format swagger documentation
-format-swagger: check-go check-swag ## Format generated Swagger documentation
+docs-fmt: check-go check-swag ## Format generated Swagger documentation
 	@echo "${YELLOW}Formatting Swagger docs...${RESET}"
 	swag fmt -d ./
 	@echo "${GREEN}Swagger documentation formatted!${RESET}"
 
-# Generate documentation
-docs-run: generate-swagger ## Generate all documentation
-	@echo "${GREEN}Documentation generated!${RESET}"
+# Start 
+run: check-go ## Start the application
+	@echo "${YELLOW}starting ${MAIN_PATH}/main.go...${RESET}"
+	go run ${MAIN_PATH}/main.go
 
-# Format documentation
-docs-fmt: format-swagger ## Format all documentation
-	@echo "${GREEN}Documentation generated!${RESET}"
-
-
-.PHONY: golangci-lint
-golangci-lint: $(LOCALBIN) ## Download golangci-lint locally if necessary.
-	$(call go-install-tool,$(GOLANGCI_LINT),github.com/golangci/golangci-lint/v2/cmd/golangci-lint,$(GOLANGCI_LINT_VERSION))
+generate: check-go ## Run the generator
+	@echo "${YELLOW}starting ${GENERATOR_PATH}/main.go...${RESET}"
+	go run ${GENERATOR_PATH}/main.go
