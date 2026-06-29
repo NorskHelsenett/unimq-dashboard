@@ -61,12 +61,16 @@ func (r *RMQClient) GetVhosts() ([]models.Vhost, error) {
 	return vhosts, nil
 }
 
+var (
+	ErrVhostNotFound = fmt.Errorf("vhost not found")
+)
+
 func (r *RMQClient) GetVhost(name string) (*models.Vhost, error) {
 
 	var vhost models.Vhost
 	_, err := r.restClient.Get("/vhosts/"+url.PathEscape(name), &vhost)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("%w. %w", ErrVhostNotFound, err)
 	}
 
 	return &vhost, nil
@@ -112,7 +116,7 @@ func (r *RMQClient) GetQueueByName(vhost string, name string) (*models.QueueAPIR
 	var queues models.QueueAPIResponse
 	_, err := r.restClient.Get("/queues/"+url.PathEscape(vhost)+"/"+url.PathEscape(name), &queues)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("could not find vhost %v with queue %v. %w", vhost, name, err)
 	}
 	return &queues, nil
 }
