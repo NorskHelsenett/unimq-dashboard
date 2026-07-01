@@ -79,6 +79,16 @@ func (dbc *Database) seedNotificationRecipients(ctx context.Context, name string
 		return err
 	}
 
+	err = dbc.AddNotificationRecipient(ctx, name, &models.Recipient{
+		ID:    recipientID,
+		Name:  "Matias",
+		Email: "matias.nordmann@example.no",
+		Type:  models.RecipientTypeEmail,
+	})
+	if err != nil {
+		return err
+	}
+
 	return nil
 }
 
