@@ -53,7 +53,7 @@ func (dbc *Database) seedNotifications(ctx context.Context) error {
 
 func (dbc *Database) seedNotificationRecipients(ctx context.Context, name string) error {
 
-	recipientID := "1"
+	recipientID := "e45957ef-b817-414e-95e8-c4ea89c4ad3e"
 	recipient, err := dbc.GetNotificationRecipient(ctx, name, recipientID)
 	if err == nil {
 		if recipient == nil {
@@ -72,7 +72,8 @@ func (dbc *Database) seedNotificationRecipients(ctx context.Context, name string
 	err = dbc.AddNotificationRecipient(ctx, name, &models.Recipient{
 		ID:   recipientID,
 		Name: "Matias",
-		Type: "email",
+		URL:  "https://hooks.slack.com/services/T00000000/B00000000/XXXXXXXXXXXXXXXXXXXXXXXX",
+		Type: models.RecipientTypeWebhook,
 	})
 	if err != nil {
 		return err
