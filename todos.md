@@ -5,6 +5,7 @@
 - Seeding should use the same logic as the API, to help ensure that the data is consistent and valid
 - Automatic cleanup of old alarms, to prevent the database from growing indefinitely
 - Automatic cleanup of old notification vhosts, to prevent the database from growing indefinitely
+- Better messaging to webhook and email receivers when an alarm is triggered, provide more context and information about the alarm
 
 ## Low priority ToDo's:
 
