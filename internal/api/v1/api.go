@@ -86,12 +86,21 @@ func NewAPIService(opts ...APIServiceOption) (*APIService, error) {
 		}
 	}
 
-	if rc.EmailConfig != nil {
+	if rc.EmailConfig != nil && rc.EmailConfig.EmailSMTPHost != "" {
+
+		opts := make([]mail.Option, 0)
+		if rc.EmailConfig.EmailSMTPUsername != "" {
+			opts = append(opts, mail.WithUsername(rc.EmailConfig.EmailSMTPUsername))
+		}
+		if rc.EmailConfig.EmailSMTPPassword != "" {
+			opts = append(opts, mail.WithPassword(rc.EmailConfig.EmailSMTPPassword))
+		}
+		if rc.EmailConfig.EmailSMTPPort != 0 {
+			opts = append(opts, mail.WithPort(rc.EmailConfig.EmailSMTPPort))
+		}
 		emailClient, err := mail.NewClient(
 			rc.EmailConfig.EmailSMTPHost,
-			mail.WithUsername(rc.EmailConfig.EmailSMTPUsername),
-			mail.WithPassword(rc.EmailConfig.EmailSMTPPassword),
-			mail.WithPort(rc.EmailConfig.EmailSMTPPort),
+			opts...,
 		)
 		if err != nil {
 			return nil, fmt.Errorf("failed to create email client: %w", err)

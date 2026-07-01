@@ -111,7 +111,7 @@ func main() {
 	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
 
-	if config.Email == nil {
+	if config.Email.EmailSMTPHost == "" {
 		slog.Warn("email configuration is not set, email notifications will not be sent")
 	}
 

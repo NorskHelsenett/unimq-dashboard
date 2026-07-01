@@ -17,6 +17,10 @@ npm run dev:all
 
 ---
 
+## Backend functionality
+
+- Email and webhook alerting
+
 ## Funksjonalitet
 
 - **Oversikt** — Connections, channels, køer og unacked meldinger per vhost, med grenser og fargeindikator

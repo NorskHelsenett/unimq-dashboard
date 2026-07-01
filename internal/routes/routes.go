@@ -44,6 +44,7 @@ func SetupRoutes(ctx context.Context, config *config.Config, db *database.Databa
 		api.WithPromClient(prom),
 		api.WithDatabase(db),
 		api.WithRMQLimits(limits),
+		api.WithEmailConfig(config.Email),
 	)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create API service: %w", err)

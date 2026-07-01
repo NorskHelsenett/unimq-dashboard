@@ -3,6 +3,7 @@ package api
 import (
 	"errors"
 	"fmt"
+	"log/slog"
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
@@ -235,6 +236,7 @@ func (rc *APIService) TestNotificationsRuleHandler(w http.ResponseWriter, r *htt
 
 	err = notificationhelper.SendWebhooks(urls, subject, body)
 	if err != nil {
+		slog.ErrorContext(r.Context(), "error sending test notification", "error", err)
 		httpsuite.WriteJSONError(w, "error sending test notification: "+err.Error(), http.StatusInternalServerError)
 		return
 	}
@@ -244,10 +246,13 @@ func (rc *APIService) TestNotificationsRuleHandler(w http.ResponseWriter, r *htt
 		for _, email := range emails {
 			err = notificationhelper.SendEmail(rc.EmailConfig, email, subject, body, mail.TypeTextPlain)
 			if err != nil {
+				slog.ErrorContext(r.Context(), "error sending test email", "error", err)
 				httpsuite.WriteJSONError(w, "error sending test email: "+err.Error(), http.StatusInternalServerError)
 				return
 			}
 		}
+	} else {
+		slog.WarnContext(r.Context(), "email client not configured, skipping email test notification")
 	}
 
 	response := models.TestNotificationResponse{
