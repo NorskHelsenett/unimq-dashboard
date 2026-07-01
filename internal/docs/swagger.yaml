@@ -1,3 +1,4 @@
+basePath: /api
 definitions:
   httpsuite.APIError:
     properties:
@@ -5,12 +6,6 @@ definitions:
         type: string
     type: object
   models.AlarmRule:
-    description: ID unique identifier for the alarm rule Name human-readable name
-      for the alarm rule Type type of the alarm (e.g., "channels", "connections",
-      "queues", etc.) QueueName optional name of the queue - required for "queues"
-      alarm types Threshold numeric threshold that triggers the alarm Message custom
-      message to include in the notification when the alarm is triggered Enabled indicates
-      whether the alarm rule is active
     properties:
       enabled:
         type: boolean
@@ -36,20 +31,28 @@ definitions:
   models.AlarmRuleUpdate:
     properties:
       message:
+        example: Queue size has exceeded the threshold
         type: string
       threshold:
+        example: 1000
         type: number
     type: object
   models.AlarmStatus:
     enum:
+    - ok
     - active
     - inactive
+    - firing
     - fired
+    - unknown
     type: string
     x-enum-varnames:
+    - OK
     - Active
     - Inactive
+    - Firing
     - Fired
+    - AlarmStatusUnknown
   models.AlarmType:
     enum:
     - channels
@@ -99,17 +102,23 @@ definitions:
   models.MaintenanceEntry:
     properties:
       description:
+        example: maintenance for server upgrade
         type: string
       end:
+        example: "2024-06-01 12:00:00"
         type: string
       id:
+        example: ""
         type: string
       notified:
         type: boolean
       start:
+        example: "2024-06-01 10:00:00"
         type: string
       status:
-        $ref: '#/definitions/models.MaintenanceStatus'
+        allOf:
+        - $ref: '#/definitions/models.MaintenanceStatus'
+        example: '-'
     type: object
   models.MaintenanceResponse:
     properties:
@@ -139,6 +148,15 @@ definitions:
       rate:
         type: number
     type: object
+  models.MessageStats:
+    properties:
+      deliver_get_details:
+        $ref: '#/definitions/models.RateDetail'
+      publish_details:
+        $ref: '#/definitions/models.RateDetail'
+      redeliver_details:
+        $ref: '#/definitions/models.RateDetail'
+    type: object
   models.Metadata:
     properties:
       default_queue_type:
@@ -163,12 +181,74 @@ definitions:
       name:
         type: string
     type: object
-  models.NotificationResponse:
+  models.PostAlarmRule:
     properties:
-      notifications:
-        $ref: '#/definitions/models.VhostNotification'
+      enabled:
+        example: true
+        type: boolean
+      message:
+        example: Queue size has exceeded the threshold
+        type: string
+      name:
+        example: High Queue Size
+        type: string
+      queue_name:
+        example: my-queue
+        type: string
+      threshold:
+        example: 1000
+        type: number
+      type:
+        allOf:
+        - $ref: '#/definitions/models.AlarmType'
+        example: queue_size
+    type: object
+  models.PostMaintenanceEntry:
+    properties:
+      description:
+        example: maintenance for server upgrade
+        type: string
+      end:
+        example: "2024-06-01 12:00:00"
+        type: string
+      start:
+        example: "2024-06-01 10:00:00"
+        type: string
+    type: object
+  models.PostRecipient:
+    properties:
+      email:
+        example: ola.normann@normann.no
+        type: string
+      name:
+        example: Slack Channel to team
+        type: string
+      type:
+        allOf:
+        - $ref: '#/definitions/models.RecipientType'
+        example: webhook
+      url:
+        example: https://hooks.slack.com/services
+        type: string
+    type: object
+  models.QueueAPIResponse:
+    properties:
+      consumers:
+        type: integer
+      message_bytes:
+        type: integer
+      message_bytes_persistent:
+        type: integer
+      message_stats:
+        $ref: '#/definitions/models.MessageStats'
+      messages:
+        type: integer
+      messages_unacknowledged:
+        type: integer
+      name:
+        type: string
       vhost:
-        $ref: '#/definitions/models.Vhost'
+        type: string
     type: object
   models.QueueDetail:
     properties:
@@ -193,8 +273,15 @@ definitions:
       redeliver_rate:
         type: number
     type: object
+  models.RateDetail:
+    properties:
+      rate:
+        type: number
+    type: object
   models.Recipient:
     properties:
+      email:
+        type: string
       id:
         type: string
       name:
@@ -206,15 +293,13 @@ definitions:
     type: object
   models.RecipientType:
     enum:
-    - slack
-    - teams
     - webhook
+    - email
     - unknown
     type: string
     x-enum-varnames:
-    - Slack
-    - Teams
     - Webhook
+    - Email
     - RecipientTypeUnknown
   models.TestNotificationResponse:
     properties:
@@ -224,9 +309,12 @@ definitions:
         type: boolean
     type: object
   models.UpdateMaintenance:
+    description: Update the status of a maintenance entry (scheduled, done, skipped)
     properties:
       status:
-        $ref: '#/definitions/models.MaintenanceStatus'
+        allOf:
+        - $ref: '#/definitions/models.MaintenanceStatus'
+        description: Enums - scheduled, done, skipped
     type: object
   models.Vhost:
     properties:
@@ -300,8 +388,14 @@ definitions:
       name:
         type: string
     type: object
+host: localhost:8080
 info:
-  contact: {}
+  contact:
+    name: Norsk helsenett SF
+    url: https://github.com/NorskHelsenett/unimq-dashboard
+  description: API for RabbitMQ Dashboard application.
+  title: RabbitMQ Dashboard API
+  version: "1.0"
 paths:
   /v1/cluster:
     get:
@@ -339,19 +433,19 @@ paths:
       - Maintenance
     post:
       description: Add new maintenance entry with description, start time, and end
-        time
+        time that will have the status Scheduled
       parameters:
       - description: Maintenance Entry Data
         in: body
         name: entry
         required: true
         schema:
-          $ref: '#/definitions/models.MaintenanceEntry'
+          $ref: '#/definitions/models.PostMaintenanceEntry'
       produces:
       - application/json
       responses:
-        "303":
-          description: Redirect to maintenance admin page with success message
+        "201":
+          description: Maintenance entry added successfully
           schema:
             type: string
         "400":
@@ -362,25 +456,31 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/httpsuite.APIError'
-      summary: Add new maintenance entry
+      summary: Add new scheduled maintenance entry
       tags:
       - Maintenance
-  /v1/maintenance/{maintenance}:
+  /v1/maintenance/{maintenance-id}:
     delete:
       description: Delete a specific maintenance entry by ID
       parameters:
       - description: Maintenance Entry ID
         in: path
-        name: maintenance
+        name: maintenance-id
         required: true
         type: string
+      produces:
+      - application/json
       responses:
-        "303":
-          description: Redirect to maintenance admin page with success message
+        "200":
+          description: Maintenance entry deleted successfully
           schema:
             type: string
         "400":
           description: Bad Request
+          schema:
+            $ref: '#/definitions/httpsuite.APIError'
+        "404":
+          description: Not Found
           schema:
             $ref: '#/definitions/httpsuite.APIError'
         "500":
@@ -390,7 +490,6 @@ paths:
       summary: Delete a maintenance entry
       tags:
       - Maintenance
-  /v1/maintenance/{maintenance}/status:
     put:
       consumes:
       - application/json
@@ -399,10 +498,10 @@ paths:
       parameters:
       - description: Maintenance Entry ID
         in: path
-        name: maintenance
+        name: maintenance-id
         required: true
         type: string
-      - description: Updated Maintenance Status
+      - description: New Maintenance Status
         in: body
         name: status
         required: true
@@ -411,12 +510,16 @@ paths:
       produces:
       - application/json
       responses:
-        "303":
-          description: Redirect to maintenance admin page with success message
+        "200":
+          description: Maintenance status updated successfully
           schema:
             type: string
         "400":
           description: Bad Request
+          schema:
+            $ref: '#/definitions/httpsuite.APIError'
+        "404":
+          description: Not Found
           schema:
             $ref: '#/definitions/httpsuite.APIError'
         "500":
@@ -443,13 +546,32 @@ paths:
       summary: Get all maintenance entries
       tags:
       - Maintenance
-  /v1/notifications/{vhost}:
+  /v1/notifications:
     get:
-      description: Get notification rules and settings for a specific vhost
+      description: Get all notification vhosts and settings
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/models.VhostNotification'
+            type: array
+        "502":
+          description: Bad Gateway
+          schema:
+            $ref: '#/definitions/httpsuite.APIError'
+      summary: Get Notifications
+      tags:
+      - Notifications
+  /v1/notifications/{vhost-name}:
+    delete:
+      description: Deletes the notification configuration for a specific vhost
       parameters:
       - description: Vhost Name
         in: path
-        name: vhost
+        name: vhost-name
         required: true
         type: string
       produces:
@@ -458,7 +580,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/models.NotificationResponse'
+            type: string
         "400":
           description: Bad Request
           schema:
@@ -467,40 +589,36 @@ paths:
           description: Bad Gateway
           schema:
             $ref: '#/definitions/httpsuite.APIError'
-      summary: Get Notifications
+      summary: Delete Notifications
       tags:
       - Notifications
-  /v1/notifications/{vhost}/logs:
     get:
-      description: Fetch logs of notifications sent for a specific vhost, including
-        timestamps and message details
+      description: Get notification rules and settings for a specific vhost
       parameters:
       - description: Vhost Name
         in: path
-        name: vhost
+        name: vhost-name
         required: true
         type: string
       produces:
       - application/json
       responses:
         "200":
-          description: List of notification log entries
+          description: OK
           schema:
-            items:
-              $ref: '#/definitions/models.VhostNotification'
-            type: array
+            $ref: '#/definitions/models.VhostNotification'
         "400":
           description: Bad Request
           schema:
             $ref: '#/definitions/httpsuite.APIError'
-        "500":
-          description: Internal Server Error
+        "502":
+          description: Bad Gateway
           schema:
             $ref: '#/definitions/httpsuite.APIError'
-      summary: Get Notification Logs
+      summary: Get Notification on Vhost
       tags:
       - Notifications
-  /v1/notifications/{vhost}/recipients:
+  /v1/notifications/{vhost-name}/recipients:
     post:
       consumes:
       - application/json
@@ -508,7 +626,7 @@ paths:
       parameters:
       - description: Vhost Name
         in: path
-        name: vhost
+        name: vhost-name
         required: true
         type: string
       - description: Notification Recipient Object
@@ -516,12 +634,12 @@ paths:
         name: recipient
         required: true
         schema:
-          $ref: '#/definitions/models.Recipient'
+          $ref: '#/definitions/models.PostRecipient'
       produces:
       - application/json
       responses:
-        "303":
-          description: Redirect to notifications page
+        "201":
+          description: Recipient added successfully
           schema:
             type: string
         "400":
@@ -535,23 +653,23 @@ paths:
       summary: Add a new notification recipient
       tags:
       - Notifications
-  /v1/notifications/{vhost}/recipients/{recipient}:
+  /v1/notifications/{vhost-name}/recipients/{recipient-id}:
     delete:
       description: Delete a specific notification recipient for a vhost
       parameters:
       - description: Vhost Name
         in: path
-        name: vhost
+        name: vhost-name
         required: true
         type: string
       - description: Recipient ID
         in: path
-        name: recipient
+        name: recipient-id
         required: true
         type: string
       responses:
-        "303":
-          description: Redirect to notifications page
+        "200":
+          description: Recipient deleted successfully
           schema:
             type: string
         "400":
@@ -565,7 +683,7 @@ paths:
       summary: Delete a notification recipient
       tags:
       - Notifications
-  /v1/notifications/{vhost}/rules:
+  /v1/notifications/{vhost-name}/rules:
     post:
       consumes:
       - application/json
@@ -573,7 +691,7 @@ paths:
       parameters:
       - description: Vhost Name
         in: path
-        name: vhost
+        name: vhost-name
         required: true
         type: string
       - description: Notification Rule Object
@@ -581,16 +699,20 @@ paths:
         name: rule
         required: true
         schema:
-          $ref: '#/definitions/models.AlarmRule'
+          $ref: '#/definitions/models.PostAlarmRule'
       produces:
       - application/json
       responses:
-        "303":
-          description: Redirect to notifications page
+        "201":
+          description: Rule added successfully
           schema:
             type: string
         "400":
           description: Bad Request
+          schema:
+            $ref: '#/definitions/httpsuite.APIError'
+        "404":
+          description: Not Found
           schema:
             $ref: '#/definitions/httpsuite.APIError'
         "500":
@@ -600,23 +722,23 @@ paths:
       summary: Add a new notification rule
       tags:
       - Notifications
-  /v1/notifications/{vhost}/rules/{recipient}:
+  /v1/notifications/{vhost-name}/rules/{rule-id}:
     delete:
       description: Delete a specific notification rule for a vhost
       parameters:
       - description: Vhost Name
         in: path
-        name: vhost
+        name: vhost-name
         required: true
         type: string
       - description: Notification Rule ID
         in: path
-        name: recipient
+        name: rule-id
         required: true
         type: string
       responses:
-        "303":
-          description: Redirect to notifications page
+        "200":
+          description: Rule deleted successfully
           schema:
             type: string
         "400":
@@ -630,18 +752,17 @@ paths:
       summary: Delete a notification rule
       tags:
       - Notifications
-  /v1/notifications/{vhost}/rules/{rule}:
-    put:
+    post:
       description: Delete a specific notification rule for a vhost
       parameters:
       - description: Vhost Name
         in: path
-        name: vhost
+        name: vhost-name
         required: true
         type: string
       - description: Notification Rule ID
         in: path
-        name: recipient
+        name: rule-id
         required: true
         type: string
       - description: Updated Notification Rule Object
@@ -663,60 +784,22 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/httpsuite.APIError'
-      summary: Delete a notification rule
+      summary: Update a notification rule
       tags:
       - Notifications
-  /v1/notifications/{vhost}/rules/{rule}/message:
-    post:
-      description: Update the custom message template for a specific notification
-        rule
-      parameters:
-      - description: Vhost Name
-        in: path
-        name: vhost
-        required: true
-        type: string
-      - description: Notification Rule ID
-        in: path
-        name: rule
-        required: true
-        type: string
-      - description: New Message Template
-        in: formData
-        name: message
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "303":
-          description: Redirect to notification rule page with success message
-          schema:
-            type: string
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/httpsuite.APIError'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/httpsuite.APIError'
-      summary: Update Notification Rule Message
-      tags:
-      - Notifications
-  /v1/notifications/{vhost}/rules/{rule}/test:
+  /v1/notifications/{vhost-name}/rules/{rule-id}/test:
     post:
       description: Send a test notification using the specified rule to verify its
         configuration
       parameters:
       - description: Vhost Name
         in: path
-        name: vhost
+        name: vhost-name
         required: true
         type: string
       - description: Notification Rule ID
         in: path
-        name: rule
+        name: rule-id
         required: true
         type: string
       produces:
@@ -737,23 +820,23 @@ paths:
       summary: Test Notification Rule
       tags:
       - Notifications
-  /v1/notifications/{vhost}/rules/{rule}/toggle:
+  /v1/notifications/{vhost-name}/rules/{rule-id}/toggle:
     post:
       description: Enable or disable a specific notification rule for a vhost
       parameters:
       - description: Vhost Name
         in: path
-        name: vhost
+        name: vhost-name
         required: true
         type: string
       - description: Notification Rule ID
         in: path
-        name: rule
+        name: rule-id
         required: true
         type: string
       responses:
-        "303":
-          description: Redirect to notifications page
+        "200":
+          description: Rule toggled successfully
           schema:
             type: string
         "400":
@@ -788,13 +871,13 @@ paths:
       summary: Get all vhosts
       tags:
       - Vhosts
-  /v1/vhosts/{vhost}:
+  /v1/vhosts/{vhost-name}:
     get:
       description: Get details of a specific vhost by name
       parameters:
       - description: Vhost Name
         in: path
-        name: vhost
+        name: vhost-name
         required: true
         type: string
       produces:
@@ -815,14 +898,14 @@ paths:
       summary: Get vhost details
       tags:
       - Vhosts
-  /v1/vhosts/{vhost}/metrics:
+  /v1/vhosts/{vhost-name}/metrics:
     get:
       description: Get real-time metrics for a specific vhost, including queue lengths,
         message rates, and resource usage
       parameters:
       - description: Vhost Name
         in: path
-        name: vhost
+        name: vhost-name
         required: true
         type: string
       produces:
@@ -842,52 +925,52 @@ paths:
             $ref: '#/definitions/httpsuite.APIError'
       summary: Get Vhost Metrics
       tags:
-      - Metrics
-  /v1/vhosts/{vhost}/queues:
+      - Vhosts
+  /v1/vhosts/{vhost-name}/queues:
     get:
-      description: Fetches time-series metrics for a specific RabbitMQ queue over
-        a specified time range.
+      description: Fetches a list of all queues in a specified virtual host.
       parameters:
       - description: Virtual Host
         in: query
-        name: vhost
+        name: vhost-name
         required: true
-        type: string
-      - description: Queue Name
-        in: query
-        name: name
-        required: true
-        type: string
-      - default: 1h
-        description: Time Range (e.g., 1h, 24h, 7d)
-        in: query
-        name: range
         type: string
       produces:
-      - text/html
+      - application/json
       responses:
         "200":
           description: HTML page with queue metrics
           schema:
-            type: string
+            items:
+              $ref: '#/definitions/models.QueueAPIResponse'
+            type: array
         "400":
           description: Bad Request
+          schema:
+            $ref: '#/definitions/httpsuite.APIError'
+        "404":
+          description: Not Found
           schema:
             $ref: '#/definitions/httpsuite.APIError'
         "500":
           description: Internal Server Error
           schema:
             $ref: '#/definitions/httpsuite.APIError'
-      summary: Get Queue Metrics for a specific queue in the specified virtual host
+      summary: Get Queues for a specific vhost
       tags:
-      - Metrics
-  /v1/vhosts/{vhost}/queues/{queue}:
+      - Queues
+  /v1/vhosts/{vhost-name}/queues/{queue-id}:
     get:
       description: Fetches details of all queues in a specified virtual host.
       parameters:
       - description: Virtual Host
-        in: query
-        name: vhost
+        in: path
+        name: vhost-name
+        required: true
+        type: string
+      - description: Queue Name
+        in: path
+        name: queue-id
         required: true
         type: string
       produces:
@@ -903,11 +986,15 @@ paths:
           description: Bad Request
           schema:
             $ref: '#/definitions/httpsuite.APIError'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/httpsuite.APIError'
         "500":
           description: Internal Server Error
           schema:
             $ref: '#/definitions/httpsuite.APIError'
-      summary: Get All Queues to a specified virtual host
+      summary: Get a specific queue to a specified virtual host
       tags:
       - Queues
 swagger: "2.0"

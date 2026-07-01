@@ -9,7 +9,10 @@ const docTemplate = `{
     "info": {
         "description": "{{escape .Description}}",
         "title": "{{.Title}}",
-        "contact": {},
+        "contact": {
+            "name": "Norsk helsenett SF",
+            "url": "https://github.com/NorskHelsenett/unimq-dashboard"
+        },
         "version": "{{.Version}}"
     },
     "host": "{{.Host}}",
@@ -67,14 +70,14 @@ const docTemplate = `{
                 }
             },
             "post": {
-                "description": "Add new maintenance entry with description, start time, and end time",
+                "description": "Add new maintenance entry with description, start time, and end time that will have the status Scheduled",
                 "produces": [
                     "application/json"
                 ],
                 "tags": [
                     "Maintenance"
                 ],
-                "summary": "Add new maintenance entry",
+                "summary": "Add new scheduled maintenance entry",
                 "parameters": [
                     {
                         "description": "Maintenance Entry Data",
@@ -82,13 +85,13 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/models.MaintenanceEntry"
+                            "$ref": "#/definitions/models.PostMaintenanceEntry"
                         }
                     }
                 ],
                 "responses": {
-                    "303": {
-                        "description": "Redirect to maintenance admin page with success message",
+                    "201": {
+                        "description": "Maintenance entry added successfully",
                         "schema": {
                             "type": "string"
                         }
@@ -134,45 +137,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/v1/maintenance/{maintenance}": {
-            "delete": {
-                "description": "Delete a specific maintenance entry by ID",
-                "tags": [
-                    "Maintenance"
-                ],
-                "summary": "Delete a maintenance entry",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "Maintenance Entry ID",
-                        "name": "maintenance",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "303": {
-                        "description": "Redirect to maintenance admin page with success message",
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/httpsuite.APIError"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/httpsuite.APIError"
-                        }
-                    }
-                }
-            }
-        },
-        "/v1/maintenance/{maintenance}/status": {
+        "/v1/maintenance/{maintenance-id}": {
             "put": {
                 "description": "Update the status of a maintenance entry (e.g., scheduled, in-progress, completed)",
                 "consumes": [
@@ -189,12 +154,12 @@ const docTemplate = `{
                     {
                         "type": "string",
                         "description": "Maintenance Entry ID",
-                        "name": "maintenance",
+                        "name": "maintenance-id",
                         "in": "path",
                         "required": true
                     },
                     {
-                        "description": "Updated Maintenance Status",
+                        "description": "New Maintenance Status",
                         "name": "status",
                         "in": "body",
                         "required": true,
@@ -204,14 +169,65 @@ const docTemplate = `{
                     }
                 ],
                 "responses": {
-                    "303": {
-                        "description": "Redirect to maintenance admin page with success message",
+                    "200": {
+                        "description": "Maintenance status updated successfully",
                         "schema": {
                             "type": "string"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/httpsuite.APIError"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/httpsuite.APIError"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/httpsuite.APIError"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "description": "Delete a specific maintenance entry by ID",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Maintenance"
+                ],
+                "summary": "Delete a maintenance entry",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Maintenance Entry ID",
+                        "name": "maintenance-id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Maintenance entry deleted successfully",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/httpsuite.APIError"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
                         "schema": {
                             "$ref": "#/definitions/httpsuite.APIError"
                         }
@@ -225,7 +241,36 @@ const docTemplate = `{
                 }
             }
         },
-        "/v1/notifications/{vhost}": {
+        "/v1/notifications": {
+            "get": {
+                "description": "Get all notification vhosts and settings",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Notifications"
+                ],
+                "summary": "Get Notifications",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/models.VhostNotification"
+                            }
+                        }
+                    },
+                    "502": {
+                        "description": "Bad Gateway",
+                        "schema": {
+                            "$ref": "#/definitions/httpsuite.APIError"
+                        }
+                    }
+                }
+            }
+        },
+        "/v1/notifications/{vhost-name}": {
             "get": {
                 "description": "Get notification rules and settings for a specific vhost",
                 "produces": [
@@ -234,12 +279,12 @@ const docTemplate = `{
                 "tags": [
                     "Notifications"
                 ],
-                "summary": "Get Notifications",
+                "summary": "Get Notification on Vhost",
                 "parameters": [
                     {
                         "type": "string",
                         "description": "Vhost Name",
-                        "name": "vhost",
+                        "name": "vhost-name",
                         "in": "path",
                         "required": true
                     }
@@ -248,7 +293,46 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/models.NotificationResponse"
+                            "$ref": "#/definitions/models.VhostNotification"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/httpsuite.APIError"
+                        }
+                    },
+                    "502": {
+                        "description": "Bad Gateway",
+                        "schema": {
+                            "$ref": "#/definitions/httpsuite.APIError"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "description": "Deletes the notification configuration for a specific vhost",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Notifications"
+                ],
+                "summary": "Delete Notifications",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Vhost Name",
+                        "name": "vhost-name",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "string"
                         }
                     },
                     "400": {
@@ -266,51 +350,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/v1/notifications/{vhost}/logs": {
-            "get": {
-                "description": "Fetch logs of notifications sent for a specific vhost, including timestamps and message details",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Notifications"
-                ],
-                "summary": "Get Notification Logs",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "Vhost Name",
-                        "name": "vhost",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "List of notification log entries",
-                        "schema": {
-                            "type": "array",
-                            "items": {
-                                "$ref": "#/definitions/models.VhostNotification"
-                            }
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/httpsuite.APIError"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/httpsuite.APIError"
-                        }
-                    }
-                }
-            }
-        },
-        "/v1/notifications/{vhost}/recipients": {
+        "/v1/notifications/{vhost-name}/recipients": {
             "post": {
                 "description": "Add a new notification recipient for a specific vhost",
                 "consumes": [
@@ -327,7 +367,7 @@ const docTemplate = `{
                     {
                         "type": "string",
                         "description": "Vhost Name",
-                        "name": "vhost",
+                        "name": "vhost-name",
                         "in": "path",
                         "required": true
                     },
@@ -337,13 +377,13 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/models.Recipient"
+                            "$ref": "#/definitions/models.PostRecipient"
                         }
                     }
                 ],
                 "responses": {
-                    "303": {
-                        "description": "Redirect to notifications page",
+                    "201": {
+                        "description": "Recipient added successfully",
                         "schema": {
                             "type": "string"
                         }
@@ -363,7 +403,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/v1/notifications/{vhost}/recipients/{recipient}": {
+        "/v1/notifications/{vhost-name}/recipients/{recipient-id}": {
             "delete": {
                 "description": "Delete a specific notification recipient for a vhost",
                 "tags": [
@@ -374,21 +414,21 @@ const docTemplate = `{
                     {
                         "type": "string",
                         "description": "Vhost Name",
-                        "name": "vhost",
+                        "name": "vhost-name",
                         "in": "path",
                         "required": true
                     },
                     {
                         "type": "string",
                         "description": "Recipient ID",
-                        "name": "recipient",
+                        "name": "recipient-id",
                         "in": "path",
                         "required": true
                     }
                 ],
                 "responses": {
-                    "303": {
-                        "description": "Redirect to notifications page",
+                    "200": {
+                        "description": "Recipient deleted successfully",
                         "schema": {
                             "type": "string"
                         }
@@ -408,7 +448,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/v1/notifications/{vhost}/rules": {
+        "/v1/notifications/{vhost-name}/rules": {
             "post": {
                 "description": "Add a new notification rule for a specific vhost",
                 "consumes": [
@@ -425,7 +465,7 @@ const docTemplate = `{
                     {
                         "type": "string",
                         "description": "Vhost Name",
-                        "name": "vhost",
+                        "name": "vhost-name",
                         "in": "path",
                         "required": true
                     },
@@ -435,19 +475,25 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/models.AlarmRule"
+                            "$ref": "#/definitions/models.PostAlarmRule"
                         }
                     }
                 ],
                 "responses": {
-                    "303": {
-                        "description": "Redirect to notifications page",
+                    "201": {
+                        "description": "Rule added successfully",
                         "schema": {
                             "type": "string"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/httpsuite.APIError"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
                         "schema": {
                             "$ref": "#/definitions/httpsuite.APIError"
                         }
@@ -461,70 +507,25 @@ const docTemplate = `{
                 }
             }
         },
-        "/v1/notifications/{vhost}/rules/{recipient}": {
-            "delete": {
+        "/v1/notifications/{vhost-name}/rules/{rule-id}": {
+            "post": {
                 "description": "Delete a specific notification rule for a vhost",
                 "tags": [
                     "Notifications"
                 ],
-                "summary": "Delete a notification rule",
+                "summary": "Update a notification rule",
                 "parameters": [
                     {
                         "type": "string",
                         "description": "Vhost Name",
-                        "name": "vhost",
+                        "name": "vhost-name",
                         "in": "path",
                         "required": true
                     },
                     {
                         "type": "string",
                         "description": "Notification Rule ID",
-                        "name": "recipient",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "303": {
-                        "description": "Redirect to notifications page",
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/httpsuite.APIError"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/httpsuite.APIError"
-                        }
-                    }
-                }
-            }
-        },
-        "/v1/notifications/{vhost}/rules/{rule}": {
-            "put": {
-                "description": "Delete a specific notification rule for a vhost",
-                "tags": [
-                    "Notifications"
-                ],
-                "summary": "Delete a notification rule",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "Vhost Name",
-                        "name": "vhost",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "Notification Rule ID",
-                        "name": "recipient",
+                        "name": "rule-id",
                         "in": "path",
                         "required": true
                     },
@@ -558,44 +559,32 @@ const docTemplate = `{
                         }
                     }
                 }
-            }
-        },
-        "/v1/notifications/{vhost}/rules/{rule}/message": {
-            "post": {
-                "description": "Update the custom message template for a specific notification rule",
-                "produces": [
-                    "application/json"
-                ],
+            },
+            "delete": {
+                "description": "Delete a specific notification rule for a vhost",
                 "tags": [
                     "Notifications"
                 ],
-                "summary": "Update Notification Rule Message",
+                "summary": "Delete a notification rule",
                 "parameters": [
                     {
                         "type": "string",
                         "description": "Vhost Name",
-                        "name": "vhost",
+                        "name": "vhost-name",
                         "in": "path",
                         "required": true
                     },
                     {
                         "type": "string",
                         "description": "Notification Rule ID",
-                        "name": "rule",
+                        "name": "rule-id",
                         "in": "path",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "New Message Template",
-                        "name": "message",
-                        "in": "formData",
                         "required": true
                     }
                 ],
                 "responses": {
-                    "303": {
-                        "description": "Redirect to notification rule page with success message",
+                    "200": {
+                        "description": "Rule deleted successfully",
                         "schema": {
                             "type": "string"
                         }
@@ -615,7 +604,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/v1/notifications/{vhost}/rules/{rule}/test": {
+        "/v1/notifications/{vhost-name}/rules/{rule-id}/test": {
             "post": {
                 "description": "Send a test notification using the specified rule to verify its configuration",
                 "produces": [
@@ -629,14 +618,14 @@ const docTemplate = `{
                     {
                         "type": "string",
                         "description": "Vhost Name",
-                        "name": "vhost",
+                        "name": "vhost-name",
                         "in": "path",
                         "required": true
                     },
                     {
                         "type": "string",
                         "description": "Notification Rule ID",
-                        "name": "rule",
+                        "name": "rule-id",
                         "in": "path",
                         "required": true
                     }
@@ -663,7 +652,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/v1/notifications/{vhost}/rules/{rule}/toggle": {
+        "/v1/notifications/{vhost-name}/rules/{rule-id}/toggle": {
             "post": {
                 "description": "Enable or disable a specific notification rule for a vhost",
                 "tags": [
@@ -674,21 +663,21 @@ const docTemplate = `{
                     {
                         "type": "string",
                         "description": "Vhost Name",
-                        "name": "vhost",
+                        "name": "vhost-name",
                         "in": "path",
                         "required": true
                     },
                     {
                         "type": "string",
                         "description": "Notification Rule ID",
-                        "name": "rule",
+                        "name": "rule-id",
                         "in": "path",
                         "required": true
                     }
                 ],
                 "responses": {
-                    "303": {
-                        "description": "Redirect to notifications page",
+                    "200": {
+                        "description": "Rule toggled successfully",
                         "schema": {
                             "type": "string"
                         }
@@ -740,7 +729,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/v1/vhosts/{vhost}": {
+        "/v1/vhosts/{vhost-name}": {
             "get": {
                 "description": "Get details of a specific vhost by name",
                 "produces": [
@@ -754,7 +743,7 @@ const docTemplate = `{
                     {
                         "type": "string",
                         "description": "Vhost Name",
-                        "name": "vhost",
+                        "name": "vhost-name",
                         "in": "path",
                         "required": true
                     }
@@ -781,21 +770,21 @@ const docTemplate = `{
                 }
             }
         },
-        "/v1/vhosts/{vhost}/metrics": {
+        "/v1/vhosts/{vhost-name}/metrics": {
             "get": {
                 "description": "Get real-time metrics for a specific vhost, including queue lengths, message rates, and resource usage",
                 "produces": [
                     "application/json"
                 ],
                 "tags": [
-                    "Metrics"
+                    "Vhosts"
                 ],
                 "summary": "Get Vhost Metrics",
                 "parameters": [
                     {
                         "type": "string",
                         "description": "Vhost Name",
-                        "name": "vhost",
+                        "name": "vhost-name",
                         "in": "path",
                         "required": true
                     }
@@ -822,48 +811,43 @@ const docTemplate = `{
                 }
             }
         },
-        "/v1/vhosts/{vhost}/queues": {
+        "/v1/vhosts/{vhost-name}/queues": {
             "get": {
-                "description": "Fetches time-series metrics for a specific RabbitMQ queue over a specified time range.",
+                "description": "Fetches a list of all queues in a specified virtual host.",
                 "produces": [
-                    "text/html"
+                    "application/json"
                 ],
                 "tags": [
-                    "Metrics"
+                    "Queues"
                 ],
-                "summary": "Get Queue Metrics for a specific queue in the specified virtual host",
+                "summary": "Get Queues for a specific vhost",
                 "parameters": [
                     {
                         "type": "string",
                         "description": "Virtual Host",
-                        "name": "vhost",
+                        "name": "vhost-name",
                         "in": "query",
                         "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "Queue Name",
-                        "name": "name",
-                        "in": "query",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "default": "1h",
-                        "description": "Time Range (e.g., 1h, 24h, 7d)",
-                        "name": "range",
-                        "in": "query"
                     }
                 ],
                 "responses": {
                     "200": {
                         "description": "HTML page with queue metrics",
                         "schema": {
-                            "type": "string"
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/models.QueueAPIResponse"
+                            }
                         }
                     },
                     "400": {
                         "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/httpsuite.APIError"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
                         "schema": {
                             "$ref": "#/definitions/httpsuite.APIError"
                         }
@@ -877,7 +861,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/v1/vhosts/{vhost}/queues/{queue}": {
+        "/v1/vhosts/{vhost-name}/queues/{queue-id}": {
             "get": {
                 "description": "Fetches details of all queues in a specified virtual host.",
                 "produces": [
@@ -886,13 +870,20 @@ const docTemplate = `{
                 "tags": [
                     "Queues"
                 ],
-                "summary": "Get All Queues to a specified virtual host",
+                "summary": "Get a specific queue to a specified virtual host",
                 "parameters": [
                     {
                         "type": "string",
                         "description": "Virtual Host",
-                        "name": "vhost",
-                        "in": "query",
+                        "name": "vhost-name",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Queue Name",
+                        "name": "queue-id",
+                        "in": "path",
                         "required": true
                     }
                 ],
@@ -908,6 +899,12 @@ const docTemplate = `{
                     },
                     "400": {
                         "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/httpsuite.APIError"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
                         "schema": {
                             "$ref": "#/definitions/httpsuite.APIError"
                         }
@@ -932,7 +929,6 @@ const docTemplate = `{
             }
         },
         "models.AlarmRule": {
-            "description": "ID unique identifier for the alarm rule Name human-readable name for the alarm rule Type type of the alarm (e.g., \"channels\", \"connections\", \"queues\", etc.) QueueName optional name of the queue - required for \"queues\" alarm types Threshold numeric threshold that triggers the alarm Message custom message to include in the notification when the alarm is triggered Enabled indicates whether the alarm rule is active",
             "type": "object",
             "properties": {
                 "enabled": {
@@ -971,24 +967,32 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "message": {
-                    "type": "string"
+                    "type": "string",
+                    "example": "Queue size has exceeded the threshold"
                 },
                 "threshold": {
-                    "type": "number"
+                    "type": "number",
+                    "example": 1000
                 }
             }
         },
         "models.AlarmStatus": {
             "type": "string",
             "enum": [
+                "ok",
                 "active",
                 "inactive",
-                "fired"
+                "firing",
+                "fired",
+                "unknown"
             ],
             "x-enum-varnames": [
+                "OK",
                 "Active",
                 "Inactive",
-                "Fired"
+                "Firing",
+                "Fired",
+                "AlarmStatusUnknown"
             ]
         },
         "models.AlarmType": {
@@ -1058,22 +1062,31 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "description": {
-                    "type": "string"
+                    "type": "string",
+                    "example": "maintenance for server upgrade"
                 },
                 "end": {
-                    "type": "string"
+                    "type": "string",
+                    "example": "2024-06-01 12:00:00"
                 },
                 "id": {
-                    "type": "string"
+                    "type": "string",
+                    "example": ""
                 },
                 "notified": {
                     "type": "boolean"
                 },
                 "start": {
-                    "type": "string"
+                    "type": "string",
+                    "example": "2024-06-01 10:00:00"
                 },
                 "status": {
-                    "$ref": "#/definitions/models.MaintenanceStatus"
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/models.MaintenanceStatus"
+                        }
+                    ],
+                    "example": "-"
                 }
             }
         },
@@ -1117,6 +1130,20 @@ const docTemplate = `{
                 }
             }
         },
+        "models.MessageStats": {
+            "type": "object",
+            "properties": {
+                "deliver_get_details": {
+                    "$ref": "#/definitions/models.RateDetail"
+                },
+                "publish_details": {
+                    "$ref": "#/definitions/models.RateDetail"
+                },
+                "redeliver_details": {
+                    "$ref": "#/definitions/models.RateDetail"
+                }
+            }
+        },
         "models.Metadata": {
             "type": "object",
             "properties": {
@@ -1154,14 +1181,107 @@ const docTemplate = `{
                 }
             }
         },
-        "models.NotificationResponse": {
+        "models.PostAlarmRule": {
             "type": "object",
             "properties": {
-                "notifications": {
-                    "$ref": "#/definitions/models.VhostNotification"
+                "enabled": {
+                    "type": "boolean",
+                    "example": true
+                },
+                "message": {
+                    "type": "string",
+                    "example": "Queue size has exceeded the threshold"
+                },
+                "name": {
+                    "type": "string",
+                    "example": "High Queue Size"
+                },
+                "queue_name": {
+                    "type": "string",
+                    "example": "my-queue"
+                },
+                "threshold": {
+                    "type": "number",
+                    "example": 1000
+                },
+                "type": {
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/models.AlarmType"
+                        }
+                    ],
+                    "example": "queue_size"
+                }
+            }
+        },
+        "models.PostMaintenanceEntry": {
+            "type": "object",
+            "properties": {
+                "description": {
+                    "type": "string",
+                    "example": "maintenance for server upgrade"
+                },
+                "end": {
+                    "type": "string",
+                    "example": "2024-06-01 12:00:00"
+                },
+                "start": {
+                    "type": "string",
+                    "example": "2024-06-01 10:00:00"
+                }
+            }
+        },
+        "models.PostRecipient": {
+            "type": "object",
+            "properties": {
+                "email": {
+                    "type": "string",
+                    "example": "ola.normann@normann.no"
+                },
+                "name": {
+                    "type": "string",
+                    "example": "Slack Channel to team"
+                },
+                "type": {
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/models.RecipientType"
+                        }
+                    ],
+                    "example": "webhook"
+                },
+                "url": {
+                    "type": "string",
+                    "example": "https://hooks.slack.com/services"
+                }
+            }
+        },
+        "models.QueueAPIResponse": {
+            "type": "object",
+            "properties": {
+                "consumers": {
+                    "type": "integer"
+                },
+                "message_bytes": {
+                    "type": "integer"
+                },
+                "message_bytes_persistent": {
+                    "type": "integer"
+                },
+                "message_stats": {
+                    "$ref": "#/definitions/models.MessageStats"
+                },
+                "messages": {
+                    "type": "integer"
+                },
+                "messages_unacknowledged": {
+                    "type": "integer"
+                },
+                "name": {
+                    "type": "string"
                 },
                 "vhost": {
-                    "$ref": "#/definitions/models.Vhost"
+                    "type": "string"
                 }
             }
         },
@@ -1200,9 +1320,20 @@ const docTemplate = `{
                 }
             }
         },
+        "models.RateDetail": {
+            "type": "object",
+            "properties": {
+                "rate": {
+                    "type": "number"
+                }
+            }
+        },
         "models.Recipient": {
             "type": "object",
             "properties": {
+                "email": {
+                    "type": "string"
+                },
                 "id": {
                     "type": "string"
                 },
@@ -1220,15 +1351,13 @@ const docTemplate = `{
         "models.RecipientType": {
             "type": "string",
             "enum": [
-                "slack",
-                "teams",
                 "webhook",
+                "email",
                 "unknown"
             ],
             "x-enum-varnames": [
-                "Slack",
-                "Teams",
                 "Webhook",
+                "Email",
                 "RecipientTypeUnknown"
             ]
         },
@@ -1244,10 +1373,16 @@ const docTemplate = `{
             }
         },
         "models.UpdateMaintenance": {
+            "description": "Update the status of a maintenance entry (scheduled, done, skipped)",
             "type": "object",
             "properties": {
                 "status": {
-                    "$ref": "#/definitions/models.MaintenanceStatus"
+                    "description": "Enums - scheduled, done, skipped",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/models.MaintenanceStatus"
+                        }
+                    ]
                 }
             }
         },
@@ -1366,12 +1501,12 @@ const docTemplate = `{
 
 // SwaggerInfo holds exported Swagger Info so clients can modify it
 var SwaggerInfo = &swag.Spec{
-	Version:          "",
-	Host:             "",
-	BasePath:         "",
+	Version:          "1.0",
+	Host:             "localhost:8080",
+	BasePath:         "/api",
 	Schemes:          []string{},
-	Title:            "",
-	Description:      "",
+	Title:            "RabbitMQ Dashboard API",
+	Description:      "API for RabbitMQ Dashboard application.",
 	InfoInstanceName: "swagger",
 	SwaggerTemplate:  docTemplate,
 	LeftDelim:        "{{",
