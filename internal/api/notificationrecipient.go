@@ -2,7 +2,6 @@ package api
 
 import (
 	"net/http"
-	"strconv"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/sisneve/rabbitmq-dashboard/internal/models"
@@ -45,10 +44,7 @@ func (rc *APIService) AddNotificationsRecipientHandler(w http.ResponseWriter, r 
 		return
 	}
 
-	id := strconv.FormatInt(int64(len(vhostNotification.Recipients)+1), 10)
-	out.ID = id
-
-	err = rc.DB.AddNotificationRecipient(r.Context(), vhost, out)
+	err = rc.DB.AddNotificationRecipient(r.Context(), vhostNotification.Name, out)
 	if err != nil {
 		httpsuite.WriteJSONError(w, "error adding recipient: "+err.Error(), http.StatusInternalServerError)
 		return
