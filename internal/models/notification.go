@@ -28,10 +28,11 @@ func (p *PostRecipient) ToRecipient() (*Recipient, error) {
 		return nil, fmt.Errorf("invalid recipient type: %s, expected one of %s", p.Type, GetRecipientTypesString())
 	}
 	return &Recipient{
-		ID:   uuid.New().String(),
-		Name: p.Name,
-		URL:  p.URL,
-		Type: typ,
+		ID:    uuid.New().String(),
+		Name:  p.Name,
+		URL:   p.URL,
+		Email: p.Email,
+		Type:  typ,
 	}, nil
 }
 
