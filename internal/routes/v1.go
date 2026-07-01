@@ -2,7 +2,7 @@ package routes
 
 import (
 	"github.com/go-chi/chi/v5"
-	"github.com/sisneve/rabbitmq-dashboard/internal/api"
+	api "github.com/sisneve/rabbitmq-dashboard/internal/api/v1"
 )
 
 func SetupV1Routes(r chi.Router, apiservice *api.APIService) {
