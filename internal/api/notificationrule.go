@@ -11,6 +11,7 @@ import (
 	"github.com/sisneve/rabbitmq-dashboard/internal/helpers/notificationhelper"
 	"github.com/sisneve/rabbitmq-dashboard/internal/models"
 	"github.com/sisneve/rabbitmq-dashboard/internal/routes/httpsuite"
+	"github.com/wneessen/go-mail"
 )
 
 // @Summary		Add a new notification rule
@@ -236,6 +237,17 @@ func (rc *APIService) TestNotificationsRuleHandler(w http.ResponseWriter, r *htt
 	if err != nil {
 		httpsuite.WriteJSONError(w, "error sending test notification: "+err.Error(), http.StatusInternalServerError)
 		return
+	}
+
+	if rc.EmailClient != nil {
+		emails := vhostobject.EmailRecipients()
+		for _, email := range emails {
+			err = notificationhelper.SendEmail(rc.EmailConfig, email, subject, body, mail.TypeTextPlain)
+			if err != nil {
+				httpsuite.WriteJSONError(w, "error sending test email: "+err.Error(), http.StatusInternalServerError)
+				return
+			}
+		}
 	}
 
 	response := models.TestNotificationResponse{
