@@ -2,11 +2,17 @@ package database
 
 import (
 	"context"
+	"errors"
 	"log/slog"
 	"time"
 
 	"github.com/sisneve/rabbitmq-dashboard/internal/models"
 	"go.mongodb.org/mongo-driver/v2/bson"
+	"go.mongodb.org/mongo-driver/v2/mongo"
+)
+
+var (
+	ErrVhostNotFound = errors.New("vhost not found")
 )
 
 func (dbc *Database) GetVhost(ctx context.Context, vhost string) (*models.VhostNotification, error) {
@@ -15,6 +21,10 @@ func (dbc *Database) GetVhost(ctx context.Context, vhost string) (*models.VhostN
 	var notification models.VhostNotification
 	err := dbc.Collections.Notifications.FindOne(ctx, bson.M{"_id": vhost}).Decode(&notification)
 	if err != nil {
+		if errors.Is(err, mongo.ErrNoDocuments) {
+			slog.DebugContext(ctx, "vhost not found", "runtime", time.Since(start), "_id", vhost)
+			return nil, ErrVhostNotFound
+		}
 		slog.ErrorContext(ctx, "failed to retrieve vhost", "runtime", time.Since(start), "_id", vhost, "error", err)
 		return nil, err
 	}
