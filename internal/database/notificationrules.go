@@ -2,6 +2,7 @@ package database
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log/slog"
 	"time"
@@ -20,10 +21,17 @@ func (dbc *Database) GetNotificationRules(ctx context.Context, id string) ([]*mo
 	return notification.Rules, nil
 }
 
+var (
+	ErrNotificationRuleNotFound = fmt.Errorf("notification rule not found")
+)
+
 func (dbc *Database) GetNotificationRule(ctx context.Context, vhost string, ruleid string) (*models.AlarmRule, error) {
 	start := time.Now()
 	notification, err := dbc.GetVhost(ctx, vhost)
 	if err != nil {
+		if errors.Is(err, ErrVhostNotFound) {
+			return nil, err
+		}
 		return nil, err
 	}
 
@@ -38,7 +46,7 @@ func (dbc *Database) GetNotificationRule(ctx context.Context, vhost string, rule
 			return rule, nil
 		}
 	}
-	return nil, fmt.Errorf("notification rule not found")
+	return nil, ErrNotificationRuleNotFound
 }
 
 func (dbc *Database) AddNotificationRule(ctx context.Context, vhost string, rule *models.AlarmRule) error {
