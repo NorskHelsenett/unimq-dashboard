@@ -12,11 +12,13 @@ import (
 //
 //	@Name	human-readable name for the recipient
 //	@URL	webhook URL for the recipient - Slack, Teams
-//	@Type	type of the recipient - "slack", "teams", "webhook"
+//	@Email	email address for the recipient - used for email notifications
+//	@Type	type of the recipient - "webhook", "email"
 type PostRecipient struct {
-	Name string        `json:"name" bson:"name" example:"Slack Channel to team"`
-	URL  string        `json:"url" bson:"url" example:"https://hooks.slack.com/services"`
-	Type RecipientType `json:"type" bson:"type" example:"webhook"`
+	Name  string        `json:"name" bson:"name" example:"Slack Channel to team"`
+	URL   string        `json:"url" bson:"url" example:"https://hooks.slack.com/services"`
+	Email string        `json:"email" bson:"email" example:"ola.normann@normann.no"`
+	Type  RecipientType `json:"type" bson:"type" example:"webhook"`
 }
 
 func (p *PostRecipient) ToRecipient() (*Recipient, error) {
@@ -38,26 +40,25 @@ func (p *PostRecipient) ToRecipient() (*Recipient, error) {
 // @URL	webhook URL for the recipient - Slack, Teams
 // @Type	type of the recipient - "slack", "teams", "webhook"
 type Recipient struct {
-	ID   string        `json:"id"`
-	Name string        `json:"name"`
-	URL  string        `json:"url"`
-	Type RecipientType `json:"type"`
+	ID    string        `json:"id"`
+	Name  string        `json:"name"`
+	URL   string        `json:"url,omitempty"`
+	Email string        `json:"email,omitempty"`
+	Type  RecipientType `json:"type"`
 }
 
 type RecipientType string
 
 const (
-	// RecipientTypeSlack   RecipientType = "slack"   //	@name	Slack
-	// RecipientTypeTeams   RecipientType = "teams"   //	@name	Teams
 	RecipientTypeWebhook RecipientType = "webhook" //	@name	Webhook
+	RecipientTypeEmail   RecipientType = "email"   //	@name	Email
 	RecipientTypeUnknown RecipientType = "unknown"
 )
 
 func GetReceipientTypes() []RecipientType {
 	return []RecipientType{
-		// RecipientTypeSlack,
-		// RecipientTypeTeams,
 		RecipientTypeWebhook,
+		RecipientTypeEmail,
 	}
 }
 
@@ -72,12 +73,10 @@ func GetRecipientTypesString() string {
 
 func ParseRecipientType(s string) RecipientType {
 	switch s {
-	// case "slack":
-	// 	return RecipientTypeSlack
-	// case "teams":
-	// 	return RecipientTypeTeams
 	case "webhook":
 		return RecipientTypeWebhook
+	case "email":
+		return RecipientTypeEmail
 	default:
 		return RecipientTypeUnknown
 	}
@@ -233,4 +232,16 @@ func (vn *VhostNotification) WebhookURLs() []string {
 		}
 	}
 	return urls
+}
+
+func (vn *VhostNotification) EmailRecipients() []string {
+	emails := make([]string, 0)
+	for _, r := range vn.Recipients {
+		if r.Type == RecipientTypeEmail {
+			if r.Email != "" {
+				emails = append(emails, r.Email)
+			}
+		}
+	}
+	return emails
 }
