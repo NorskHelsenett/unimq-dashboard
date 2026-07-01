@@ -76,9 +76,9 @@ func (rc *APIService) DeleteNotificationsRuleHandler(w http.ResponseWriter, r *h
 		httpsuite.WriteJSONError(w, "missing required vhost parameter", http.StatusBadRequest)
 		return
 	}
-	id := chi.URLParam(r, "recipient")
+	id := chi.URLParam(r, "rule")
 	if id == "" {
-		httpsuite.WriteJSONError(w, "missing required recipient id parameter", http.StatusBadRequest)
+		httpsuite.WriteJSONError(w, "missing required rule id parameter", http.StatusBadRequest)
 		return
 	}
 	err := rc.DB.DeleteNotificationRule(r.Context(), vhost, id)
