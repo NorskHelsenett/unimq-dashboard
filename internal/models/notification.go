@@ -1,7 +1,6 @@
 package models
 
 import (
-	"encoding/json"
 	"fmt"
 	"strings"
 	"time"
@@ -17,7 +16,7 @@ import (
 type PostRecipient struct {
 	Name string        `json:"name" bson:"name" example:"Slack Channel to team"`
 	URL  string        `json:"url" bson:"url" example:"https://hooks.slack.com/services"`
-	Type RecipientType `json:"type" bson:"type" example:"slack"`
+	Type RecipientType `json:"type" bson:"type" example:"webhook"`
 }
 
 func (p *PostRecipient) ToRecipient() (*Recipient, error) {
@@ -45,41 +44,19 @@ type Recipient struct {
 	Type RecipientType `json:"type"`
 }
 
-func (r *Recipient) UnmarshalJSON(data []byte) error {
-	var aux struct {
-		ID   string `json:"id"`
-		Name string `json:"name"`
-		URL  string `json:"url"`
-		Type string `json:"type"`
-	}
-	if err := json.Unmarshal(data, &aux); err != nil {
-		return err
-	}
-
-	r.ID = aux.ID
-	r.Name = aux.Name
-	r.URL = aux.URL
-	r.Type = ParseRecipientType(aux.Type)
-	if r.Type == RecipientTypeUnknown {
-		return fmt.Errorf("invalid recipient type: %s, expected one of %s", aux.Type, GetRecipientTypesString())
-	}
-
-	return nil
-}
-
 type RecipientType string
 
 const (
-	RecipientTypeSlack   RecipientType = "slack"   //	@name	Slack
-	RecipientTypeTeams   RecipientType = "teams"   //	@name	Teams
+	// RecipientTypeSlack   RecipientType = "slack"   //	@name	Slack
+	// RecipientTypeTeams   RecipientType = "teams"   //	@name	Teams
 	RecipientTypeWebhook RecipientType = "webhook" //	@name	Webhook
 	RecipientTypeUnknown RecipientType = "unknown"
 )
 
 func GetReceipientTypes() []RecipientType {
 	return []RecipientType{
-		RecipientTypeSlack,
-		RecipientTypeTeams,
+		// RecipientTypeSlack,
+		// RecipientTypeTeams,
 		RecipientTypeWebhook,
 	}
 }
@@ -95,10 +72,10 @@ func GetRecipientTypesString() string {
 
 func ParseRecipientType(s string) RecipientType {
 	switch s {
-	case "slack":
-		return RecipientTypeSlack
-	case "teams":
-		return RecipientTypeTeams
+	// case "slack":
+	// 	return RecipientTypeSlack
+	// case "teams":
+	// 	return RecipientTypeTeams
 	case "webhook":
 		return RecipientTypeWebhook
 	default:
@@ -128,7 +105,7 @@ func (p *PostAlarmRule) ToAlarmRule() (*AlarmRule, error) {
 		Threshold: p.Threshold,
 		Message:   p.Message,
 		Enabled:   p.Enabled,
-		Status:    AlarmStatusInactive,
+		Status:    AlarmStatusActive,
 		LastFired: nil,
 		LastValue: nil,
 	}, nil
@@ -148,8 +125,8 @@ type AlarmRule struct {
 }
 
 type AlarmRuleUpdate struct {
-	Threshold float64 `json:"threshold" bson:"threshold"`
-	Message   string  `json:"message" bson:"message"`
+	Threshold float64 `json:"threshold" bson:"threshold" example:"1000"`
+	Message   string  `json:"message" bson:"message" example:"Queue size has exceeded the threshold"`
 }
 
 type AlarmStatus string
@@ -247,10 +224,12 @@ func NewVhostNotification(name string) *VhostNotification {
 }
 
 func (vn *VhostNotification) WebhookURLs() []string {
-	urls := make([]string, 0, len(vn.Recipients))
+	urls := make([]string, 0)
 	for _, r := range vn.Recipients {
 		if r.Type == RecipientTypeWebhook {
-			urls = append(urls, r.URL)
+			if r.URL != "" {
+				urls = append(urls, r.URL)
+			}
 		}
 	}
 	return urls
