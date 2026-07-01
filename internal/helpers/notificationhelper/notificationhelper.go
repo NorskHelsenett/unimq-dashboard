@@ -5,6 +5,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+
+	"github.com/wneessen/go-mail"
 )
 
 func SendWebhooks(urls []string, subject, body string) error {
@@ -26,4 +28,28 @@ func SendWebhooks(urls []string, subject, body string) error {
 		}
 	}
 	return lastErr
+}
+
+func SendEmail(smtp, from, to, subject, body string, typ mail.ContentType) error {
+	message := mail.NewMsg()
+	if err := message.From(from); err != nil {
+		return fmt.Errorf("failed to set From address: %w", err)
+	}
+	if err := message.To(to); err != nil {
+		return fmt.Errorf("failed to set To address: %w", err)
+	}
+
+	message.Subject(subject)
+	message.SetBodyString(typ, body)
+
+	client, err := mail.NewClient(smtp)
+	if err != nil {
+		return fmt.Errorf("failed to create mail client: %w", err)
+	}
+
+	if err := client.DialAndSend(message); err != nil {
+		return fmt.Errorf("failed to send mail: %w", err)
+	}
+
+	return nil
 }
