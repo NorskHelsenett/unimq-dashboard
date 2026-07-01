@@ -6,16 +6,20 @@ import (
 
 	"github.com/sisneve/rabbitmq-dashboard/internal/clients/prometheus"
 	"github.com/sisneve/rabbitmq-dashboard/internal/clients/rabbitmq"
+	"github.com/sisneve/rabbitmq-dashboard/internal/config"
 	"github.com/sisneve/rabbitmq-dashboard/internal/database"
 	"github.com/sisneve/rabbitmq-dashboard/internal/models"
+	"github.com/wneessen/go-mail"
 )
 
 type APIService struct {
-	Ctx        context.Context
-	RMQClient  *rabbitmq.RMQClient
-	PromClient *prometheus.PromClient
-	DB         *database.Database
-	RMQLimits  *models.Limits
+	Ctx         context.Context
+	RMQClient   *rabbitmq.RMQClient
+	PromClient  *prometheus.PromClient
+	DB          *database.Database
+	EmailClient *mail.Client
+	EmailConfig *config.EmailConfig
+	RMQLimits   *models.Limits
 }
 
 type APIServiceOption func(*APIService) error
@@ -55,13 +59,22 @@ func WithRMQLimits(limits *models.Limits) APIServiceOption {
 	}
 }
 
+func WithEmailConfig(emailConfig *config.EmailConfig) APIServiceOption {
+	return func(rc *APIService) error {
+		rc.EmailConfig = emailConfig
+		return nil
+	}
+}
+
 func newAPIServiceConfig() *APIService {
 	return &APIService{
-		Ctx:        context.Background(),
-		RMQClient:  nil,
-		PromClient: nil,
-		DB:         nil,
-		RMQLimits:  &models.Limits{},
+		Ctx:         context.Background(),
+		RMQClient:   nil,
+		PromClient:  nil,
+		DB:          nil,
+		RMQLimits:   &models.Limits{},
+		EmailConfig: nil,
+		EmailClient: nil,
 	}
 }
 
@@ -71,6 +84,19 @@ func NewAPIService(opts ...APIServiceOption) (*APIService, error) {
 		if err := opt(rc); err != nil {
 			return nil, fmt.Errorf("failed to apply option: %w", err)
 		}
+	}
+
+	if rc.EmailConfig != nil {
+		emailClient, err := mail.NewClient(
+			rc.EmailConfig.EmailSMTPHost,
+			mail.WithUsername(rc.EmailConfig.EmailSMTPUsername),
+			mail.WithPassword(rc.EmailConfig.EmailSMTPPassword),
+			mail.WithPort(rc.EmailConfig.EmailSMTPPort),
+		)
+		if err != nil {
+			return nil, fmt.Errorf("failed to create email client: %w", err)
+		}
+		rc.EmailClient = emailClient
 	}
 	return rc, nil
 }
