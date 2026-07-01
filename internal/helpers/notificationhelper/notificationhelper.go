@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/sisneve/rabbitmq-dashboard/internal/config"
 	"github.com/wneessen/go-mail"
 )
 
@@ -30,9 +31,12 @@ func SendWebhooks(urls []string, subject, body string) error {
 	return lastErr
 }
 
-func SendEmail(smtp, from, to, subject, body string, typ mail.ContentType) error {
+func SendEmail(config *config.EmailConfig, to, subject, body string, typ mail.ContentType) error {
+	if config.EmailFromAddress == "" {
+		return fmt.Errorf("SMTP server is not configured")
+	}
 	message := mail.NewMsg()
-	if err := message.From(from); err != nil {
+	if err := message.From(config.EmailFromAddress); err != nil {
 		return fmt.Errorf("failed to set From address: %w", err)
 	}
 	if err := message.To(to); err != nil {
@@ -42,7 +46,7 @@ func SendEmail(smtp, from, to, subject, body string, typ mail.ContentType) error
 	message.Subject(subject)
 	message.SetBodyString(typ, body)
 
-	client, err := mail.NewClient(smtp)
+	client, err := mail.NewClient(config.EmailSMTPHost)
 	if err != nil {
 		return fmt.Errorf("failed to create mail client: %w", err)
 	}

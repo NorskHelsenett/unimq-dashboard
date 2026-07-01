@@ -33,6 +33,16 @@ type Config struct {
 
 	PrometheusHost string `mapstructure:"PROMETHEUS_HOST"`
 	PrometheusPort int    `mapstructure:"PROMETHEUS_PORT"`
+
+	Email *EmailConfig `mapstructure:",squash"`
+}
+
+type EmailConfig struct {
+	EmailSMTPHost     string `mapstructure:"EMAIL_SMTP_HOST"`
+	EmailSMTPPort     int    `mapstructure:"EMAIL_SMTP_PORT"`
+	EmailSMTPUsername string `mapstructure:"EMAIL_SMTP_USERNAME"`
+	EmailSMTPPassword string `mapstructure:"EMAIL_SMTP_PASSWORD"`
+	EmailFromAddress  string `mapstructure:"EMAIL_FROM_ADDRESS"`
 }
 
 func NewConfig() *Config {
@@ -54,6 +64,14 @@ func NewConfig() *Config {
 		RabbitMQQueueLimit:      150,
 		PrometheusHost:          "http://localhost",
 		PrometheusPort:          9090,
+
+		Email: &EmailConfig{
+			EmailSMTPHost:     "",
+			EmailSMTPPort:     587,
+			EmailSMTPUsername: "",
+			EmailSMTPPassword: "",
+			EmailFromAddress:  "unimq@example.com",
+		},
 	}
 	return c
 }
@@ -147,6 +165,12 @@ func (c *Config) loadEnvironmentVariables() {
 	_ = viper.BindEnv("RABBITMQ_CHANNEL_LIMIT")
 	_ = viper.BindEnv("RABBITMQ_CONNECTION_LIMIT")
 	_ = viper.BindEnv("RABBITMQ_QUEUE_LIMIT")
+
+	_ = viper.BindEnv("EMAIL_SMTP_HOST")
+	_ = viper.BindEnv("EMAIL_SMTP_PORT")
+	_ = viper.BindEnv("EMAIL_SMTP_USERNAME")
+	_ = viper.BindEnv("EMAIL_SMTP_PASSWORD")
+	_ = viper.BindEnv("EMAIL_FROM_ADDRESS")
 }
 
 func (c *Config) validateConfiguration() error {

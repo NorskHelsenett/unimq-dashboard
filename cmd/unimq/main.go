@@ -111,6 +111,10 @@ func main() {
 	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
 
+	if config.Email == nil {
+		slog.Warn("email configuration is not set, email notifications will not be sent")
+	}
+
 	select {
 	case <-quit:
 	case <-ctx.Done():
