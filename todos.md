@@ -1,7 +1,10 @@
 # TODO: This should be moved to issues or discarded based
 
-- Golangci-lint
 - Helm chart variables updated with new environment variables and configuration options
+- Pagingation handling for RabbitMQ and Prometheus API calls, to ensure all data is retrieved when there are more than 100 results
+- Seeding should use the same logic as the API, to help ensure that the data is consistent and valid
+- Automatic cleanup of old alarms, to prevent the database from growing indefinitely
+- Automatic cleanup of old notification vhosts, to prevent the database from growing indefinitely
 
 ## Low priority ToDo's:
 
@@ -9,6 +12,4 @@
 - Watchers for mongodb, rabbitmq, prometheus to cover connectivity loss
 - More comprehensive unit tests for all packages, especially the notify and scraper packages
 - Checker does unnecessary updates, should only update when there are changes to the alarm state (e.g., from not triggered to triggered, or vice versa)
-- api/queues require vhost parameter, should return all and use below example for filtering
-- api/queues/{vhost} require queue name parameter
 - More seeding data
