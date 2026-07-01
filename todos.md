@@ -6,6 +6,7 @@
 - Automatic cleanup of old alarms, to prevent the database from growing indefinitely
 - Automatic cleanup of old notification vhosts, to prevent the database from growing indefinitely
 - Better messaging to webhook and email receivers when an alarm is triggered, provide more context and information about the alarm
+- Make email and webhook receivers unique per rule, duplicate receivers shouldn't be allowed
 
 ## Low priority ToDo's:
 
