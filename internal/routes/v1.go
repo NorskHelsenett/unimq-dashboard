@@ -39,7 +39,7 @@ func SetupV1Routes(r chi.Router, apiservice *api.APIService) {
 				r.Post("/rules", apiservice.AddNotificationsRuleHandler)
 				r.Post("/rules/{rule}", apiservice.UpdateNotificationsRuleHandler)
 				r.Post("/rules/{rule}/toggle", apiservice.ToggleNotificationsRuleHandler)
-				r.Post("/rules/{rule}/test", apiservice.TestNotificationsHandler)
+				r.Post("/rules/{rule}/test", apiservice.TestNotificationsRuleHandler)
 				r.Delete("/rules/{rule}", apiservice.DeleteNotificationsRuleHandler)
 			})
 		})
