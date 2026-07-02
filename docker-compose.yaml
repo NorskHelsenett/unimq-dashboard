@@ -109,8 +109,8 @@ services:
       - ME_CONFIG_MONGODB_ADMINPASSWORD=${MONGODB_PASSWORD:-adminpassword}
       - ME_CONFIG_MONGODB_SERVER=mongodb
       - ME_CONFIG_MONBGODB_URL=mongodb://${MONGODb_USERNAME:-admin}:${MONGODB_PASSWORD:-adminpassword}@mongodb:27017/unimq"
-      - ME_CONFIG_BASICAUTH_USERNAME=test
-      - ME_CONFIG_BASICAUTH_PASSWORD=test
+      - ME_CONFIG_BASICAUTH_USERNAME=${MONGO_EXPRESS_USERNAME:-test}
+      - ME_CONFIG_BASICAUTH_PASSWORD=${MONGO_EXPRESS_PASSWORD:-test}
     depends_on:
       - mongodb
     networks:
