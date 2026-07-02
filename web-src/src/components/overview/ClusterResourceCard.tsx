@@ -12,7 +12,7 @@ export const ClusterResourceCard = () => {
 
     useEffect(() => {
         const load = () =>
-        fetch('/api/cluster')
+        fetch('/v1/cluster')
             .then((r) => {
             if (!r.ok) throw new Error()
             return r.json() as Promise<ClusterStats>

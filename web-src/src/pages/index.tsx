@@ -63,11 +63,13 @@ const MainPage = () => {
                 {/* Body    T      `json:"body"` */}
 
                 <QueueSizeInfoCard />
-                {/* <QueuesCard vhost={selected} /> TODO: fix this */}
-                {/* <SizeDistributionCard vhost={selected} /> */}
+                {/* todo: queuesCard og sizedistributionCard */}
+                <QueuesCard vhost={selected} /> 
+                <SizeDistributionCard vhost={selected} />
                 <div className="flex gap-4">
                     <ClusterResourceCard />
-                    {/* <VhostResourceCard vhost={selected} /> */}
+                    {/* Fix VhostResourceCard */}
+                    <VhostResourceCard vhost={selected} />
                 </div>
             </div>
         </div>
