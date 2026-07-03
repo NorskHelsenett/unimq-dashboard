@@ -112,7 +112,7 @@ func NewRestClient(baseURL string, opts ...ConfigOption) (*RestClient, error) {
 func (r *Config) AddAuthHeaders(req *http.Request) {
 	r.authProvider.AddAuthHeaders(req)
 }
-func (r *RestClient) request(method string, url string, body *[]byte, out any, restclientParam []Params) (int, error) {
+func (r *RestClient) request(method string, url string, body any, out any, restclientParam []Params) (int, error) {
 
 	u, err := neturl.ParseRequestURI(url)
 	if err != nil {
@@ -126,7 +126,11 @@ func (r *RestClient) request(method string, url string, body *[]byte, out any, r
 	if body == nil {
 		req, err = http.NewRequestWithContext(r.Context, method, endpoint.String(), nil)
 	} else {
-		req, err = http.NewRequestWithContext(r.Context, method, endpoint.String(), bytes.NewReader(*body))
+		bodybytes, err := json.Marshal(body)
+		if err != nil {
+			return http.StatusInternalServerError, fmt.Errorf("unable to marshal body %v. %w", body, err)
+		}
+		req, err = http.NewRequestWithContext(r.Context, method, endpoint.String(), bytes.NewReader(bodybytes))
 	}
 	if err != nil {
 		return http.StatusInternalServerError,
@@ -149,13 +153,6 @@ func (r *RestClient) request(method string, url string, body *[]byte, out any, r
 	if err != nil && resp == nil {
 		return http.StatusInternalServerError, fmt.Errorf("unable to Do request. %w", err)
 	}
-	defer func() {
-		berr := resp.Body.Close()
-		err = errors.Join(err, berr)
-		if err != nil {
-			slog.ErrorContext(r.Context, "error closing response body", "error", err)
-		}
-	}()
 	slog.DebugContext(r.Context, "received response", "method", method, "status_code", resp.StatusCode)
 	badStatusCodeCeiling := 399
 	if resp.StatusCode > badStatusCodeCeiling {
@@ -164,16 +161,30 @@ func (r *RestClient) request(method string, url string, body *[]byte, out any, r
 			return resp.StatusCode, err
 		}
 		err = errors.New(string(bodyBytes))
-		if body != nil {
-			err = errors.Join(err, errors.New(string(*body)))
-		}
 		return resp.StatusCode, err
 	}
+
+	if out == nil {
+		err = resp.Body.Close()
+		if err != nil {
+			slog.ErrorContext(r.Context, "error closing response body", "error", err)
+		}
+		return resp.StatusCode, nil
+	}
+
 	err = json.NewDecoder(resp.Body).Decode(&out)
 	if err != nil {
+		if errors.Is(err, io.EOF) {
+			return resp.StatusCode, nil
+		}
 		return http.StatusInternalServerError, fmt.Errorf("unable to read body of response. %w", err)
-
 	}
+
+	err = resp.Body.Close()
+	if err != nil {
+		slog.ErrorContext(r.Context, "error closing response body", "error", err)
+	}
+
 	return resp.StatusCode, nil
 }
 func (r *RestClient) addCommonHeaders(req *http.Request) {

@@ -17,6 +17,13 @@ type Vhost struct {
 	MessagesReadyDetails          MessageRate       `json:"messages_ready_details"`
 }
 
+type VhostPost struct {
+	Name             string   `json:"name"`
+	Description      string   `json:"description"`
+	Tags             []string `json:"tags"`
+	DefaultQueueType string   `json:"default_queue_type"`
+}
+
 type Metadata struct {
 	Description      string   `json:"description"`
 	Tags             []string `json:"tags"`
@@ -114,4 +121,12 @@ type QueueAPIResponse struct {
 	MessageBytes           int64        `json:"message_bytes"`
 	MessageBytesPersistent int64        `json:"message_bytes_persistent"`
 	MessageStats           MessageStats `json:"message_stats"`
+}
+
+type QueuePost struct {
+	Name       string `json:"name"`
+	AutoDelete bool   `json:"auto_delete"`
+	Durable    bool   `json:"durable"`
+	Vhost      string `json:"vhost"`
+	Arguments  any    `json:"arguments"`
 }

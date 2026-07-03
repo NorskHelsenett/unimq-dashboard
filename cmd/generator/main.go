@@ -2,9 +2,11 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"log/slog"
 	"time"
 
+	"github.com/sisneve/rabbitmq-dashboard/internal/clients/rabbitmq"
 	"github.com/sisneve/rabbitmq-dashboard/internal/config"
 	"github.com/sisneve/rabbitmq-dashboard/internal/database"
 	"github.com/sisneve/rabbitmq-dashboard/internal/logger"
@@ -44,4 +46,19 @@ func main() {
 	}
 
 	slog.Info("database seeded successfully")
+
+	rmqurl := fmt.Sprintf("%v:%d/api", config.RabbitMQHost, config.RabbitMQPort)
+	rmq, err := rabbitmq.NewRMQClient(ctx, rmqurl, config.RabbitMQUsername, config.RabbitMQPassword)
+	if err != nil {
+		slog.Error("failed to create RabbitMQ client", "error", err)
+		return
+	}
+
+	err = rmq.Seed(ctx)
+	if err != nil {
+		slog.Error("failed to seed RabbitMQ", "error", err)
+		return
+	}
+
+	slog.Info("RabbitMQ seeded successfully")
 }

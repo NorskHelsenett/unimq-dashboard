@@ -36,4 +36,4 @@ jobs:
           export LIB_VER=$(cat go.mod | grep "github.com/NorskHelsenett/unimq-dashboard" | cut -d' ' -f2)
           go get ./...
           mkdir -p dist/isbuilt
-          CGO_ENABLED=0 go build -o dist/${{ env.APP }} -ldflags "-w -extldflags '-static' /main.go
+          CGO_ENABLED=0 go build -o dist/${{ env.APP }} -ldflags "-w -extldflags '-static' /main.go"
