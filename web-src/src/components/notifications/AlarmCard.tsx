@@ -57,7 +57,7 @@ function ExistingAlarms({existingAlarms, vhost}: {existingAlarms: AlarmProps[], 
         const data = new FormData()
         data.set('vhost', vhost)
         data.set('id', id)
-        fetch('/notifications/rules/toggle', { method: 'POST', body: data })
+        fetch(`/v1/notifications/${encodeURIComponent(vhost)}/rules/${encodeURIComponent(id)}/toggle`, { method: 'POST', body: data })
     }
 
     return (
@@ -143,7 +143,7 @@ function AddAlarmForm({ selectedAlarm, vhost, onClose }: { selectedAlarm: string
         const data = new FormData(form)
         data.set('vhost', vhost)
         data.set('type', selectedAlarm)
-        fetch('/notifications/rules/add', { method: 'POST', body: data })
+        fetch(`/v1/notifications/${encodeURIComponent(vhost)}/rules`, { method: 'POST', body: data })
             .then(() => window.location.reload())
     }
 

@@ -5,7 +5,9 @@ import { RequireAuth } from '@/auth/RequireAuth'
 import { Layout } from '@/components/layout/Layout'
 import { AlarmCard, AlarmProps } from '@/components/notifications/AlarmCard'
 import { RecipientCard, RecipientsProps } from '@/components/notifications/RecipientCard'
+import type { VhostNotification } from '@/types/notifications'
 
+// TODO: Move these to another file
 interface ApiResponse<T> {
   code: number
   message: string
@@ -15,13 +17,7 @@ interface ApiResponse<T> {
 interface VhostObj {
   name: string
 }
-
-interface VhostNotification {
-  Name: string
-  Recipients: RecipientsProps[]
-  Rules: AlarmProps[]
-  Notified: boolean
-}
+//------------
 
 function getSelectedVhost(vhosts: string[]): string {
   const params = new URLSearchParams(window.location.search)
@@ -37,7 +33,7 @@ const NotificationsApp = () => {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    fetch('/api/v1/vhosts')
+    fetch('api/v1/vhosts')
       .then(r => r.json())
       .then((res: ApiResponse<VhostObj[]>) => {
         const names = (res.body ?? []).map(v => v.name)
@@ -46,7 +42,7 @@ const NotificationsApp = () => {
         setSelected(sel)
         return sel
       })
-      .then(sel => fetch(`/api/v1/notifications/${encodeURIComponent(sel)}`))
+      .then(sel => fetch(`api/v1/notifications/${encodeURIComponent(sel)}`))
       .then(r => r.ok ? r.json() : Promise.resolve({ body: { Rules: [], Recipients: [] } }))
       .then((res: ApiResponse<VhostNotification>) => {
         setRules(res.body?.Rules ?? [])
