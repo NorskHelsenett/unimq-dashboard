@@ -2,6 +2,7 @@ package api
 
 import (
 	"net/http"
+	"net/url"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/sisneve/rabbitmq-dashboard/internal/routes/httpsuite"
@@ -17,12 +18,19 @@ import (
 // @Failure		502			{object}	httpsuite.APIError
 // @Router			/v1/vhosts/{vhost-name}/metrics [get]
 func (rc *APIService) MetricHandler(w http.ResponseWriter, r *http.Request) {
-	vhostName := chi.URLParam(r, "vhost")
-	if vhostName == "" {
+	vhost := chi.URLParam(r, "vhost")
+	if vhost == "" {
 		httpsuite.WriteJSONError(w, "vhost name is required", http.StatusBadRequest)
 		return
 	}
-	metrics, err := rc.RMQClient.GetMetrics(vhostName)
+
+	eVhost, err := url.QueryUnescape(vhost)
+	if err != nil {
+		httpsuite.WriteJSONError(w, "error decoding vhost name", http.StatusBadRequest)
+		return
+	}
+
+	metrics, err := rc.RMQClient.GetMetrics(eVhost)
 	if err != nil {
 		httpsuite.WriteJSONError(w, "error fetching metrics for vhost. "+err.Error(), http.StatusInternalServerError)
 		return

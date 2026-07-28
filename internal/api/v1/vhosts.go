@@ -2,6 +2,7 @@ package api
 
 import (
 	"net/http"
+	"net/url"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/sisneve/rabbitmq-dashboard/internal/routes/httpsuite"
@@ -40,7 +41,13 @@ func (rc *APIService) VhostHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	vhostData, err := rc.RMQClient.GetVhost(vhostName)
+	eVhostName, err := url.QueryUnescape(vhostName)
+	if err != nil {
+		httpsuite.WriteJSONError(w, "error decoding vhost name", http.StatusBadRequest)
+		return
+	}
+
+	vhostData, err := rc.RMQClient.GetVhost(eVhostName)
 	if err != nil {
 		httpsuite.WriteJSONError(w, "error fetching vhost data", http.StatusBadGateway)
 		return

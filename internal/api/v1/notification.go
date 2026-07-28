@@ -2,6 +2,7 @@ package api
 
 import (
 	"net/http"
+	"net/url"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/sisneve/rabbitmq-dashboard/internal/routes/httpsuite"
@@ -36,13 +37,19 @@ func (rc *APIService) GetNotificationsHandler(w http.ResponseWriter, r *http.Req
 // @Router			/v1/notifications/{vhost-name} [get]
 func (rc *APIService) GetNotificationsVhostHandler(w http.ResponseWriter, r *http.Request) {
 
-	vhostName := chi.URLParam(r, "vhost")
-	if vhostName == "" {
+	vhost := chi.URLParam(r, "vhost")
+	if vhost == "" {
 		httpsuite.WriteJSONError(w, "missing required vhost parameter", http.StatusBadRequest)
 		return
 	}
 
-	notification, err := rc.DB.GetNotification(r.Context(), vhostName)
+	eVhost, err := url.QueryUnescape(vhost)
+	if err != nil {
+		httpsuite.WriteJSONError(w, "error decoding vhost name", http.StatusBadRequest)
+		return
+	}
+
+	notification, err := rc.DB.GetNotification(r.Context(), eVhost)
 	if err != nil {
 		httpsuite.WriteJSONError(w, "error fetching notification config: "+err.Error(), http.StatusInternalServerError)
 		return
@@ -67,7 +74,13 @@ func (rc *APIService) DeleteNotificationsHandler(w http.ResponseWriter, r *http.
 		return
 	}
 
-	err := rc.DB.DeleteNotification(r.Context(), vhost)
+	eVhost, err := url.QueryUnescape(vhost)
+	if err != nil {
+		httpsuite.WriteJSONError(w, "error decoding vhost name", http.StatusBadRequest)
+		return
+	}
+
+	err = rc.DB.DeleteNotification(r.Context(), eVhost)
 	if err != nil {
 		httpsuite.WriteJSONError(w, "error deleting notification config: "+err.Error(), http.StatusInternalServerError)
 		return
