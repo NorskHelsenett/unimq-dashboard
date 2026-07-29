@@ -10,19 +10,30 @@ import (
 	"go.mongodb.org/mongo-driver/v2/mongo"
 )
 
+const (
+	recipientID   = "e45957ef-b817-414e-95e8-c4ea89c4ad3e"
+	ruleID        = "090e10a0-4c2c-46e4-8870-9e354232a037"
+	MaintenanceID = "e45957ef-b817-414e-95e8-c4ea89c4ad3e"
+)
+
 func (dbc *Database) Seed(ctx context.Context) error {
 
-	err := dbc.seedNotifications(ctx)
-	if err != nil {
-		return err
+	vhosts := []string{"/", "test-Name"}
+
+	for _, vhost := range vhosts {
+		err := dbc.seedNotifications(ctx, vhost)
+		if err != nil {
+			return err
+		}
+
+		err = dbc.SeedAlarms(ctx, vhost)
+		if err != nil {
+			return err
+		}
+
 	}
 
-	err = dbc.seedMaintenace(ctx)
-	if err != nil {
-		return err
-	}
-
-	err = dbc.SeedAlarms(ctx)
+	err := dbc.seedMaintenace(ctx)
 	if err != nil {
 		return err
 	}
@@ -30,9 +41,8 @@ func (dbc *Database) Seed(ctx context.Context) error {
 	return nil
 }
 
-func (dbc *Database) seedNotifications(ctx context.Context) error {
+func (dbc *Database) seedNotifications(ctx context.Context, name string) error {
 
-	name := "test-Name"
 	err := dbc.EnsureVhostExists(ctx, name)
 	if err != nil {
 		return err
@@ -53,7 +63,6 @@ func (dbc *Database) seedNotifications(ctx context.Context) error {
 
 func (dbc *Database) seedNotificationRecipients(ctx context.Context, name string) error {
 
-	recipientID := "e45957ef-b817-414e-95e8-c4ea89c4ad3e"
 	recipient, err := dbc.GetNotificationRecipient(ctx, name, recipientID)
 	if err == nil {
 		if recipient == nil {
@@ -94,7 +103,6 @@ func (dbc *Database) seedNotificationRecipients(ctx context.Context, name string
 
 func (dbc *Database) seedNotificationRules(ctx context.Context, name string) error {
 
-	ruleID := "090e10a0-4c2c-46e4-8870-9e354232a037"
 	rules, err := dbc.GetNotificationRules(ctx, name)
 	if err != nil {
 		if !errors.Is(err, mongo.ErrNoDocuments) {
@@ -128,8 +136,7 @@ func (dbc *Database) seedNotificationRules(ctx context.Context, name string) err
 
 func (dbc *Database) seedMaintenace(ctx context.Context) error {
 
-	id := "e45957ef-b817-414e-95e8-c4ea89c4ad3e"
-	existing, err := dbc.GetMaintenanceEntry(ctx, id)
+	existing, err := dbc.GetMaintenanceEntry(ctx, MaintenanceID)
 	if err != nil {
 		if !errors.Is(err, mongo.ErrNoDocuments) {
 			return fmt.Errorf("failed to check existing maintenance entry. %w", err)
@@ -138,14 +145,14 @@ func (dbc *Database) seedMaintenace(ctx context.Context) error {
 		if existing == nil {
 			return fmt.Errorf("unexpected nil maintenance entry")
 		}
-		if existing.ID == id {
+		if existing.ID == MaintenanceID {
 			return nil
 		}
 		return fmt.Errorf("unexpected maintenance entry ID. expected %s, got %s", "test-maintenance", existing.ID)
 	}
 
 	maintenance := models.MaintenanceEntry{
-		ID:          id,
+		ID:          MaintenanceID,
 		Description: "Test maintenance entry",
 		Start:       time.Now(),
 		End:         time.Now().Add(2 * time.Hour),
@@ -159,24 +166,24 @@ func (dbc *Database) seedMaintenace(ctx context.Context) error {
 	return nil
 }
 
-func (dbc *Database) SeedAlarms(ctx context.Context) error {
-	alarmID := "test-alarm"
-	alarm, err := dbc.GetAlarm(ctx, alarmID)
+func (dbc *Database) SeedAlarms(ctx context.Context, name string) error {
+	alarm, err := dbc.GetAlarm(ctx, name)
 	if err == nil {
 		if alarm == nil {
 			return fmt.Errorf("unexpected nil alarm entry")
 		}
-		if alarm.AlarmID != alarmID {
-			return fmt.Errorf("unexpected alarm entry name. expected %s, got %s", alarmID, alarm.AlarmID)
+		if alarm.AlarmID != name {
+			return fmt.Errorf("unexpected alarm entry name. expected %s, got %s", name, alarm.AlarmID)
 		}
 		return nil
 	}
+
 	if !errors.Is(err, mongo.ErrNoDocuments) {
 		return fmt.Errorf("failed to check existing alarm entry. %w", err)
 	}
 
 	entry := models.AlarmEntry{
-		AlarmID: alarmID,
+		AlarmID: name,
 		Entries: []models.LogEntry{
 			{
 				Timestamp: time.Now(),

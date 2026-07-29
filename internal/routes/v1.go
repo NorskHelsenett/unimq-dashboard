@@ -27,6 +27,11 @@ func SetupV1Routes(r chi.Router, apiservice *api.APIService) {
 			r.Delete("/{maintenance}", apiservice.DeleteMaintenanceHandler)
 		})
 
+		r.Route("/alarms", func(r chi.Router) {
+			r.Get("/", apiservice.GetAlarmHistoryAllHandler)
+			r.Get("/{vhost}", apiservice.GetAlarmHistoryHandler)
+		})
+
 		r.Get("/cluster", apiservice.GetClusterHandler)
 		r.Route("/notifications", func(r chi.Router) {
 			r.Get("/", apiservice.GetNotificationsHandler)
