@@ -28,15 +28,6 @@ const docTemplate = `{
                     "Alarms"
                 ],
                 "summary": "Get Alarm History",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "Vhost Name",
-                        "name": "vhost-name",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
                 "responses": {
                     "200": {
                         "description": "OK",

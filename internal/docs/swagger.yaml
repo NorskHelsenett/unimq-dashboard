@@ -428,12 +428,6 @@ paths:
   /v1/alarms:
     get:
       description: Get alarm history for all vhosts
-      parameters:
-      - description: Vhost Name
-        in: path
-        name: vhost-name
-        required: true
-        type: string
       produces:
       - application/json
       responses:
