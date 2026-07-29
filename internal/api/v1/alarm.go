@@ -12,7 +12,6 @@ import (
 // @Description	Get alarm history for all vhosts
 // @Tags			Alarms
 // @Produce		json
-// @Param			vhost-name	path		string	true	"Vhost Name"
 // @Success		200			{array}		[]models.AlarmEntry
 // @Failure		400			{object}	httpsuite.APIError
 // @Failure		502			{object}	httpsuite.APIError

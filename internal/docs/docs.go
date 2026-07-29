@@ -18,6 +18,100 @@ const docTemplate = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
+        "/v1/alarms": {
+            "get": {
+                "description": "Get alarm history for all vhosts",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Alarms"
+                ],
+                "summary": "Get Alarm History",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Vhost Name",
+                        "name": "vhost-name",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "type": "array",
+                                "items": {
+                                    "$ref": "#/definitions/models.AlarmEntry"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/httpsuite.APIError"
+                        }
+                    },
+                    "502": {
+                        "description": "Bad Gateway",
+                        "schema": {
+                            "$ref": "#/definitions/httpsuite.APIError"
+                        }
+                    }
+                }
+            }
+        },
+        "/v1/alarms/{vhost-name}": {
+            "get": {
+                "description": "Get alarm history for a specific vhost",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Alarms"
+                ],
+                "summary": "Get Alarm History for Vhost",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Vhost Name",
+                        "name": "vhost-name",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "type": "array",
+                                "items": {
+                                    "$ref": "#/definitions/models.AlarmEntry"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/httpsuite.APIError"
+                        }
+                    },
+                    "502": {
+                        "description": "Bad Gateway",
+                        "schema": {
+                            "$ref": "#/definitions/httpsuite.APIError"
+                        }
+                    }
+                }
+            }
+        },
         "/v1/cluster": {
             "get": {
                 "description": "Get overall cluster statistics and health information",
@@ -928,6 +1022,20 @@ const docTemplate = `{
                 }
             }
         },
+        "models.AlarmEntry": {
+            "type": "object",
+            "properties": {
+                "alarmID": {
+                    "type": "string"
+                },
+                "entries": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/models.LogEntry"
+                    }
+                }
+            }
+        },
         "models.AlarmRule": {
             "type": "object",
             "properties": {
@@ -1046,6 +1154,34 @@ const docTemplate = `{
                     }
                 }
             }
+        },
+        "models.LogEntry": {
+            "type": "object",
+            "properties": {
+                "event": {
+                    "$ref": "#/definitions/models.LogEvent"
+                },
+                "threshold": {
+                    "type": "number"
+                },
+                "ts": {
+                    "type": "string"
+                },
+                "value": {
+                    "type": "number"
+                }
+            }
+        },
+        "models.LogEvent": {
+            "type": "string",
+            "enum": [
+                "fired",
+                "resolved"
+            ],
+            "x-enum-varnames": [
+                "LogEventFired",
+                "LogEventResolved"
+            ]
         },
         "models.MaintenanceAdminResponse": {
             "type": "object",

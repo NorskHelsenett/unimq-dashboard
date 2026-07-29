@@ -5,6 +5,15 @@ definitions:
       error:
         type: string
     type: object
+  models.AlarmEntry:
+    properties:
+      alarmID:
+        type: string
+      entries:
+        items:
+          $ref: '#/definitions/models.LogEntry'
+        type: array
+    type: object
   models.AlarmRule:
     properties:
       enabled:
@@ -92,6 +101,25 @@ definitions:
           $ref: '#/definitions/models.VhostResources'
         type: array
     type: object
+  models.LogEntry:
+    properties:
+      event:
+        $ref: '#/definitions/models.LogEvent'
+      threshold:
+        type: number
+      ts:
+        type: string
+      value:
+        type: number
+    type: object
+  models.LogEvent:
+    enum:
+    - fired
+    - resolved
+    type: string
+    x-enum-varnames:
+    - LogEventFired
+    - LogEventResolved
   models.MaintenanceAdminResponse:
     properties:
       entries:
@@ -397,6 +425,68 @@ info:
   title: RabbitMQ Dashboard API
   version: "1.0"
 paths:
+  /v1/alarms:
+    get:
+      description: Get alarm history for all vhosts
+      parameters:
+      - description: Vhost Name
+        in: path
+        name: vhost-name
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              items:
+                $ref: '#/definitions/models.AlarmEntry'
+              type: array
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/httpsuite.APIError'
+        "502":
+          description: Bad Gateway
+          schema:
+            $ref: '#/definitions/httpsuite.APIError'
+      summary: Get Alarm History
+      tags:
+      - Alarms
+  /v1/alarms/{vhost-name}:
+    get:
+      description: Get alarm history for a specific vhost
+      parameters:
+      - description: Vhost Name
+        in: path
+        name: vhost-name
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              items:
+                $ref: '#/definitions/models.AlarmEntry'
+              type: array
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/httpsuite.APIError'
+        "502":
+          description: Bad Gateway
+          schema:
+            $ref: '#/definitions/httpsuite.APIError'
+      summary: Get Alarm History for Vhost
+      tags:
+      - Alarms
   /v1/cluster:
     get:
       description: Get overall cluster statistics and health information
