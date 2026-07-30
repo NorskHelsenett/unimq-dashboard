@@ -1,55 +1,17 @@
-import { StrictMode, useState, useEffect } from 'react'
+import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import '../index.css'
 import { RequireAuth } from '@/auth/RequireAuth'
 import { Layout } from '@/components/layout/Layout'
-import { AlarmCard, AlarmProps } from '@/components/notifications/AlarmCard'
-import { RecipientCard, RecipientsProps } from '@/components/notifications/RecipientCard'
-import type { VhostNotification } from '@/types/notifications'
+import { AlarmCard } from '@/components/notifications/AlarmCard'
+import { RecipientCard } from '@/components/notifications/RecipientCard'
+import { useVhostNotification } from '@/hooks/useVhostNotification'
 
-// TODO: Move these to another file
-interface ApiResponse<T> {
-  code: number
-  message: string
-  body: T
-}
 
-interface VhostObj {
-  name: string
-}
-//------------
-
-function getSelectedVhost(vhosts: string[]): string {
-  const params = new URLSearchParams(window.location.search)
-  const vhost = params.get('vhost')
-  return (vhost && vhosts.includes(vhost)) ? vhost : (vhosts[0] ?? '')
-}
-
-const NotificationsApp = () => {
-  const [vhosts, setVhosts] = useState<string[]>([])
-  const [selected, setSelected] = useState<string>('')
-  const [rules, setRules] = useState<AlarmProps[]>([])
-  const [recipients, setRecipients] = useState<RecipientsProps[]>([])
-  const [loading, setLoading] = useState(true)
-
-  useEffect(() => {
-    fetch('api/v1/vhosts')
-      .then(r => r.json())
-      .then((res: ApiResponse<VhostObj[]>) => {
-        const names = (res.body ?? []).map(v => v.name)
-        setVhosts(names)
-        const sel = getSelectedVhost(names)
-        setSelected(sel)
-        return sel
-      })
-      .then(sel => fetch(`api/v1/notifications/${encodeURIComponent(sel)}`))
-      .then(r => r.ok ? r.json() : Promise.resolve({ body: { Rules: [], Recipients: [] } }))
-      .then((res: ApiResponse<VhostNotification>) => {
-        setRules(res.body?.Rules ?? [])
-        setRecipients(res.body?.Recipients ?? [])
-      })
-      .finally(() => setLoading(false))
-  }, [])
+const Notifications = () => {
+  const { vhosts, selected, notification, loading } = useVhostNotification()
+  const rules = notification?.Rules ?? []
+  const recipients = notification?.Recipients ?? []
 
   return (
     <Layout Vhosts={vhosts} Selected={selected}>
@@ -74,7 +36,7 @@ if (!root) throw new Error('Missing #app mount point')
 createRoot(root).render(
   <StrictMode>
     <RequireAuth>
-      <NotificationsApp />
+      <Notifications />
     </RequireAuth>
   </StrictMode>,
 )

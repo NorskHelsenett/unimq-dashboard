@@ -1,6 +1,6 @@
 import { Switch } from "../ui/switch"
 import { Pill } from "../ui/pill"
-import { AlarmProps } from "./AlarmCard"
+import { AlarmProps } from "@/types/notifications"
 import { Button } from "../ui/button"
 import { Input } from "../ui/input"
 import { useState } from "react"
@@ -8,6 +8,7 @@ import { DropdownMenu } from "radix-ui"
 import { DeleteItem } from "./DeleteItem"
 import { AlarmLogSheet } from "./AlarmLogSheet"
 import { Response } from "../ui/response"
+import { toggleRule, updateRule, testRule } from '@/services/notifications'
 
 export const EditAlarm = ({ alarm, vhost }: { alarm: AlarmProps, vhost: string }) => {
     const [deletingId, setDeletingId] = useState<string | null>(null)
@@ -49,10 +50,7 @@ export const EditAlarm = ({ alarm, vhost }: { alarm: AlarmProps, vhost: string }
             next.has(id) ? next.delete(id) : next.add(id)
             return next
         })
-        const data = new FormData()
-        data.set('vhost', vhost)
-        data.set('id', id)
-        fetch('/notifications/rules/toggle', { method: 'POST', body: data })
+        toggleRule(vhost, id)
     }
 
 
@@ -60,14 +58,9 @@ export const EditAlarm = ({ alarm, vhost }: { alarm: AlarmProps, vhost: string }
         const changes: string[] = []
         if (threshold !== (alarm.threshold?.toString() ?? "")) changes.push(`threshold → ${threshold}`)
         if (message !== (alarm.message ?? "")) changes.push(`message → "${message || "(default)"}"`)
-        const data = new FormData()
-        data.set('vhost', vhost)
-        data.set('id', id)
-        data.set('threshold', threshold)
-        data.set('message', message)
         setUpdated(false)
         setUpdateResult(null)
-        fetch('/notifications/rules/update', { method: 'POST', body: data })
+        updateRule(vhost, id, Number(threshold), message)
             .then(async (res) => {
                 await ensureOk(res, 'Failed to update alarm.')
                 const summary = `Updated: ${changes.join(", ")}`
@@ -89,13 +82,9 @@ export const EditAlarm = ({ alarm, vhost }: { alarm: AlarmProps, vhost: string }
             return
         }
 
-        const data = new FormData()
-        data.set('vhost', vhost)
-        data.set('id', alarmId)
-        data.set('message', '')
         setUpdated(false)
         setUpdateResult(null)
-        fetch('/notifications/rules/message', { method: 'POST', body: data })
+        updateRule(vhost, alarmId, Number(threshold), '')
             .then(async (res) => {
                 await ensureOk(res, 'Failed to reset message to default.')
                 const summary = `Updated: message → "(default)"`
@@ -117,17 +106,9 @@ export const EditAlarm = ({ alarm, vhost }: { alarm: AlarmProps, vhost: string }
             return
         }
 
-        const data = new FormData()
-        data.set('vhost', vhost)
-        data.set('id', alarmId)
-        fetch('/notifications/rules/test', { method: 'POST', body: data })
-            .then(res => res.json())
-            .then((json: { status: string, message: string }) => {
-                if (json.status === 'sent') {
-                    setTestResult({ status: 'success', message: json.message })
-                } else {
-                    setTestResult({ status: 'error', message: json.message })
-                }
+        testRule(vhost, alarmId)
+            .then(result => {
+                setTestResult({ status: result.success ? 'success' : 'error', message: result.message })
             })
             .catch(() => setTestResult({ status: 'error', message: 'Failed to reach server.' }))
     }

@@ -1,13 +1,8 @@
 import { useEffect, useState } from "react"
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "../ui/sheet"
 import { AlertTriangle, CheckCircle2 } from "lucide-react"
-
-type LogEntry = {
-    ts: string
-    event: "fired" | "resolved"
-    value?: number
-    threshold: number
-}
+import { getAlarmLogs} from '@/services/notifications'
+import type { LogEntry } from '@/types/notifications'
 
 export const AlarmLogSheet = ({
     alarmId,
@@ -26,9 +21,8 @@ export const AlarmLogSheet = ({
     useEffect(() => {
         if (!open) return
         setLoading(true)
-        fetch(`/notifications/rules/logs?id=${encodeURIComponent(alarmId)}`)
-            .then(res => res.json())
-            .then((data: LogEntry[] | null) => setEntries(data ?? []))
+        getAlarmLogs(alarmId)
+            .then(data => setEntries(data))
             .catch(() => setEntries([]))
             .finally(() => setLoading(false))
     }, [open, alarmId])
