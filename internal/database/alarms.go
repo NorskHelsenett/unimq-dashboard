@@ -8,6 +8,7 @@ import (
 
 	"github.com/sisneve/rabbitmq-dashboard/internal/models"
 	"go.mongodb.org/mongo-driver/v2/bson"
+	"go.mongodb.org/mongo-driver/v2/mongo/options"
 )
 
 func (dbc *Database) GetAlarmsAll(ctx context.Context) ([]models.AlarmEntry, error) {
@@ -53,6 +54,23 @@ func (dbc *Database) GetAlarm(ctx context.Context, id string) (*models.AlarmEntr
 	return &alarm, nil
 }
 
+func (dbc *Database) GetAlarmByType(ctx context.Context, id string, alarmType models.AlarmType) (*models.AlarmEntry, error) {
+	start := time.Now()
+	var alarm models.AlarmEntry
+
+	projection := bson.M{"entries": bson.M{"$elemMatch": bson.M{"type": alarmType}}}
+
+	err := dbc.Collections.Alarms.FindOne(ctx, bson.M{"_id": id, "type": alarmType}, options.FindOne().SetProjection(projection)).Decode(&alarm)
+	if err != nil {
+		slog.ErrorContext(ctx, "failed to decode alarms by type", "runtime", time.Since(start), "error", err)
+		return nil, err
+	}
+
+	slog.DebugContext(ctx, "retrieved alarms by type", "runtime", time.Since(start))
+
+	return &alarm, nil
+}
+
 func (dbc *Database) AddAlarm(ctx context.Context, alarm *models.AlarmEntry) error {
 	start := time.Now()
 	_, err := dbc.Collections.Alarms.InsertOne(ctx, alarm)
@@ -61,6 +79,17 @@ func (dbc *Database) AddAlarm(ctx context.Context, alarm *models.AlarmEntry) err
 	} else {
 		slog.DebugContext(ctx, "created alarm", "runtime", time.Since(start), "_id", alarm.AlarmID)
 
+	}
+	return err
+}
+
+func (dbc *Database) InsertAlarmEntries(ctx context.Context, alarmID string, logEntries []*models.LogEntry) error {
+	start := time.Now()
+	_, err := dbc.Collections.Alarms.UpdateOne(ctx, bson.M{"_id": alarmID}, bson.M{"$push": bson.M{"entries": bson.M{"$each": logEntries}}})
+	if err != nil {
+		slog.ErrorContext(ctx, "failed to update alarm", "runtime", time.Since(start), "_id", alarmID, "error", err)
+	} else {
+		slog.DebugContext(ctx, "updated alarm", "runtime", time.Since(start), "_id", alarmID)
 	}
 	return err
 }
