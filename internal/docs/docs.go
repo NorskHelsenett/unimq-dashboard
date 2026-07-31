@@ -94,6 +94,12 @@ const docTemplate = `{
                             "$ref": "#/definitions/httpsuite.APIError"
                         }
                     },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/httpsuite.APIError"
+                        }
+                    },
                     "502": {
                         "description": "Bad Gateway",
                         "schema": {
