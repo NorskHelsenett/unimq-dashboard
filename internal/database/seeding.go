@@ -182,28 +182,30 @@ func (dbc *Database) SeedAlarms(ctx context.Context, name string) error {
 		return fmt.Errorf("failed to check existing alarm entry. %w", err)
 	}
 
-	entry := models.AlarmEntry{
+	entries := models.AlarmEntry{
 		AlarmID: name,
-		Entries: []models.LogEntry{
-			{
-				Timestamp: time.Now(),
-				Event:     models.LogEvent("Test alarm triggered"),
-				Value:     nil,
-				Threshold: 0.0,
-			},
-			{
-				Timestamp: time.Now().Add(1 * time.Hour),
-				Event:     models.LogEvent("Test alarm resolved"),
-				Value:     nil,
-				Threshold: 0.0,
-			},
-		},
+		Entries: []models.LogEntry{},
 	}
 
-	err = dbc.AddAlarm(ctx, &entry)
+	val := 5.0
+	entries.Entries = append(entries.Entries, models.NewLogEntry(models.LogEventFired, &val, 3.4, models.AlarmTypeChannels))
+	entries.Entries = append(entries.Entries, models.NewLogEntry(models.LogEventResolved, &val, 42.0, models.AlarmTypeChannels))
+	entries.Entries = append(entries.Entries, models.NewLogEntry(models.LogEventFired, &val, 0.67, models.AlarmTypeQueueSize))
+	entries.Entries = append(entries.Entries, models.NewLogEntry(models.LogEventResolved, &val, 69.0, models.AlarmTypeQueueSize))
+
+	err = dbc.AddAlarm(ctx, &entries)
 	if err != nil {
 		return err
 	}
+
+	// This is mostly to test the InsertAlarmEntries function, which is used to insert log entries for a specific vhost.
+	alarms := []*models.LogEntry{}
+	entry := models.NewLogEntry(models.LogEventFired, &val, 1.337, models.AlarmTypeQueueMessages)
+	alarms = append(alarms, &entry)
+	entry = models.NewLogEntry(models.LogEventResolved, &val, 5.318008, models.AlarmTypeQueueMessages)
+	alarms = append(alarms, &entry)
+
+	err = dbc.InsertAlarmEntries(ctx, name, alarms)
 
 	return nil
 }
