@@ -1,11 +1,13 @@
 package api
 
 import (
+	"errors"
 	"net/http"
 	"net/url"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/sisneve/rabbitmq-dashboard/internal/routes/httpsuite"
+	"go.mongodb.org/mongo-driver/v2/mongo"
 )
 
 // @Summary		Get Alarm History
@@ -34,6 +36,7 @@ func (rc *APIService) GetAlarmHistoryAllHandler(w http.ResponseWriter, r *http.R
 // @Param			vhost-name	path		string	true	"Vhost Name"
 // @Success		200			{array}		[]models.AlarmEntry
 // @Failure		400			{object}	httpsuite.APIError
+// @Failure		404			{object}	httpsuite.APIError
 // @Failure		502			{object}	httpsuite.APIError
 // @Router			/v1/alarms/{vhost-name} [get]
 func (rc *APIService) GetAlarmHistoryHandler(w http.ResponseWriter, r *http.Request) {
@@ -51,6 +54,19 @@ func (rc *APIService) GetAlarmHistoryHandler(w http.ResponseWriter, r *http.Requ
 	}
 
 	alarms, err := rc.DB.GetAlarm(r.Context(), eVhost)
+	if err != nil {
+		if errors.Is(err, mongo.ErrNoDocuments) {
+			httpsuite.WriteJSONError(w, "no alarm history found for vhost: "+eVhost, http.StatusNotFound)
+			return
+		}
+		httpsuite.WriteJSONError(w, "error fetching alarm history: "+err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	if alarms == nil {
+		httpsuite.WriteJSONError(w, "no alarm history found for vhost: "+eVhost, http.StatusNotFound)
+		return
+	}
 
 	httpsuite.SendResponse(r.Context(), w, "Gathered notification history on vhost", http.StatusOK, alarms)
 }
