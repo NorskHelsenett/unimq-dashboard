@@ -94,7 +94,7 @@ type PostAlarmRule struct {
 }
 
 func (p *PostAlarmRule) ToAlarmRule() (*AlarmRule, error) {
-	if !isValidAlarmType(string(p.Type)) {
+	if !IsValidAlarmType(string(p.Type)) {
 		return nil, fmt.Errorf("invalid alarm type: %s", p.Type)
 	}
 	return &AlarmRule{
@@ -166,13 +166,22 @@ func GetAlarmTypes() []AlarmType {
 	}
 }
 
-func isValidAlarmType(s string) bool {
+func IsValidAlarmType(s string) bool {
 	for _, t := range GetAlarmTypes() {
 		if string(t) == s {
 			return true
 		}
 	}
 	return false
+}
+
+func ConvertToAlarmType(s string) (AlarmType, error) {
+	for _, t := range GetAlarmTypes() {
+		if string(t) == s {
+			return t, nil
+		}
+	}
+	return "", fmt.Errorf("invalid alarm type: %s", s)
 }
 
 func (r *AlarmRule) BuildMessage(vhost string) string {
