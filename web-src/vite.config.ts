@@ -14,13 +14,13 @@ export default defineConfig({
     emptyOutDir: true,
     rollupOptions: {
       input: {
-        index: resolve(__dirname, "src/pages/index.tsx"),
+        index: resolve(__dirname, "index.html"),
         queue: resolve(__dirname, "src/pages/Queue.tsx"),
-        notifications: resolve(__dirname, "src/pages/Notifications.tsx"),
-        notifRule: resolve(__dirname, "src/pages/NotifyRule.tsx"),
+        notifications: resolve(__dirname, "notifications.html"),
+        notifRule: resolve(__dirname, "notification_rule.html"),
         maintenance: resolve(__dirname, "src/pages/Maintenance.tsx"),
         maintAdmin: resolve(__dirname, "src/pages/MaintenanceAdmin.tsx"),
-        profile: resolve(__dirname, "src/pages/Profile.tsx"),
+        profile: resolve(__dirname, "profile.html"),
         callback: resolve(__dirname, "callback.html"),
       },
       output: {
