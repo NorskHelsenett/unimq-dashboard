@@ -73,6 +73,22 @@ const docTemplate = `{
                         "name": "vhost-name",
                         "in": "path",
                         "required": true
+                    },
+                    {
+                        "enum": [
+                            "channels",
+                            "connections",
+                            "queues",
+                            "unacked",
+                            "queue_messages",
+                            "queue_size",
+                            "no_consumer",
+                            "maintenance"
+                        ],
+                        "type": "string",
+                        "description": "Alarm Type",
+                        "name": "type",
+                        "in": "query"
                     }
                 ],
                 "responses": {
@@ -1155,8 +1171,14 @@ const docTemplate = `{
         "models.LogEntry": {
             "type": "object",
             "properties": {
+                "alarm_type": {
+                    "$ref": "#/definitions/models.AlarmType"
+                },
                 "event": {
                     "$ref": "#/definitions/models.LogEvent"
+                },
+                "id": {
+                    "type": "string"
                 },
                 "threshold": {
                     "type": "number"

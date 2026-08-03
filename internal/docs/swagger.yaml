@@ -103,8 +103,12 @@ definitions:
     type: object
   models.LogEntry:
     properties:
+      alarm_type:
+        $ref: '#/definitions/models.AlarmType'
       event:
         $ref: '#/definitions/models.LogEvent'
+      id:
+        type: string
       threshold:
         type: number
       ts:
@@ -458,6 +462,19 @@ paths:
         in: path
         name: vhost-name
         required: true
+        type: string
+      - description: Alarm Type
+        enum:
+        - channels
+        - connections
+        - queues
+        - unacked
+        - queue_messages
+        - queue_size
+        - no_consumer
+        - maintenance
+        in: query
+        name: type
         type: string
       produces:
       - application/json
