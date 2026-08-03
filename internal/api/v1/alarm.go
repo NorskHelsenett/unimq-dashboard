@@ -6,6 +6,7 @@ import (
 	"net/url"
 
 	"github.com/go-chi/chi/v5"
+	"github.com/sisneve/rabbitmq-dashboard/internal/models"
 	"github.com/sisneve/rabbitmq-dashboard/internal/routes/httpsuite"
 	"go.mongodb.org/mongo-driver/v2/mongo"
 )
@@ -34,6 +35,7 @@ func (rc *APIService) GetAlarmHistoryAllHandler(w http.ResponseWriter, r *http.R
 // @Tags			Alarms
 // @Produce		json
 // @Param			vhost-name	path		string	true	"Vhost Name"
+// @Param			type		query		models.AlarmType	false	"Alarm Type"
 // @Success		200			{array}		[]models.AlarmEntry
 // @Failure		400			{object}	httpsuite.APIError
 // @Failure		404			{object}	httpsuite.APIError
@@ -50,6 +52,37 @@ func (rc *APIService) GetAlarmHistoryHandler(w http.ResponseWriter, r *http.Requ
 	eVhost, err := url.QueryUnescape(vhost)
 	if err != nil {
 		httpsuite.WriteJSONError(w, "error decoding vhost name", http.StatusBadRequest)
+		return
+	}
+
+	typ := r.URL.Query().Get("type")
+	if typ != "" {
+		if !models.IsValidAlarmType(typ) {
+			httpsuite.WriteJSONError(w, "invalid alarm type: "+typ, http.StatusBadRequest)
+			return
+		}
+
+		alarmType, err := models.ConvertToAlarmType(typ)
+		if err != nil {
+			httpsuite.WriteJSONError(w, "error converting alarm type: "+err.Error(), http.StatusBadRequest)
+			return
+		}
+		alarms, err := rc.DB.GetAlarmByType(r.Context(), eVhost, alarmType)
+		if err != nil {
+			if errors.Is(err, mongo.ErrNoDocuments) {
+				httpsuite.WriteJSONError(w, "no alarm history found for vhost: "+eVhost, http.StatusNotFound)
+				return
+			}
+			httpsuite.WriteJSONError(w, "error fetching alarm history: "+err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		if alarms == nil {
+			httpsuite.WriteJSONError(w, "no alarm history found for vhost: "+eVhost, http.StatusNotFound)
+			return
+		}
+
+		httpsuite.SendResponse(r.Context(), w, "Gathered notification history on vhost", http.StatusOK, alarms)
 		return
 	}
 
