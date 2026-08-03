@@ -117,7 +117,7 @@ export const EditAlarm = ({ alarm, vhost }: { alarm: AlarmProps, vhost: string }
         <div className="mt-2">
         <DeleteItem alarm={alarm} vhost={vhost} open={deletingId !== null} onClose={() => setDeletingId(null)} onDeleted={redirectAfterDelete} />
         {hasAlarmId && (
-            <AlarmLogSheet alarmId={alarmId} alarmName={alarm.name ?? ""} open={showLogs} onClose={() => setShowLogs(false)} />
+            <AlarmLogSheet alarmId={alarmId} alarmName={alarm.name ?? ""} alarmType={alarm.type} open={showLogs} onClose={() => setShowLogs(false)} />
         )}
         <Response onClose={() => setUpdated(false)} open={updated} status="success" message={`Alarm updated successfully!`} />
         <Response onClose={() => setTestResult(null)} open={testResult !== null} status={testResult?.status ?? 'success'} message={testResult?.message ?? ''} />

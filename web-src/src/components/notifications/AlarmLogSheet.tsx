@@ -7,11 +7,13 @@ import type { LogEntry } from '@/types/notifications'
 export const AlarmLogSheet = ({
     alarmId,
     alarmName,
+    alarmType,
     open,
     onClose,
 }: {
     alarmId: string
     alarmName: string
+    alarmType?: string
     open: boolean
     onClose: () => void
 }) => {
@@ -21,11 +23,11 @@ export const AlarmLogSheet = ({
     useEffect(() => {
         if (!open) return
         setLoading(true)
-        getAlarmLogs(alarmId)
+        getAlarmLogs(alarmId, alarmType)
             .then(data => setEntries(data))
             .catch(() => setEntries([]))
             .finally(() => setLoading(false))
-    }, [open, alarmId])
+    }, [open, alarmId, alarmType])
 
     return (
         <Sheet open={open} onOpenChange={o => !o && onClose()}>

@@ -49,6 +49,7 @@ export interface LogEntry {
   event: 'fired' | 'resolved'
   value?: number
   threshold: number
+  alarm_type?: string
 }
 
 export interface TestResult {

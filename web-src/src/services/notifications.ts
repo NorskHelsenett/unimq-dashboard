@@ -97,8 +97,11 @@ export async function deleteRecipient(vhost: string, recipientId: string): Promi
   )
 }
 
-export async function getAlarmLogs(vHost_name: string): Promise<LogEntry[]> {
-  const res = await fetch(`/api/v1/alarms/${encodeURIComponent(vHost_name)}`)
-  const data: ApiResponse<LogEntry[]> | null = await res.json().catch(() => null)
-  return data?.body ?? []
+export async function getAlarmLogs(vHost_name: string, alarmType?: string): Promise<LogEntry[]> {
+  const url = alarmType
+    ? `/api/v1/alarms/${encodeURIComponent(vHost_name)}?type=${encodeURIComponent(alarmType)}`
+    : `/api/v1/alarms/${encodeURIComponent(vHost_name)}`
+  const res = await fetch(url)
+  const data: ApiResponse<{ entries?: LogEntry[] }> | null = await res.json().catch(() => null)
+  return data?.body?.entries ?? []
 }
