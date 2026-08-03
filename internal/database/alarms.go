@@ -8,7 +8,7 @@ import (
 
 	"github.com/sisneve/rabbitmq-dashboard/internal/models"
 	"go.mongodb.org/mongo-driver/v2/bson"
-	"go.mongodb.org/mongo-driver/v2/mongo/options"
+	"go.mongodb.org/mongo-driver/v2/mongo"
 )
 
 func (dbc *Database) GetAlarmsAll(ctx context.Context) ([]models.AlarmEntry, error) {
@@ -56,19 +56,68 @@ func (dbc *Database) GetAlarm(ctx context.Context, id string) (*models.AlarmEntr
 
 func (dbc *Database) GetAlarmByType(ctx context.Context, id string, alarmType models.AlarmType) (*models.AlarmEntry, error) {
 	start := time.Now()
-	var alarm models.AlarmEntry
 
-	projection := bson.M{"entries": bson.M{"$elemMatch": bson.M{"type": alarmType}}}
+	pipeline := mongo.Pipeline{
+		{{
+			Key: "$match",
+			Value: bson.D{
+				{Key: "_id", Value: id},
+			},
+		}},
+		{{
+			Key: "$project",
+			Value: bson.D{
+				{
+					Key: "entries",
+					Value: bson.D{
+						{
+							Key: "$filter",
+							Value: bson.D{
+								{Key: "input", Value: "$entries"},
+								{Key: "as", Value: "entry"},
+								{Key: "cond", Value: bson.D{
+									{Key: "$eq", Value: bson.A{"$$entry.alarmtype", alarmType}},
+								}},
+							},
+						},
+					},
+				},
+			},
+		}},
+	}
 
-	err := dbc.Collections.Alarms.FindOne(ctx, bson.M{"_id": id, "type": alarmType}, options.FindOne().SetProjection(projection)).Decode(&alarm)
+	cursor, err := dbc.Collections.Alarms.Aggregate(ctx, pipeline)
 	if err != nil {
-		slog.ErrorContext(ctx, "failed to decode alarms by type", "runtime", time.Since(start), "error", err)
+		slog.ErrorContext(ctx, "failed to find alarms by type", "runtime", time.Since(start), "id", id, "type", alarmType, "error", err)
+		return nil, fmt.Errorf("failed to find alarms by type. %w", err)
+	}
+	defer func() {
+		err := cursor.Close(ctx)
+		if err != nil {
+			slog.ErrorContext(ctx, "failed to close cursor", "runtime", time.Since(start), "error", err)
+		}
+	}()
+
+	if !cursor.Next(ctx) {
+		slog.DebugContext(ctx, "no alarms found for given type", "runtime", time.Since(start), "id", id, "type", alarmType)
+		return nil, fmt.Errorf("no alarms found for given type: %s", alarmType)
+	}
+
+	var alarm []models.AlarmEntry
+	err = cursor.All(ctx, &alarm)
+	if err != nil {
+		slog.ErrorContext(ctx, "failed to decode alarms by type", "runtime", time.Since(start), "id", id, "type", alarmType, "error", err)
 		return nil, err
 	}
 
-	slog.DebugContext(ctx, "retrieved alarms by type", "runtime", time.Since(start))
+	if len(alarm) != 1 {
+		slog.ErrorContext(ctx, "unexpected number of alarms found for given type", "runtime", time.Since(start), "id", id, "type", alarmType, "count", len(alarm))
+		return nil, fmt.Errorf("unexpected number of alarms found for given type: %d", len(alarm))
+	}
 
-	return &alarm, nil
+	slog.DebugContext(ctx, "retrieved alarms by type", "runtime", time.Since(start), "id", id, "type", alarmType)
+
+	return &alarm[0], nil
 }
 
 func (dbc *Database) AddAlarm(ctx context.Context, alarm *models.AlarmEntry) error {
