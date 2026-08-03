@@ -170,7 +170,7 @@ func (c *Checker) checkRule(rule *models.AlarmRule, vhostName string, urls []str
 	}
 
 	if rule.Status != models.AlarmStatusFiring && newStatus == models.AlarmStatusFiring {
-		entry := models.LogEntry{Timestamp: time.Now(), Event: models.LogEventFired, Value: value, Threshold: rule.Threshold}
+		entry := models.NewLogEntry(models.LogEventFired, value, rule.Threshold, rule.Type)
 		alarm := models.AlarmEntry{
 			AlarmID: rule.ID,
 			Entries: []models.LogEntry{entry},
@@ -181,7 +181,7 @@ func (c *Checker) checkRule(rule *models.AlarmRule, vhostName string, urls []str
 		}
 
 	} else if rule.Status == models.AlarmStatusFiring && newStatus == models.AlarmStatusOK {
-		entry := models.LogEntry{Timestamp: time.Now(), Event: models.LogEventResolved, Value: value, Threshold: rule.Threshold}
+		entry := models.NewLogEntry(models.LogEventResolved, value, rule.Threshold, rule.Type)
 		alarm := models.AlarmEntry{
 			AlarmID: rule.ID,
 			Entries: []models.LogEntry{entry},
