@@ -5,17 +5,17 @@ group "all" {
 target "frontend" {
   context = "."
   dockerfile = "dockerfiles/Dockerfile.frontend"
+
   args = {
     NODE_VERSION = "22"
   }
-  tags = ["nhn-unimq/frontend:latest"]
 }
 
 target "backend" {
   context = "."
   dockerfile = "dockerfiles/Dockerfile.api"
+
   args = {
-    GO_VERSION = "1.25"
+    GO_VERSION = "1.26.4"
   }
-  tags = ["nhn-unimq/backend:latest"]
 }
