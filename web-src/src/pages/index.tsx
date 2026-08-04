@@ -10,35 +10,34 @@ import { QueuesCard } from "@/components/overview/QueuesCard";
 import { ClusterResourceCard } from "@/components/overview/ClusterResourceCard";
 import { VhostResourceCard } from "@/components/overview/VhostResourceCard";
 import { SizeDistributionCard } from "@/components/overview/SizeDistributionCard";
+import { useIndex } from "@/hooks/useIndex";
 
-interface Metrics {
+export interface Metrics {
     connections: number;
     channels: number;
     queues: number;
     unacked: number;
+    name: string;
 }
 
-interface Limits {
+export interface Limits {
     MaxConnections: number;
     MaxQueues: number;
 }
 
-interface IndexData {
+export interface IndexData {
     Vhosts: string[];
     Selected: string;
     Metrics: Metrics | null;
     Limits: Limits;
 }
 
-const data = getPageData<IndexData>();
+//const data = getPageData<IndexData>();
 
 const root = document.getElementById("app");
 if (!root) throw new Error("Missing #app mount point");
 
-const MainPage = () => {
-    const selected = data.Selected;
-    const metrics = data.Metrics;
-
+const MainPage = ({ selected, metrics, limits }: { selected: string; metrics: Metrics | null; limits: Limits }) => {
     return (
         <div className="text-text-primary text-base">
             <h1 className="text-4xl mb-6">{selected}</h1>
@@ -49,8 +48,8 @@ const MainPage = () => {
                         channels={metrics.channels}
                         queues={metrics.queues}
                         unacked={metrics.unacked}
-                        maxConnections={data.Limits.MaxConnections}
-                        maxQueues={data.Limits.MaxQueues}
+                        maxConnections={limits.MaxConnections}
+                        maxQueues={limits.MaxQueues}
                     />
                 ) : (
                     <p className="text-sm text-text-muted">No metrics available.</p>
@@ -63,23 +62,32 @@ const MainPage = () => {
                 {/* Body    T      `json:"body"` */}
 
                 <QueueSizeInfoCard />
-                {/* <QueuesCard vhost={selected} /> TODO: fix this */}
-                {/* <SizeDistributionCard vhost={selected} /> */}
+                {/* todo: queuesCard og sizedistributionCard */}
+                <QueuesCard vhost={selected} /> 
+                <SizeDistributionCard vhost={selected} />
                 <div className="flex gap-4">
                     <ClusterResourceCard />
-                    {/* <VhostResourceCard vhost={selected} /> */}
+                    {/* Fix VhostResourceCard */}
+                    <VhostResourceCard vhost={selected} />
                 </div>
             </div>
         </div>
     );
 };
 
+const App = () => {
+    const { Vhosts, Selected, Metrics, Limits } = useIndex();
+    return (
+        <Layout Vhosts={Vhosts} Selected={Selected}>
+            <MainPage selected={Selected} metrics={Metrics} limits={Limits} />
+        </Layout>
+    );
+};
+
 createRoot(document.getElementById("app")!).render(
     <StrictMode>
         <RequireAuth>
-            <Layout Vhosts={data.Vhosts} Selected={data.Selected}>
-                <MainPage />
-            </Layout>
+            <App />
         </RequireAuth>
     </StrictMode>,
 );

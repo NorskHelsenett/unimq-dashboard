@@ -3,6 +3,7 @@ import { Button } from "../ui/button"
 import { SelectLabel, Selector, SelectorContent, SelectorItem, SelectorTrigger, SelectorValue } from "../ui/selector"
 import { Input } from "../ui/input"
 import { DeleteItem } from "./DeleteItem"
+import { addRecipient } from '@/services/notifications'
 
 
 export interface RecipientsProps {
@@ -24,7 +25,7 @@ function ExisitingRecipients({existingRecipients, vhost}: {existingRecipients: R
 
     const [deletingId, setDeletingId] = useState<string | null>(null)
     const deletingRecipient = recipients.find(r => r.id === deletingId)
-    //Rewrite the deletealarm component to handle both recipients and alarms
+
     
     return (
         <div className="mt-4">
@@ -61,13 +62,13 @@ function AddRecipientForm({selectedType, vhost, onClose}: {selectedType: string,
 
     const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault()
-        const form = e.currentTarget
-        const data = new FormData(form)
-        data.set('vhost', vhost)
-        data.set('type', selectedType)
-        fetch('/notifications/recipients/add', { method: 'POST', body: data }).then(() => {
-            window.location.reload()
-        })
+        const fd = new FormData(e.currentTarget)
+        addRecipient(vhost, {
+            name: fd.get('name') as string,
+            type: selectedType,
+            url: (fd.get('url') as string) || undefined,
+            email: (fd.get('email') as string) || undefined,
+        }).then(() => window.location.reload())
     }
 
     return (

@@ -1,8 +1,9 @@
 import { useState } from "react"
 import { Button } from "../ui/button"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogClose } from "../ui/dialog"
-import { AlarmProps } from "./AlarmCard"
+import { AlarmProps } from "@/types/notifications"
 import { RecipientsProps } from "./RecipientCard"
+import { deleteRule, deleteRecipient } from '@/services/notifications'
 
 interface DeleteAlarmProps {
     alarm?: AlarmProps | undefined
@@ -19,13 +20,10 @@ export function DeleteItem({ recipient, alarm, vhost, open, onClose, onDeleted }
 
     const handleDelete = () => {
         if (!alarm?.id && !recipient?.id) return
-        const data = new FormData()
-        data.set('vhost', vhost)
         if (recipient?.id) {
-            data.set('id', recipient.id)
             setDeleting(true)
             Promise.all([
-                fetch('/notifications/recipients/delete', { method: 'POST', body: data }),
+                deleteRecipient(vhost, recipient.id),
                 new Promise(res => setTimeout(res, 2000)),
             ]).then(() => {
                 setDeleting(false)
@@ -35,10 +33,9 @@ export function DeleteItem({ recipient, alarm, vhost, open, onClose, onDeleted }
             return
         }
         if (!alarm?.id) return
-        data.set('id', alarm.id)
         setDeleting(true)
         Promise.all([
-            fetch('/notifications/rules/delete', { method: 'POST', body: data }),
+            deleteRule(vhost, alarm.id),
             new Promise(res => setTimeout(res, 2000)),
         ]).then(() => {
             setDeleting(false)

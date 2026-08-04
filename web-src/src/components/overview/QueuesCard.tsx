@@ -106,7 +106,8 @@ export function QueuesCard({ vhost }: QueuesCardProps) {
 
     useEffect(() => {
         const load = () =>
-            fetch(`/api/queues?vhost=${encodeURIComponent(vhost)}`)
+            //fetch(`/api/queues?vhost=${encodeURIComponent(vhost)}`)
+            fetch(`/v1/vhosts/vhost=${encodeURIComponent(vhost)}/queues`)
                 .then((r) => {
                     if (!r.ok) throw new Error()
                     return r.json() as Promise<QueueDetail[]>

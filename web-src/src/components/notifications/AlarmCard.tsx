@@ -4,31 +4,9 @@ import { Selector, SelectorTrigger, SelectorContent, SelectorItem, SelectorValue
 import { Button } from "../ui/button"
 import { Switch } from "../ui/switch"
 import { DeleteItem } from "./DeleteItem"
+import { AlarmProps, alarmDropdownOptions } from '@/types/notifications'
+import { toggleRule, addRule } from '@/services/notifications'
 
-export interface AlarmProps {
-    id?: string
-    name?: string
-    type?: string    
-    queue_name?: string    
-    threshold?: number
-    message?: string
-    enabled?: boolean
-    status?: string //"firing", "ok", also based on enabled status
-    last_fired?: string | null
-    last_value?: number | null
-}
-
-
-const alarmDropdownOptions = [
-    { value: 'connections', label: 'Connections' },
-    { value: 'channels', label: 'Channels' },
-    { value: 'queues', label: 'Queues' },
-    { value: 'unacked', label: 'Unacknowledged Messages' },
-    { value: 'queue_messages', label: 'Messages in Queue' },
-    { value: 'queue_size', label: 'Queue Size' },
-    { value: 'no_consumer', label: 'No Consumers' },
-    { value: 'maintenance', label: 'Maintenance Message' },
-]
 
 // name, type, threshold, message, enabled, status, last_value
 function ExistingAlarms({existingAlarms, vhost}: {existingAlarms: AlarmProps[], vhost: string}) {
@@ -54,10 +32,7 @@ function ExistingAlarms({existingAlarms, vhost}: {existingAlarms: AlarmProps[], 
             next.has(id) ? next.delete(id) : next.add(id)
             return next
         })
-        const data = new FormData()
-        data.set('vhost', vhost)
-        data.set('id', id)
-        fetch('/notifications/rules/toggle', { method: 'POST', body: data })
+        toggleRule(vhost, id)
     }
 
     return (
@@ -139,12 +114,14 @@ function AddAlarmForm({ selectedAlarm, vhost, onClose }: { selectedAlarm: string
 
     const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault()
-        const form = e.currentTarget
-        const data = new FormData(form)
-        data.set('vhost', vhost)
-        data.set('type', selectedAlarm)
-        fetch('/notifications/rules/add', { method: 'POST', body: data })
-            .then(() => window.location.reload())
+        const fd = new FormData(e.currentTarget)
+        addRule(vhost, {
+            name: fd.get('name') as string,
+            type: selectedAlarm,
+            queue_name: (fd.get('queue_name') as string) || undefined,
+            threshold: fd.get('threshold') ? Number(fd.get('threshold')) : undefined,
+            message: (fd.get('message') as string) || '',
+        }).then(() => window.location.reload())
     }
 
     return(
