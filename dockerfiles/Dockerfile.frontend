@@ -1,20 +1,4 @@
 ARG GCR_MIRROR=gcr.io/
-#
-# FROM ${GCR_MIRROR}distroless/nodejs26-debian13
-#
-# LABEL org.opencontainers.image.source="https://github.com/norskhelsenett/unimq-dashboard"
-#
-# WORKDIR /app
-#
-# COPY /web/static/dist ./dist
-# COPY /web-src/package.json ./
-# COPY /web-src/package-lock.json ./
-# COPY /web-src/node_modules ./node_modules
-#
-# EXPOSE 5176
-#
-# CMD ["dist/index.js"]
-
 
 FROM node:22-alpine AS builder
 WORKDIR /app
@@ -29,13 +13,5 @@ COPY --from=builder /web-src/static/dist /usr/share/nginx/html
 COPY dockerfiles/nginx.conf /etc/nginx/conf.d/default.conf
 EXPOSE 80
 
-# FROM  nginx:1.25-alpine AS nhn-unimq-dashboard
 
-# LABEL org.opencontainers.image.source="https://github.com/norskhelsenett/unimq-dashboard"
-
-# COPY web/static/dist /usr/share/nginx/html
-
-# EXPOSE 80
-
-
-
+CMD ["nginx", "-g", "daemon off;"]
