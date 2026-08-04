@@ -1,9 +1,33 @@
-group "all" {
+group "default" {
   targets = ["frontend", "backend"]
 }
 
-target "frontend" {
+target "_common" {
   context = "."
+  platforms = [
+    "linux/amd64",
+    "linux/arm64"
+  ]
+
+
+  labels = {
+    "org.opencontainers.image.source" = "https://github.com/NorskHelsenett/unimq-dashboard"
+    "org.opencontainers.image.licenses" = "Apache-2.0"
+  }
+
+
+  cache-from = [
+    "type=gha"
+  ]
+
+  cache-to = [
+    "type=gha,mode=max"
+  ]
+}
+
+target "frontend" {
+  inherits = ["_common"]
+
   dockerfile = "dockerfiles/Dockerfile.frontend"
 
   args = {
@@ -12,7 +36,8 @@ target "frontend" {
 }
 
 target "backend" {
-  context = "."
+  inherits = ["_common"]
+
   dockerfile = "dockerfiles/Dockerfile.api"
 
   args = {
