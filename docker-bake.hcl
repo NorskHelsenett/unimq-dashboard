@@ -2,14 +2,18 @@ group "default" {
   targets = ["frontend", "backend"]
 }
 
+group "release" {
+  targets = ["frontend_release", "backend_release"]
+}
+
 target "_common" {
   context = "."
+
   platforms = [
     "linux/amd64",
     "linux/arm64"
   ]
 
-target "docker-metadata-action" {}
 
   labels = {
     "org.opencontainers.image.source" = "https://github.com/NorskHelsenett/unimq-dashboard"
@@ -26,8 +30,11 @@ target "docker-metadata-action" {}
   ]
 }
 
+target "docker-metadata-action" {}
+
+
 target "frontend" {
-  inherits = ["_common", "docker-metadata-action"]
+  inherits = ["_common"]
 
   dockerfile = "dockerfiles/Dockerfile.frontend"
 
@@ -36,12 +43,20 @@ target "frontend" {
   }
 }
 
+target "frontend_release" {
+  inherits = ["docker-metadata-action", "frontend"]
+}
+
 target "backend" {
-  inherits = ["_common", "docker-metadata-action"]
+  inherits = ["_common"]
 
   dockerfile = "dockerfiles/Dockerfile.backend"
 
   args = {
     GO_VERSION = "1.26.4"
   }
+}
+
+target "backend_release" {
+  inherits = ["docker-metadata-action", "backend"]
 }
