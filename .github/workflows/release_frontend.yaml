@@ -41,7 +41,7 @@ jobs:
 
       - name: Generate metadata
         id: meta
-        uses: docker/metadata-action@v5
+        uses: docker/metadata-action@v6
         with:
           images: ${{ env.IMAGE }}
           tags: |
@@ -51,25 +51,30 @@ jobs:
             type=sha
             type=raw,value=latest,enable=${{ !contains(github.ref_name, '-') }}
 
+      - name: Show metadata outputs
+        run: |
+          echo '${{ toJSON(steps.meta.outputs) }}'
+
       - name: Build and push frontend
-        uses: docker/bake-action@v6
+        uses: docker/bake-action@v7
         with:
-          files: docker-bake.hcl
-          targets: frontend
+          files: |
+            ./docker-bake.hcl
+            cwd://${{ steps.meta.outputs.bake-file-tags }}
+            cwd://${{ steps.meta.outputs.bake-file-labels }}
+          targets: frontend_release
           push: true
           provenance: true
           sbom: true
-          set: |
-            frontend.tags=${{ steps.meta.outputs.tags }}
-            frontend.labels=${{ steps.meta.outputs.labels }}
-          metadata: metadata.json
+
+      - name: Show bake outputs
+        run: |
+          echo '${{ toJSON(steps.bake.outputs) }}'
 
       - name: Install Cosign
         uses: sigstore/cosign-installer@v3
 
       - name: Sign frontend image
         run: |
-          DIGEST=$(jq -r '.frontend["containerimage.digest"]' metadata.json)
-
-          cosign sign --yes \
-            "${IMAGE}@${DIGEST}"
+          cosign sign --yes --recursive \
+            "${IMAGE}:${{ github.ref_name }}"

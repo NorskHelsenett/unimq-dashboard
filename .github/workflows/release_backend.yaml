@@ -62,7 +62,7 @@ jobs:
             ./docker-bake.hcl
             cwd://${{ steps.meta.outputs.bake-file-tags }}
             cwd://${{ steps.meta.outputs.bake-file-labels }}
-          targets: backend
+          targets: backend_release
           push: true
           provenance: true
           sbom: true
@@ -76,7 +76,5 @@ jobs:
 
       - name: Sign backend image
         run: |
-          DIGEST=$(jq -r '.backend["containerimage.digest"]' metadata.json)
-
-          cosign sign --yes \
-            "${IMAGE}@${DIGEST}"
+          cosign sign --yes --recursive \
+            "${IMAGE}:${{ github.ref_name }}"
