@@ -1,10 +1,8 @@
 name: Test and build unimq-dashboard frontend
 
 on:
-  pull_request:
-    branches:
-      - main
   workflow_dispatch:
+  workflow_call:
 
 jobs:
   build-frontend:

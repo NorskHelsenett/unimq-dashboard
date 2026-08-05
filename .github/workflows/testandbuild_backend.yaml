@@ -1,10 +1,8 @@
 name: Test and build unimq-dashboard backend
 
 on:
-  pull_request:
-    branches:
-      - main
   workflow_dispatch:
+  workflow_call:
 
 # For the Golangci-lint job.
 permissions:
@@ -24,37 +22,37 @@ jobs:
           go-version-file: go.mod
           cache: true
           cache-dependency-path: go.sum
-      - name: Test
+      - name: Download go modules
         run: |
-          echo testing...
-          export sha_short=$(git rev-parse --short HEAD)
-          go get -t ./...
-          go vet ./...
-          go test -v ./...
+          go mod download
+
+      - name: Run go vet
+        run: go vet ./...
+
+      - name: Run tests
+        run: go test ./...
+
       - name: Build Swagger
         run: |
           go install github.com/swaggo/swag/cmd/swag@latest
           make docs-run
+
       - name: Build
         run: |
           echo building...
-          export sha_short=$(git rev-parse --short HEAD)
-          export LIB_VER=$(cat go.mod | grep "github.com/NorskHelsenett/unimq-dashboard" | cut -d' ' -f2)
-          go get ./...
           mkdir -p dist/isbuilt
-          CGO_ENABLED=0 go build -o dist/${{ env.APP }} -ldflags "-w -extldflags '-static' /main.go"
+          CGO_ENABLED=0 go build -o dist/${{ env.APP }} -ldflags "-w -extldflags '-static'" ./cmd/unimq/
   golangci:
-    strategy:
-      matrix:
-        go: [stable]
-        os: [ubuntu-latest, macos-latest]
     name: lint
-    runs-on: ${{ matrix.os }}
+    runs-on: ubuntu-latest
+
     steps:
       - uses: actions/checkout@v6
       - uses: actions/setup-go@v6
         with:
-          go-version: ${{ matrix.go }}
+          cache: true
+          cache-dependency-path: go.sum
+          go-version-file: go.mod
       - name: golangci-lint
         uses: golangci/golangci-lint-action@v9
         with:
