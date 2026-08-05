@@ -4,9 +4,8 @@ on:
   pull_request:
     branches:
       - main
-# env:
-#   APP: unimq-dashboard
-#   APP_PATH: cmd/unimq
+  workflow_dispatch:
+
 jobs:
   build-frontend:
     runs-on: ubuntu-latest
