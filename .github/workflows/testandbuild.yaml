@@ -11,7 +11,7 @@ permissions:
 
 jobs:
   frontend:
-    uses: ./.github/workflows/frontend.yml
+    uses: ./.github/workflows/testandbuild_frontend.yml
 
   backend:
-    uses: ./.github/workflows/backend.yml
+    uses: ./.github/workflows/testandbuild_backend.yml
