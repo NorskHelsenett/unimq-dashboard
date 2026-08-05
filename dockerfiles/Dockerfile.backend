@@ -1,13 +1,20 @@
-FROM "golang:latest" AS build
+ARG GO_VERSION=1.26.4
+FROM golang:${GO_VERSION} AS build
 
 WORKDIR /app
+
+COPY go.mod go.sum ./
+
+RUN --mount=type=cache,target=/go/pkg/mod \
+    go mod download
+
 COPY . .
 
-RUN go get ./...
-RUN go fmt ./...
-RUN go vet ./...
-RUN go test ./...
-RUN CGO_ENABLED=0 go build -o nhn-unimq -ldflags '-w -extldflags "-static"' cmd/unimq/main.go
+RUN go mod download
+
+RUN --mount=type=cache,target=/go/pkg/mod \
+    --mount=type=cache,target=/root/.cache/go-build \
+    CGO_ENABLED=0 go build -o nhn-unimq -ldflags '-w -extldflags "-static"' cmd/unimq/main.go
 
 FROM gcr.io/distroless/static AS unimq-backend
 
