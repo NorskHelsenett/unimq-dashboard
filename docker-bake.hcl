@@ -38,7 +38,7 @@ target "frontend" {
 target "backend" {
   inherits = ["_common"]
 
-  dockerfile = "dockerfiles/Dockerfile.api"
+  dockerfile = "dockerfiles/Dockerfile.backend"
 
   args = {
     GO_VERSION = "1.26.4"
