@@ -9,6 +9,7 @@ target "_common" {
     "linux/arm64"
   ]
 
+target "docker-metadata-action" {}
 
   labels = {
     "org.opencontainers.image.source" = "https://github.com/NorskHelsenett/unimq-dashboard"
@@ -26,7 +27,7 @@ target "_common" {
 }
 
 target "frontend" {
-  inherits = ["_common"]
+  inherits = ["_common", "docker-metadata-action"]
 
   dockerfile = "dockerfiles/Dockerfile.frontend"
 
@@ -36,7 +37,7 @@ target "frontend" {
 }
 
 target "backend" {
-  inherits = ["_common"]
+  inherits = ["_common", "docker-metadata-action"]
 
   dockerfile = "dockerfiles/Dockerfile.backend"
 

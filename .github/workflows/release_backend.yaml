@@ -41,7 +41,7 @@ jobs:
 
       - name: Generate metadata
         id: meta
-        uses: docker/metadata-action@v5
+        uses: docker/metadata-action@v6
         with:
           images: ${{ env.IMAGE }}
           tags: |
@@ -51,18 +51,25 @@ jobs:
             type=sha
             type=raw,value=latest,enable=${{ !contains(github.ref_name, '-') }}
 
+      - name: Show metadata outputs
+        run: |
+          echo '${{ toJSON(steps.meta.outputs) }}'
+
       - name: Build and push backend
-        uses: docker/bake-action@v6
+        uses: docker/bake-action@v7
         with:
-          files: docker-bake.hcl
+          files: |
+            ./docker-bake.hcl
+            cwd://${{ steps.meta.outputs.bake-file-tags }}
+            cwd://${{ steps.meta.outputs.bake-file-labels }}
           targets: backend
           push: true
           provenance: true
           sbom: true
-          set: |
-            backend.tags=${{ steps.meta.outputs.tags }}
-            backend.labels=${{ steps.meta.outputs.labels }}
-          metadata: metadata.json
+
+      - name: Show bake outputs
+        run: |
+          echo '${{ toJSON(steps.bake.outputs) }}'
 
       - name: Install Cosign
         uses: sigstore/cosign-installer@v3
