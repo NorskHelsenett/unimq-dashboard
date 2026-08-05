@@ -199,13 +199,16 @@ func (dbc *Database) SeedAlarms(ctx context.Context, name string) error {
 	}
 
 	// This is mostly to test the InsertAlarmEntries function, which is used to insert log entries for a specific vhost.
-	alarms := []*models.LogEntry{}
+	alarms := make([]*models.LogEntry, 0, 2)
 	entry := models.NewLogEntry(models.LogEventFired, &val, 1.337, models.AlarmTypeQueueMessages)
 	alarms = append(alarms, &entry)
 	entry = models.NewLogEntry(models.LogEventResolved, &val, 5.318008, models.AlarmTypeQueueMessages)
 	alarms = append(alarms, &entry)
 
 	err = dbc.InsertAlarmEntries(ctx, name, alarms)
+	if err != nil {
+		return err
+	}
 
 	return nil
 }

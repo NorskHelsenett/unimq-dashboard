@@ -19,23 +19,23 @@ func (dbc *Database) GetVhost(ctx context.Context, vhost string) (*models.VhostN
 	start := time.Now()
 
 	var notification models.VhostNotification
-	err := dbc.Collections.Notifications.FindOne(ctx, bson.M{"_id": vhost}).Decode(&notification)
+	err := dbc.Collections.Notifications.FindOne(ctx, bson.M{id: vhost}).Decode(&notification)
 	if err != nil {
 		if errors.Is(err, mongo.ErrNoDocuments) {
-			slog.DebugContext(ctx, "vhost not found", "runtime", time.Since(start), "_id", vhost)
+			slog.DebugContext(ctx, "vhost not found", "runtime", time.Since(start), id, vhost)
 			return nil, ErrVhostNotFound
 		}
-		slog.ErrorContext(ctx, "failed to retrieve vhost", "runtime", time.Since(start), "_id", vhost, "error", err)
+		slog.ErrorContext(ctx, "failed to retrieve vhost", "runtime", time.Since(start), id, vhost, "error", err)
 		return nil, err
 	}
 
-	slog.DebugContext(ctx, "retrieved vhost", "runtime", time.Since(start), "_id", vhost)
+	slog.DebugContext(ctx, "retrieved vhost", "runtime", time.Since(start), id, vhost)
 	return &notification, err
 }
 
 func (dbc *Database) CheckVhostExists(ctx context.Context, vhost string) (bool, error) {
 	start := time.Now()
-	cursor, err := dbc.Collections.Notifications.Find(ctx, map[string]any{"_id": vhost})
+	cursor, err := dbc.Collections.Notifications.Find(ctx, map[string]any{id: vhost})
 	if err != nil {
 		return false, err
 	}
@@ -50,11 +50,11 @@ func (dbc *Database) CheckVhostExists(ctx context.Context, vhost string) (bool, 
 	var alarms []models.AlarmEntry
 	err = cursor.All(ctx, &alarms)
 	if err != nil {
-		slog.ErrorContext(ctx, "checked vhost existence", "runtime", time.Since(start), "_id", vhost, "exists", len(alarms) > 0, "error", err)
+		slog.ErrorContext(ctx, "checked vhost existence", "runtime", time.Since(start), id, vhost, "exists", len(alarms) > 0, "error", err)
 		return false, err
 	}
 
-	slog.DebugContext(ctx, "checked vhost existence", "runtime", time.Since(start), "_id", vhost, "exists", len(alarms) > 0)
+	slog.DebugContext(ctx, "checked vhost existence", "runtime", time.Since(start), id, vhost, "exists", len(alarms) > 0)
 	return len(alarms) > 0, nil
 }
 
@@ -77,9 +77,9 @@ func (dbc *Database) AddVhost(ctx context.Context, name string) error {
 	notification := models.NewVhostNotification(name)
 	_, err := dbc.Collections.Notifications.InsertOne(ctx, notification)
 	if err != nil {
-		slog.ErrorContext(ctx, "failed to add vhost", "runtime", time.Since(start), "_id", name, "error", err)
+		slog.ErrorContext(ctx, "failed to add vhost", "runtime", time.Since(start), id, name, "error", err)
 	} else {
-		slog.DebugContext(ctx, "added vhost", "runtime", time.Since(start), "_id", notification.Name)
+		slog.DebugContext(ctx, "added vhost", "runtime", time.Since(start), id, notification.Name)
 	}
 
 	return err

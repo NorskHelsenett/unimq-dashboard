@@ -17,7 +17,7 @@ func (dbc *Database) GetNotificationRecipient(ctx context.Context, vhost string,
 	start := time.Now()
 
 	var notification models.VhostNotification
-	err := dbc.Collections.Notifications.FindOne(ctx, map[string]any{"_id": vhost}).Decode(&notification)
+	err := dbc.Collections.Notifications.FindOne(ctx, map[string]any{id: vhost}).Decode(&notification)
 	if err != nil {
 		return nil, fmt.Errorf("failed to retrieve notification recipient %v. %w", vhost, err)
 	}
@@ -26,7 +26,7 @@ func (dbc *Database) GetNotificationRecipient(ctx context.Context, vhost string,
 		if recipient.ID == id {
 			slog.DebugContext(ctx, "retrieved notification recipient",
 				"runtime", time.Since(start),
-				"_id", vhost,
+				id, vhost,
 				"recipient", recipient.Name,
 				"id", recipient.ID,
 			)
@@ -40,7 +40,7 @@ func (dbc *Database) GetNotificationRecipient(ctx context.Context, vhost string,
 func (dbc *Database) AddNotificationRecipient(ctx context.Context, vhost string, recipient *models.Recipient) error {
 	start := time.Now()
 
-	filter := map[string]any{"_id": vhost}
+	filter := map[string]any{id: vhost}
 	update := map[string]any{
 		"$push": map[string]any{
 			"recipients": recipient,
@@ -51,7 +51,7 @@ func (dbc *Database) AddNotificationRecipient(ctx context.Context, vhost string,
 	if err != nil {
 		slog.DebugContext(ctx, "failed to add notification recipient",
 			"runtime", time.Since(start),
-			"_id", vhost,
+			id, vhost,
 			"recipient", recipient.Name,
 			"id", recipient.ID,
 			"error", err,
@@ -59,7 +59,7 @@ func (dbc *Database) AddNotificationRecipient(ctx context.Context, vhost string,
 	} else {
 		slog.DebugContext(ctx, "added notification recipient",
 			"runtime", time.Since(start),
-			"_id", vhost,
+			id, vhost,
 			"recipient", recipient.Name,
 			"id", recipient.ID,
 		)
@@ -71,7 +71,7 @@ func (dbc *Database) AddNotificationRecipient(ctx context.Context, vhost string,
 func (dbc *Database) DeleteNotificationRecipient(ctx context.Context, vhost string, id string) error {
 	start := time.Now()
 
-	filter := map[string]any{"_id": vhost, "recipients.id": id}
+	filter := map[string]any{id: vhost, "recipients.id": id}
 	update := map[string]any{
 		"$pull": map[string]any{
 			"recipients": map[string]any{"id": id},
@@ -82,7 +82,7 @@ func (dbc *Database) DeleteNotificationRecipient(ctx context.Context, vhost stri
 	if err != nil {
 		slog.ErrorContext(ctx, "failed to delete notification recipient",
 			"runtime", time.Since(start),
-			"_id", vhost,
+			id, vhost,
 			"id", id,
 			"error", err,
 		)
@@ -92,7 +92,7 @@ func (dbc *Database) DeleteNotificationRecipient(ctx context.Context, vhost stri
 	if result.ModifiedCount == 0 {
 		slog.ErrorContext(ctx, "no notification recipient found to delete",
 			"runtime", time.Since(start),
-			"_id", vhost,
+			id, vhost,
 			"id", id,
 		)
 		return fmt.Errorf("%w, with id: %s", ErrRecipientNotFound, id)
@@ -100,7 +100,7 @@ func (dbc *Database) DeleteNotificationRecipient(ctx context.Context, vhost stri
 
 	slog.DebugContext(ctx, "deleted notification recipient",
 		"runtime", time.Since(start),
-		"_id", id,
+		id, id,
 	)
 
 	return nil

@@ -43,13 +43,13 @@ func (dbc *Database) GetAlarm(ctx context.Context, id string) (*models.AlarmEntr
 	start := time.Now()
 	var alarm models.AlarmEntry
 
-	err := dbc.Collections.Alarms.FindOne(ctx, bson.M{"_id": id}).Decode(&alarm)
+	err := dbc.Collections.Alarms.FindOne(ctx, bson.M{id: id}).Decode(&alarm)
 	if err != nil {
-		slog.ErrorContext(ctx, "failed to find alarm", "runtime", time.Since(start), "_id", id, "error", err)
+		slog.ErrorContext(ctx, "failed to find alarm", "runtime", time.Since(start), id, id, "error", err)
 		return nil, fmt.Errorf("failed to find alarm. %w", err)
 	}
 
-	slog.DebugContext(ctx, "retrieved alarm", "runtime", time.Since(start), "_id", id)
+	slog.DebugContext(ctx, "retrieved alarm", "runtime", time.Since(start), id, id)
 
 	return &alarm, nil
 }
@@ -61,7 +61,7 @@ func (dbc *Database) GetAlarmByType(ctx context.Context, id string, alarmType mo
 		{{
 			Key: "$match",
 			Value: bson.D{
-				{Key: "_id", Value: id},
+				{Key: id, Value: id},
 			},
 		}},
 		{{
@@ -124,9 +124,9 @@ func (dbc *Database) AddAlarm(ctx context.Context, alarm *models.AlarmEntry) err
 	start := time.Now()
 	_, err := dbc.Collections.Alarms.InsertOne(ctx, alarm)
 	if err != nil {
-		slog.ErrorContext(ctx, "failed to create alarm", "runtime", time.Since(start), "_id", alarm.AlarmID, "error", err)
+		slog.ErrorContext(ctx, "failed to create alarm", "runtime", time.Since(start), id, alarm.AlarmID, "error", err)
 	} else {
-		slog.DebugContext(ctx, "created alarm", "runtime", time.Since(start), "_id", alarm.AlarmID)
+		slog.DebugContext(ctx, "created alarm", "runtime", time.Since(start), id, alarm.AlarmID)
 
 	}
 	return err
@@ -134,22 +134,22 @@ func (dbc *Database) AddAlarm(ctx context.Context, alarm *models.AlarmEntry) err
 
 func (dbc *Database) InsertAlarmEntries(ctx context.Context, alarmID string, logEntries []*models.LogEntry) error {
 	start := time.Now()
-	_, err := dbc.Collections.Alarms.UpdateOne(ctx, bson.M{"_id": alarmID}, bson.M{"$push": bson.M{"entries": bson.M{"$each": logEntries}}})
+	_, err := dbc.Collections.Alarms.UpdateOne(ctx, bson.M{id: alarmID}, bson.M{"$push": bson.M{"entries": bson.M{"$each": logEntries}}})
 	if err != nil {
-		slog.ErrorContext(ctx, "failed to update alarm", "runtime", time.Since(start), "_id", alarmID, "error", err)
+		slog.ErrorContext(ctx, "failed to update alarm", "runtime", time.Since(start), id, alarmID, "error", err)
 	} else {
-		slog.DebugContext(ctx, "updated alarm", "runtime", time.Since(start), "_id", alarmID)
+		slog.DebugContext(ctx, "updated alarm", "runtime", time.Since(start), id, alarmID)
 	}
 	return err
 }
 
 func (dbc *Database) DeleteAlarm(ctx context.Context, alarmID string) error {
 	start := time.Now()
-	_, err := dbc.Collections.Alarms.DeleteOne(ctx, bson.M{"_id": alarmID})
+	_, err := dbc.Collections.Alarms.DeleteOne(ctx, bson.M{id: alarmID})
 	if err != nil {
-		slog.ErrorContext(ctx, "failed to delete alarm", "runtime", time.Since(start), "_id", alarmID, "error", err)
+		slog.ErrorContext(ctx, "failed to delete alarm", "runtime", time.Since(start), id, alarmID, "error", err)
 	} else {
-		slog.DebugContext(ctx, "deleted alarm", "runtime", time.Since(start), "_id", alarmID)
+		slog.DebugContext(ctx, "deleted alarm", "runtime", time.Since(start), id, alarmID)
 	}
 	return err
 }

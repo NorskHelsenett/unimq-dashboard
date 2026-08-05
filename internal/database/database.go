@@ -23,6 +23,12 @@ type Collections struct {
 	Notifications *mongo.Collection
 }
 
+// MongoConstants
+const (
+	set = "$set"
+	id  = "_id"
+)
+
 func BuildURI(host, username, password string, port int) string {
 	return fmt.Sprintf("mongodb://%s:%s@%s:%d",
 		username,
@@ -30,6 +36,7 @@ func BuildURI(host, username, password string, port int) string {
 		host,
 		port,
 	)
+
 }
 
 func NewDatabase(uri, db string) (*Database, error) {

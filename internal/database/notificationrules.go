@@ -17,7 +17,7 @@ func (dbc *Database) GetNotificationRules(ctx context.Context, id string) ([]*mo
 		return nil, err
 	}
 
-	slog.DebugContext(ctx, "retrieved notification rules", "runtime", time.Since(start), "_id", id, "count", len(notification.Rules))
+	slog.DebugContext(ctx, "retrieved notification rules", "runtime", time.Since(start), id, id, "count", len(notification.Rules))
 	return notification.Rules, nil
 }
 
@@ -41,7 +41,7 @@ func (dbc *Database) GetNotificationRule(ctx context.Context, vhost string, rule
 				"runtime", time.Since(start),
 				"vhost", vhost,
 				"rule", rule.Name,
-				"_id", rule.ID,
+				id, rule.ID,
 			)
 			return rule, nil
 		}
@@ -52,7 +52,7 @@ func (dbc *Database) GetNotificationRule(ctx context.Context, vhost string, rule
 func (dbc *Database) AddNotificationRule(ctx context.Context, vhost string, rule *models.AlarmRule) error {
 	start := time.Now()
 
-	filter := map[string]any{"_id": vhost}
+	filter := map[string]any{id: vhost}
 	update := map[string]any{
 		"$push": map[string]any{
 			"rules": rule,
@@ -82,7 +82,7 @@ func (dbc *Database) AddNotificationRule(ctx context.Context, vhost string, rule
 func (dbc *Database) DeleteNotificationRule(ctx context.Context, vhost string, id string) error {
 	start := time.Now()
 
-	filter := map[string]any{"_id": vhost}
+	filter := map[string]any{id: vhost}
 	update := map[string]any{
 		"$pull": map[string]any{
 			"rules": map[string]any{"id": id},
@@ -94,7 +94,7 @@ func (dbc *Database) DeleteNotificationRule(ctx context.Context, vhost string, i
 		slog.ErrorContext(ctx, "failed to delete notification rule",
 			"runtime", time.Since(start),
 			"vhost", vhost,
-			"_id", id,
+			id, id,
 			"error", err,
 		)
 		return fmt.Errorf("failed to delete notification rule. %w", err)
@@ -103,7 +103,7 @@ func (dbc *Database) DeleteNotificationRule(ctx context.Context, vhost string, i
 	slog.DebugContext(ctx, "deleted notification rule",
 		"runtime", time.Since(start),
 		"vhost", vhost,
-		"_id", id,
+		id, id,
 	)
 	return nil
 }
@@ -111,9 +111,9 @@ func (dbc *Database) DeleteNotificationRule(ctx context.Context, vhost string, i
 func (dbc *Database) UpdateNotificationRule(ctx context.Context, vhost, name string, status models.AlarmStatus, value float64, notified bool) error {
 	start := time.Now()
 
-	filter := map[string]any{"_id": vhost, "rules.name": name}
+	filter := map[string]any{id: vhost, "rules.name": name}
 	update := map[string]any{
-		"$set": map[string]any{
+		set: map[string]any{
 			"rules.$.status":    status,
 			"rules.$.lastValue": value,
 			"notified":          notified,
@@ -122,10 +122,10 @@ func (dbc *Database) UpdateNotificationRule(ctx context.Context, vhost, name str
 
 	_, err := dbc.Collections.Notifications.UpdateOne(ctx, filter, update)
 	if err != nil {
-		slog.ErrorContext(ctx, "failed to update notification rule status", "runtime", time.Since(start), "_id", vhost, "rule", name, "error", err)
+		slog.ErrorContext(ctx, "failed to update notification rule status", "runtime", time.Since(start), id, vhost, "rule", name, "error", err)
 		return err
 	} else {
-		slog.DebugContext(ctx, "updated notification rule status", "runtime", time.Since(start), "_id", vhost, "name", name, "notified", notified)
+		slog.DebugContext(ctx, "updated notification rule status", "runtime", time.Since(start), id, vhost, "name", name, "notified", notified)
 	}
 
 	return err
@@ -134,28 +134,28 @@ func (dbc *Database) UpdateNotificationRule(ctx context.Context, vhost, name str
 func (dbc *Database) ToggleNotificationRule(ctx context.Context, vhost, ruleID string, enabled bool) error {
 	start := time.Now()
 
-	filter := map[string]any{"_id": vhost, "rules.id": ruleID}
+	filter := map[string]any{id: vhost, "rules.id": ruleID}
 	update := map[string]any{
-		"$set": map[string]any{
+		set: map[string]any{
 			"rules.$.enabled": enabled,
 		},
 	}
 	_, err := dbc.Collections.Notifications.UpdateOne(ctx, filter, update)
 	if err != nil {
-		slog.ErrorContext(ctx, "failed to toggle notification rule", "runtime", time.Since(start), "_id", vhost, "ruleID", ruleID, "enabled", enabled, "error", err)
+		slog.ErrorContext(ctx, "failed to toggle notification rule", "runtime", time.Since(start), id, vhost, "ruleID", ruleID, "enabled", enabled, "error", err)
 		return err
 	}
 
-	slog.DebugContext(ctx, "toggled notification rule", "runtime", time.Since(start), "_id", vhost, "ruleID", ruleID, "enabled", enabled)
+	slog.DebugContext(ctx, "toggled notification rule", "runtime", time.Since(start), id, vhost, "ruleID", ruleID, "enabled", enabled)
 	return err
 }
 
 func (dbc *Database) UpdateNotificationRuleThreshold(ctx context.Context, vhost, ruleID string, threshold float64) error {
 	start := time.Now()
 
-	filter := map[string]any{"_id": vhost, "rules.id": ruleID}
+	filter := map[string]any{id: vhost, "rules.id": ruleID}
 	update := map[string]any{
-		"$set": map[string]any{
+		set: map[string]any{
 			"rules.$.threshold": threshold,
 		},
 	}
@@ -172,18 +172,18 @@ func (dbc *Database) UpdateNotificationRuleThreshold(ctx context.Context, vhost,
 func (dbc *Database) UpdateNotificationRuleMessage(ctx context.Context, vhost, ruleID string, message string) error {
 	start := time.Now()
 
-	filter := map[string]any{"_id": vhost, "rules.id": ruleID}
+	filter := map[string]any{id: vhost, "rules.id": ruleID}
 	update := map[string]any{
-		"$set": map[string]any{
+		set: map[string]any{
 			"rules.$.message": message,
 		},
 	}
 
 	_, err := dbc.Collections.Notifications.UpdateOne(ctx, filter, update)
 	if err != nil {
-		slog.ErrorContext(ctx, "failed to update notification rule message", "runtime", time.Since(start), "_id", vhost, "ruleID", ruleID, "error", err)
+		slog.ErrorContext(ctx, "failed to update notification rule message", "runtime", time.Since(start), id, vhost, "ruleID", ruleID, "error", err)
 	} else {
-		slog.DebugContext(ctx, "updated notification rule message", "runtime", time.Since(start), "_id", vhost, "ruleID", ruleID)
+		slog.DebugContext(ctx, "updated notification rule message", "runtime", time.Since(start), id, vhost, "ruleID", ruleID)
 	}
 
 	return err

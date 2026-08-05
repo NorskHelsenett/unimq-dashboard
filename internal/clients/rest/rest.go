@@ -125,21 +125,26 @@ func (r *RestClient) request(method string, url string, body any, out any, restc
 	var req *http.Request
 	if body == nil {
 		req, err = http.NewRequestWithContext(r.Context, method, endpoint.String(), nil)
+		if err != nil {
+			return http.StatusInternalServerError,
+				fmt.Errorf("unable to create new request of method %v with endpoint %v without a body. %w",
+					method,
+					endpoint.String(), err)
+		}
 	} else {
 		bodybytes, err := json.Marshal(body)
 		if err != nil {
 			return http.StatusInternalServerError, fmt.Errorf("unable to marshal body %v. %w", body, err)
 		}
 		req, err = http.NewRequestWithContext(r.Context, method, endpoint.String(), bytes.NewReader(bodybytes))
+		if err != nil {
+			return http.StatusInternalServerError,
+				fmt.Errorf("unable to create new request of method %v with endpoint %v with a body. %w",
+					method,
+					endpoint.String(), err)
+		}
 	}
-	if err != nil {
-		return http.StatusInternalServerError,
-			fmt.Errorf("unable to create new request of method %v with endpoint %v. %w",
-				http.MethodPost,
-				endpoint,
-				err,
-			)
-	}
+
 	r.addCommonHeaders(req)
 	r.processParams(restclientParam, req)
 	slog.DebugContext(r.Context, "making request", "method", method, "url", endpoint.String())
@@ -164,34 +169,45 @@ func (r *RestClient) request(method string, url string, body any, out any, restc
 		return resp.StatusCode, err
 	}
 
-	if out == nil {
-		err = resp.Body.Close()
-		if err != nil {
-			slog.ErrorContext(r.Context, "error closing response body", "error", err)
-		}
-		return resp.StatusCode, nil
-	}
-
-	err = json.NewDecoder(resp.Body).Decode(&out)
+	err = handleOutput(r.Context, out, resp)
 	if err != nil {
-		if errors.Is(err, io.EOF) {
-			return resp.StatusCode, nil
-		}
-		return http.StatusInternalServerError, fmt.Errorf("unable to read body of response. %w", err)
-	}
-
-	err = resp.Body.Close()
-	if err != nil {
-		slog.ErrorContext(r.Context, "error closing response body", "error", err)
+		return resp.StatusCode, fmt.Errorf("unable to handle output. %w", err)
 	}
 
 	return resp.StatusCode, nil
 }
+
+func handleOutput(ctx context.Context, out any, resp *http.Response) error {
+
+	if out == nil {
+		err := resp.Body.Close()
+		if err != nil {
+			slog.ErrorContext(ctx, "error closing response body", "error", err)
+		}
+		return err
+	}
+
+	err := json.NewDecoder(resp.Body).Decode(&out)
+	if err != nil {
+		if errors.Is(err, io.EOF) {
+			return nil
+		}
+		return fmt.Errorf("unable to read body of response. %w", err)
+	}
+
+	err = resp.Body.Close()
+	if err != nil {
+		slog.ErrorContext(ctx, "error closing response body", "error", err)
+	}
+	return nil
+}
+
 func (r *RestClient) addCommonHeaders(req *http.Request) {
 	req.Header.Set("User-Agent", userAgent)
 	req.Header.Add("Accept", `application/json`)
 	req.Header.Add("Content-Type", `application/json`)
 }
+
 func (r *RestClient) processParams(params []Params, req *http.Request) {
 	auth := true
 	for _, param := range params {
