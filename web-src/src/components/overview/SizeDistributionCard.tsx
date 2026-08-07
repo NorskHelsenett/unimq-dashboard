@@ -208,6 +208,7 @@
 import { useState, useEffect, useMemo } from 'react'
 import { fmtBytes } from '@/lib/format'
 import { cn } from '@/lib/utils'
+import { apiFetch } from '@/lib/apiClient'
  
 interface QueueDetail {
     name: string
@@ -361,7 +362,7 @@ export function SizeDistributionCard({ vhost }: SizeDistributionCardProps) {
  
     useEffect(() => {
         const load = () =>
-            fetch(`/v1/vhosts/vhost=${encodeURIComponent(vhost)}/queues`)
+            apiFetch(`/v1/vhosts/vhost=${encodeURIComponent(vhost)}/queues`)
                 .then((r) => {
                     if (!r.ok) throw new Error()
                     return r.json() as Promise<QueueDetail[]>

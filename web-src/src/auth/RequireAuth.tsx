@@ -1,9 +1,14 @@
 import { useEffect } from "react"
 import { AuthProvider, useAuth } from "react-oidc-context"
 import { oidcConfig } from "./auth.config"
+import { setAuthToken } from "@/lib/apiClient"
 
 function AuthGuard({ children }: { children: React.ReactNode }) {
   const auth = useAuth()
+
+  useEffect(() => {
+    setAuthToken(auth.user?.access_token ?? null)
+  }, [auth.user])
 
   useEffect(() => {
     return auth.events.addSilentRenewError(() => {
