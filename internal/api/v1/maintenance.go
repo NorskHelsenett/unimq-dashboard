@@ -12,7 +12,6 @@ import (
 	"github.com/sisneve/rabbitmq-dashboard/internal/database"
 	"github.com/sisneve/rabbitmq-dashboard/internal/models"
 	"github.com/sisneve/rabbitmq-dashboard/internal/routes/httpsuite"
-	"go.mongodb.org/mongo-driver/v2/bson"
 )
 
 // @Summary		Get scheduled  maintenance information and history
@@ -22,6 +21,7 @@ import (
 // @Success		200	{object}	models.MaintenanceResponse
 // @Failure		500	{object}	httpsuite.APIError
 // @Router			/v1/maintenance [get]
+// @security		bearer
 func (rc *APIService) GetMaintenanceHandler(w http.ResponseWriter, r *http.Request) {
 	// Advance stale entries before returning so callers always see current statuses
 	if _, err := rc.DB.AdvanceMaintenanceStatuses(r.Context()); err != nil {
@@ -44,25 +44,6 @@ func (rc *APIService) GetMaintenanceHandler(w http.ResponseWriter, r *http.Reque
 	httpsuite.SendResponse(r.Context(), w, "Fetched sheduled and historic maintenance", http.StatusOK, &response)
 }
 
-// @Summary		Get all maintenance entries
-// @Description	Get all maintenance entries for admin view
-// @Tags			Maintenance
-// @Produce		json
-// @Success		200	{object}	models.MaintenanceAdminResponse
-// @Failure		500	{object}	httpsuite.APIError
-// @Router			/v1/maintenance/admin [get]
-func (rc *APIService) GetMaintenanceAdminHandler(w http.ResponseWriter, r *http.Request) {
-
-	maintenanceAll, err := rc.DB.GetMaintenanceAll(r.Context(), bson.D{})
-	if err != nil {
-		httpsuite.WriteJSONError(w, "error fetching maintenance", http.StatusInternalServerError)
-		return
-	}
-
-	response := models.NewMaintenanceAdminResponse(maintenanceAll)
-	httpsuite.SendResponse(r.Context(), w, "Fetched all maintenance entries", http.StatusOK, &response)
-}
-
 // @Summary		Add new scheduled maintenance entry
 // @Description	Add new maintenance entry with description, start time, and end time that will have the status Scheduled
 // @Tags			Maintenance
@@ -72,6 +53,7 @@ func (rc *APIService) GetMaintenanceAdminHandler(w http.ResponseWriter, r *http.
 // @Failure		400		{object}	httpsuite.APIError
 // @Failure		500		{object}	httpsuite.APIError
 // @Router			/v1/maintenance [post]
+// @security		bearer
 func (rc *APIService) AddMaintenanceHandler(w http.ResponseWriter, r *http.Request) {
 
 	var entry models.PostMaintenanceEntry
@@ -109,6 +91,7 @@ func (rc *APIService) AddMaintenanceHandler(w http.ResponseWriter, r *http.Reque
 // @Failure		404				{object}	httpsuite.APIError
 // @Failure		500				{object}	httpsuite.APIError
 // @Router			/v1/maintenance/{maintenance-id} [put]
+// @security		bearer
 func (rc *APIService) UpdateMaintenanceStatusHandler(w http.ResponseWriter, r *http.Request) {
 	id := chi.URLParam(r, "maintenance")
 	if id == "" {
@@ -230,6 +213,7 @@ func (rc *APIService) GetMaintenanceEditLogsHandler(w http.ResponseWriter, r *ht
 // @Failure		404	{object}	httpsuite.APIError
 // @Failure		500	{object}	httpsuite.APIError
 // @Router			/v1/maintenance/{maintenance-id} [delete]
+// @security		bearer
 func (rc *APIService) DeleteMaintenanceHandler(w http.ResponseWriter, r *http.Request) {
 	id := chi.URLParam(r, "maintenance")
 	if id == "" {
