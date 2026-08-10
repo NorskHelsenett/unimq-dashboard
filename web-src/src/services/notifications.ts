@@ -2,17 +2,16 @@ import type { VhostNotification } from '@/types/notifications'
 import type { LogEntry, TestResult, VhostObj } from '@/types/notifications'
 import { apiFetch } from '@/lib/apiClient'
 
+export interface ApiResponse<T> {
+  code: number
+  message: string
+  body: T
+}
 
 export function getSelectedVhost(vhosts: string[]): string {
   const params = new URLSearchParams(window.location.search)
   const vhost = params.get('vhost')
   return (vhost && vhosts.includes(vhost)) ? vhost : (vhosts[0] ?? '')
-}
-
-interface ApiResponse<T> {
-  code: number
-  message: string
-  body: T
 }
 
 function jsonPost(body: unknown): RequestInit {

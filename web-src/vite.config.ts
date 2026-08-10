@@ -43,7 +43,13 @@ export default defineConfig({
       },
       // "/notifications": "http://localhost:8080",
       "/notifications/": "http://localhost:8080",
-      "/maintenance": "http://localhost:8080",
+      "/maintenance": {
+        target: "http://localhost:8080",
+        bypass: (req) => {
+          if (req.method === "GET") return "/maintenance.html"
+          return null
+        },
+      },
       "/static/logo": "http://localhost:8080",
     },
   },

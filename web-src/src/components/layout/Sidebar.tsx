@@ -3,7 +3,7 @@ import { LogoLink } from "./LogoLink"
 import { cn } from "@/lib/utils"
 import { VhostSelector } from "./VhostSelector"
 import { Vhosts } from "@/types/vhosts"
-import { User } from "lucide-react"
+import { User, Wrench } from "lucide-react"
 import { Selector, SelectorTrigger, SelectorContent, SelectorItem, SelectorValue } from "../ui/selector"
 import { useAuth } from "react-oidc-context"
 
@@ -12,17 +12,25 @@ function isActive(itemHref: string, currentPath: string): boolean {
     return currentPath.startsWith(itemHref)
 }
 
-export function Sidebar({ Vhosts, Selected }: Vhosts) {
+export function Sidebar({ Vhosts, Selected, MaintenanceMode=false }: Vhosts & { MaintenanceMode: boolean }) {
     const currentPath = window.location.pathname
     const auth = useAuth()
 
     return (
         <nav className="relative flex flex-col pt-4 border-r border-border-sidebar h-full min-h-screen">
             <LogoLink />
-            <div className="p-4 flex gap-2 items-center border-y my-4">
-                <span>Vhost:</span> 
-                <VhostSelector Vhosts={Vhosts} Selected={Selected} />
-            </div>
+            {MaintenanceMode ? (
+                <div className="mx-4 my-4 flex items-center gap-2 rounded-md border border-amber-500/30 bg-amber-500/10 px-3 py-2 text-amber-500">
+                    <Wrench size={14} className="shrink-0" />
+                    <span className="text-sm font-medium"></span>
+                </div>
+            ) : (
+                <div className="p-4 flex gap-2 items-center border-y my-4">
+                    <span>Vhost:</span>
+                    <VhostSelector Vhosts={Vhosts} Selected={Selected} />
+                </div>
+            )}
+            
             <div className="flex flex-col gap-1">
                 {NAV_ITEMS.map((item) => {
                     const active = isActive(item.href, currentPath)
