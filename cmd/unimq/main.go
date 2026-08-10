@@ -49,8 +49,13 @@ func main() {
 		return
 	}
 
-	uri := database.BuildURI(config.MongoDBHost, config.MongoDBUsername, config.MongoDBPassword, config.MongoDBPort)
-	db, err := database.NewDatabase(uri, config.MongoDBDatabase)
+	db, err := database.NewDatabase(
+		database.WithDatabase(config.MongoDBDatabase),
+		database.WithHost(config.MongoDBHost),
+		database.WithPort(config.MongoDBPort),
+		database.WithUsername(config.MongoDBUsername),
+		database.WithPassword(config.MongoDBPassword),
+	)
 	if err != nil {
 		slog.Error("failed to connect to database", "error", err)
 		return
@@ -59,8 +64,13 @@ func main() {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	rmqurl := fmt.Sprintf("%v:%d/api", config.RabbitMQHost, config.RabbitMQPort)
-	rmq, err := rabbitmq.NewRMQClient(ctx, rmqurl, config.RabbitMQUsername, config.RabbitMQPassword)
+	rmq, err := rabbitmq.NewRMQClient(
+		rabbitmq.WithRMQHost(config.RabbitMQHost),
+		rabbitmq.WithRMQPort(config.RabbitMQPort),
+		rabbitmq.WithRMQUsername(config.RabbitMQUsername),
+		rabbitmq.WithRMQPassword(config.RabbitMQPassword),
+		rabbitmq.WithRMQContext(ctx),
+	)
 	if err != nil {
 		slog.Error("failed to create RabbitMQ client", "error", err)
 		return

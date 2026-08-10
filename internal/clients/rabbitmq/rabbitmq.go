@@ -39,12 +39,67 @@ func appendHistory(key string, value int) []int {
 	return h
 }
 
-func NewRMQClient(ctx context.Context, url, username, password string) (*RMQClient, error) {
-	restclient, err := rest.NewRestClient(url,
-		rest.WithContext(ctx),
-		rest.WithUsername(username),
-		rest.WithPassword(password),
-		rest.WithAuthProvider(httpauthproviders.NewBasicAuthProvider(username, password)),
+type (
+	rmqClientConfig struct {
+		Host     string
+		Port     int
+		Username string
+		Password string
+		Ctx      context.Context
+	}
+
+	rmqClientOptions func(*rmqClientConfig)
+)
+
+func newRMQClientConfig() *rmqClientConfig {
+	return &rmqClientConfig{
+		Host:     "localhost",
+		Port:     15672,
+		Username: "",
+		Password: "",
+		Ctx:      context.Background(),
+	}
+}
+
+func WithRMQHost(host string) rmqClientOptions {
+	return func(rc *rmqClientConfig) {
+		rc.Host = host
+	}
+}
+
+func WithRMQPort(port int) rmqClientOptions {
+	return func(rc *rmqClientConfig) {
+		rc.Port = port
+	}
+}
+
+func WithRMQUsername(username string) rmqClientOptions {
+	return func(rc *rmqClientConfig) {
+		rc.Username = username
+	}
+}
+
+func WithRMQPassword(password string) rmqClientOptions {
+	return func(rc *rmqClientConfig) {
+		rc.Password = password
+	}
+}
+
+func WithRMQContext(ctx context.Context) rmqClientOptions {
+	return func(rc *rmqClientConfig) {
+		rc.Ctx = ctx
+	}
+}
+
+func NewRMQClient(opts ...rmqClientOptions) (*RMQClient, error) {
+	config := newRMQClientConfig()
+	for _, opt := range opts {
+		opt(config)
+	}
+	rmqurl := fmt.Sprintf("%v:%d/api", config.Host, config.Port)
+	restclient, err := rest.NewRestClient(rmqurl,
+		rest.WithContext(config.Ctx),
+		rest.WithAuthProvider(httpauthproviders.NewBasicAuthProvider(config.Username, config.Password)),
 	)
 	if err != nil {
 		return nil, err
