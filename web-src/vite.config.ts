@@ -41,7 +41,6 @@ export default defineConfig({
           return null
         },
       },
-      // "/notifications": "http://localhost:8080",
       "/notifications/": "http://localhost:8080",
       "/maintenance": {
         target: "http://localhost:8080",
