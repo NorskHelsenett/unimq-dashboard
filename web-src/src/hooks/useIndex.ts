@@ -1,5 +1,5 @@
 import type { IndexData, Metrics, Limits } from "@/pages/index"
-import { getVhosts } from "@/services/notifications"
+import { getVhosts } from "@/services/vhosts"
 import { apiFetch } from "@/lib/apiClient"
 import { useEffect, useState } from "react"
 

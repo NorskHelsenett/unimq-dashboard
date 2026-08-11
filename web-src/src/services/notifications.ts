@@ -1,12 +1,8 @@
 import type { VhostNotification } from '@/types/notifications'
-import type { LogEntry, TestResult, VhostObj } from '@/types/notifications'
+import type { LogEntry, TestResult } from '@/types/notifications'
 import { apiFetch } from '@/lib/apiClient'
+import { ApiResponse } from '@/services/vhosts'
 
-export interface ApiResponse<T> {
-  code: number
-  message: string
-  body: T
-}
 
 export function getSelectedVhost(vhosts: string[]): string {
   const params = new URLSearchParams(window.location.search)
@@ -20,12 +16,6 @@ function jsonPost(body: unknown): RequestInit {
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(body),
   }
-}
-
-export async function getVhosts(): Promise<string[]> {
-  const res = await apiFetch('/api/v1/vhosts')
-  const data: ApiResponse<VhostObj[]> = await res.json()
-  return (data.body ?? []).map(v => v.name)
 }
 
 export async function getVhostNotification(vhost: string): Promise<VhostNotification | null> {
