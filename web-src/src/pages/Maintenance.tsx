@@ -5,14 +5,15 @@ import { RequireAuth } from '@/auth/RequireAuth'
 import { Layout } from '@/components/layout/Layout'
 import { MaintenanceHistoryCard } from '@/components/maintenance/MaintenanceHistoryCard'
 import { useMaintenance } from '@/hooks/useMaintenance'
+import { useIndex } from '@/hooks/useIndex'
 
 function MaintenancePage() {
 
   const { maintenanceHistory, loading } = useMaintenance()
 
-  const { vhosts, selected } = { vhosts: [], selected: '' }
+  const { Vhosts, Selected } = useIndex()
   return (
-    <Layout Vhosts={vhosts} Selected={selected} MaintenanceMode={true}>
+    <Layout Vhosts={Vhosts} Selected={Selected} >
           {loading ? (
             <div className="p-8 text-text-muted">Loading...</div>
           ) : (
