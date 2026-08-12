@@ -57,10 +57,10 @@ func (dbc *Database) GetMaintenanceHistory(ctx context.Context) ([]models.Mainte
 
 }
 
-func (dbc *Database) SetMaintenanceEntryStatus(ctx context.Context, id string, status models.MaintenanceStatus) error {
+func (dbc *Database) SetMaintenanceEntryStatus(ctx context.Context, entryID string, status models.MaintenanceStatus) error {
 	start := time.Now()
 
-	filter := map[string]any{id: id}
+	filter := map[string]any{id: entryID}
 	update := map[string]any{
 		set: map[string]any{
 			"status": status,
@@ -68,18 +68,18 @@ func (dbc *Database) SetMaintenanceEntryStatus(ctx context.Context, id string, s
 	}
 	_, err := dbc.Collections.Maintenance.UpdateOne(ctx, filter, update)
 	if err != nil {
-		slog.ErrorContext(ctx, "failed to update maintenance", "runtime", time.Since(start), id, id, "status", status, "error", err)
+		slog.ErrorContext(ctx, "failed to update maintenance", "runtime", time.Since(start), id, entryID, "status", status, "error", err)
 	} else {
-		slog.DebugContext(ctx, "updated maintenance", "runtime", time.Since(start), id, id, "status", status)
+		slog.DebugContext(ctx, "updated maintenance", "runtime", time.Since(start), id, entryID, "status", status)
 	}
 
 	return err
 }
 
-func (dbc *Database) SetMaintenanceEntryNotified(ctx context.Context, id string, notified bool) error {
+func (dbc *Database) SetMaintenanceEntryNotified(ctx context.Context, entryID string, notified bool) error {
 	start := time.Now()
 
-	filter := map[string]any{id: id}
+	filter := map[string]any{id: entryID}
 	update := map[string]any{
 		set: map[string]any{
 			"notified": notified,
@@ -87,24 +87,24 @@ func (dbc *Database) SetMaintenanceEntryNotified(ctx context.Context, id string,
 	}
 	_, err := dbc.Collections.Maintenance.UpdateOne(ctx, filter, update)
 	if err != nil {
-		slog.ErrorContext(ctx, "failed to update maintenance", "runtime", time.Since(start), id, id, "notified", notified, "error", err)
+		slog.ErrorContext(ctx, "failed to update maintenance", "runtime", time.Since(start), id, entryID, "notified", notified, "error", err)
 	} else {
-		slog.DebugContext(ctx, "updated maintenance", "runtime", time.Since(start), id, id, "notified", notified)
+		slog.DebugContext(ctx, "updated maintenance", "runtime", time.Since(start), id, entryID, "notified", notified)
 	}
 
 	return err
 }
 
-func (dbc *Database) GetMaintenanceEntry(ctx context.Context, id string) (*models.MaintenanceEntry, error) {
+func (dbc *Database) GetMaintenanceEntry(ctx context.Context, entryID string) (*models.MaintenanceEntry, error) {
 	start := time.Now()
 
 	var entry models.MaintenanceEntry
-	err := dbc.Collections.Maintenance.FindOne(ctx, map[string]any{id: id}).Decode(&entry)
+	err := dbc.Collections.Maintenance.FindOne(ctx, map[string]any{id: entryID}).Decode(&entry)
 	if err != nil {
-		slog.ErrorContext(ctx, "failed to retrieve maintenance", "runtime", time.Since(start), "id", id, "error", err)
+		slog.ErrorContext(ctx, "failed to retrieve maintenance", "runtime", time.Since(start), id, entryID, "error", err)
 		return nil, err
 	}
-	slog.DebugContext(ctx, "retrieved maintenance", "runtime", time.Since(start), id, id)
+	slog.DebugContext(ctx, "retrieved maintenance", "runtime", time.Since(start), id, entryID)
 
 	return &entry, err
 }
@@ -122,10 +122,10 @@ func (dbc *Database) AddMaintenanceEntry(ctx context.Context, entry *models.Main
 	return err
 }
 
-func (dbc *Database) UpdateMaintenanceEntry(ctx context.Context, id string, status string) error {
+func (dbc *Database) UpdateMaintenanceEntry(ctx context.Context, entryID string, status string) error {
 	start := time.Now()
 
-	filter := map[string]any{id: id}
+	filter := map[string]any{id: entryID}
 	update := map[string]any{
 		set: map[string]any{
 			"status": status,
@@ -134,9 +134,9 @@ func (dbc *Database) UpdateMaintenanceEntry(ctx context.Context, id string, stat
 
 	_, err := dbc.Collections.Maintenance.UpdateOne(ctx, filter, update)
 	if err != nil {
-		slog.ErrorContext(ctx, "failed to update maintenance", "runtime", time.Since(start), id, id, "error", err)
+		slog.ErrorContext(ctx, "failed to update maintenance", "runtime", time.Since(start), id, entryID, "error", err)
 	} else {
-		slog.DebugContext(ctx, "updated maintenance", "runtime", time.Since(start), id, id)
+		slog.DebugContext(ctx, "updated maintenance", "runtime", time.Since(start), id, entryID)
 	}
 
 	return err
@@ -146,19 +146,19 @@ var (
 	ErrMaintenanceNotFound = fmt.Errorf("maintenance entry not found")
 )
 
-func (dbc *Database) DeleteMaintenanceEntry(ctx context.Context, id string) error {
+func (dbc *Database) DeleteMaintenanceEntry(ctx context.Context, entryID string) error {
 	start := time.Now()
 
-	status, err := dbc.Collections.Maintenance.DeleteOne(ctx, map[string]any{id: id})
+	status, err := dbc.Collections.Maintenance.DeleteOne(ctx, map[string]any{id: entryID})
 	if err != nil {
-		slog.ErrorContext(ctx, "failed to delete maintenance", "runtime", time.Since(start), id, id, "error", err)
+		slog.ErrorContext(ctx, "failed to delete maintenance", "runtime", time.Since(start), id, entryID, "error", err)
 		return err
 	}
 	if status.DeletedCount == 0 {
-		slog.ErrorContext(ctx, "no maintenance entry found to delete", "runtime", time.Since(start), id, id)
-		return fmt.Errorf("%w, with id: %s", ErrMaintenanceNotFound, id)
+		slog.ErrorContext(ctx, "no maintenance entry found to delete", "runtime", time.Since(start), id, entryID)
+		return fmt.Errorf("%w, with id: %s", ErrMaintenanceNotFound, entryID)
 	}
 
-	slog.DebugContext(ctx, "deleted maintenance", "runtime", time.Since(start), id, id)
+	slog.DebugContext(ctx, "deleted maintenance", "runtime", time.Since(start), id, entryID)
 	return nil
 }
