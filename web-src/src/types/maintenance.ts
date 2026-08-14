@@ -2,8 +2,8 @@ export interface ApiResponse<Scheduled, History> {
     code: number
     message: string
     body: {
-        scheduled: Scheduled[]
-        history: History[]
+        Scheduled: Scheduled[]
+        History: History[]
     }
 }
 
@@ -12,6 +12,20 @@ export interface Maintenance {
     description: string
     start: string
     end: string
-    status: 'scheduled' | 'in_progress' | 'completed'
+    status: 'scheduled' | 'done' | 'skipped' | 'unknown'
     notified: boolean
+    updated_by?: string
+    updated_at?: string
+    update_reason?: string
+}
+
+export interface UseMaintenanceHistoryResult {
+  maintenanceHistory: Maintenance[]
+  loading: boolean
+}
+
+export interface UseMaintenanceScheduleResult {
+  maintenanceSchedule: Maintenance[]
+  loading: boolean
+  refetch: () => void
 }

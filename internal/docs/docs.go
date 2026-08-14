@@ -346,6 +346,107 @@ const docTemplate = `{
                         }
                     }
                 }
+            },
+            "patch": {
+                "description": "Edit description, start, and end of an existing maintenance entry, with an audit trail",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Maintenance"
+                ],
+                "summary": "Edit a maintenance entry",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Maintenance Entry ID",
+                        "name": "maintenance-id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Updated Maintenance Data",
+                        "name": "entry",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/models.PatchMaintenanceEntry"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Maintenance entry updated successfully",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/httpsuite.APIError"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/httpsuite.APIError"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/httpsuite.APIError"
+                        }
+                    }
+                }
+            }
+        },
+        "/v1/maintenance/{maintenance-id}/logs": {
+            "get": {
+                "description": "Returns all edit log entries for a given maintenance ID",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Maintenance"
+                ],
+                "summary": "Get edit history for a maintenance entry",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Maintenance Entry ID",
+                        "name": "maintenance-id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/models.MaintenanceEditLog"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/httpsuite.APIError"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/httpsuite.APIError"
+                        }
+                    }
+                }
             }
         },
         "/v1/notifications": {
@@ -1213,6 +1314,35 @@ const docTemplate = `{
                 }
             }
         },
+        "models.MaintenanceEditLog": {
+            "type": "object",
+            "properties": {
+                "description": {
+                    "type": "string"
+                },
+                "end": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "maintenance_id": {
+                    "type": "string"
+                },
+                "reason": {
+                    "type": "string"
+                },
+                "start": {
+                    "type": "string"
+                },
+                "updated_at": {
+                    "type": "string"
+                },
+                "updated_by": {
+                    "type": "string"
+                }
+            }
+        },
         "models.MaintenanceEntry": {
             "type": "object",
             "properties": {
@@ -1242,6 +1372,15 @@ const docTemplate = `{
                         }
                     ],
                     "example": "-"
+                },
+                "update_reason": {
+                    "type": "string"
+                },
+                "updated_at": {
+                    "type": "string"
+                },
+                "updated_by": {
+                    "type": "string"
                 }
             }
         },
@@ -1332,6 +1471,26 @@ const docTemplate = `{
                     "type": "integer"
                 },
                 "name": {
+                    "type": "string"
+                }
+            }
+        },
+        "models.PatchMaintenanceEntry": {
+            "type": "object",
+            "properties": {
+                "description": {
+                    "type": "string"
+                },
+                "end": {
+                    "type": "string"
+                },
+                "reason": {
+                    "type": "string"
+                },
+                "start": {
+                    "type": "string"
+                },
+                "updated_by": {
                     "type": "string"
                 }
             }

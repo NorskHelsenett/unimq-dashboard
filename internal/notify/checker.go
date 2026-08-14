@@ -83,7 +83,7 @@ func (c *Checker) StartChecker(wg *sync.WaitGroup) {
 			case <-ticker.C:
 				timer := time.Now()
 				c.runChecks()
-				slog.InfoContext(c.Ctx, "finished checking notifications and metrics values", "runtime", time.Since(timer))
+				slog.InfoContext(c.Ctx, "finished checking maintenance statuses, notifications and metrics values", "runtime", time.Since(timer))
 			case <-c.Ctx.Done():
 				slog.InfoContext(c.Ctx, "Checker stopped")
 				return
@@ -100,6 +100,11 @@ func (c *Checker) runChecks() {
 		slog.WarnContext(c.Ctx, "Checker: database not initialized")
 		return
 	}
+
+	if _, err := c.DB.AdvanceMaintenanceStatuses(c.Ctx); err != nil {
+		slog.ErrorContext(c.Ctx, "Checker: failed to advance maintenance statuses", "error", err)
+	}
+
 	notifications, err := c.DB.GetNotificationsAll(c.Ctx)
 	if err != nil {
 		slog.ErrorContext(c.Ctx, "Failed to fetch notifications from database", "error", err)

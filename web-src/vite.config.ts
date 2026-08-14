@@ -20,6 +20,7 @@ export default defineConfig({
         notifRule: resolve(__dirname, "notification_rule.html"),
         maintenance: resolve(__dirname, "src/pages/Maintenance.tsx"),
         maintAdmin: resolve(__dirname, "src/pages/MaintenanceAdmin.tsx"),
+        editMaintenance: resolve(__dirname, "edit_maintenance.html"),
         profile: resolve(__dirname, "profile.html"),
         callback: resolve(__dirname, "callback.html"),
       },
@@ -45,7 +46,10 @@ export default defineConfig({
       "/maintenance": {
         target: "http://localhost:8080",
         bypass: (req) => {
-          if (req.method === "GET") return "/maintenance.html"
+          if (req.method === "GET") {
+            if (req.url?.startsWith("/maintenance/edit")) return "/edit_maintenance.html"
+            return "/maintenance.html"
+          }
           return null
         },
       },

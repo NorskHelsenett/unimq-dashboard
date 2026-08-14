@@ -23,8 +23,10 @@ func SetupV1Routes(r chi.Router, apiservice *api.APIService) {
 			r.Get("/", apiservice.GetMaintenanceHandler)
 			r.Get("/admin", apiservice.GetMaintenanceAdminHandler)
 			r.Post("/", apiservice.AddMaintenanceHandler)
+			r.Patch("/{maintenance}", apiservice.PatchMaintenanceHandler)
 			r.Put("/{maintenance}", apiservice.UpdateMaintenanceStatusHandler)
 			r.Delete("/{maintenance}", apiservice.DeleteMaintenanceHandler)
+			r.Get("/{maintenance}/logs", apiservice.GetMaintenanceEditLogsHandler)
 		})
 
 		r.Route("/alarms", func(r chi.Router) {
