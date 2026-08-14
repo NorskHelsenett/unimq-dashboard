@@ -128,39 +128,39 @@ export function MaintenanceScheduleCard({ maintenanceSchedule, onRefresh }: { ma
                                 <th className="border-b border-border-card py-2 px-4 text-xs text-gray-500">Description</th>
                                 <th className="border-b border-border-card py-2 px-4 text-xs text-gray-500">Date</th>
                                 <th className="border-b border-border-card py-2 px-4 text-xs text-gray-500">Status</th>
+                                <th className="border-b border-border-card py-2 px-4 text-xs text-gray-500 text-right">Actions</th>
                             </tr>
                         </thead>
                         <tbody>
                         {maintenanceScheduleSorted.map((maintenance) => (
                             <tr key={maintenance.id} className="hover:bg-gray-50">
-                                <td className="border-b border-border-card py-2 px-4 text-sm font-medium ">{maintenance.description}</td>
+                                <td className="border-b border-border-card py-2 px-4 text-sm font-medium">{maintenance.description}</td>
                                 <td className="border-b border-border-card py-2 px-4 text-sm">{formatDateRange(maintenance.start, maintenance.end)}</td>
-                                <td className="border-b border-border-card py-2">
+                                <td className="border-b border-border-card py-2 px-4">
                                     <Pill variant={maintenance.status === 'done' ? 'lightGreen' : maintenance.status === 'skipped' ? 'amber' : 'lightBlue'} className="border-none px-2 text-xs">
                                         {upperCaseStatus(maintenance.status)}
                                     </Pill>
                                 </td>
-                                <td className="border-b border-border-card py-2 px-2">
-                                    <Tooltip>
-                                        <TooltipTrigger asChild>
-                                            <Button
-                                                variant="ghost"
-                                                size="sm"
-                                                className="p-0 text-gray-400 hover:text-gray-700"
-                                                onClick={() => window.location.href = `/maintenance/edit?id=${maintenance.id}`}
-                                            >
-                                                <Pencil className="h-4 w-4" />
-                                            </Button>
-                                        </TooltipTrigger>
-                                        <TooltipContent>Edit</TooltipContent>
-                                    </Tooltip>
-                                </td>
-                                    <td className="border-b border-border-card py-2">
+                                <td className="border-b border-border-card py-2 px-4">
+                                    <div className="flex items-center justify-end gap-2">
+                                        <Tooltip>
+                                            <TooltipTrigger asChild>
+                                                <Button
+                                                    variant="ghost"
+                                                    size="sm"
+                                                    className="p-0 text-gray-400 hover:text-gray-700"
+                                                    onClick={() => window.location.href = `/maintenance/edit?id=${maintenance.id}`}
+                                                >
+                                                    <Pencil className="h-4 w-4" />
+                                                </Button>
+                                            </TooltipTrigger>
+                                            <TooltipContent>Edit</TooltipContent>
+                                        </Tooltip>
                                         <Button variant="destructive" size="xs" onClick={() => setDeletingId(maintenance.id)}>
                                             Delete
                                         </Button>
-                                    </td>
-                                
+                                    </div>
+                                </td>
                             </tr>
                             ))}
                         </tbody>

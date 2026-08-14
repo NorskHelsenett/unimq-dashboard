@@ -20,44 +20,38 @@ export function formatDateRange(start: string, end: string): string {
 
 export function MaintenanceHistoryCard({ maintenanceHistory }: { maintenanceHistory: Maintenance[] }) {
     const maintenanceHistorySorted = [...maintenanceHistory].sort((a, b) => new Date(b.start).getTime() - new Date(a.start).getTime())
-    const maintenanceHistoryDataLength = maintenanceHistory.length
-    if (maintenanceHistoryDataLength === 0) {
-        return (
-            <div className="bg-white rounded-lg shadow p-4 min-w-[300px] border border-border-card">
-                <h3 className="text-lg font-semibold mb-2">Maintenance history</h3>
-                <p className="text-gray-500">No maintenance history available.</p>
-            </div>
-        )
-    }
 
     return (
         <div className="bg-white rounded-lg shadow p-4 min-w-[300px] border border-border-card">
             <h3 className="text-lg font-semibold mb-2">Maintenance history</h3>
-            <div className="overflow-y-auto max-h-64">
-                <table className="w-full text-left border-collapse">
-                    <thead>
-                        <tr>
-                            <th className="border-b border-border-card py-2 px-4 text-gray-500">Description</th>
-                            <th className="border-b border-border-card py-2 px-4 text-gray-500">Date</th>
-                            <th className="border-b border-border-card py-2 px-4 text-gray-500">Status</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {maintenanceHistorySorted.map((maintenance) => (
-                            <tr key={maintenance.id}>
-                                <td className="border-b border-border-card py-2 px-4">{maintenance.description}</td>
-                                <td className="border-b border-border-card py-2 px-4">{formatDateRange(maintenance.start, maintenance.end)}</td>
-                                <td className="border-b border-border-card py-2 px-4">
-                                <Pill variant={maintenance.status === 'done' ? 'lightGreen' : maintenance.status === 'skipped' ? 'amber' : 'lightBlue'} className="border-none py-1 px-2 text-sm">
-                                    {upperCaseStatus(maintenance.status)}
-                                </Pill>
-                            </td>
+            {maintenanceHistory.length === 0 ? (
+                <p className="text-gray-500">No maintenance history available.</p>
+            ) : (
+                <div className="overflow-y-auto max-h-64 text-sm">
+                    <table className="w-full text-left border-collapse">
+                        <thead>
+                            <tr>
+                                <th className="border-b border-border-card py-2 px-4 text-xs text-gray-500">Description</th>
+                                <th className="border-b border-border-card py-2 px-4 text-xs text-gray-500">Date</th>
+                                <th className="border-b border-border-card py-2 px-4 text-xs text-gray-500">Status</th>
                             </tr>
-                        ))}
-                    </tbody>
-                </table>
-            </div>  
+                        </thead>
+                        <tbody>
+                            {maintenanceHistorySorted.map((maintenance) => (
+                                <tr key={maintenance.id} className="text-gray-500">
+                                    <td className="border-b font-medium border-border-card py-2 px-4">{maintenance.description}</td>
+                                    <td className="border-b border-border-card py-2 px-4">{formatDateRange(maintenance.start, maintenance.end)}</td>
+                                    <td className="border-b border-border-card py-2 px-4">
+                                        <Pill variant={maintenance.status === 'done' ? 'lightGreen' : maintenance.status === 'skipped' ? 'amber' : 'lightBlue'} className="border-none px-2 text-xs">
+                                            {upperCaseStatus(maintenance.status)}
+                                        </Pill>
+                                    </td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                </div>
+            )}
         </div>
-
     )
 }
