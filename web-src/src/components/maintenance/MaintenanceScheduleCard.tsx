@@ -109,10 +109,6 @@ export function MaintenanceScheduleCard({ maintenanceSchedule, onRefresh }: { ma
                         <Button variant="orange" size="sm" className="mb-2 mr-2" onClick={() => setShowForm(!showForm)}>
                             {showForm ? "Cancel add" : "Add maintenance"}
                         </Button>
-                    
-                        {/* <Button variant="outline" size="sm" className="mb-2" onClick={() => setAdministrative(!administrative)}>
-                            {administrative ? "Done" : "Administrate"}
-                        </Button> */}
                     </div>
                 </div>
                 {showForm && (
