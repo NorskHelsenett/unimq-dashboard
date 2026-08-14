@@ -57,13 +57,8 @@ function AddMaintenanceForm({onClose, onError} : { onClose: () => void, onError:
     )
 }
 
-function ShowMaintenenace({ maintenance }: { maintenance: Maintenance }) {
-   
-}
-
 export function MaintenanceScheduleCard({ maintenanceSchedule, onRefresh }: { maintenanceSchedule: Maintenance[], onRefresh: () => void }) {
     const maintenanceScheduleSorted = [...maintenanceSchedule].sort((a, b) => new Date(a.start).getTime() - new Date(b.start).getTime())
-    // const [administrative, setAdministrative] = useState(false)
     const [showForm, setShowForm] = useState(false)
     const [deletingId, setDeletingId] = useState<string | null>(null)
     const [response, setResponse] = useState<{ open: boolean, status: 'success' | 'error', message: string }>({ open: false, status: 'success', message: '' })
