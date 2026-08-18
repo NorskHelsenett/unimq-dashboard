@@ -265,7 +265,8 @@ func checkMaintenanceRule(ctx context.Context, db *database.Database, urls []str
 		slog.ErrorContext(ctx, "Failed to fetch scheduled maintenance", "error", err)
 		return
 	}
-	for _, m := range scheduled {
+	for i := range scheduled {
+		m := &scheduled[i]
 		if m.Notified {
 			continue
 		}

@@ -26,8 +26,9 @@ type Collections struct {
 
 // MongoConstants
 const (
-	set = "$set"
-	id  = "_id"
+	set       = "$set"
+	id        = "_id"
+	statusKey = "status"
 )
 
 func BuildURI(host, username, password string, port int) string {

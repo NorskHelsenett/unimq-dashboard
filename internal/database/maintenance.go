@@ -37,7 +37,7 @@ func (dbc *Database) GetMaintenanceAll(ctx context.Context, filter bson.D) ([]mo
 func (dbc *Database) GetMaintenanceScheduled(ctx context.Context) ([]models.MaintenanceEntry, error) {
 	return dbc.GetMaintenanceAll(ctx, bson.D{
 		bson.E{
-			Key: "status",
+			Key: statusKey,
 			Value: bson.M{
 				"$in": []models.MaintenanceStatus{
 					models.MaintenanceStatusScheduled,
@@ -51,7 +51,7 @@ func (dbc *Database) GetMaintenanceScheduled(ctx context.Context) ([]models.Main
 func (dbc *Database) GetMaintenanceHistory(ctx context.Context) ([]models.MaintenanceEntry, error) {
 	return dbc.GetMaintenanceAll(ctx, bson.D{
 		bson.E{
-			Key: "status",
+			Key: statusKey,
 			Value: bson.M{
 				"$in": []models.MaintenanceStatus{
 					models.MaintenanceStatusDone,
@@ -70,11 +70,11 @@ func (dbc *Database) AdvanceMaintenanceStatuses(ctx context.Context) (int64, err
 	// scheduled → in_progress when start has passed but end has not
 	result, err := dbc.Collections.Maintenance.UpdateMany(ctx,
 		bson.M{
-			"status": models.MaintenanceStatusScheduled,
-			"start":  bson.M{"$lte": now},
-			"end":    bson.M{"$gt": now},
+			statusKey: models.MaintenanceStatusScheduled,
+			"start":   bson.M{"$lte": now},
+			"end":     bson.M{"$gt": now},
 		},
-		bson.M{set: bson.M{"status": models.MaintenanceStatusInProgress}},
+		bson.M{set: bson.M{statusKey: models.MaintenanceStatusInProgress}},
 	)
 	if err != nil {
 		slog.ErrorContext(ctx, "failed to advance maintenance statuses to in_progress", "runtime", time.Since(start), "error", err)
@@ -88,13 +88,13 @@ func (dbc *Database) AdvanceMaintenanceStatuses(ctx context.Context) (int64, err
 	// scheduled or in_progress → done when end has passed
 	result, err = dbc.Collections.Maintenance.UpdateMany(ctx,
 		bson.M{
-			"status": bson.M{"$in": []models.MaintenanceStatus{
+			statusKey: bson.M{"$in": []models.MaintenanceStatus{
 				models.MaintenanceStatusScheduled,
 				models.MaintenanceStatusInProgress,
 			}},
 			"end": bson.M{"$lte": now},
 		},
-		bson.M{set: bson.M{"status": models.MaintenanceStatusDone}},
+		bson.M{set: bson.M{statusKey: models.MaintenanceStatusDone}},
 	)
 	if err != nil {
 		slog.ErrorContext(ctx, "failed to advance maintenance statuses to done", "runtime", time.Since(start), "error", err)
@@ -114,14 +114,14 @@ func (dbc *Database) SetMaintenanceEntryStatus(ctx context.Context, entryID stri
 	filter := map[string]any{id: entryID}
 	update := map[string]any{
 		set: map[string]any{
-			"status": status,
+			statusKey: status,
 		},
 	}
 	_, err := dbc.Collections.Maintenance.UpdateOne(ctx, filter, update)
 	if err != nil {
-		slog.ErrorContext(ctx, "failed to update maintenance", "runtime", time.Since(start), id, entryID, "status", status, "error", err)
+		slog.ErrorContext(ctx, "failed to update maintenance", "runtime", time.Since(start), id, entryID, statusKey, status, "error", err)
 	} else {
-		slog.DebugContext(ctx, "updated maintenance", "runtime", time.Since(start), id, entryID, "status", status)
+		slog.DebugContext(ctx, "updated maintenance", "runtime", time.Since(start), id, entryID, statusKey, status)
 	}
 
 	return err
@@ -179,7 +179,7 @@ func (dbc *Database) UpdateMaintenanceEntry(ctx context.Context, entryID string,
 	filter := map[string]any{id: entryID}
 	update := map[string]any{
 		set: map[string]any{
-			"status": status,
+			statusKey: status,
 		},
 	}
 
@@ -243,7 +243,11 @@ func (dbc *Database) GetMaintenanceEditLogs(ctx context.Context, maintenanceID s
 	if err != nil {
 		return nil, err
 	}
-	defer cursor.Close(ctx)
+	defer func() {
+		if err := cursor.Close(ctx); err != nil {
+			slog.ErrorContext(ctx, "failed to close cursor", "runtime", time.Since(start), "error", err)
+		}
+	}()
 
 	var logs []models.MaintenanceEditLog
 	if err = cursor.All(ctx, &logs); err != nil {
