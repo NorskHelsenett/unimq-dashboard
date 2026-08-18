@@ -12,16 +12,19 @@ import (
 type MaintenanceStatus string
 
 const (
-	MaintenanceStatusScheduled MaintenanceStatus = "scheduled"
-	MaintenanceStatusDone      MaintenanceStatus = "done"
-	MaintenanceStatusSkipped   MaintenanceStatus = "skipped"
-	MaintenanceStatusUnknown   MaintenanceStatus = "unknown"
+	MaintenanceStatusScheduled  MaintenanceStatus = "scheduled"
+	MaintenanceStatusInProgress MaintenanceStatus = "in_progress"
+	MaintenanceStatusDone       MaintenanceStatus = "done"
+	MaintenanceStatusSkipped    MaintenanceStatus = "skipped"
+	MaintenanceStatusUnknown    MaintenanceStatus = "unknown"
 )
 
 func ParseMaintenanceStatus(s string) MaintenanceStatus {
 	switch s {
 	case "scheduled":
 		return MaintenanceStatusScheduled
+	case "in_progress":
+		return MaintenanceStatusInProgress
 	case "done":
 		return MaintenanceStatusDone
 	case "skipped":
@@ -34,6 +37,7 @@ func ParseMaintenanceStatus(s string) MaintenanceStatus {
 func GetMaintenanceStatusAll() []MaintenanceStatus {
 	return []MaintenanceStatus{
 		MaintenanceStatusScheduled,
+		MaintenanceStatusInProgress,
 		MaintenanceStatusDone,
 		MaintenanceStatusSkipped,
 	}
@@ -64,12 +68,12 @@ type PostMaintenanceEntry struct {
 
 func (p *PostMaintenanceEntry) ToMaintenanceEntry() (*MaintenanceEntry, error) {
 
-	start, err := time.Parse(timeStampLayout, p.Start)
+	start, err := time.ParseInLocation(timeStampLayout, p.Start, time.Local)
 	if err != nil {
 		return nil, fmt.Errorf("invalid start time format: %w", err)
 	}
 
-	end, err := time.Parse(timeStampLayout, p.End)
+	end, err := time.ParseInLocation(timeStampLayout, p.End, time.Local)
 	if err != nil {
 		return nil, fmt.Errorf("invalid end time format: %w", err)
 	}

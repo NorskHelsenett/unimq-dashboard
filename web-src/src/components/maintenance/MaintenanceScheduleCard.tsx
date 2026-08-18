@@ -66,20 +66,29 @@ export function MaintenanceScheduleCard({ maintenanceSchedule, onRefresh }: { ma
     const maintenanceScheduleDataLength = maintenanceSchedule.length
     if (maintenanceScheduleDataLength === 0) {
         return (
-            <div className="bg-white rounded-lg shadow p-4 min-w-[300px] border border-border-card">
-                <div className="flex justify-between items-center mb-2">
-                    <h3 className="text-lg font-semibold mb-2">Maintenance schedule</h3>
-                    <Button variant="orange" size="sm" className="mb-2 mr-2" onClick={() => setShowForm(!showForm)}>
-                            {showForm ? "Cancel add" : "Add maintenance"}
-                    </Button>
+            <div className="mt-2">
+                <Response 
+                    open={response.open} 
+                    onClose={() => { setResponse(r => ({ ...r, open: false }))
+                    if (response.status === 'success') 
+                    onRefresh() }} 
+                    status={response.status} 
+                    message={response.message} />
+                <div className="bg-white rounded-lg shadow p-4 min-w-[300px] border border-border-card">
+                    <div className="flex justify-between items-center mb-2">
+                        <h3 className="text-lg font-semibold mb-2">Maintenance schedule</h3>
+                        <Button variant="orange" size="sm" className="mb-2 mr-2" onClick={() => setShowForm(!showForm)}>
+                                {showForm ? "Cancel add" : "Add maintenance"}
+                        </Button>
+                    </div>
+                    {showForm && (
+                        <AddMaintenanceForm
+                            onClose={() => { setShowForm(false); setResponse({ open: true, status: 'success', message: 'Maintenance schedule added successfully.' }) }}
+                            onError={(msg) => { setShowForm(false); setResponse({ open: true, status: 'error', message: msg }) }}
+                        />
+                    )}
+                    <p className="text-gray-500">No maintenance schedule available.</p>
                 </div>
-                {showForm && (
-                    <AddMaintenanceForm
-                        onClose={() => { setShowForm(false); setResponse({ open: true, status: 'success', message: 'Maintenance schedule added successfully.' }) }}
-                        onError={(msg) => { setShowForm(false); setResponse({ open: true, status: 'error', message: msg }) }}
-                    />
-                )}
-                <p className="text-gray-500">No maintenance schedule available.</p>
             </div>
         )
     }
@@ -133,7 +142,7 @@ export function MaintenanceScheduleCard({ maintenanceSchedule, onRefresh }: { ma
                                 <td className="border-b border-border-card py-2 px-4 text-sm font-medium">{maintenance.description}</td>
                                 <td className="border-b border-border-card py-2 px-4 text-sm">{formatDateRange(maintenance.start, maintenance.end)}</td>
                                 <td className="border-b border-border-card py-2 px-4">
-                                    <Pill variant={maintenance.status === 'done' ? 'lightGreen' : maintenance.status === 'skipped' ? 'amber' : 'lightBlue'} className="border-none px-2 text-xs">
+                                    <Pill variant={maintenance.status === 'done' ? 'lightGreen' : maintenance.status === 'in_progress' ? 'amber' : 'lightBlue'} className="border-none px-2 text-xs">
                                         {upperCaseStatus(maintenance.status)}
                                     </Pill>
                                 </td>

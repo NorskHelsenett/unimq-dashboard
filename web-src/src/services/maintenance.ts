@@ -107,7 +107,7 @@ export async function deleteMaintenance(id: string): Promise<void> {
 }
 
 
-export async function updateMaintenanceStatus(id: string, status: 'scheduled' | 'done' | 'skipped'): Promise<void> {
+export async function updateMaintenanceStatus(id: string, status: 'scheduled' | 'in_progress' | 'done' | 'skipped'): Promise<void> {
     const res = await apiFetch(
         `/api/v1/maintenance/${id}`,
         {
@@ -125,6 +125,7 @@ export async function updateMaintenanceStatus(id: string, status: 'scheduled' | 
 export const upperCaseStatus = (status: string): string => {
     switch (status) {
         case 'scheduled': return 'Scheduled'
+        case 'in_progress': return 'In Progress'
         case 'done':      return 'Done'
         case 'skipped':   return 'Skipped'
         default:          return status

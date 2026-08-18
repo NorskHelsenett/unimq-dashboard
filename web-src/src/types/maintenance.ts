@@ -12,7 +12,7 @@ export interface Maintenance {
     description: string
     start: string
     end: string
-    status: 'scheduled' | 'done' | 'skipped' | 'unknown'
+    status: 'scheduled' | 'in_progress' | 'done' | 'skipped' | 'unknown'
     notified: boolean
     updated_by?: string
     updated_at?: string

@@ -37,11 +37,15 @@ func (dbc *Database) GetMaintenanceAll(ctx context.Context, filter bson.D) ([]mo
 func (dbc *Database) GetMaintenanceScheduled(ctx context.Context) ([]models.MaintenanceEntry, error) {
 	return dbc.GetMaintenanceAll(ctx, bson.D{
 		bson.E{
-			Key:   "status",
-			Value: models.MaintenanceStatusScheduled,
+			Key: "status",
+			Value: bson.M{
+				"$in": []models.MaintenanceStatus{
+					models.MaintenanceStatusScheduled,
+					models.MaintenanceStatusInProgress,
+				},
+			},
 		},
-	},
-	)
+	})
 }
 
 func (dbc *Database) GetMaintenanceHistory(ctx context.Context) ([]models.MaintenanceEntry, error) {
@@ -49,34 +53,59 @@ func (dbc *Database) GetMaintenanceHistory(ctx context.Context) ([]models.Mainte
 		bson.E{
 			Key: "status",
 			Value: bson.M{
-				"$ne": models.MaintenanceStatusScheduled,
+				"$in": []models.MaintenanceStatus{
+					models.MaintenanceStatusDone,
+					models.MaintenanceStatusSkipped,
+				},
 			},
 		},
-	},
-	)
-
+	})
 }
 
 func (dbc *Database) AdvanceMaintenanceStatuses(ctx context.Context) (int64, error) {
 	start := time.Now()
 	now := time.Now().UTC()
+	var total int64
 
-	// Mark scheduled entries whose end time has passed as done
-	filter := bson.M{
-		"status": models.MaintenanceStatusScheduled,
-		"end":    bson.M{"$lte": now},
-	}
-	update := bson.M{set: bson.M{"status": models.MaintenanceStatusDone}}
-
-	result, err := dbc.Collections.Maintenance.UpdateMany(ctx, filter, update)
+	// scheduled → in_progress when start has passed but end has not
+	result, err := dbc.Collections.Maintenance.UpdateMany(ctx,
+		bson.M{
+			"status": models.MaintenanceStatusScheduled,
+			"start":  bson.M{"$lte": now},
+			"end":    bson.M{"$gt": now},
+		},
+		bson.M{set: bson.M{"status": models.MaintenanceStatusInProgress}},
+	)
 	if err != nil {
-		slog.ErrorContext(ctx, "failed to advance maintenance statuses", "runtime", time.Since(start), "error", err)
+		slog.ErrorContext(ctx, "failed to advance maintenance statuses to in_progress", "runtime", time.Since(start), "error", err)
 		return 0, err
+	}
+	if result.ModifiedCount > 0 {
+		slog.InfoContext(ctx, "advanced maintenance statuses to in_progress", "runtime", time.Since(start), "count", result.ModifiedCount)
+	}
+	total += result.ModifiedCount
+
+	// scheduled or in_progress → done when end has passed
+	result, err = dbc.Collections.Maintenance.UpdateMany(ctx,
+		bson.M{
+			"status": bson.M{"$in": []models.MaintenanceStatus{
+				models.MaintenanceStatusScheduled,
+				models.MaintenanceStatusInProgress,
+			}},
+			"end": bson.M{"$lte": now},
+		},
+		bson.M{set: bson.M{"status": models.MaintenanceStatusDone}},
+	)
+	if err != nil {
+		slog.ErrorContext(ctx, "failed to advance maintenance statuses to done", "runtime", time.Since(start), "error", err)
+		return total, err
 	}
 	if result.ModifiedCount > 0 {
 		slog.InfoContext(ctx, "advanced maintenance statuses to done", "runtime", time.Since(start), "count", result.ModifiedCount)
 	}
-	return result.ModifiedCount, nil
+	total += result.ModifiedCount
+
+	return total, nil
 }
 
 func (dbc *Database) SetMaintenanceEntryStatus(ctx context.Context, entryID string, status models.MaintenanceStatus) error {
