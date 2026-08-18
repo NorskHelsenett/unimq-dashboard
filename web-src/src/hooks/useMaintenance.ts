@@ -23,6 +23,7 @@ export function useScheduledMaintenance(): UseMaintenanceScheduleResult {
   const [tick, setTick] = useState(0)
 
   useEffect(() => {
+    setLoading(true)
     getScheduledMaintenance()
       .then(data => setMaintenanceSchedule(data))
       .finally(() => setLoading(false))
