@@ -98,12 +98,16 @@ export async function updateMaintenance({
 }
 
 export async function deleteMaintenance(id: string): Promise<void> {
-  await apiFetch(
+  const res = await apiFetch(
     `/api/v1/maintenance/${id}`,
     {
       method: 'DELETE'
     }
   )
+  if (!res.ok) {
+    const text = await res.text().catch(() => '')
+    throw new Error(text || 'Failed to delete maintenance.')
+  }
 }
 
 
