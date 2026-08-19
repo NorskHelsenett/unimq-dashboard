@@ -20,11 +20,15 @@ export function DeleteMaintenance({ maintenance, open, onClose, onDeleted }: Del
         Promise.all([
             deleteMaintenance(maintenance.id),
             new Promise(res => setTimeout(res, 2000)),
-        ]).then(() => {
-            setDeleting(false)
-            setDeleted(true)
-            setTimeout(() => onDeleted ? onDeleted() : window.location.reload(), 1500)
-        })
+        ])
+            .then(() => {
+                setDeleting(false)
+                setDeleted(true)
+                setTimeout(() => onDeleted ? onDeleted() : window.location.reload(), 1500)
+            })
+            .catch(() => {
+                setDeleting(false)
+            })
     }
 
     return (
