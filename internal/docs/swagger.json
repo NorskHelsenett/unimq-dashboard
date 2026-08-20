@@ -1028,7 +1028,7 @@
                         "type": "string",
                         "description": "Virtual Host",
                         "name": "vhost-name",
-                        "in": "query",
+                        "in": "path",
                         "required": true
                     }
                 ],
@@ -1399,12 +1399,14 @@
             "type": "string",
             "enum": [
                 "scheduled",
+                "in_progress",
                 "done",
                 "skipped",
                 "unknown"
             ],
             "x-enum-varnames": [
                 "MaintenanceStatusScheduled",
+                "MaintenanceStatusInProgress",
                 "MaintenanceStatusDone",
                 "MaintenanceStatusSkipped",
                 "MaintenanceStatusUnknown"

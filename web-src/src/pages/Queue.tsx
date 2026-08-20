@@ -1,8 +1,7 @@
 import { createRoot } from 'react-dom/client'
 import { StrictMode } from 'react'
-// import '../index.css'
 import { RequireAuth } from '@/auth/RequireAuth'
-import '.'
+import '../index.css'
 
 function App() {
   return <div />

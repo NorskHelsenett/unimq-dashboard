@@ -1,5 +1,5 @@
-export function Sparkline({ data, className }: { data: number[]; className?: string }) {
-  if (data.length < 2) return <svg width="100%" height={20} />
+export function Sparkline({ data, className }: { data: number[] | undefined | null; className?: string }) {
+  if (!data || data.length < 2) return <svg width="100%" height={20} />
   const w = 228, h = 20, pad = 2
   const max = Math.max(...data, 1)
   const points = data

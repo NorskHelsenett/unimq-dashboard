@@ -81,7 +81,7 @@ func (dbc *Database) initCollections() error {
 		Maintenance:         client.Database(dbc.db).Collection("maintenance"),
 		MaintenanceEditLogs: client.Database(dbc.db).Collection("maintenance_edit_logs"),
 		Notifications:       client.Database(dbc.db).Collection("notifications"),
-	}
+	} 
 
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()

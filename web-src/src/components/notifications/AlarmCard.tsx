@@ -7,8 +7,6 @@ import { DeleteItem } from "./DeleteItem"
 import { AlarmProps, alarmDropdownOptions } from '@/types/notifications'
 import { toggleRule, addRule } from '@/services/notifications'
 
-
-// name, type, threshold, message, enabled, status, last_value
 function ExistingAlarms({existingAlarms, vhost}: {existingAlarms: AlarmProps[], vhost: string}) {
     const alarms = existingAlarms || []
     const [disabledIds, setDisabledIds] = useState<Set<string>>(
@@ -16,7 +14,6 @@ function ExistingAlarms({existingAlarms, vhost}: {existingAlarms: AlarmProps[], 
     )
     const [deletingId, setDeletingId] = useState<string | null>(null)
     const deletingAlarm = alarms.find(a => a.id === deletingId)
-    // const [showAll, setShowAll] = useState(false)
     const [showDeactivated, setShowDeactivated] = useState(false)
     const sortedAlarms = [...alarms].sort((a, b) => {
         const aDisabled = disabledIds.has(a.id!) ? 1 : 0

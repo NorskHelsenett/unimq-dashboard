@@ -17,8 +17,15 @@ const (
 )
 
 func (dbc *Database) Seed(ctx context.Context) error {
+	// Drop stale data so re-seeding always produces a clean state.
+	if err := dbc.Collections.Notifications.Drop(ctx); err != nil {
+		return fmt.Errorf("failed to drop notifications collection: %w", err)
+	}
+	if err := dbc.Collections.Alarms.Drop(ctx); err != nil {
+		return fmt.Errorf("failed to drop alarms collection: %w", err)
+	}
 
-	vhosts := []string{"/", "test-Name"}
+	vhosts := []string{"unimq", "unimq-test"}
 
 	for _, vhost := range vhosts {
 		err := dbc.seedNotifications(ctx, vhost)

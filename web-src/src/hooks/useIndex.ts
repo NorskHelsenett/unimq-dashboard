@@ -1,32 +1,29 @@
-import type { IndexData, Metrics, Limits } from "@/pages/index"
+import type { IndexData, Limits } from "@/pages/index"
 import { getVhosts } from "@/services/vhosts"
-import { apiFetch } from "@/lib/apiClient"
+import { getMetrics } from "@/services/metrics"
+import type { Metrics } from "@/types/metrics"
 import { useEffect, useState } from "react"
 
 export function useIndex(): IndexData {
     const [vhosts, setVhosts] = useState<string[]>([])
     const [selected, setSelected] = useState<string>('')
     const [metrics, setMetrics] = useState<Metrics | null>(null)
-    const [limits, setLimits] = useState<Limits>({ MaxConnections: 0, MaxQueues: 0 })
+    const [limits] = useState<Limits>({ MaxConnections: 0, MaxQueues: 0 })
 
     useEffect(() => {
         getVhosts().then(names => {
             setVhosts(names)
             const sel = new URLSearchParams(window.location.search).get('vhost') ?? names[0] ?? ''
             setSelected(sel)
-            // Fetch metrics and limits for the selected vhost
-            apiFetch(`/api/v1/vhosts/${encodeURIComponent(sel)}/metrics`)
-                .then(res => res.json())
-                .then(data => {
-                    setMetrics(data.metrics)
-                    setLimits(data.limits)
-                })
-                .catch(() => {
-                    setMetrics(null)
-                    setLimits({ MaxConnections: 0, MaxQueues: 0 })
-                })
         })
-    }, []) 
+    }, [])
+
+    useEffect(() => {
+        if (!selected) return
+        getMetrics(selected)
+            .then(setMetrics)
+            .catch(() => setMetrics(null))
+    }, [selected])
 
     return { Vhosts: vhosts, Selected: selected, Metrics: metrics, Limits: limits }
 }

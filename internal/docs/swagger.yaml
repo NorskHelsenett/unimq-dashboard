@@ -191,12 +191,14 @@ definitions:
   models.MaintenanceStatus:
     enum:
     - scheduled
+    - in_progress
     - done
     - skipped
     - unknown
     type: string
     x-enum-varnames:
     - MaintenanceStatusScheduled
+    - MaintenanceStatusInProgress
     - MaintenanceStatusDone
     - MaintenanceStatusSkipped
     - MaintenanceStatusUnknown
@@ -1142,7 +1144,7 @@ paths:
       description: Fetches a list of all queues in a specified virtual host.
       parameters:
       - description: Virtual Host
-        in: query
+        in: path
         name: vhost-name
         required: true
         type: string

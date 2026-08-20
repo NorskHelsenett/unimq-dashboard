@@ -1,26 +1,10 @@
-import { useState, useEffect } from 'react'
 import { Sparkline } from '@/components/charts/Sparkline'
 import { Skeleton } from '@/components/ui/skeleton'
 import { fmtBytes, fmtRate } from '@/lib/format'
 import { cn } from '@/lib/utils'
-import { apiFetch } from '@/lib/apiClient'
 import { Tooltip, TooltipContent, TooltipTrigger } from '../ui/tooltip'
+import { QueueDetail, QueuesCardProps } from '@/types/queues'
 
-interface QueueDetail {
-    name: string
-    messages: number
-    message_bytes: number
-    history: number[]
-    consumers: number
-    publish_rate: number
-    deliver_rate: number
-    redeliver_rate: number
-    messages_unacknowledged: number
-}
-
-interface QueuesCardProps {
-    vhost: string
-}
 
 const cellPaddingStyling = "py-2.5 px-3"
 const subHeaderCellPaddingStyling = "px-3"
@@ -101,26 +85,7 @@ function SubHeaderCell({ children, className }: { children?: React.ReactNode; cl
     )
 }
 
-export function QueuesCard({ vhost }: QueuesCardProps) {
-    const [data, setData] = useState<QueueDetail[] | null>(null)
-    const [error, setError] = useState(false)
-
-    useEffect(() => {
-        const load = () =>
-            //fetch(`/api/queues?vhost=${encodeURIComponent(vhost)}`)
-            apiFetch(`/v1/vhosts/vhost=${encodeURIComponent(vhost)}/queues`)
-                .then((r) => {
-                    if (!r.ok) throw new Error()
-                    return r.json() as Promise<QueueDetail[]>
-                })
-                .then(setData)
-                .catch(() => setError(true))
-
-        load()
-        const id = setInterval(load, 10_000)
-        return () => clearInterval(id)
-    }, [vhost])
-
+export function QueuesCard({ vhost, queues, loading, error }: QueuesCardProps) {
     return (
         <div className='w-full'>
             <h2 className="text-lg font-semibold text-text-primary mb-3">Queues</h2>
@@ -155,7 +120,7 @@ export function QueuesCard({ vhost }: QueuesCardProps) {
                                     </td>
                                 </tr>
                             )}
-                            {!error && data === null && (
+                            {!error && loading && (
                                 Array.from({ length: 3 }).map((_, i) => (
                                     <tr key={i} className="border-b last:border-0">
                                         <td className={cellPaddingStyling}><Skeleton className="h-4 w-28" /></td>
@@ -170,14 +135,14 @@ export function QueuesCard({ vhost }: QueuesCardProps) {
                                     </tr>
                                 ))
                             )}
-                            {!error && data !== null && data.length === 0 && (
+                            {!error && !loading && queues.length === 0 && (
                                 <tr>
                                     <td colSpan={9} className="py-6 text-center text-sm text-text-muted">
                                         No queues on this vhost
                                     </td>
                                 </tr>
                             )}
-                            {!error && data !== null && data.map((queue) => (
+                            {!error && !loading && queues.map((queue) => (
                                 <QueueRow key={queue.name} queue={queue} vhost={vhost} />
                             ))}
                         </tbody>

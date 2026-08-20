@@ -1,39 +1,16 @@
 "use client"
 
 import { Tile } from "../layout/Tile"
-import { useEffect, useState } from "react"
 import { ClusterStats } from "@/types/clusterStats"
 import { convertBytes } from "@/lib/bytes"
-import { apiFetch } from "@/lib/apiClient"
 
-export const VhostResourceCard = ({ vhost }: { vhost: string }) => {
-    const [data, setData] = useState<ClusterStats | null>(null)
+export const VhostResourceCard = ({ vhost, clusters }: { vhost: string, clusters: ClusterStats | null }) => {
+    const clusterStats = clusters
+    
+    if (!clusterStats) return <p>ClusterStats does not exist</p>
 
-    useEffect(() => {
-        const load = () =>
-        apiFetch('/v1/cluster')
-            .then((r) => {
-            if (!r.ok) throw new Error()
-            return r.json() as Promise<ClusterStats>
-            })
-            .then(setData)
-            .catch(() => {})
-
-        load()
-        const id = setInterval(load, 15_000)
-        return () => clearInterval(id)
-    }, [])
-    if (!data) return <p>ClusterStats does not exist</p>
-
-    const vhostResources = data.vhost_resources
+    const vhostResources = clusterStats.vhost_resources ?? []
     const vhostResource = vhostResources.find(v => v.name === vhost)
-
-    const DiskDescription = ({ free, limit }: { free: number, limit: number }) => (
-        <div>
-            <p>Lower limit: {convertBytes(limit)}</p>
-            <p>Free disk space: {convertBytes(free)}</p>
-        </div>
-    )
 
     return (
         <div>
