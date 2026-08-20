@@ -1,6 +1,6 @@
 const BYTE_SIZE_UNITS = ["Bytes", "KB", "MB", "GB", "TB", "PB"];
 
-export function convertBytes(bytes: number) {
+export function convertBytes(bytes: number | null | undefined) {
   if (bytes == null) return "N/A";
   let count = 0;
   let num = bytes;
