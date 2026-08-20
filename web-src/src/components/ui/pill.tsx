@@ -26,6 +26,7 @@ const pillVariants = cva(
         cyan: 'border-transparent bg-cyan-500 dark:bg-cyan-600 text-primary-background',
         sky: 'border-transparent bg-sky-500 dark:bg-sky-600 text-primary-background',
         blue: 'border-transparent bg-blue-500 dark:bg-blue-600 text-primary-background',
+        lightBlue: 'border-transparent bg-blue-300 dark:bg-blue-400 text-primary-background',
         indigo: 'border-transparent bg-indigo-500 dark:bg-indigo-600 text-primary-background',
         violet: 'border-transparent bg-violet-500 dark:bg-violet-600 text-primary-background',
         purple: 'border-transparent bg-purple-500 dark:bg-purple-600 text-primary-background',

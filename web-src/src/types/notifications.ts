@@ -40,10 +40,6 @@ export interface NotifyRuleData {
   Msg: string
 }
 
-export interface VhostObj {
-  name: string
-}
-
 export interface LogEntry {
   ts: string
   event: 'fired' | 'resolved'

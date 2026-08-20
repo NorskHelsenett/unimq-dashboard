@@ -12,7 +12,7 @@ function isActive(itemHref: string, currentPath: string): boolean {
     return currentPath.startsWith(itemHref)
 }
 
-export function Sidebar({ Vhosts, Selected }: Vhosts) {
+export function Sidebar({ Vhosts, Selected }: Vhosts ) {
     const currentPath = window.location.pathname
     const auth = useAuth()
 
@@ -20,7 +20,7 @@ export function Sidebar({ Vhosts, Selected }: Vhosts) {
         <nav className="relative flex flex-col pt-4 border-r border-border-sidebar h-full min-h-screen">
             <LogoLink />
             <div className="p-4 flex gap-2 items-center border-y my-4">
-                <span>Vhost:</span> 
+                <span>Vhost:</span>
                 <VhostSelector Vhosts={Vhosts} Selected={Selected} />
             </div>
             <div className="flex flex-col gap-1">

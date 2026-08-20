@@ -18,15 +18,17 @@ type Database struct {
 }
 
 type Collections struct {
-	Alarms        *mongo.Collection
-	Maintenance   *mongo.Collection
-	Notifications *mongo.Collection
+	Alarms              *mongo.Collection
+	Maintenance         *mongo.Collection
+	MaintenanceEditLogs *mongo.Collection
+	Notifications       *mongo.Collection
 }
 
 // MongoConstants
 const (
-	set = "$set"
-	id  = "_id"
+	set       = "$set"
+	id        = "_id"
+	statusKey = "status"
 )
 
 func BuildURI(host, username, password string, port int) string {
@@ -75,9 +77,10 @@ func (dbc *Database) initCollections() error {
 	}
 
 	dbc.Collections = &Collections{
-		Alarms:        client.Database(dbc.db).Collection("alarms"),
-		Maintenance:   client.Database(dbc.db).Collection("maintenance"),
-		Notifications: client.Database(dbc.db).Collection("notifications"),
+		Alarms:              client.Database(dbc.db).Collection("alarms"),
+		Maintenance:         client.Database(dbc.db).Collection("maintenance"),
+		MaintenanceEditLogs: client.Database(dbc.db).Collection("maintenance_edit_logs"),
+		Notifications:       client.Database(dbc.db).Collection("notifications"),
 	}
 
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)

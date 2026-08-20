@@ -6,13 +6,14 @@ import { Tile } from "../layout/Tile"
 import { useEffect, useState } from "react"
 import { ClusterStats } from "@/types/clusterStats"
 import { convertBytes } from "@/lib/bytes"
+import { apiFetch } from "@/lib/apiClient"
 
 export const ClusterResourceCard = () => {
     const [data, setData] = useState<ClusterStats | null>(null)
 
     useEffect(() => {
         const load = () =>
-        fetch('/v1/cluster')
+        apiFetch('/v1/cluster')
             .then((r) => {
             if (!r.ok) throw new Error()
             return r.json() as Promise<ClusterStats>

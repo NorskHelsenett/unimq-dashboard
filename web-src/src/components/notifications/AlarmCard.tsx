@@ -112,20 +112,18 @@ function ExistingAlarms({existingAlarms, vhost}: {existingAlarms: AlarmProps[], 
 function AddAlarmForm({ selectedAlarm, vhost, onClose }: { selectedAlarm: string, vhost: string, onClose: () => void }) {
     if (!selectedAlarm) return null
 
-    const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
-        e.preventDefault()
-        const fd = new FormData(e.currentTarget)
-        addRule(vhost, {
-            name: fd.get('name') as string,
-            type: selectedAlarm,
-            queue_name: (fd.get('queue_name') as string) || undefined,
-            threshold: fd.get('threshold') ? Number(fd.get('threshold')) : undefined,
-            message: (fd.get('message') as string) || '',
-        }).then(() => window.location.reload())
-    }
-
     return(
-        <form onSubmit={handleSubmit} className="bg-gray-50 border border-gray-300 rounded-lg p-4">
+        <form onSubmit={(e) => {
+            e.preventDefault()
+            const fd = new FormData(e.currentTarget)
+            addRule(vhost, {
+                name: fd.get('name') as string,
+                type: selectedAlarm,
+                queue_name: (fd.get('queue_name') as string) || undefined,
+                threshold: fd.get('threshold') ? Number(fd.get('threshold')) : undefined,
+                message: (fd.get('message') as string) || '',
+            }).then(() => window.location.reload())
+        }} className="bg-gray-50 border border-gray-300 rounded-lg p-4">
             <h2 className="text-sm font-semibold mb-3">New alarm: {alarmDropdownOptions.find(o => o.value === selectedAlarm)?.label}</h2>
 
             {selectedAlarm === 'maintenance' ? (

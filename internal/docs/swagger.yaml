@@ -131,6 +131,25 @@ definitions:
           $ref: '#/definitions/models.MaintenanceEntry'
         type: array
     type: object
+  models.MaintenanceEditLog:
+    properties:
+      description:
+        type: string
+      end:
+        type: string
+      id:
+        type: string
+      maintenance_id:
+        type: string
+      reason:
+        type: string
+      start:
+        type: string
+      updated_at:
+        type: string
+      updated_by:
+        type: string
+    type: object
   models.MaintenanceEntry:
     properties:
       description:
@@ -151,6 +170,12 @@ definitions:
         allOf:
         - $ref: '#/definitions/models.MaintenanceStatus'
         example: '-'
+      update_reason:
+        type: string
+      updated_at:
+        type: string
+      updated_by:
+        type: string
     type: object
   models.MaintenanceResponse:
     properties:
@@ -211,6 +236,19 @@ definitions:
       mem_used:
         type: integer
       name:
+        type: string
+    type: object
+  models.PatchMaintenanceEntry:
+    properties:
+      description:
+        type: string
+      end:
+        type: string
+      reason:
+        type: string
+      start:
+        type: string
+      updated_by:
         type: string
     type: object
   models.PostAlarmRule:
@@ -595,6 +633,45 @@ paths:
       summary: Delete a maintenance entry
       tags:
       - Maintenance
+    patch:
+      consumes:
+      - application/json
+      description: Edit description, start, and end of an existing maintenance entry,
+        with an audit trail
+      parameters:
+      - description: Maintenance Entry ID
+        in: path
+        name: maintenance-id
+        required: true
+        type: string
+      - description: Updated Maintenance Data
+        in: body
+        name: entry
+        required: true
+        schema:
+          $ref: '#/definitions/models.PatchMaintenanceEntry'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Maintenance entry updated successfully
+          schema:
+            type: string
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/httpsuite.APIError'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/httpsuite.APIError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/httpsuite.APIError'
+      summary: Edit a maintenance entry
+      tags:
+      - Maintenance
     put:
       consumes:
       - application/json
@@ -632,6 +709,35 @@ paths:
           schema:
             $ref: '#/definitions/httpsuite.APIError'
       summary: Update maintenance entry status
+      tags:
+      - Maintenance
+  /v1/maintenance/{maintenance-id}/logs:
+    get:
+      description: Returns all edit log entries for a given maintenance ID
+      parameters:
+      - description: Maintenance Entry ID
+        in: path
+        name: maintenance-id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/models.MaintenanceEditLog'
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/httpsuite.APIError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/httpsuite.APIError'
+      summary: Get edit history for a maintenance entry
       tags:
       - Maintenance
   /v1/maintenance/admin:

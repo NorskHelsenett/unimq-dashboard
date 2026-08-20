@@ -5,8 +5,10 @@ import (
 	"fmt"
 	"log/slog"
 	"net/http"
+	"time"
 
 	"github.com/go-chi/chi/v5"
+	"github.com/google/uuid"
 	"github.com/sisneve/rabbitmq-dashboard/internal/database"
 	"github.com/sisneve/rabbitmq-dashboard/internal/models"
 	"github.com/sisneve/rabbitmq-dashboard/internal/routes/httpsuite"
@@ -21,6 +23,10 @@ import (
 // @Failure		500	{object}	httpsuite.APIError
 // @Router			/v1/maintenance [get]
 func (rc *APIService) GetMaintenanceHandler(w http.ResponseWriter, r *http.Request) {
+	// Advance stale entries before returning so callers always see current statuses
+	if _, err := rc.DB.AdvanceMaintenanceStatuses(r.Context()); err != nil {
+		slog.WarnContext(r.Context(), "failed to advance maintenance statuses", "error", err)
+	}
 
 	scheduled, err := rc.DB.GetMaintenanceScheduled(r.Context())
 	if err != nil {
@@ -124,6 +130,94 @@ func (rc *APIService) UpdateMaintenanceStatusHandler(w http.ResponseWriter, r *h
 	}
 
 	httpsuite.SendResponse(r.Context(), w, "Maintenance status updated successfully", http.StatusOK, httpsuite.NewEmptyResponse())
+}
+
+// @Summary		Edit a maintenance entry
+// @Description	Edit description, start, and end of an existing maintenance entry, with an audit trail
+// @Tags			Maintenance
+// @Accept			json
+// @Produce		json
+// @Param			maintenance-id	path		string							true	"Maintenance Entry ID"
+// @Param			entry			body		models.PatchMaintenanceEntry	true	"Updated Maintenance Data"
+// @Success		200				{string}	string							"Maintenance entry updated successfully"
+// @Failure		400				{object}	httpsuite.APIError
+// @Failure		404				{object}	httpsuite.APIError
+// @Failure		500				{object}	httpsuite.APIError
+// @Router			/v1/maintenance/{maintenance-id} [patch]
+func (rc *APIService) PatchMaintenanceHandler(w http.ResponseWriter, r *http.Request) {
+	id := chi.URLParam(r, "maintenance")
+	if id == "" {
+		httpsuite.WriteJSONError(w, "maintenance id is required", http.StatusBadRequest)
+		return
+	}
+
+	var request models.PatchMaintenanceEntry
+	if err := httpsuite.ReadResponse(r, &request); err != nil {
+		httpsuite.WriteJSONError(w, "invalid request body: "+err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	if err := request.Validate(); err != nil {
+		httpsuite.WriteJSONError(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	start, _ := time.Parse("2006-01-02 15:04:05", request.Start)
+	end, _ := time.Parse("2006-01-02 15:04:05", request.End)
+
+	err := rc.DB.PatchMaintenanceEntry(r.Context(), id, request.Description, start, end, request.Reason, request.UpdatedBy)
+	if err != nil {
+		if errors.Is(err, database.ErrMaintenanceNotFound) {
+			httpsuite.WriteJSONError(w, "maintenance entry not found", http.StatusNotFound)
+			return
+		}
+		httpsuite.WriteJSONError(w, "error updating maintenance entry", http.StatusInternalServerError)
+		return
+	}
+
+	logEntry := &models.MaintenanceEditLog{
+		ID:            uuid.New().String(),
+		MaintenanceID: id,
+		Description:   request.Description,
+		Start:         start,
+		End:           end,
+		Reason:        request.Reason,
+		UpdatedBy:     request.UpdatedBy,
+		UpdatedAt:     time.Now().UTC(),
+	}
+	if logErr := rc.DB.AddMaintenanceEditLog(r.Context(), logEntry); logErr != nil {
+		slog.WarnContext(r.Context(), "failed to write maintenance edit log", "error", logErr)
+	}
+
+	httpsuite.SendResponse(r.Context(), w, "Maintenance entry updated successfully", http.StatusOK, httpsuite.NewEmptyResponse())
+}
+
+// @Summary		Get edit history for a maintenance entry
+// @Description	Returns all edit log entries for a given maintenance ID
+// @Tags			Maintenance
+// @Produce		json
+// @Param			maintenance-id	path		string	true	"Maintenance Entry ID"
+// @Success		200				{array}		models.MaintenanceEditLog
+// @Failure		400				{object}	httpsuite.APIError
+// @Failure		500				{object}	httpsuite.APIError
+// @Router			/v1/maintenance/{maintenance-id}/logs [get]
+func (rc *APIService) GetMaintenanceEditLogsHandler(w http.ResponseWriter, r *http.Request) {
+	id := chi.URLParam(r, "maintenance")
+	if id == "" {
+		httpsuite.WriteJSONError(w, "maintenance id is required", http.StatusBadRequest)
+		return
+	}
+
+	logs, err := rc.DB.GetMaintenanceEditLogs(r.Context(), id)
+	if err != nil {
+		httpsuite.WriteJSONError(w, "error fetching maintenance edit logs", http.StatusInternalServerError)
+		return
+	}
+
+	type logsResponse struct {
+		Logs []models.MaintenanceEditLog `json:"logs"`
+	}
+	httpsuite.SendResponse(r.Context(), w, "Fetched maintenance edit logs", http.StatusOK, &logsResponse{Logs: logs})
 }
 
 // @Summary		Delete a maintenance entry

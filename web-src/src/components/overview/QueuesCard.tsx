@@ -3,6 +3,7 @@ import { Sparkline } from '@/components/charts/Sparkline'
 import { Skeleton } from '@/components/ui/skeleton'
 import { fmtBytes, fmtRate } from '@/lib/format'
 import { cn } from '@/lib/utils'
+import { apiFetch } from '@/lib/apiClient'
 import { Tooltip, TooltipContent, TooltipTrigger } from '../ui/tooltip'
 
 interface QueueDetail {
@@ -107,7 +108,7 @@ export function QueuesCard({ vhost }: QueuesCardProps) {
     useEffect(() => {
         const load = () =>
             //fetch(`/api/queues?vhost=${encodeURIComponent(vhost)}`)
-            fetch(`/v1/vhosts/vhost=${encodeURIComponent(vhost)}/queues`)
+            apiFetch(`/v1/vhosts/vhost=${encodeURIComponent(vhost)}/queues`)
                 .then((r) => {
                     if (!r.ok) throw new Error()
                     return r.json() as Promise<QueueDetail[]>

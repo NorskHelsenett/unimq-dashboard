@@ -83,7 +83,7 @@ func (c *Checker) StartChecker(wg *sync.WaitGroup) {
 			case <-ticker.C:
 				timer := time.Now()
 				c.runChecks()
-				slog.InfoContext(c.Ctx, "finished checking notifications and metrics values", "runtime", time.Since(timer))
+				slog.InfoContext(c.Ctx, "finished checking maintenance statuses, notifications and metrics values", "runtime", time.Since(timer))
 			case <-c.Ctx.Done():
 				slog.InfoContext(c.Ctx, "Checker stopped")
 				return
@@ -100,6 +100,11 @@ func (c *Checker) runChecks() {
 		slog.WarnContext(c.Ctx, "Checker: database not initialized")
 		return
 	}
+
+	if _, err := c.DB.AdvanceMaintenanceStatuses(c.Ctx); err != nil {
+		slog.ErrorContext(c.Ctx, "Checker: failed to advance maintenance statuses", "error", err)
+	}
+
 	notifications, err := c.DB.GetNotificationsAll(c.Ctx)
 	if err != nil {
 		slog.ErrorContext(c.Ctx, "Failed to fetch notifications from database", "error", err)
@@ -136,7 +141,7 @@ func (c *Checker) checkRule(rule *models.AlarmRule, vhostName string, urls []str
 		return
 	}
 	if rule.Type == models.AlarmTypeMaintenance {
-		checkMaintenanceRule(c.Ctx, c.DB, vhostName, rule, urls)
+		checkMaintenanceRule(c.Ctx, c.DB, urls)
 		return
 	}
 	triggered, value := evaluate(rule, metrics, queues)
@@ -254,47 +259,32 @@ func evaluate(rule *models.AlarmRule, metrics *models.VhostMetrics, queues []mod
 	return v >= rule.Threshold, &v
 }
 
-func checkMaintenanceRule(ctx context.Context, db *database.Database, vhost string, rule *models.AlarmRule, urls []string) {
+func checkMaintenanceRule(ctx context.Context, db *database.Database, urls []string) {
 	scheduled, err := db.GetMaintenanceScheduled(ctx)
 	if err != nil {
 		slog.ErrorContext(ctx, "Failed to fetch scheduled maintenance", "error", err)
 		return
 	}
-	fired := false
-	for _, m := range scheduled {
+	for i := range scheduled {
+		m := &scheduled[i]
 		if m.Notified {
 			continue
 		}
 
-		body := rule.Message
-		if body == "" {
-			body = fmt.Sprintf(
-				"New maintenance scheduled:\n\n%s\n\nDate: %s – %s UTC",
-				m.Description,
-				m.Start.Format("2006-01-02 15:04"),
-				m.End.Format("15:04"),
-			)
-		}
+		body := fmt.Sprintf(
+			"New maintenance scheduled:\n\n%s\n\nDate: %s – %s UTC",
+			m.Description,
+			m.Start.Format("2006-01-02 15:04"),
+			m.End.Format("15:04"),
+		)
 		subject := "[UniMQ] New maintenance scheduled"
 		if err := notificationhelper.SendWebhooks(urls, subject, body); err != nil {
 			slog.ErrorContext(ctx, "notify: maintenance webhook failed", "error", err)
 		} else {
 			slog.InfoContext(ctx, "notify: maintenance webhook sent", "id", m.ID)
 		}
-		err = db.SetMaintenanceEntryNotified(ctx, m.ID, true)
-		if err != nil {
+		if err := db.SetMaintenanceEntryNotified(ctx, m.ID, true); err != nil {
 			slog.ErrorContext(ctx, "Failed to mark maintenance as notified", "error", err)
 		}
-		fired = true
-	}
-
-	status := models.MaintenanceStatusDone
-	if fired {
-		status = models.MaintenanceStatusScheduled
-	}
-
-	err = db.SetMaintenanceEntryStatus(ctx, vhost, status)
-	if err != nil {
-		slog.ErrorContext(ctx, "Failed to update maintenance status", "error", err)
 	}
 }

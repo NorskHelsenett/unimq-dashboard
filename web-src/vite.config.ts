@@ -18,8 +18,9 @@ export default defineConfig({
         queue: resolve(__dirname, "src/pages/Queue.tsx"),
         notifications: resolve(__dirname, "notifications.html"),
         notifRule: resolve(__dirname, "notification_rule.html"),
-        maintenance: resolve(__dirname, "src/pages/Maintenance.tsx"),
+        maintenance: resolve(__dirname, "maintenance.html"),
         maintAdmin: resolve(__dirname, "src/pages/MaintenanceAdmin.tsx"),
+        editMaintenance: resolve(__dirname, "edit_maintenance.html"),
         profile: resolve(__dirname, "profile.html"),
         callback: resolve(__dirname, "callback.html"),
       },
@@ -41,9 +42,17 @@ export default defineConfig({
           return null
         },
       },
-      // "/notifications": "http://localhost:8080",
       "/notifications/": "http://localhost:8080",
-      "/maintenance": "http://localhost:8080",
+      "/maintenance": {
+        target: "http://localhost:8080",
+        bypass: (req) => {
+          if (req.method === "GET") {
+            if (req.url?.startsWith("/maintenance/edit")) return "/edit_maintenance.html"
+            return "/maintenance.html"
+          }
+          return null
+        },
+      },
       "/static/logo": "http://localhost:8080",
     },
   },

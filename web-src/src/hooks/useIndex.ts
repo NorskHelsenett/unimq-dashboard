@@ -1,5 +1,6 @@
 import type { IndexData, Metrics, Limits } from "@/pages/index"
-import { getVhosts } from "@/services/notifications"
+import { getVhosts } from "@/services/vhosts"
+import { apiFetch } from "@/lib/apiClient"
 import { useEffect, useState } from "react"
 
 export function useIndex(): IndexData {
@@ -14,7 +15,7 @@ export function useIndex(): IndexData {
             const sel = new URLSearchParams(window.location.search).get('vhost') ?? names[0] ?? ''
             setSelected(sel)
             // Fetch metrics and limits for the selected vhost
-            fetch(`/v1/vhosts/${encodeURIComponent(sel)}/metrics`)
+            apiFetch(`/api/v1/vhosts/${encodeURIComponent(sel)}/metrics`)
                 .then(res => res.json())
                 .then(data => {
                     setMetrics(data.metrics)

@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
-import { getVhosts, getVhostNotification, getSelectedVhost } from '@/services/notifications'
+import { getVhostNotification, getSelectedVhost } from '@/services/notifications'
 import type { VhostNotification } from '@/types/notifications'
+import { getVhosts } from '@/services/vhosts'
 
 interface UseVhostNotificationResult {
   vhosts: string[]
