@@ -19,7 +19,6 @@ export default defineConfig({
         notifications: resolve(__dirname, "notifications.html"),
         notifRule: resolve(__dirname, "notification_rule.html"),
         maintenance: resolve(__dirname, "maintenance.html"),
-        maintAdmin: resolve(__dirname, "src/pages/MaintenanceAdmin.tsx"),
         editMaintenance: resolve(__dirname, "edit_maintenance.html"),
         profile: resolve(__dirname, "profile.html"),
         callback: resolve(__dirname, "callback.html"),
