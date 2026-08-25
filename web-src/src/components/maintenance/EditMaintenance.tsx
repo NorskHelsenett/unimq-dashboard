@@ -26,6 +26,9 @@ export function EditMaintenance({ maintenance }: { maintenance: Maintenance }) {
     const auth = useAuth()
     const userName = auth.user?.profile?.name ?? auth.user?.profile?.email ?? "Unknown"
 
+    const currentVhost = new URLSearchParams(window.location.search).get('vhost')
+    const vhostParam = currentVhost ? `?vhost=${encodeURIComponent(currentVhost)}` : ''
+
     const initialStart = toDatetimeLocal(maintenance.start)
     const initialEnd = toDatetimeLocal(maintenance.end)
 
@@ -100,7 +103,7 @@ export function EditMaintenance({ maintenance }: { maintenance: Maintenance }) {
                     maintenance={maintenance}
                     open={true}
                     onClose={() => setShowDelete(false)}
-                    onDeleted={() => { window.location.href = "/maintenance" }}
+                    onDeleted={() => { window.location.href = `/maintenance${vhostParam}` }}
                 />
             )}
             <MaintenanceEditLogSheet

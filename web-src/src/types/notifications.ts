@@ -7,6 +7,7 @@ export interface VhostNotification {
   Notified: boolean
 }
 
+export type Status = 'ok' | 'active' | 'inactive' | 'firing' | 'fired' | 'unknown' | ''
 
 export interface AlarmProps {
     id?: string
@@ -16,7 +17,7 @@ export interface AlarmProps {
     threshold?: number
     message?: string
     enabled?: boolean
-    status?: string //"firing", "ok", also based on enabled status
+    status?: Status
     last_fired?: string | null
     last_value?: number | null
 }

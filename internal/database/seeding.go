@@ -13,6 +13,7 @@ import (
 const (
 	recipientID   = "e45957ef-b817-414e-95e8-c4ea89c4ad3e"
 	ruleID        = "090e10a0-4c2c-46e4-8870-9e354232a037"
+	firingRuleID  = "b8f2a1c4-3e7d-4f90-a5b6-1c2d3e4f5a6b"
 	MaintenanceID = "e45957ef-b817-414e-95e8-c4ea89c4ad3e"
 )
 
@@ -42,6 +43,18 @@ func (dbc *Database) Seed(ctx context.Context) error {
 
 	err := dbc.seedMaintenace(ctx)
 	if err != nil {
+		return err
+	}
+
+	// seed per-rule log for the firing alarm (rule-scoped, not per-vhost)
+	firingVal := 47.0
+	firingEntries := models.AlarmEntry{
+		AlarmID: firingRuleID,
+		Entries: []models.LogEntry{
+			models.NewLogEntry(models.LogEventFired, &firingVal, 10.0, models.AlarmTypeChannels),
+		},
+	}
+	if err := dbc.AddAlarm(ctx, &firingEntries); err != nil {
 		return err
 	}
 
@@ -138,6 +151,22 @@ func (dbc *Database) seedNotificationRules(ctx context.Context, name string) err
 		return err
 	}
 
+	lastFired := time.Now().Add(-10 * time.Minute)
+	lastVal := 47.0
+	err = dbc.AddNotificationRule(ctx, name, &models.AlarmRule{
+		ID:        firingRuleID,
+		Name:      "High channel count",
+		Threshold: 10.0,
+		Type:      models.AlarmTypeChannels,
+		Enabled:   true,
+		Status:    models.AlarmStatusFiring,
+		LastFired: &lastFired,
+		LastValue: &lastVal,
+	})
+	if err != nil {
+		return err
+	}
+
 	return nil
 }
 
@@ -199,6 +228,10 @@ func (dbc *Database) SeedAlarms(ctx context.Context, name string) error {
 	entries.Entries = append(entries.Entries, models.NewLogEntry(models.LogEventResolved, &val, 42.0, models.AlarmTypeChannels))
 	entries.Entries = append(entries.Entries, models.NewLogEntry(models.LogEventFired, &val, 0.67, models.AlarmTypeQueueSize))
 	entries.Entries = append(entries.Entries, models.NewLogEntry(models.LogEventResolved, &val, 69.0, models.AlarmTypeQueueSize))
+
+	// trailing fired entry — alarm is still above threshold
+	firingVal := 47.0
+	entries.Entries = append(entries.Entries, models.NewLogEntry(models.LogEventFired, &firingVal, 10.0, models.AlarmTypeChannels))
 
 	err = dbc.AddAlarm(ctx, &entries)
 	if err != nil {

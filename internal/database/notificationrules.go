@@ -108,24 +108,27 @@ func (dbc *Database) DeleteNotificationRule(ctx context.Context, vhost string, i
 	return nil
 }
 
-func (dbc *Database) UpdateNotificationRule(ctx context.Context, vhost, name string, status models.AlarmStatus, value float64, notified bool) error {
+func (dbc *Database) UpdateNotificationRule(ctx context.Context, vhost, ruleID string, status models.AlarmStatus, value float64, notified bool) error {
 	start := time.Now()
 
-	filter := map[string]any{id: vhost, "rules.name": name}
-	update := map[string]any{
-		set: map[string]any{
-			"rules.$.status":    status,
-			"rules.$.lastValue": value,
-			"notified":          notified,
-		},
+	setFields := map[string]any{
+		"rules.$.status":    status,
+		"rules.$.lastValue": value,
+		"notified":          notified,
 	}
+	if status == models.AlarmStatusFiring {
+		setFields["rules.$.lastFired"] = time.Now()
+	}
+
+	filter := map[string]any{id: vhost, "rules.id": ruleID}
+	update := map[string]any{set: setFields}
 
 	_, err := dbc.Collections.Notifications.UpdateOne(ctx, filter, update)
 	if err != nil {
-		slog.ErrorContext(ctx, "failed to update notification rule status", "runtime", time.Since(start), id, vhost, "rule", name, "error", err)
+		slog.ErrorContext(ctx, "failed to update notification rule status", "runtime", time.Since(start), id, vhost, "rule", ruleID, "error", err)
 		return err
 	} else {
-		slog.DebugContext(ctx, "updated notification rule status", "runtime", time.Since(start), id, vhost, "name", name, "notified", notified)
+		slog.DebugContext(ctx, "updated notification rule status", "runtime", time.Since(start), id, vhost, "ruleID", ruleID, "notified", notified)
 	}
 
 	return err

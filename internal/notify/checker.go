@@ -147,7 +147,7 @@ func (c *Checker) checkRule(rule *models.AlarmRule, vhostName string, urls []str
 	triggered, value := evaluate(rule, metrics, queues)
 	newStatus := models.AlarmStatusOK
 	if triggered {
-		newStatus = models.AlarmStatusFired
+		newStatus = models.AlarmStatusFiring
 	}
 	shouldNotify := triggered && rule.Status != models.AlarmStatusFiring && len(urls) > 0
 	slog.DebugContext(c.Ctx, "Evaluating rule",
