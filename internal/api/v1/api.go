@@ -9,6 +9,7 @@ import (
 	"github.com/sisneve/rabbitmq-dashboard/internal/config"
 	"github.com/sisneve/rabbitmq-dashboard/internal/database"
 	"github.com/sisneve/rabbitmq-dashboard/internal/models"
+	"github.com/sisneve/rabbitmq-dashboard/internal/notify"
 	"github.com/wneessen/go-mail"
 )
 
@@ -20,6 +21,7 @@ type APIService struct {
 	EmailClient *mail.Client
 	EmailConfig *config.EmailConfig
 	RMQLimits   *models.Limits
+	Checker     *notify.Checker
 }
 
 type APIServiceOption func(*APIService) error
@@ -62,6 +64,13 @@ func WithRMQLimits(limits *models.Limits) APIServiceOption {
 func WithEmailConfig(emailConfig *config.EmailConfig) APIServiceOption {
 	return func(rc *APIService) error {
 		rc.EmailConfig = emailConfig
+		return nil
+	}
+}
+
+func WithChecker(checker *notify.Checker) APIServiceOption {
+	return func(rc *APIService) error {
+		rc.Checker = checker
 		return nil
 	}
 }

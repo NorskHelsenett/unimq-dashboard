@@ -3,7 +3,7 @@ import { upperCaseStatus } from "@/services/maintenance"
 import { Pill } from "../ui/pill"
 import { ChevronDown, ChevronUp, History } from "lucide-react"
 import { useLocalStorage } from "@/hooks/useLocalStorage"
-import { SectionCard } from "../ui/section-card"
+import { SectionCard, SectionCardHeader } from "../ui/section-card"
 
 export function formatDateRange(start: string, end: string): string {
     const pad = (n: number) => String(n).padStart(2, '0')
@@ -33,15 +33,15 @@ export function MaintenanceHistoryCard({ maintenanceHistory }: { maintenanceHist
 
     return (
         <SectionCard accent="green">
-            <button
+        <button
                 onClick={() => setOpen(o => !o)}
-                className="flex justify-between items-center w-full text-left mb-2"
+                className="w-full text-left"
             >
-                <h3 className="text-lg font-semibold flex items-center gap-2">
-                        <History className="w-5 h-5 text-gray-400" />
-                        Maintenance history
-                    </h3>
-                {open ? <ChevronUp className="w-4 h-4 text-gray-400" /> : <ChevronDown className="w-4 h-4 text-gray-400" />}
+            <SectionCardHeader
+                title="Maintenance history"
+                icon={<History className="w-4 h-4 text-green-400" />}
+                action={open ? <ChevronUp className="w-4 h-4 text-gray-400" /> : <ChevronDown className="w-4 h-4 text-gray-400" />}
+                />
             </button>
             {open && (
                 maintenanceHistory.length === 0 ? (

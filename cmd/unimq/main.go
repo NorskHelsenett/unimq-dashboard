@@ -66,7 +66,14 @@ func main() {
 		return
 	}
 
-	routes, err := routes.SetupRoutes(ctx, config, db, rmq)
+	checker := notify.NewChecker(
+		notify.WithDB(db),
+		notify.WithRMQClient(rmq),
+		notify.WithInterval(60*time.Second),
+		notify.WithContext(ctx),
+	)
+
+	routes, err := routes.SetupRoutes(ctx, config, db, rmq, checker)
 	if err != nil {
 		slog.Error("failed to set up routes", "error", err)
 		return
@@ -97,13 +104,6 @@ func main() {
 			return
 		}
 	})
-
-	checker := notify.NewChecker(
-		notify.WithDB(db),
-		notify.WithRMQClient(rmq),
-		notify.WithInterval(60*time.Second),
-		notify.WithContext(ctx),
-	)
 
 	wg.Add(1)
 	checker.StartChecker(wg)

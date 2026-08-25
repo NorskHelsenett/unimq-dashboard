@@ -16,10 +16,20 @@ import (
 type (
 	// Checker periodically evaluates alarm rules against current RabbitMQ metrics and triggers notifications.
 	Checker struct {
-		Ctx       context.Context
-		DB        *database.Database
-		RMQClient *rabbitmq.RMQClient
-		interval  time.Duration
+		Ctx         context.Context
+		DB          *database.Database
+		RMQClient   *rabbitmq.RMQClient
+		interval    time.Duration
+		mu          sync.RWMutex
+		lastChecked time.Time
+		runtimeMs   int64
+		hasRun      bool
+	}
+
+	CheckerStatus struct {
+		LastChecked *time.Time `json:"last_checked"`
+		RuntimeMs   *int64     `json:"runtime_ms"`
+		IntervalS   int64      `json:"interval_s"`
 	}
 
 	CheckerOptions func(*Checker)
@@ -59,6 +69,17 @@ func NewChecker(opts ...CheckerOptions) *Checker {
 	return c
 }
 
+func (c *Checker) GetStatus() CheckerStatus {
+	c.mu.RLock()
+	defer c.mu.RUnlock()
+	if !c.hasRun {
+		return CheckerStatus{IntervalS: int64(c.interval.Seconds())}
+	}
+	t := c.lastChecked
+	ms := c.runtimeMs
+	return CheckerStatus{LastChecked: &t, RuntimeMs: &ms, IntervalS: int64(c.interval.Seconds())}
+}
+
 func (c *Checker) StartChecker(wg *sync.WaitGroup) {
 	go func() {
 		defer wg.Done()
@@ -83,7 +104,13 @@ func (c *Checker) StartChecker(wg *sync.WaitGroup) {
 			case <-ticker.C:
 				timer := time.Now()
 				c.runChecks()
-				slog.InfoContext(c.Ctx, "finished checking maintenance statuses, notifications and metrics values", "runtime", time.Since(timer))
+				elapsed := time.Since(timer)
+				slog.InfoContext(c.Ctx, "finished checking maintenance statuses, notifications and metrics values", "runtime", elapsed)
+				c.mu.Lock()
+				c.lastChecked = time.Now()
+				c.runtimeMs = elapsed.Milliseconds()
+				c.hasRun = true
+				c.mu.Unlock()
 			case <-c.Ctx.Done():
 				slog.InfoContext(c.Ctx, "Checker stopped")
 				return

@@ -118,7 +118,7 @@ function ExistingAlarms({existingAlarms, vhost, disabledIds, onToggle}: {
                                                     <Pill variant={pillVariant} className="border-none px-2 text-xs">
                                                         {alarm.status === 'firing'   ? 'Firing' :
                                                          alarm.status === 'fired'    ? 'Fired' :
-                                                         alarm.status === 'ok'       ? 'OK' :
+                                                         alarm.status === 'ok'       ? 'ok' :
                                                          alarm.status === 'inactive' ? 'Inactive' :
                                                          alarm.status === 'active'   ? 'Pending' :
                                                          alarm.status === 'unknown'  ? 'Pending' :

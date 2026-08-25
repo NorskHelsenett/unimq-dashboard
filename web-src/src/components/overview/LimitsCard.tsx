@@ -1,6 +1,7 @@
+import type { ReactNode } from 'react'
 import { cn } from '@/lib/utils'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
-import { Tile } from '../layout/Tile'
+import { Network, GitBranch, LayoutList, Hourglass } from 'lucide-react'
 
 interface LimitsCardProps {
   connections: number
@@ -11,103 +12,113 @@ interface LimitsCardProps {
   maxQueues: number
 }
 
-const bgMap: Record<string, string> = {
-  'status-danger':  'bg-status-danger-bg border-status-danger-border',
-  'status-warning': 'bg-status-warning-bg-subtle border-status-warning-border',
-  'status-ok':      'bg-status-ok-bg-subtle border-status-ok-border',
-  'text-text-primary': 'bg-surface-card border-border-card',
+type StatusKey = 'danger' | 'warning' | 'neutral'
+
+function limitColor(value: number, max: number): StatusKey {
+  if (max <= 0) return 'neutral'
+  if (value >= max * 0.8) return 'danger'
+  if (value >= max * 0.5) return 'warning'
+  return 'neutral'
 }
 
-const textMap: Record<string, string> = {
-  'status-danger':  'text-status-danger',
-  'status-warning': 'text-status-warning',
-  'status-ok':      'text-status-ok',
-  'text-text-primary': 'text-text-primary',
+const valueColor: Record<StatusKey, string> = {
+  danger:  'text-red-600',
+  warning: 'text-amber-600',
+  neutral: 'text-text-primary',
 }
 
-function limitColor(value: number, max: number): string {
-  if (value >= max / 5 * 4)       return 'status-danger'
-  if (value >= max / 2)   return 'status-warning'
-  return 'status-ok'
-}
-
-interface MetricTileProps {
+interface StatCardProps {
   label: string
   tooltip: string
   value: number
+  sub: string
   max?: number
-  sub?: string
+  icon: ReactNode
+  cardBg: string
+  cardBorder: string
+  iconBg: string
+  iconColor: string
+  subColor: string
 }
 
-function MetricTile({ label, tooltip, value, max, sub }: MetricTileProps) {
-  const colorKey = max ? limitColor(value, max) : 'text-text-primary'
-  const bgClass   = bgMap[colorKey]
-  const textClass = textMap[colorKey]
-
+function StatCard({ label, tooltip, value, sub, max, icon, cardBg, cardBorder, iconBg, iconColor, subColor }: StatCardProps) {
+  const colorKey: StatusKey = max ? limitColor(value, max) : 'neutral'
   return (
-    <Tile className={cn('rounded-lg p-4 flex justify-between items-center border', bgClass)}>
-      <div className="flex flex-col gap-0.5">
-        <span className="flex items-center gap-1.5 text-text-muted uppercase tracking-wide">
-          {label}
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <button
-                type="button"
-                aria-label={`Show information about ${label}`}
-                className="inline-flex items-center justify-center w-4 h-4 rounded-full
-                              bg-gray-100 text-gray-400 text-xs cursor-default select-none normal-case tracking-normal"
-              >
-                ?
-              </button>
-            </TooltipTrigger>
-            <TooltipContent>
-              <p className="max-w-xs text-sm">{tooltip}</p>
-            </TooltipContent>
-          </Tooltip>
-        </span>
-        {sub && <span className="text-xs text-text-muted">{sub}</span>}
+    <div className={cn('rounded-xl border p-4', cardBg, cardBorder)}>
+      <div className="flex items-center justify-between mb-3">
+        <span className="text-sm font-medium text-text-secondary">{label}</span>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <button
+              type="button"
+              aria-label={`Info about ${label}`}
+              className="inline-flex items-center justify-center w-3.5 h-3.5 rounded-full bg-white/70 text-gray-400 text-[10px] cursor-default select-none"
+            >
+              ?
+            </button>
+          </TooltipTrigger>
+          <TooltipContent>
+            <p className="max-w-xs text-sm">{tooltip}</p>
+          </TooltipContent>
+        </Tooltip>
       </div>
-      <span className={cn('text-2xl font-mono font-semibold tabular-nums', textClass)}>
-        {value}
-      </span>
-    </Tile>
+      <div className="flex items-end justify-between gap-2">
+        <div>
+          <div className={cn('text-2xl font-bold tabular-nums tracking-tight', valueColor[colorKey])}>
+            {value}
+          </div>
+          <div className={cn('text-xs mt-0.5 font-medium', subColor)}>{sub}</div>
+        </div>
+        <div className={cn('w-9 h-9 rounded-lg flex items-center justify-center shrink-0', iconBg)}>
+          <div className={iconColor}>{icon}</div>
+        </div>
+      </div>
+    </div>
   )
 }
 
 export function LimitsCard({ connections, channels, queues, unacked, maxConnections, maxQueues }: LimitsCardProps) {
   return (
-    <div className='min-w-sm w-xl'>
-      <h2 className="text-lg font-semibold text-text-primary mb-3">
-        Limits
-      </h2>
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        <MetricTile
-          label="Connections"
-          tooltip={`Maks antall connections til en vhost er ${maxConnections}. Etter at dette antallet er nådd, vil det ikke lenger være mulig å opprette nye connections før du er under grensen igjen.`}
-          value={connections}
-          max={maxConnections}
-          sub={`limit ${maxConnections}`}
-        />
-        <MetricTile
-          label="Channels"
-          tooltip="Vi anbefaler å holde antallet channels per vhost under 1000."
-          value={channels}
-          sub="rec. <1000"
-        />
-        <MetricTile
-          label="Queues"
-          tooltip={`Maks antall queues på en vhost er ${maxQueues}. Etter at dette antallet er nådd, vil det ikke lenger være mulig å opprette nye queues før du er under grensen igjen.`}
-          value={queues}
-          max={maxQueues}
-          sub={`limit ${maxQueues}`}
-        />
-        <MetricTile
-          label="Unacked messages"
-          tooltip="Totalt antall unacked messages på vhosten. Meldinger som hentes, men ikke enda er konsumert, havner i «unacked state». Disse meldingene lagres i minne, det er derfor ikke ønskelig å ha for mange."
-          value={unacked}
-          sub="keep low"
-        />
-      </div>
+    <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+      <StatCard
+        label="Connections"
+        tooltip={`Maks antall connections til en vhost er ${maxConnections}. Etter at dette antallet er nådd, vil det ikke lenger være mulig å opprette nye connections før du er under grensen igjen.`}
+        value={connections}
+        sub={`limit ${maxConnections}`}
+        max={maxConnections > 0 ? maxConnections : undefined}
+        icon={<Network className="w-4 h-4" />}
+        cardBg="bg-blue-50" cardBorder="border-blue-100"
+        iconBg="bg-blue-100" iconColor="text-blue-500" subColor="text-blue-400"
+      />
+      <StatCard
+        label="Channels"
+        tooltip="Vi anbefaler å holde antallet channels per vhost under 1000."
+        value={channels}
+        sub="rec. <1000"
+        icon={<GitBranch className="w-4 h-4" />}
+        cardBg="bg-violet-50" cardBorder="border-violet-100"
+        iconBg="bg-violet-100" iconColor="text-violet-500" subColor="text-violet-400"
+      />
+      <StatCard
+        label="Queues"
+        tooltip={`Maks antall queues på en vhost er ${maxQueues}. Etter at dette antallet er nådd, vil det ikke lenger være mulig å opprette nye queues før du er under grensen igjen.`}
+        value={queues}
+        sub={`limit ${maxQueues}`}
+        max={maxQueues > 0 ? maxQueues : undefined}
+        icon={<LayoutList className="w-4 h-4" />}
+        cardBg="bg-orange-50" cardBorder="border-orange-100"
+        iconBg="bg-orange-100" iconColor="text-orange-500" subColor="text-orange-400"
+      />
+      <StatCard
+        label="Unacked messages"
+        tooltip="Totalt antall unacked messages på vhosten. Meldinger som hentes, men ikke enda er konsumert, havner i «unacked state». Disse meldingene lagres i minne, det er derfor ikke ønskelig å ha for mange."
+        value={unacked}
+        sub="keep low"
+        icon={<Hourglass className="w-4 h-4" />}
+        cardBg="bg-teal-50" cardBorder="border-teal-100"
+        iconBg="bg-teal-100" iconColor="text-teal-500" subColor="text-teal-400"
+      />
     </div>
   )
 }
+

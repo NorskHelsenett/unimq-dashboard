@@ -2,11 +2,11 @@ import * as React from "react"
 import { cn } from "@/lib/utils"
 
 const accentClasses = {
-  blue: "border-l-blue-400",
-  amber: "border-l-amber-500",
-  green: "border-l-green-200",
-  danger: "border-l-red-500",
-  none: "",
+  blue:   "border-t-blue-400",
+  amber:  "border-t-amber-500",
+  green:  "border-t-green-400",
+  danger: "border-t-red-500",
+  none:   "border-t-transparent",
 } as const
 
 type Accent = keyof typeof accentClasses
@@ -19,7 +19,7 @@ function SectionCard({
   return (
     <div
       className={cn(
-        "bg-white rounded-lg shadow p-4 min-w-[300px] border border-border-card border-l-4",
+        "bg-white rounded-xl border border-gray-100 shadow-sm border-t-2 p-5",
         accentClasses[accent],
         className
       )}
@@ -40,8 +40,8 @@ function SectionCardHeader({
   className?: string
 }) {
   return (
-    <div className={cn("flex justify-between items-center mb-4", className)}>
-      <h3 className="text-lg font-semibold flex items-center gap-2">
+    <div className={cn("flex justify-between items-center pb-3 mb-4 border-b border-gray-100", className)}>
+      <h3 className="text-base font-semibold text-text-primary flex items-center gap-2">
         {icon}
         {title}
       </h3>

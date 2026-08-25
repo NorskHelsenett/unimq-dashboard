@@ -1,11 +1,14 @@
 package api
 
 import (
+	"errors"
 	"net/http"
 	"net/url"
 
 	"github.com/go-chi/chi/v5"
+	"github.com/sisneve/rabbitmq-dashboard/internal/models"
 	"github.com/sisneve/rabbitmq-dashboard/internal/routes/httpsuite"
+	"go.mongodb.org/mongo-driver/v2/mongo"
 )
 
 // @Summary		Get Notifications
@@ -51,6 +54,11 @@ func (rc *APIService) GetNotificationsVhostHandler(w http.ResponseWriter, r *htt
 
 	notification, err := rc.DB.GetNotification(r.Context(), eVhost)
 	if err != nil {
+		if errors.Is(err, mongo.ErrNoDocuments) {
+			empty := models.NewVhostNotification(eVhost)
+			httpsuite.SendResponse(r.Context(), w, "Gathered notifications on vhost", http.StatusOK, empty)
+			return
+		}
 		httpsuite.WriteJSONError(w, "error fetching notification config: "+err.Error(), http.StatusInternalServerError)
 		return
 	}

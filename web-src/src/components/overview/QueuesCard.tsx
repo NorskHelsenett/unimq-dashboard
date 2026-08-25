@@ -87,10 +87,11 @@ function SubHeaderCell({ children, className }: { children?: React.ReactNode; cl
 
 export function QueuesCard({ vhost, queues, loading, error }: QueuesCardProps) {
     return (
-        <div className='w-full'>
-            <h2 className="text-lg font-semibold text-text-primary mb-3">Queues</h2>
-            <div className="rounded-lg border bg-surface-card overflow-hidden w-full">
-                <div className="overflow-x-auto">
+        <div className="rounded-xl border border-gray-100 bg-white shadow-sm overflow-hidden w-full">
+            <div className="px-5 py-4 border-b border-gray-100">
+                <h3 className="text-sm font-semibold text-text-primary">Queues</h3>
+            </div>
+            <div className="overflow-x-auto">
                     <table className="w-full border-collapse text-sm">
                         <thead>
                             <tr>
@@ -147,7 +148,6 @@ export function QueuesCard({ vhost, queues, loading, error }: QueuesCardProps) {
                             ))}
                         </tbody>
                     </table>
-                </div>
             </div>
         </div>
     )

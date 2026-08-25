@@ -16,10 +16,11 @@ import (
 	"github.com/sisneve/rabbitmq-dashboard/internal/database"
 	_ "github.com/sisneve/rabbitmq-dashboard/internal/docs"
 	"github.com/sisneve/rabbitmq-dashboard/internal/models"
+	"github.com/sisneve/rabbitmq-dashboard/internal/notify"
 	httpSwagger "github.com/swaggo/http-swagger/v2"
 )
 
-func SetupRoutes(ctx context.Context, config *config.Config, db *database.Database, rmq *rabbitmq.RMQClient) (chi.Router, error) {
+func SetupRoutes(ctx context.Context, config *config.Config, db *database.Database, rmq *rabbitmq.RMQClient, checker *notify.Checker) (chi.Router, error) {
 	r := chi.NewRouter()
 
 	r.Use(middleware.Logger)
@@ -45,6 +46,7 @@ func SetupRoutes(ctx context.Context, config *config.Config, db *database.Databa
 		api.WithDatabase(db),
 		api.WithRMQLimits(limits),
 		api.WithEmailConfig(config.Email),
+		api.WithChecker(checker),
 	)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create API service: %w", err)
