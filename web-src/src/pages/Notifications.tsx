@@ -10,12 +10,12 @@ import { LiveDataWidget } from '@/components/dashboard/LiveDataWidget'
 
 
 const Notifications = () => {
-  const { vhosts, selected, notification, loading } = useVhostNotification()
+  const { selected, notification, loading } = useVhostNotification()
   const rules = notification?.Rules ?? []
   const recipients = notification?.Recipients ?? []
 
   return (
-    <Layout Vhosts={vhosts} Selected={selected}>
+    <Layout>
       {loading ? (
         <div className="p-8 text-text-muted">Loading...</div>
       ) : (

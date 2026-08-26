@@ -7,12 +7,12 @@ import { EditAlarm } from '@/components/notifications/EditAlarm'
 import { useVhostNotification } from '@/hooks/useVhostNotification'
 
 const NotificationRule = () => {
-  const { vhosts, selected, notification, loading } = useVhostNotification()
+  const { selected, notification, loading } = useVhostNotification()
   const ruleId = new URLSearchParams(window.location.search).get('id')
   const alarm = notification?.Rules.find(r => r.id === ruleId) ?? null
 
   return (
-    <Layout Vhosts={vhosts} Selected={selected}>
+    <Layout>
       <div className="max-w-4xl mx-auto">
         <a href={`/notifications?vhost=${encodeURIComponent(selected)}`} className="text-sm text-text-muted hover:text-text-primary mb-4 inline-block">← Back to alarms</a>
         {loading ? (

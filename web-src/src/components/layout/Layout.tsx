@@ -3,16 +3,14 @@ import { Sidebar } from './Sidebar'
 import { TooltipProvider } from '../ui/tooltip'
 
 interface LayoutProps {
-  Vhosts: string[]
-  Selected: string
   children: ReactNode
 }
 
-export function Layout({ Vhosts, Selected, children }: LayoutProps) {
+export function Layout({ children }: LayoutProps) {
   return (
     <TooltipProvider>
         <div className="flex min-h-screen bg-gray-50">
-            <Sidebar Vhosts={Vhosts} Selected={Selected} />
+            <Sidebar/>
             <div className="flex flex-col flex-1 min-w-0">
                 <main className="flex-1 p-4 m-6 rounded-lg">
                     {children}

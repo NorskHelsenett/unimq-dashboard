@@ -60,7 +60,7 @@ const MainPage = () => {
         isVisible('alarms') || isVisible('recipients') || isVisible('maintenance')
 
     return (
-        <Layout Vhosts={Vhosts} Selected={Selected}>
+        <Layout>
             <div className="space-y-6">
                 <div className="flex items-start justify-between mb-12">
                     <div>

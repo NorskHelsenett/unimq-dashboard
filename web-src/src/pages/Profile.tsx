@@ -5,7 +5,6 @@ import { RequireAuth } from '@/auth/RequireAuth'
 import { Layout } from '@/components/layout/Layout'
 import { useAuth } from 'react-oidc-context'
 import { Eye, EyeOff } from 'lucide-react'
-import { useIndex } from '@/hooks/useIndex'
 
 const getInitials = (name?: string) => {
   if (!name) return '?'
@@ -21,10 +20,9 @@ const ProfilePage = () => {
   const auth = useAuth()
   const user = auth.user?.profile
   const [showSub, setShowSub] = useState(false)
-  const { Vhosts, Selected } = useIndex()
 
   return (
-    <Layout Vhosts={Vhosts} Selected={Selected}>
+    <Layout>
       <div className='max-w-sm flex flex-col gap-6'>
         <div className='flex items-center gap-4'>
         <div className='size-14 rounded-full bg-brand/10 border border-brand/20 flex items-center justify-center flex-shrink-0'>
