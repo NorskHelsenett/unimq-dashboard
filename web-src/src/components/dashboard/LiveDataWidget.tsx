@@ -2,11 +2,11 @@ import { cn } from '@/lib/utils'
 import { useCheckerStatus } from '@/hooks/useCheckerStatus'
 
 interface LiveDataWidgetProps {
-  vhost?: string
+  // vhost?: string
   className?: string
 }
 
-export function LiveDataWidget({ vhost, className }: LiveDataWidgetProps) {
+export function LiveDataWidget({ className }: LiveDataWidgetProps) {
   const { status, timeAgo } = useCheckerStatus()
 
   const isFresh =
@@ -15,44 +15,37 @@ export function LiveDataWidget({ vhost, className }: LiveDataWidgetProps) {
 
   return (
     <div className={cn('flex items-center gap-2 mt-1', className)}>
-      {/* Dark status chip */}
-      <div className="inline-flex items-center gap-2 bg-gray-900 rounded-lg px-3 py-1.5 shadow-sm">
+      {/* Light status chip */}
+      <div className="inline-flex items-center gap-2 bg-white border border-gray-200 rounded-lg px-3 py-1.5 shadow-sm">
         <span
           className={cn(
-            'w-1.5 h-1.5 rounded-full shrink-0',
+            'w-2 h-2 rounded-full shrink-0 self-start mt-[4px]',
             !status
-              ? 'bg-gray-600'
+              ? 'bg-gray-400'
               : isFresh
-              ? 'bg-green-400 animate-pulse'
+              ? 'bg-green-500 animate-pulse'
               : 'bg-yellow-400',
           )}
         />
-        <span className="text-xs text-gray-300">
+        <span className="text-xs text-gray-500">
           {!status ? (
-            <span className="text-gray-500">Awaiting first check…</span>
+            <span className="text-gray-400">Awaiting first check…</span>
           ) : (
-            <>
-              Synced{' '}
-              <span className="text-white font-medium">{timeAgo}</span>
-            </>
+            <span className="flex flex-col leading-tight">
+              <span>Synced</span>
+              <span className="text-gray-900 font-medium mt-1">{timeAgo}</span>
+            </span>
           )}
         </span>
         {status?.runtime_ms != null && (
           <>
-            <div className="w-px h-3 bg-gray-700 shrink-0" />
-            <span className="text-xs font-mono text-green-400">
+            <div className="w-px h-3 bg-gray-200 shrink-0" />
+            <span className="text-xs font-mono text-green-600">
               {status.runtime_ms}ms
             </span>
           </>
         )}
       </div>
-
-      {/* Vhost pill */}
-      {vhost && (
-        <span className="font-mono font-medium text-text-secondary bg-white/80 px-1.5 py-0.5 rounded text-xs border border-gray-200">
-          {vhost}
-        </span>
-      )}
     </div>
   )
 }

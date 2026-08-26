@@ -20,6 +20,7 @@ import { useScheduledMaintenance } from "@/hooks/useMaintenance";
 import { useDashboard } from "@/hooks/useDashboard";
 import { useAuth } from 'react-oidc-context'
 import type { Metrics } from "@/types/metrics"
+import { VhostSelector } from "@/components/layout/VhostSelector";
 
 export interface Limits {
     MaxConnections: number;
@@ -39,14 +40,11 @@ if (!root) throw new Error("Missing #app mount point")
 function GreetingHeader() {
     const hour = new Date().getHours()
     const auth = useAuth()
-    const userName = auth.user?.profile?.name ?? "User"
+    const firsName = (auth.user?.profile?.name ?? "User").split(" ")[0]
     const greeting = hour < 12 ? "Good morning" : hour < 18 ? "Good afternoon" : "Good evening"
 
     return (
-        <>
-            <span className="text-text-muted font-normal">{greeting}, </span>
-            <span className="text-text-primary font-normal">{userName}</span>
-        </>
+        <span className="text-text-primary font-normal">{greeting}, {firsName} 👋</span>
     )
 }
 
@@ -64,14 +62,21 @@ const MainPage = () => {
     return (
         <Layout Vhosts={Vhosts} Selected={Selected}>
             <div className="space-y-6">
-                <div className="flex items-start justify-between gap-4 mb-12">
+                <div className="flex items-start justify-between mb-12">
                     <div>
                         <h1 className="text-3xl font-bold tracking-tight">
                             <GreetingHeader />
                         </h1>
-                        <LiveDataWidget vhost={Selected} />
+                        <p className="flex items-center gap-1.5 text-sm text-text-muted mt-1">
+                            Here is what's happening on your RabbitMQ instance.
+                        </p>
+                        {/* <LiveDataWidget vhost={Selected} /> */}
                     </div>
-                    <DashboardCustomizer widgets={widgets} isVisible={isVisible} toggle={toggle} />
+                    <div className="flex items-center gap-4">
+                        <LiveDataWidget />
+                        <VhostSelector Vhosts={Vhosts} Selected={Selected} />
+                        <DashboardCustomizer widgets={widgets} isVisible={isVisible} toggle={toggle} />
+                    </div>
                 </div>
 
                 {isVisible('limits') && Metrics && (

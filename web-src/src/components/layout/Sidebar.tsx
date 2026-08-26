@@ -21,11 +21,11 @@ export function Sidebar({ Vhosts, Selected }: Vhosts ) {
     return (
         <nav className="relative flex flex-col pt-4 border-r border-border-sidebar h-screen sticky top-0 overflow-y-auto">
             <LogoLink />
-            <div className="p-4 flex gap-2 items-center border-y my-4">
+            {/* <div className="p-4 flex gap-2 items-center border-y my-4">
                 <span>Vhost:</span>
                 <VhostSelector Vhosts={Vhosts} Selected={Selected} />
-            </div>
-            <div className="flex flex-col gap-1">
+            </div> */}
+            <div className="flex flex-col gap-1 pt-10">
                 {NAV_ITEMS.map((item) => {
                     const active = isActive(item.href, currentPath)
                     return (
