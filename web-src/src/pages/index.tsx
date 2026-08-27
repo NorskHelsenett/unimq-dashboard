@@ -105,16 +105,6 @@ const MainPage = () => {
                     </div>
                 )}
 
-                {/* Queues table */}
-                {isVisible('queues') && (
-                    <QueuesCard
-                        vhost={Selected}
-                        queues={queues}
-                        loading={queuesLoading}
-                        error={queuesError}
-                    />
-                )}
-
                 {/* Bottom row: cluster + size distribution */}
                 {(isVisible('cluster') || isVisible('sizeDistribution')) && (
                     <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
@@ -129,6 +119,16 @@ const MainPage = () => {
                             </div>
                         )}
                     </div>
+                )}
+
+                {/* Queues table */}
+                {isVisible('queues') && (
+                    <QueuesCard
+                        vhost={Selected}
+                        queues={queues}
+                        loading={queuesLoading}
+                        error={queuesError}
+                    />
                 )}
             </div>
         </Layout>

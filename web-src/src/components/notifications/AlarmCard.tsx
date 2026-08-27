@@ -45,21 +45,14 @@ function ExistingAlarms({existingAlarms, vhost, disabledIds, onToggle}: {
                 <>
                     {visibleAlarms.length > 0 ? (
                         <div className="overflow-y-auto max-h-64">
-                            <table className="w-full text-left border-collapse table-fixed">
-                                <colgroup>
-                                    <col />
-                                    <col className="w-32" />
-                                    <col className="w-20" />
-                                    <col className="w-12" />
-                                    <col className="w-28" />
-                                </colgroup>
+                            <table className="w-full text-left border-collapse">
                                 <thead>
                                     <tr>
-                                        <th className="border-b border-border-card py-2 px-4 text-xs text-gray-500">Alarm</th>
-                                        <th className="border-b border-border-card py-2 px-4 text-xs text-gray-500">Last fired</th>
-                                        <th className="border-b border-border-card py-2 pl-1 pr-2 text-xs text-gray-500">Status</th>
-                                        <th className="border-b border-border-card py-2 pl-1 pr-1 text-xs text-gray-500">Active</th>
-                                        <th className="border-b border-border-card py-2 pl-6 pr-4 text-xs text-gray-500 text-right">Actions</th>
+                                        <th className="border-b border-border-card py-2 px-4 text-xs text-text-muted">Alarm</th>
+                                        <th className="border-b border-border-card py-2 px-4 text-xs text-text-muted">Last fired</th>
+                                        <th className="border-b border-border-card py-2 pl-1 pr-2 text-xs text-text-muted">Status</th>
+                                        <th className="border-b border-border-card py-2 pl-1 pr-1 text-xs text-text-muted">Active</th>
+                                        <th className="border-b border-border-card py-2 pl-6 pr-4 text-xs text-text-muted text-right">Actions</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -79,10 +72,10 @@ function ExistingAlarms({existingAlarms, vhost, disabledIds, onToggle}: {
                                             {showDivider && (
                                                 <tr key={`divider-${i}`}>
                                                     <td colSpan={5} className="py-1 px-4">
-                                                        <div className="flex items-center gap-2 text-xs text-gray-400">
-                                                            <div className="flex-1 border-t border-dashed border-gray-300" />
+                                                        <div className="flex items-center gap-2 text-xs text-text-muted">
+                                                            <div className="flex-1 border-t border-dashed border-border-card" />
                                                             <span>Deactivated</span>
-                                                            <div className="flex-1 border-t border-dashed border-gray-300" />
+                                                            <div className="flex-1 border-t border-dashed border-border-card" />
                                                         </div>
                                                     </td>
                                                 </tr>
@@ -90,7 +83,7 @@ function ExistingAlarms({existingAlarms, vhost, disabledIds, onToggle}: {
                                             <tr key={alarm.id} className={
                                                 isDisabled ? '' :
                                                 alarm.status === 'firing' ? 'bg-red-50 hover:bg-red-100' :
-                                                'hover:bg-gray-50'
+                                                'hover:bg-surface-page'
                                             }>
                                                 <td className={cn("border-b border-border-card py-2 px-4 text-sm font-medium", fadedCell)}>
                                                     <span className="flex items-center gap-2">
@@ -138,7 +131,7 @@ function ExistingAlarms({existingAlarms, vhost, disabledIds, onToggle}: {
                                                                 <Button
                                                                     variant="ghost"
                                                                     size="sm"
-                                                                    className="p-0 text-gray-400 hover:text-gray-700"
+                                                                    className="p-0 text-text-muted hover:text-text-secondary"
                                                                     onClick={() => { window.location.href = `/notifications/rule?vhost=${encodeURIComponent(vhost)}&id=${alarm.id}` }}
                                                                 >
                                                                     <Pencil className="h-4 w-4" />
@@ -194,7 +187,7 @@ function AddAlarmForm({ selectedAlarm, vhost, onClose }: { selectedAlarm: string
                 threshold: fd.get('threshold') ? Number(fd.get('threshold')) : undefined,
                 message: (fd.get('message') as string) || '',
             }).then(() => window.location.reload())
-        }} className="bg-white border border-blue-200 rounded-lg p-4 mb-4 shadow">
+        }} className="bg-surface-card border border-blue-200 rounded-lg p-4 mb-4 shadow">
             <div className="flex flex-wrap items-end gap-2">
                 <div className="flex flex-col gap-1 min-w-[180px] flex-1">
                     <label className="text-sm font-medium">{label}</label>
@@ -202,13 +195,13 @@ function AddAlarmForm({ selectedAlarm, vhost, onClose }: { selectedAlarm: string
                 </div>
                 {hasQueue && (
                     <div className="flex flex-col gap-1">
-                        <label className="text-xs text-gray-500">Queue name</label>
+                        <label className="text-xs text-text-muted">Queue name</label>
                         <Input name="queue_name" placeholder="my.queue.name" required />
                     </div>
                 )}
                 {hasThreshold && (
                     <div className="flex flex-col gap-1">
-                        <label className="text-xs text-gray-500">Threshold</label>
+                        <label className="text-xs text-text-muted">Threshold</label>
                         <Input name="threshold" type="number" placeholder="e.g. 1000" required />
                     </div>
                 )}
@@ -216,7 +209,7 @@ function AddAlarmForm({ selectedAlarm, vhost, onClose }: { selectedAlarm: string
                 <Button type="button" variant="ghost" size="sm" onClick={onClose}>Cancel</Button>
             </div>
             <div className="mt-2 flex flex-col gap-1">
-                <label className="text-xs text-gray-500">Message (optional)</label>
+                <label className="text-xs text-text-muted">Message (optional)</label>
                 <Input name="message" placeholder="Leave empty for default" />
             </div>
         </form>
@@ -264,7 +257,7 @@ export function AlarmCard({ existingAlarms, vhost = '' }: { existingAlarms: Alar
                     </Selector>
                 }
             />
-            <p className="text-sm text-gray-600 mb-4 max-w-xl">
+            <p className="text-sm text-text-secondary mb-4 max-w-xl">
                 Set up alarms to notify the team when thresholds are reached.
                 Alerts are sent only once per trigger and reset automatically when the value goes back below the threshold.
             </p>

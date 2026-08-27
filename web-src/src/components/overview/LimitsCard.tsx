@@ -45,32 +45,36 @@ function StatCard({ label, tooltip, value, sub, max, icon, cardBg, cardBorder, i
   const colorKey: StatusKey = max ? limitColor(value, max) : 'neutral'
   return (
     <div className={cn('rounded-xl border p-4', cardBg, cardBorder)}>
-      <div className="flex items-center justify-between mb-3">
-        <span className="text-sm font-medium text-text-secondary">{label}</span>
+      <div className="flex items-start justify-between mb-3">
+        <div className="flex items-center gap-6">
+          <div className={cn('w-9 h-9 rounded-lg flex items-center justify-center shrink-0', iconBg)}>
+            <div className={iconColor}>{icon}</div>
+          </div>
+          <div className="flex flex-col gap-0.5 min-w-0">
+            <span className="text-sm font-medium text-text-secondary">{label}</span>
+            <div className={cn('text-2xl font-bold tabular-nums tracking-tight', valueColor[colorKey])}>
+              {value}
+            </div>
+          </div>
+        </div>
         <Tooltip>
           <TooltipTrigger asChild>
             <button
               type="button"
               aria-label={`Info about ${label}`}
-              className="inline-flex items-center justify-center w-3.5 h-3.5 rounded-full bg-white/70 text-gray-400 text-[10px] cursor-default select-none"
+              className="inline-flex items-center justify-center w-3.5 h-3.5 rounded-full bg-surface-card/70 text-text-muted text-[14px] cursor-default select-none"
             >
               ?
             </button>
           </TooltipTrigger>
           <TooltipContent>
-            <p className="max-w-xs text-sm">{tooltip}</p>
+            <p className="max-w-xs text-xs">{tooltip}</p>
           </TooltipContent>
         </Tooltip>
       </div>
       <div className="flex items-end justify-between gap-2">
         <div>
-          <div className={cn('text-2xl font-bold tabular-nums tracking-tight', valueColor[colorKey])}>
-            {value}
-          </div>
           <div className={cn('text-xs mt-0.5 font-medium', subColor)}>{sub}</div>
-        </div>
-        <div className={cn('w-9 h-9 rounded-lg flex items-center justify-center shrink-0', iconBg)}>
-          <div className={iconColor}>{icon}</div>
         </div>
       </div>
     </div>
@@ -87,7 +91,7 @@ export function LimitsCard({ connections, channels, queues, unacked, maxConnecti
         sub={`limit ${maxConnections}`}
         max={maxConnections > 0 ? maxConnections : undefined}
         icon={<Network className="w-4 h-4" />}
-        cardBg="bg-blue-50" cardBorder="border-blue-100"
+        cardBg="bg-surface-card" cardBorder="border-border-card"
         iconBg="bg-blue-100" iconColor="text-blue-500" subColor="text-blue-400"
       />
       <StatCard
@@ -96,7 +100,7 @@ export function LimitsCard({ connections, channels, queues, unacked, maxConnecti
         value={channels}
         sub="rec. <1000"
         icon={<GitBranch className="w-4 h-4" />}
-        cardBg="bg-violet-50" cardBorder="border-violet-100"
+        cardBg="bg-surface-card" cardBorder="border-border-card"
         iconBg="bg-violet-100" iconColor="text-violet-500" subColor="text-violet-400"
       />
       <StatCard
@@ -106,7 +110,7 @@ export function LimitsCard({ connections, channels, queues, unacked, maxConnecti
         sub={`limit ${maxQueues}`}
         max={maxQueues > 0 ? maxQueues : undefined}
         icon={<LayoutList className="w-4 h-4" />}
-        cardBg="bg-orange-50" cardBorder="border-orange-100"
+        cardBg="bg-surface-card" cardBorder="border-border-card"
         iconBg="bg-orange-100" iconColor="text-orange-500" subColor="text-orange-400"
       />
       <StatCard
@@ -115,7 +119,7 @@ export function LimitsCard({ connections, channels, queues, unacked, maxConnecti
         value={unacked}
         sub="keep low"
         icon={<Hourglass className="w-4 h-4" />}
-        cardBg="bg-teal-50" cardBorder="border-teal-100"
+        cardBg="bg-surface-card" cardBorder="border-border-card"
         iconBg="bg-teal-100" iconColor="text-teal-500" subColor="text-teal-400"
       />
     </div>

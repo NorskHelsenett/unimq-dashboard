@@ -65,11 +65,11 @@ export const AlarmLogSheet = ({
                                         </div>
                                     </li>
                                 ) : (
-                                    <li key={i} className="flex gap-3 rounded-lg border border-gray-200 bg-gray-50 px-4 py-2.5">
-                                        <CheckCircle2 className="mt-0.5 shrink-0 text-gray-400" size={15} />
+                                    <li key={i} className="flex gap-3 rounded-lg border border-border-card bg-surface-page px-4 py-2.5">
+                                        <CheckCircle2 className="mt-0.5 shrink-0 text-text-muted" size={15} />
                                         <div>
-                                            <p className="text-xs font-medium text-gray-500">Resolved</p>
-                                            <p className="text-xs text-gray-400">
+                                            <p className="text-xs font-medium text-text-muted">Resolved</p>
+                                            <p className="text-xs text-text-muted">
                                                 {new Date(e.ts).toLocaleString("no-NO", {
                                                     day: "2-digit", month: "short", year: "numeric",
                                                     hour: "2-digit", minute: "2-digit",

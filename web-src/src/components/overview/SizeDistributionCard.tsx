@@ -55,7 +55,7 @@ export function SizeDistributionCard({ queues }: SizeDistributionCardProps) {
         <SectionCard accent="none" className="min-w-0 h-full">
             <SectionCardHeader
                 title="Message Size Distribution"
-                icon={<BarChart3 className="w-4 h-4 text-gray-400" />}
+                icon={<BarChart3 className="w-4 h-4 text-text-muted" />}
                 action={
                     dist && dist.totalMessages > 0 ? (
                         <span className="text-sm font-bold tabular-nums text-text-primary">
@@ -70,7 +70,7 @@ export function SizeDistributionCard({ queues }: SizeDistributionCardProps) {
             ) : (
                 <div className="space-y-4">
                     {/* Stacked horizontal bar */}
-                    <div className="h-3 rounded-full overflow-hidden flex bg-gray-100 gap-px">
+                    <div className="h-3 rounded-full overflow-hidden flex bg-surface-page gap-px">
                         {BUCKETS.map((b, i) => {
                             const pct = dist.percentages[i]
                             if (pct < 0.05) return null

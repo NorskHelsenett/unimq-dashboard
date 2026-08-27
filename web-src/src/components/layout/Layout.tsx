@@ -9,7 +9,7 @@ interface LayoutProps {
 export function Layout({ children }: LayoutProps) {
   return (
     <TooltipProvider>
-        <div className="flex min-h-screen bg-gray-50">
+        <div className="flex min-h-screen bg-surface-page">
             <Sidebar/>
             <div className="flex flex-col flex-1 min-w-0">
                 <main className="flex-1 p-4 m-6 rounded-lg">

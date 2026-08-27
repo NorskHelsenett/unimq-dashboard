@@ -34,24 +34,18 @@ function ExisitingRecipients({existingRecipients, vhost}: {existingRecipients: R
                 <p className="text-sm text-text-muted py-2">No recipients configured for this vhost.</p>
             ) : (
                 <div className="overflow-y-auto max-h-64">
-                    <table className="w-full text-left border-collapse table-fixed">
-                        <colgroup>
-                            <col />
-                            <col className="w-24" />
-                            <col className="w-56" />
-                            <col className="w-20" />
-                        </colgroup>
+                    <table className="w-full text-left border-collapse">
                         <thead>
                             <tr>
-                                <th className="border-b border-border-card py-2 px-4 text-xs text-gray-500">Name</th>
-                                <th className="border-b border-border-card py-2 px-4 text-xs text-gray-500">Type</th>
-                                <th className="border-b border-border-card py-2 px-4 text-xs text-gray-500">Endpoint</th>
-                                <th className="border-b border-border-card py-2 px-4 text-xs text-gray-500 text-right">Actions</th>
+                                <th className="border-b border-border-card py-2 px-4 text-xs text-text-muted">Name</th>
+                                <th className="border-b border-border-card py-2 px-4 text-xs text-text-muted">Type</th>
+                                <th className="border-b border-border-card py-2 px-4 text-xs text-text-muted">Endpoint</th>
+                                <th className="border-b border-border-card py-2 px-4 text-xs text-text-muted text-right">Actions</th>
                             </tr>
                         </thead>
                         <tbody>
                             {recipients.map(recipient => (
-                                <tr key={recipient.id} className="hover:bg-gray-50">
+                                <tr key={recipient.id} className="hover:bg-surface-page">
                                     <td className="border-b border-border-card py-2 px-4 text-sm font-medium">
                                         <span className="flex items-center gap-2">
                                             <StatusDot color="blue" pulse={false} />
@@ -94,15 +88,15 @@ function AddRecipientForm({selectedType, vhost, onClose}: {selectedType: string,
     }
 
     return (
-        <form onSubmit={handleSubmit} className="bg-white border border-blue-200 rounded-lg p-4 mb-4 shadow">
+        <form onSubmit={handleSubmit} className="bg-surface-card border border-blue-200 rounded-lg p-4 mb-4 shadow">
             <div className="flex flex-wrap items-end gap-2">
                 <div className="flex flex-col gap-1 flex-1 min-w-[160px]">
                     <label className="text-sm font-medium">{recipientTypeOptions.find(o => o.value === selectedType)?.label}</label>
-                    <Input name="name" placeholder="E.g. #alerts-channel" className="bg-white" required />
+                    <Input name="name" placeholder="E.g. #alerts-channel" className="bg-surface-card" required />
                 </div>
                 <div className="flex flex-col gap-1 flex-1 min-w-[200px]">
-                    <label className="text-xs text-gray-500">Webhook URL</label>
-                    <Input name="url" type="url" placeholder="https://hooks.example.com/..." className="bg-white" required />
+                    <label className="text-xs text-text-muted">Webhook URL</label>
+                    <Input name="url" type="url" placeholder="https://hooks.example.com/..." className="bg-surface-card" required />
                 </div>
                 <Button type="submit" variant="orange" size="sm">Save</Button>
                 <Button type="button" variant="ghost" size="sm" onClick={onClose}>Cancel</Button>

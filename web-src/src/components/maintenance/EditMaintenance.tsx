@@ -116,11 +116,11 @@ export function EditMaintenance({ maintenance }: { maintenance: Maintenance }) {
 
             <form onSubmit={handleSubmit} className="flex flex-col gap-6">
                 {/* Main fields */}
-                <div className="bg-white border border-border-card rounded-lg p-5 flex flex-col gap-4">
+                <div className="bg-surface-card border border-border-card rounded-lg p-5 flex flex-col gap-4">
                     <h2 className="text-sm font-semibold text-text-muted uppercase tracking-wide">Details</h2>
 
                     <div className="flex flex-col gap-1">
-                        <label className="text-xs text-gray-500">Description</label>
+                        <label className="text-xs text-text-muted">Description</label>
                         <input
                             value={description}
                             onChange={e => setDescription(e.target.value)}
@@ -132,7 +132,7 @@ export function EditMaintenance({ maintenance }: { maintenance: Maintenance }) {
 
                     <div className="grid grid-cols-2 gap-4">
                         <div className="flex flex-col gap-1">
-                            <label className="text-xs text-gray-500">Start</label>
+                            <label className="text-xs text-text-muted">Start</label>
                             <input
                                 type="datetime-local"
                                 value={start}
@@ -142,7 +142,7 @@ export function EditMaintenance({ maintenance }: { maintenance: Maintenance }) {
                             />
                         </div>
                         <div className="flex flex-col gap-1">
-                            <label className="text-xs text-gray-500">End</label>
+                            <label className="text-xs text-text-muted">End</label>
                             <input
                                 type="datetime-local"
                                 value={end}
@@ -155,32 +155,32 @@ export function EditMaintenance({ maintenance }: { maintenance: Maintenance }) {
                 </div>
 
                 {/* Audit trail */}
-                <div className="bg-white border border-border-card rounded-lg p-5 flex flex-col gap-4">
+                <div className="bg-surface-card border border-border-card rounded-lg p-5 flex flex-col gap-4">
                     <h2 className="text-sm font-semibold text-text-muted uppercase tracking-wide">Change record</h2>
 
                     <div className="grid grid-cols-2 gap-4">
                         <div className="flex flex-col gap-1">
-                            <label className="text-xs text-gray-500">Edited by</label>
+                            <label className="text-xs text-text-muted">Edited by</label>
                             <input
                                 readOnly
                                 disabled
                                 value={userName}
-                                className="border border-border-card rounded px-3 py-2 text-sm bg-gray-50 text-text-muted cursor-not-allowed"
+                                className="border border-border-card rounded px-3 py-2 text-sm bg-surface-page text-text-muted cursor-not-allowed"
                             />
                         </div>
                         <div className="flex flex-col gap-1">
-                            <label className="text-xs text-gray-500">Edited at</label>
+                            <label className="text-xs text-text-muted">Edited at</label>
                             <input
                                 readOnly
                                 disabled
                                 value={editedAt}
-                                className="border border-border-card rounded px-3 py-2 text-sm bg-gray-50 text-text-muted cursor-not-allowed"
+                                className="border border-border-card rounded px-3 py-2 text-sm bg-surface-page text-text-muted cursor-not-allowed"
                             />
                         </div>
                     </div>
 
                     <div className="flex flex-col gap-1">
-                        <label className="text-xs text-gray-500">
+                        <label className="text-xs text-text-muted">
                             Reason for change <span className="text-destructive">*</span>
                         </label>
                         <textarea

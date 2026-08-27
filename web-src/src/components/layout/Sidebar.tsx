@@ -2,10 +2,11 @@ import { NAV_ITEMS } from "@/lib/navItems"
 import { LogoLink } from "./LogoLink"
 import { cn } from "@/lib/utils"
 import { Vhosts } from "@/types/vhosts"
-import { User } from "lucide-react"
-import { Selector, SelectorTrigger, SelectorContent, SelectorItem, SelectorValue } from "../ui/selector"
+import { User, Sun, Moon } from "lucide-react"
+import { Selector, SelectorTrigger, SelectorContent, SelectorItem } from "../ui/selector"
 import { useAuth } from "react-oidc-context"
 import { useSidebarResize } from "@/hooks/useSidebarResize"
+import { useTheme } from "@/hooks/useTheme"
 
 function isActive(itemHref: string, currentPath: string): boolean {
     if (itemHref === '/') return currentPath === '/'
@@ -18,6 +19,7 @@ export function Sidebar() {
     const vhostParam = currentVhost ? `?vhost=${encodeURIComponent(currentVhost)}` : ''
     const { width, collapsed, onMouseDown } = useSidebarResize()
     const auth = useAuth()
+    const { theme, toggle } = useTheme()
 
     return (
 
@@ -46,28 +48,65 @@ export function Sidebar() {
                         })}
                     </div>
                     <div className="mt-auto p-4">
-                        <Selector onValueChange={(value) => {
-                            if (value === 'signout') {
-                                auth.signoutRedirect()
-                            } else {
-                                window.location.href = value
-                            }
-                        }}>
-                            <SelectorTrigger className={cn(
-                                "flex items-center py-2 rounded-md w-full border-none shadow-none",
-                                collapsed ? "justify-center px-2" : "gap-2 px-4",
-                                currentPath === '/profile'
-                                    ? "bg-surface-sidebar-active text-text-sidebar-active border-l-3 border-brand"
-                                    : "text-text-sidebar hover:bg-surface-sidebar-active hover:text-text-sidebar-active"
-                            )}>
-                                <User size={18} className="shrink-0" />
-                                {!collapsed && <SelectorValue placeholder="Account" />}
-                            </SelectorTrigger>
-                            <SelectorContent>
-                                <SelectorItem value="/profile">Profile</SelectorItem>
-                                <SelectorItem value="signout">Sign out</SelectorItem>
-                            </SelectorContent>
-                        </Selector>
+                        {collapsed ? (
+                            <div className="flex flex-col items-center gap-1">
+                                <button
+                                    onClick={toggle}
+                                    className="flex items-center justify-center p-2 rounded-md hover:bg-surface-sidebar-active text-text-sidebar hover:text-text-sidebar-active"
+                                >
+                                    {theme === "dark" ? <Sun size={18} /> : <Moon size={18} />}
+                                </button>
+                                <Selector onValueChange={(value) => {
+                                    if (value === 'signout') {
+                                        auth.signoutRedirect()
+                                    } else {
+                                        window.location.href = value
+                                    }
+                                }}>
+                                    <SelectorTrigger className={cn(
+                                        "flex items-center justify-center p-2 rounded-md w-full border-none shadow-none",
+                                        currentPath === '/profile'
+                                            ? "bg-surface-sidebar-active border-l-3"
+                                            : "hover:bg-surface-sidebar-active"
+                                    )}>
+                                        <User size={18} className="shrink-0" />
+                                    </SelectorTrigger>
+                                    <SelectorContent>
+                                        <SelectorItem value="/profile">Profile</SelectorItem>
+                                        <SelectorItem value="signout">Sign out</SelectorItem>
+                                    </SelectorContent>
+                                </Selector>
+                            </div>
+                        ) : (
+                            <div className="flex items-center justify-between">
+                                <Selector onValueChange={(value) => {
+                                    if (value === 'signout') {
+                                        auth.signoutRedirect()
+                                    } else {
+                                        window.location.href = value
+                                    }
+                                }}>
+                                    <SelectorTrigger className={cn(
+                                        "flex items-center gap-2 px-2 py-2 rounded-md border-none shadow-none",
+                                        currentPath === '/profile'
+                                            ? "bg-surface-sidebar-active border-l-3"
+                                            : "hover:bg-surface-sidebar-active"
+                                    )}>
+                                        <User size={18} className="shrink-0" />
+                                    </SelectorTrigger>
+                                    <SelectorContent>
+                                        <SelectorItem value="/profile">Profile</SelectorItem>
+                                        <SelectorItem value="signout">Sign out</SelectorItem>
+                                    </SelectorContent>
+                                </Selector>
+                                <button
+                                    onClick={toggle}
+                                    className="flex items-center justify-center p-2 rounded-md hover:bg-surface-sidebar-active text-text-sidebar hover:text-text-sidebar-active"
+                                >
+                                    {theme === "dark" ? <Sun size={18} /> : <Moon size={18} />}
+                                </button>
+                            </div>
+                        )}
                     </div>
                 </nav>
         </aside>

@@ -49,7 +49,7 @@ export function DashboardMaintenanceWidget({ schedule }: { schedule: Maintenance
                 key={m.id}
                 className={cn(
                   'py-2 border-b last:border-0 border-border-card',
-                  inProgress && 'rounded-lg px-2 -mx-2 mb-1 bg-amber-50/60 border-amber-200'
+                  inProgress && 'rounded-lg px-2 -mx-2 mb-1 bg-maintenance-in-progress-bg hover:bg-maintenance-in-progress-bg-hover border-amber-200'
                 )}
               >
                 <div className="flex items-start justify-between gap-2 mb-0.5">

@@ -19,7 +19,7 @@ function SectionCard({
   return (
     <div
       className={cn(
-        "bg-white rounded-xl border border-gray-100 shadow-sm border-t-2 p-5",
+        "bg-surface-card rounded-xl border border-border-card shadow-sm border-t-2 p-5",
         accentClasses[accent],
         className
       )}
@@ -40,7 +40,7 @@ function SectionCardHeader({
   className?: string
 }) {
   return (
-    <div className={cn("flex justify-between items-center pb-3 mb-4 border-b border-gray-100", className)}>
+    <div className={cn("flex justify-between items-center pb-3 mb-4 border-b border-border-card", className)}>
       <h3 className="text-base font-semibold text-text-primary flex items-center gap-2">
         {icon}
         {title}

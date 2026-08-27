@@ -76,12 +76,12 @@ export function DeleteItem({ recipient, alarm, vhost, open, onClose, onDeleted }
                         </DialogHeader>
                         <DialogFooter>
                             <DialogClose asChild>
-                                <Button variant="outline" className="bg-gray-100" disabled={deleting}>Cancel</Button>
+                                <Button variant="outline" className="bg-surface-page" disabled={deleting}>Cancel</Button>
                             </DialogClose>
                             <Button variant="destructive" onClick={handleDelete} disabled={deleting}>
                                 {deleting ? (
                                     <span className="flex items-center gap-2">
-                                        <span className="size-4 border-2 border-red-300 border-t-white rounded-full animate-spin inline-block" />
+                                        <span className="size-4 border-2 border-red-300 border-t-surface-card rounded-full animate-spin inline-block" />
                                         Deleting…
                                     </span>
                                 ) : 'Delete'}

@@ -33,7 +33,7 @@ export function DashboardCustomizer({ widgets, isVisible, toggle }: DashboardCus
       </Button>
 
       {open && (
-        <div className="absolute right-0 top-full mt-1 z-50 bg-white border border-border-card rounded-lg shadow-lg p-4 w-64">
+        <div className="absolute right-0 top-full mt-1 z-50 bg-surface-card border border-border-card rounded-lg shadow-lg p-4 w-64">
           <p className="text-sm font-semibold mb-3 text-text-primary">Dashboard Widgets</p>
           <div className="space-y-2.5">
             {widgets.map(w => (

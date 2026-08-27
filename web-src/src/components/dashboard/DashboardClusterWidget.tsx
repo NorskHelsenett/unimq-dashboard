@@ -27,7 +27,7 @@ export function DashboardClusterWidget({
     <SectionCard accent="none" className="min-w-0 h-full">
       <SectionCardHeader
         title="Cluster Resources"
-        icon={<Server className="w-4 h-4 text-gray-500" />}
+        icon={<Server className="w-4 h-4 text-text-muted" />}
       />
       <div className="flex flex-wrap gap-6">
         <div>

@@ -39,7 +39,7 @@ function AddMaintenanceForm({onClose, onCancel, onError} : { onClose: () => void
                 start: toDateTime(start),
                 end: toDateTime(end),
             }).then(() => onClose()).catch((err) => onError(err?.message ?? "Failed to add maintenance."))
-        }} className="bg-white border border-blue-200 rounded-lg p-4 mb-4 shadow">
+        }} className="bg-surface-card border border-blue-200 rounded-lg p-4 mb-4 shadow">
             {validationError && (
                 <p className="text-destructive text-xs mb-2">{validationError}</p>
             )}
@@ -53,11 +53,11 @@ function AddMaintenanceForm({onClose, onCancel, onError} : { onClose: () => void
             </div>
             <div className="grid grid-cols-2 gap-2">
                 <div className="flex flex-col gap-1">
-                    <label className="text-xs text-gray-500">Start</label>
+                    <label className="text-xs text-text-muted">Start</label>
                     <input name="start" type="datetime-local" required min={minNow} className="border rounded px-2 py-1.5 text-sm" />
                 </div>
                 <div className="flex flex-col gap-1">
-                    <label className="text-xs text-gray-500">End</label>
+                    <label className="text-xs text-text-muted">End</label>
                     <input name="end" type="datetime-local" required min={minNow} className="border rounded px-2 py-1.5 text-sm" />
                 </div>
             </div>
@@ -118,24 +118,17 @@ export function MaintenanceScheduleCard({ maintenanceSchedule, onRefresh }: { ma
                     </>
                 )}
                 {maintenanceSchedule.length === 0 ? (
-                    <p className="text-gray-500">No maintenance schedule available.</p>
+                    <p className="text-text-muted">No maintenance schedule available.</p>
                 ) : (
                     <div className="overflow-y-auto max-h-64">
-                        <table className="w-full text-left border-collapse table-fixed">
-                            <colgroup>
-                                <col />
-                                <col className="w-52" />
-                                <col className="w-20" />
-                                <col className="w-28" />
-                                <col className="w-32" />
-                            </colgroup>
+                        <table className="w-full text-left border-collapse">
                             <thead>
                                 <tr>
-                                    <th className="border-b border-border-card py-2 px-4 text-xs text-gray-500">Description</th>
-                                    <th className="border-b border-border-card py-2 px-4 text-xs text-gray-500">Date</th>
-                                    <th className="border-b border-border-card py-2 px-4 text-xs text-gray-500">Duration</th>
-                                    <th className="border-b border-border-card py-2 px-4 text-xs text-gray-500">Status</th>
-                                    <th className="border-b border-border-card py-2 px-4 text-xs text-gray-500 text-right">Actions</th>
+                                    <th className="border-b border-border-card py-2 px-4 text-xs text-text-muted">Description</th>
+                                    <th className="border-b border-border-card py-2 px-4 text-xs text-text-muted">Date</th>
+                                    <th className="border-b border-border-card py-2 px-4 text-xs text-text-muted">Duration</th>
+                                    <th className="border-b border-border-card py-2 px-4 text-xs text-text-muted">Status</th>
+                                    <th className="border-b border-border-card py-2 px-4 text-xs text-text-muted text-right">Actions</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -147,15 +140,15 @@ export function MaintenanceScheduleCard({ maintenanceSchedule, onRefresh }: { ma
                                     {showDivider && (
                                         <tr key={`divider-${i}`}>
                                             <td colSpan={5} className="py-1 px-4">
-                                                <div className="flex items-center gap-2 text-xs text-gray-400">
-                                                    <div className="flex-1 border-t border-dashed border-gray-300" />
+                                                <div className="flex items-center gap-2 text-xs text-text-muted">
+                                                    <div className="flex-1 border-t border-dashed border-border-card" />
                                                     <span>Scheduled</span>
-                                                    <div className="flex-1 border-t border-dashed border-gray-300" />
+                                                    <div className="flex-1 border-t border-dashed border-border-card" />
                                                 </div>
                                             </td>
                                         </tr>
                                     )}
-                                    <tr key={maintenance.id} className={maintenance.status === 'in_progress' ? 'bg-amber-50 hover:bg-amber-100' : 'hover:bg-gray-50'}>
+                                    <tr key={maintenance.id} className={maintenance.status === 'in_progress' ? 'bg-maintenance-in-progress-bg hover:bg-maintenance-in-progress-bg-hover' : 'hover:bg-surface-page'}>
                                         <td className="border-b border-border-card py-2 px-4 text-sm font-medium">
                                             <span className="flex items-center gap-2">
                                                 {maintenance.status === 'in_progress' && <StatusDot color="warning" />}
@@ -178,7 +171,7 @@ export function MaintenanceScheduleCard({ maintenanceSchedule, onRefresh }: { ma
                                                         <Button
                                                             variant="ghost"
                                                             size="sm"
-                                                            className="p-0 text-gray-400 hover:text-gray-700"
+                                                            className="p-0 text-text-muted hover:text-text-secondary"
                                                             onClick={() => {
                                                                 const vhost = new URLSearchParams(window.location.search).get('vhost')
                                                                 const vhostSuffix = vhost ? `&vhost=${encodeURIComponent(vhost)}` : ''

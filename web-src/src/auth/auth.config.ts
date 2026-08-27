@@ -1,5 +1,5 @@
 import type { UserManagerSettings } from "oidc-client-ts"
-import { InMemoryWebStorage, WebStorageStateStore } from "oidc-client-ts"
+import { WebStorageStateStore } from "oidc-client-ts"
 
 
 export const oidcConfig: UserManagerSettings = {

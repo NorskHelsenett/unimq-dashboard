@@ -44,7 +44,7 @@ function AlarmRow({ alarm }: { alarm: AlarmProps }) {
       </span>
       <div className="flex items-center gap-1.5 shrink-0 ml-2">
         {isDisabled ? (
-          <span className="text-[10px] font-medium uppercase tracking-wide text-text-muted bg-gray-100 px-1.5 py-0.5 rounded">
+          <span className="text-[10px] font-medium uppercase tracking-wide text-text-muted bg-surface-page px-1.5 py-0.5 rounded">
             disabled
           </span>
         ) : (

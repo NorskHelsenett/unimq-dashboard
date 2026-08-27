@@ -46,15 +46,15 @@ export function MaintenanceEditLogSheet({
                     {!loading && logs.length > 0 && (
                         <ol className="mt-4 space-y-3">
                             {logs.map(log => (
-                                <li key={log.id} className="flex gap-3 rounded-lg border border-gray-200 bg-gray-50 px-4 py-3">
-                                    <Pencil className="mt-0.5 shrink-0 text-gray-400" size={15} />
+                                <li key={log.id} className="flex gap-3 rounded-lg border border-border-card bg-surface-page px-4 py-3">
+                                    <Pencil className="mt-0.5 shrink-0 text-text-muted" size={15} />
                                     <div className="min-w-0 flex-1">
                                         <div className="flex items-center justify-between gap-2">
                                             <p className="text-sm font-medium text-text-primary truncate">{log.updated_by}</p>
                                             <p className="text-xs text-text-muted shrink-0">{fmtUtc(log.updated_at)}</p>
                                         </div>
                                         <p className="text-xs text-text-muted mt-1 italic">"{log.reason}"</p>
-                                        <div className="mt-2 text-xs text-gray-500 space-y-0.5">
+                                        <div className="mt-2 text-xs text-text-muted space-y-0.5">
                                             <p><span className="font-medium">Description:</span> {log.description}</p>
                                             <p><span className="font-medium">Start:</span> {fmtUtc(log.start)}</p>
                                             <p><span className="font-medium">End:</span> {fmtUtc(log.end)}</p>
