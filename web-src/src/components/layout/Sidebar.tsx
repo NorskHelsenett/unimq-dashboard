@@ -32,7 +32,7 @@ export function Sidebar() {
                         {NAV_ITEMS.map((item) => {
                             const active = isActive(item.href, currentPath)
                             return (
-                                <a href={item.href + vhostParam} className={cn(
+                                <a key={item.href} href={item.href + vhostParam} className={cn(
                                     "flex items-center py-2",
                                     collapsed ? "justify-center px-2" : "gap-2 px-4",
                                     active 

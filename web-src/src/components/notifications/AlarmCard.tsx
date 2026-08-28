@@ -1,4 +1,4 @@
-import { useState } from "react"
+import React, { useState } from "react"
 import { Input } from "../ui/input"
 import { Selector, SelectorTrigger, SelectorContent, SelectorItem, SelectorValue, SelectLabel } from "../ui/selector"
 import { Button } from "../ui/button"
@@ -68,7 +68,7 @@ function ExistingAlarms({existingAlarms, vhost, disabledIds, onToggle}: {
                                             'lightBlue' // active / unknown — pending first check
                                         const fadedCell = isDisabled ? 'opacity-40 grayscale' : ''
                                         return (
-                                            <>
+                                            <React.Fragment key={alarm.id}>
                                             {showDivider && (
                                                 <tr key={`divider-${i}`}>
                                                     <td colSpan={5} className="py-1 px-4">
@@ -80,7 +80,7 @@ function ExistingAlarms({existingAlarms, vhost, disabledIds, onToggle}: {
                                                     </td>
                                                 </tr>
                                             )}
-                                            <tr key={alarm.id} className={
+                                            <tr className={
                                                 isDisabled ? '' :
                                                 alarm.status === 'firing' ? 'bg-red-50 hover:bg-red-100' :
                                                 'hover:bg-surface-page'
@@ -143,7 +143,7 @@ function ExistingAlarms({existingAlarms, vhost, disabledIds, onToggle}: {
                                                     </div>
                                                 </td>
                                             </tr>
-                                            </>
+                                            </React.Fragment>
                                         )
                                     })}
                                 </tbody>

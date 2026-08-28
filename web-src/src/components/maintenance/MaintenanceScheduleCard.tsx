@@ -1,3 +1,4 @@
+import React from "react"
 import { Maintenance } from "@/types/maintenance"
 import { formatDateRange, durationInMinutes } from "./MaintenanceHistoryCard"
 import { Pill } from "../ui/pill"
@@ -54,11 +55,11 @@ function AddMaintenanceForm({onClose, onCancel, onError} : { onClose: () => void
             <div className="grid grid-cols-2 gap-2">
                 <div className="flex flex-col gap-1">
                     <label className="text-xs text-text-muted">Start</label>
-                    <input name="start" type="datetime-local" required min={minNow} className="border rounded px-2 py-1.5 text-sm" />
+                    <input name="start" type="datetime-local" required min={minNow} className="border rounded px-2 py-1.5 text-sm dark:[color-scheme:dark]" />
                 </div>
                 <div className="flex flex-col gap-1">
                     <label className="text-xs text-text-muted">End</label>
-                    <input name="end" type="datetime-local" required min={minNow} className="border rounded px-2 py-1.5 text-sm" />
+                    <input name="end" type="datetime-local" required min={minNow} className="border rounded px-2 py-1.5 text-sm dark:[color-scheme:dark]" />
                 </div>
             </div>
         </form>
@@ -136,7 +137,7 @@ export function MaintenanceScheduleCard({ maintenanceSchedule, onRefresh }: { ma
                                 const prevStatus = maintenanceScheduleSorted[i - 1]?.status
                                 const showDivider = i > 0 && maintenance.status !== 'in_progress' && prevStatus === 'in_progress'
                                 return (
-                                    <>
+                                    <React.Fragment key={maintenance.id}>
                                     {showDivider && (
                                         <tr key={`divider-${i}`}>
                                             <td colSpan={5} className="py-1 px-4">
@@ -148,7 +149,7 @@ export function MaintenanceScheduleCard({ maintenanceSchedule, onRefresh }: { ma
                                             </td>
                                         </tr>
                                     )}
-                                    <tr key={maintenance.id} className={maintenance.status === 'in_progress' ? 'bg-maintenance-in-progress-bg hover:bg-maintenance-in-progress-bg-hover' : 'hover:bg-surface-page'}>
+                                    <tr className={maintenance.status === 'in_progress' ? 'bg-maintenance-in-progress-bg hover:bg-maintenance-in-progress-bg-hover' : 'hover:bg-surface-page'}>
                                         <td className="border-b border-border-card py-2 px-4 text-sm font-medium">
                                             <span className="flex items-center gap-2">
                                                 {maintenance.status === 'in_progress' && <StatusDot color="warning" />}
@@ -189,7 +190,7 @@ export function MaintenanceScheduleCard({ maintenanceSchedule, onRefresh }: { ma
                                             </div>
                                         </td>
                                     </tr>
-                                    </>
+                                    </React.Fragment>
                                 )
                             })}
                             </tbody>
