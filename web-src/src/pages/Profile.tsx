@@ -1,83 +1,77 @@
-import { StrictMode, useState } from 'react'
+import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import '../index.css'
 import { RequireAuth } from '@/auth/RequireAuth'
 import { Layout } from '@/components/layout/Layout'
 import { useAuth } from 'react-oidc-context'
-import { Eye, EyeOff } from 'lucide-react'
-
-const getInitials = (name?: string) => {
-  if (!name) return '?'
-  return name
-    .split(' ')
-    .filter(Boolean)
-    .slice(0, 2)
-    .map((n) => n[0].toUpperCase())
-    .join('')
-}
+import { ProfileHeroCard } from '@/components/profile/ProfileHeroCard'
+import { AccountDetailsCard } from '@/components/profile/AccountDetailsCard'
+import { AccessPermissionsCard } from '@/components/profile/AccessPermissionsCard'
+import { DEFAULT_ROLES, resolveIdProvider } from '@/components/profile/profileUtils'
 
 const ProfilePage = () => {
   const auth = useAuth()
-  const user = auth.user?.profile
-  const [showSub, setShowSub] = useState(false)
+  const p = auth.user?.profile as Record<string, unknown>
+
+  const name     = p?.name as string | undefined
+  const email    = p?.email as string | undefined
+  const verified = p?.email_verified as boolean | undefined
+  const sub      = p?.sub as string | undefined
+  const username = p?.preferred_username as string | undefined
+  const iss      = p?.iss as string | undefined
+  const iat      = p?.iat as number | undefined
+  const exp      = auth.user?.expires_at
+
+  const realmRoles     = (p?.realm_access as { roles?: string[] })?.roles ?? []
+  const resourceAccess = (p?.resource_access as Record<string, { roles: string[] }>) ?? {}
+  const groups         = (p?.groups as string[]) ?? []
+  const displayRoles   = realmRoles.filter(r => !DEFAULT_ROLES.has(r))
 
   return (
     <Layout>
-      <div className='max-w-sm flex flex-col gap-6'>
-        <div className='flex items-center gap-4'>
-        <div className='size-14 rounded-full bg-brand/10 border border-brand/20 flex items-center justify-center flex-shrink-0'>
-          <span className='text-xl font-semibold text-brand'>{getInitials(user?.name)}</span>
+      <div className="max-w-5xl space-y-6">
+        <div className="flex items-start justify-between">
+          <div>
+            <h1 className="text-2xl font-bold text-text-primary">Profile</h1>
+            <p className="text-sm text-text-muted mt-1">Manage your account and access.</p>
+          </div>
+          <button
+            onClick={() => auth.signoutRedirect()}
+            className="flex items-center gap-2 px-4 py-2 rounded-md border border-destructive/30 text-destructive hover:bg-destructive/15 transition-colors text-sm font-medium"
+          >
+            Sign out
+          </button>
         </div>
-        <div className='min-w-0'>
-          <h1 className='text-xl font-semibold text-text-primary truncate'>{user?.name ?? '—'}</h1>
-          {user?.email && (
-            <p className='text-sm text-text-muted truncate'>{user.email}</p>
-          )}
+
+        <ProfileHeroCard
+          name={name}
+          email={email}
+          verified={verified}
+          primaryRole={displayRoles[0]}
+          iat={iat}
+          exp={exp}
+        />
+
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <AccountDetailsCard
+            name={name}
+            email={email}
+            verified={verified}
+            sub={sub}
+            username={username}
+            iss={iss}
+            idProvider={resolveIdProvider(iss)}
+            iat={iat}
+            exp={exp}
+            rawProfile={auth.user?.profile}
+          />
+          <AccessPermissionsCard
+            displayRoles={displayRoles}
+            resourceAccess={resourceAccess}
+            groups={groups}
+          />
         </div>
       </div>
-
-      {/* Info card */}
-      <div className='flex flex-col divide-y divide-border-card border border-border-card rounded-lg bg-surface-card'>
-        {user?.name && (
-          <div className='flex items-center justify-between px-4 py-3'>
-            <span className='text-xs text-text-muted uppercase tracking-wide'>Name</span>
-            <span className='text-sm text-text-primary font-medium'>{user.name}</span>
-          </div>
-        )}
-        {user?.email && (
-          <div className='flex items-center justify-between px-4 py-3'>
-            <span className='text-xs text-text-muted uppercase tracking-wide'>Email</span>
-            <span className='text-sm text-text-primary'>{user.email}</span>
-          </div>
-        )}
-        {user?.sub && (
-          <div className='flex items-center justify-between px-4 py-3 gap-4'>
-            <span className='text-xs text-text-muted uppercase tracking-wide flex-shrink-0'>User ID</span>
-            <div className='flex items-center gap-2 min-w-0'>
-              <span className='text-xs text-text-muted font-mono truncate'>
-                {showSub ? user.sub : '••••••••••••'}
-              </span>
-              <button
-                onClick={() => setShowSub((v) => !v)}
-                className='text-xs text-text-muted hover:text-text-primary flex-shrink-0 transition-colors'
-              >
-                {showSub ? <Eye size={16} /> : <EyeOff size={16} />}
-              </button>
-            </div>
-          </div>
-        )}
-      </div>
-
-      {/* Sign out */}
-      <div className='border-t border-border-card pt-4'>
-        <button
-          onClick={() => auth.signoutRedirect()}
-          className='w-full px-4 py-2 rounded-md border border-destructive/30 text-destructive hover:bg-destructive/5 text-sm font-medium transition-colors'
-        >
-          Sign out
-        </button>
-      </div>
-    </div>
     </Layout>
   )
 }
@@ -89,3 +83,4 @@ createRoot(document.getElementById('app')!).render(
     </RequireAuth>
   </StrictMode>,
 )
+
