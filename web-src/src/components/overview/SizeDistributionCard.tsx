@@ -51,8 +51,12 @@ export function SizeDistributionCard({ queues }: SizeDistributionCardProps) {
         ? BUCKETS.map((b, i) => ({ ...b, pct: dist.percentages[i] })).filter(b => b.pct > 0)
         : []
 
+    const allBuckets = dist
+        ? BUCKETS.map((b, i) => ({ ...b, pct: dist.percentages[i] }))
+        : []
+
     return (
-        <SectionCard accent="none" className="min-w-0 h-full">
+        <SectionCard accent="none" className="min-w-0 ">
             <SectionCardHeader
                 title="Message Size Distribution"
                 icon={<BarChart3 className="w-4 h-4 text-text-muted" />}
@@ -85,15 +89,17 @@ export function SizeDistributionCard({ queues }: SizeDistributionCardProps) {
                         })}
                     </div>
 
-                    {/* Legend — only non-zero buckets */}
+                    {/* Legend — all buckets, empty ones dimmed */}
                     <div className="flex flex-wrap gap-x-4 gap-y-1.5">
-                        {nonZero.map(b => (
-                            <div key={b.label} className="flex items-center gap-1.5">
-                                <div className={cn('w-2 h-2 rounded-sm shrink-0', b.dotColor)} />
+                        {allBuckets.map(b => (
+                            <div key={b.label} className={cn('flex items-center gap-1.5', b.pct === 0 && 'opacity-35')}>
+                                <div className={cn('w-2 h-2 rounded-sm shrink-0', b.pct > 0 ? b.dotColor : 'bg-border-card')} />
                                 <span className="text-xs text-text-muted">{b.label}</span>
-                                <span className={cn('text-xs font-semibold tabular-nums', b.textColor)}>
-                                    {b.pct.toFixed(1)}%
-                                </span>
+                                {b.pct > 0 && (
+                                    <span className={cn('text-xs font-semibold tabular-nums', b.textColor)}>
+                                        {b.pct.toFixed(1)}%
+                                    </span>
+                                )}
                             </div>
                         ))}
                     </div>

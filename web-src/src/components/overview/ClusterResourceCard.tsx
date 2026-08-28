@@ -25,7 +25,6 @@ export const ClusterResourceCard = ({ clusters }: { clusters: ClusterStats | nul
         <div>
             <h2 className="text-lg font-semibold text-text-primary mb-3">Cluster Resources</h2>
             <Tile>
-                <p className="mb-2">General data from cluster</p>
                 <div className="flex gap-4">
                     <GaugeChart title="Memory" usage={totalMemUsed} max={totalMemLimit} labelText={`${convertBytes(totalMemUsed)}/${convertBytes(totalMemLimit)}`} fontSize={16} />
                     <RatioChart title={"Disk"} description={<DiskDescription free={totalDiskFree} limit={minDiskLimit}/>} free={totalDiskFree} limit={minDiskLimit} />
