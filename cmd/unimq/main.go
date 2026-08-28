@@ -16,6 +16,7 @@ import (
 	"github.com/sisneve/rabbitmq-dashboard/internal/config"
 	"github.com/sisneve/rabbitmq-dashboard/internal/database"
 	"github.com/sisneve/rabbitmq-dashboard/internal/logger"
+	"github.com/sisneve/rabbitmq-dashboard/internal/models"
 	"github.com/sisneve/rabbitmq-dashboard/internal/notify"
 	"github.com/sisneve/rabbitmq-dashboard/internal/routes"
 )
@@ -29,7 +30,9 @@ import (
 
 //	@host					localhost:8080
 //	@basePath				/api
-//	@securityDefinitions	none
+//	@securityDefinitions	bearer		Authorization
+//	@securityDefinitions.oauth2.implicit	OAuth2Implicit	Implicit OAuth2 flow
+//  @authorizationurl	https://dex.example.com/dex/auth
 
 func main() {
 
@@ -64,12 +67,19 @@ func main() {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
+	limits := &models.Limits{
+		MaxChannels:    config.RabbitMQChannelLimit,
+		MaxConnections: config.RabbitMQConnectionLimit,
+		MaxQueues:      config.RabbitMQQueueLimit,
+	}
+
 	rmq, err := rabbitmq.NewRMQClient(
 		rabbitmq.WithRMQHost(config.RabbitMQHost),
 		rabbitmq.WithRMQPort(config.RabbitMQPort),
 		rabbitmq.WithRMQUsername(config.RabbitMQUsername),
 		rabbitmq.WithRMQPassword(config.RabbitMQPassword),
 		rabbitmq.WithRMQContext(ctx),
+		rabbitmq.WithRMQLimits(limits),
 	)
 	if err != nil {
 		slog.Error("failed to create RabbitMQ client", "error", err)
@@ -120,10 +130,6 @@ func main() {
 
 	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
-
-	if config.Email.EmailSMTPHost == "" {
-		slog.Warn("email configuration is not set, email notifications will not be sent")
-	}
 
 	select {
 	case <-quit:
