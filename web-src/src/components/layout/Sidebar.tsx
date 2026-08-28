@@ -21,7 +21,7 @@ export function Sidebar() {
     const { theme, toggle } = useTheme()
 
     return (
-        <aside style={{ width }} className="overflow-x-auto">
+        <aside style={{ width }} className="relative overflow-x-auto">
             <nav className="h-full flex flex-col pt-4 border-r border-border-sidebar">
             <div
                 className="absolute right-0 top-0 h-full w-1 cursor-col-resize"
