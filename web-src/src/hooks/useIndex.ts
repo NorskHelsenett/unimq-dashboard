@@ -8,7 +8,7 @@ export function useIndex(): IndexData {
     const [vhosts, setVhosts] = useState<string[]>([])
     const [selected, setSelected] = useState<string>('')
     const [metrics, setMetrics] = useState<Metrics | null>(null)
-    const [limits] = useState<Limits>({ MaxConnections: 0, MaxQueues: 0 })
+    const [limits] = useState<Limits>({ MaxConnections: 10, MaxQueues: 20 })
 
     useEffect(() => {
         getVhosts().then(names => {

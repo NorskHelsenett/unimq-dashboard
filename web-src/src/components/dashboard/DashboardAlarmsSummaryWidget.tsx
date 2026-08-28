@@ -3,7 +3,7 @@ import { SectionCard, SectionCardHeader } from '../ui/section-card'
 import { Pill } from '../ui/pill'
 import { StatusDot } from '../ui/status-dot'
 import { cn } from '@/lib/utils'
-import { Bell } from 'lucide-react'
+import { Bell, AlertCircle, CheckCircle2 } from 'lucide-react'
 
 const STATUS_PRIORITY: Record<string, number> = {
   firing: 0, fired: 1, active: 2, ok: 3, inactive: 4, unknown: 5, '': 6,
@@ -15,6 +15,7 @@ function alarmDotColor(status: Status | undefined): 'danger' | 'warning' | 'ok' 
   if (status === 'ok') return 'ok'
   return 'blue'
 }
+//'ok' | 'active' | 'inactive' | 'firing' | 'fired' | 'unknown' | ''
 
 function alarmPillVariant(status: Status | undefined) {
   if (status === 'firing') return 'red' as const
@@ -22,6 +23,62 @@ function alarmPillVariant(status: Status | undefined) {
   if (status === 'ok') return 'lightGreen' as const
   if (status === 'inactive') return 'gray' as const
   return 'lightBlue' as const
+}
+
+function alarmStatusLabel(status: Status | undefined) {
+  if (status === 'ok') return 'Healthy'
+  if(status === 'firing') return 'Firing'
+  if(status === 'fired') return 'Fired'
+  if(status === 'active') return 'Active'
+  if(status === 'inactive') return 'Inactive'
+  return status || 'Unknown'
+}
+
+function AlarmStatusBanner({ alarms }: { alarms: AlarmProps[] }) {
+  const active = alarms.filter(a => a.enabled !== false)
+  const firingCount = active.filter(a => a.status === 'firing').length
+  const firedCount = active.filter(a => a.status === 'fired').length
+  const okCount = active.filter(a => a.status === 'ok').length
+
+  if (firingCount > 0) {
+    return (
+      <div className="flex items-center gap-3 rounded-lg bg-red-50 dark:bg-red-950/50 border border-red-200 dark:border-red-800/60 px-3 py-2.5 mb-3">
+        <div className="w-8 h-8 rounded-lg bg-red-600 flex items-center justify-center shrink-0">
+          <AlertCircle className="w-4 h-4 text-white" />
+        </div>
+        <div>
+          <p className="text-sm font-semibold">{firingCount} alarm{firingCount !== 1 ? 's' : ''} firing</p>
+          <p className="text-xs">Needs your attention</p>
+        </div>
+      </div>
+    )
+  }
+
+  if (firedCount > 0) {
+    return (
+      <div className="flex items-center gap-3 rounded-lg bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800/50 px-3 py-2.5 mb-3">
+        <div className="w-8 h-8 rounded-lg bg-amber-500 flex items-center justify-center shrink-0">
+          <AlertCircle className="w-4 h-4 text-white" />
+        </div>
+        <div>
+          <p className="text-sm font-semibold ">{firedCount} alarm{firedCount !== 1 ? 's' : ''} fired</p>
+          <p className="text-xs ">Check recent activity</p>
+        </div>
+      </div>
+    )
+  }
+
+  return (
+    <div className="flex items-center gap-3 rounded-lg bg-green-50 dark:bg-green-950/30 border border-green-200 dark:border-green-800/40 px-3 py-2.5 mb-3">
+      <div className="w-8 h-8 rounded-lg bg-green-600 flex items-center justify-center shrink-0">
+        <CheckCircle2 className="w-4 h-4 text-white" />
+      </div>
+      <div>
+        <p className="text-sm font-semibold ">All systems healthy</p>
+        <p className="text-xs ">{okCount} of {active.length} alarms healthy</p>
+      </div>
+    </div>
+  )
 }
 
 function AlarmRow({ alarm }: { alarm: AlarmProps }) {
@@ -48,7 +105,7 @@ function AlarmRow({ alarm }: { alarm: AlarmProps }) {
             disabled
           </span>
         ) : (
-          <Pill variant={pillVariant}>{alarm.status || 'unknown'}</Pill>
+          <Pill variant={pillVariant}>{alarmStatusLabel(alarm.status)}</Pill>
         )}
       </div>
     </div>
@@ -72,27 +129,19 @@ export function DashboardAlarmsSummaryWidget({
   )
 
   const accent =
-    firingCount > 0 ? 'danger' : firedCount > 0 ? 'amber' : 'blue'
+    firingCount > 0 ? 'danger' : firedCount > 0 ? 'amber' : 'green'
 
   return (
     <SectionCard accent={accent} className="min-w-0 h-full">
       <SectionCardHeader
         title="Alarms"
-        icon={<Bell className="w-4 h-4 text-blue-400" />}
+        icon={<Bell className={`w-4 h-4 ${firingCount > 0 ? 'text-red-500' : firedCount > 0 ? 'text-amber-500' : 'text-green-500'}`} />}
       />
       {alarms.length === 0 ? (
         <p className="text-sm text-text-muted">No alarms configured.</p>
       ) : (
         <>
-          <div className="flex flex-wrap gap-2 mb-3">
-            {firingCount > 0 && <Pill variant="red">{firingCount} firing</Pill>}
-            {firedCount > 0 && <Pill variant="amber">{firedCount} fired</Pill>}
-            {okCount > 0 && <Pill variant="lightGreen">{okCount} ok</Pill>}
-            {disabledCount > 0 && <Pill variant="gray">{disabledCount} disabled</Pill>}
-            {firingCount === 0 && firedCount === 0 && okCount === 0 && disabledCount === 0 && (
-              <Pill variant="lightBlue">{alarms.length} active</Pill>
-            )}
-          </div>
+          <AlarmStatusBanner alarms={alarms} />
           <div className="max-h-56 overflow-y-auto">
             {sorted.map(a => (
               <AlarmRow key={a.id} alarm={a} />

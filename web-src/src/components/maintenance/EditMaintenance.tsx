@@ -138,7 +138,7 @@ export function EditMaintenance({ maintenance }: { maintenance: Maintenance }) {
                                 value={start}
                                 onChange={e => setStart(e.target.value)}
                                 required
-                                className="border border-border-card rounded px-3 py-2 text-sm"
+                                className="border border-border-card rounded px-3 py-2 text-sm dark:[color-scheme:dark]"
                             />
                         </div>
                         <div className="flex flex-col gap-1">
@@ -148,7 +148,7 @@ export function EditMaintenance({ maintenance }: { maintenance: Maintenance }) {
                                 value={end}
                                 onChange={e => setEnd(e.target.value)}
                                 required
-                                className="border border-border-card rounded px-3 py-2 text-sm"
+                                className="border border-border-card rounded px-3 py-2 text-sm dark:[color-scheme:dark]"
                             />
                         </div>
                     </div>

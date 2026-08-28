@@ -26,14 +26,6 @@ export function DashboardMaintenanceWidget({ schedule }: { schedule: Maintenance
             className={`w-4 h-4 ${hasInProgress ? 'text-amber-500' : 'text-blue-400'}`}
           />
         }
-        action={
-          hasInProgress ? (
-            <span className="flex items-center gap-1.5 text-xs font-semibold text-amber-600 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded-full">
-              <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse shrink-0" />
-              Live
-            </span>
-          ) : undefined
-        }
       />
       {upcoming.length === 0 ? (
         <p className="text-sm text-text-muted">No maintenance scheduled.</p>
