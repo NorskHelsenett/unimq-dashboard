@@ -15,7 +15,6 @@ function alarmDotColor(status: Status | undefined): 'danger' | 'warning' | 'ok' 
   if (status === 'ok') return 'ok'
   return 'blue'
 }
-//'ok' | 'active' | 'inactive' | 'firing' | 'fired' | 'unknown' | ''
 
 function alarmPillVariant(status: Status | undefined) {
   if (status === 'firing') return 'red' as const
