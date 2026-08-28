@@ -14,6 +14,7 @@ import (
 
 type RMQClient struct {
 	restClient *rest.RestClient
+	Limits     *models.Limits
 }
 
 // TODO: Figure out if the history is necessary.
@@ -46,6 +47,7 @@ type (
 		Username string
 		Password string
 		Ctx      context.Context
+		Limits   *models.Limits
 	}
 
 	rmqClientOptions func(*rmqClientConfig)
@@ -58,6 +60,11 @@ func newRMQClientConfig() *rmqClientConfig {
 		Username: "",
 		Password: "",
 		Ctx:      context.Background(),
+		Limits: &models.Limits{
+			MaxChannels:    1000,
+			MaxConnections: 1000,
+			MaxQueues:      1000,
+		},
 	}
 }
 
@@ -88,6 +95,12 @@ func WithRMQPassword(password string) rmqClientOptions {
 func WithRMQContext(ctx context.Context) rmqClientOptions {
 	return func(rc *rmqClientConfig) {
 		rc.Ctx = ctx
+	}
+}
+
+func WithRMQLimits(limits *models.Limits) rmqClientOptions {
+	return func(rc *rmqClientConfig) {
+		rc.Limits = limits
 	}
 }
 
