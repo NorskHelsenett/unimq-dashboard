@@ -18,8 +18,53 @@ const docTemplate = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
+        "/login": {
+            "post": {
+                "description": "This endpoint accepts a JSON payload containing the username and password. If the credentials are valid, it returns a JWT token that can be used for subsequent requests to protected endpoints.\nTo use the token, include it in the Authorization header of your requests as follows: ` + "`" + `Authorization: Bearer \u003ctoken\u003e` + "`" + `.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Authentication"
+                ],
+                "summary": "Login handles user login requests and returns a JWT token upon successful authentication.",
+                "parameters": [
+                    {
+                        "description": "Login credentials",
+                        "name": "login",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/authcontroller.User"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Login successful",
+                        "schema": {
+                            "$ref": "#/definitions/authcontroller.LoginResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Invalid credentials",
+                        "schema": {
+                            "$ref": "#/definitions/httpsuite.APIError"
+                        }
+                    }
+                }
+            }
+        },
         "/v1/alarms": {
             "get": {
+                "security": [
+                    {
+                        "bearer": []
+                    }
+                ],
                 "description": "Get alarm history for all vhosts",
                 "produces": [
                     "application/json"
@@ -58,6 +103,11 @@ const docTemplate = `{
         },
         "/v1/alarms/{vhost-name}": {
             "get": {
+                "security": [
+                    {
+                        "bearer": []
+                    }
+                ],
                 "description": "Get alarm history for a specific vhost",
                 "produces": [
                     "application/json"
@@ -127,6 +177,11 @@ const docTemplate = `{
         },
         "/v1/cluster": {
             "get": {
+                "security": [
+                    {
+                        "bearer": []
+                    }
+                ],
                 "description": "Get overall cluster statistics and health information",
                 "produces": [
                     "application/json"
@@ -153,6 +208,11 @@ const docTemplate = `{
         },
         "/v1/maintenance": {
             "get": {
+                "security": [
+                    {
+                        "bearer": []
+                    }
+                ],
                 "description": "Get scheduled  maintenance information and history",
                 "produces": [
                     "application/json"
@@ -177,6 +237,11 @@ const docTemplate = `{
                 }
             },
             "post": {
+                "security": [
+                    {
+                        "bearer": []
+                    }
+                ],
                 "description": "Add new maintenance entry with description, start time, and end time that will have the status Scheduled",
                 "produces": [
                     "application/json"
@@ -218,34 +283,13 @@ const docTemplate = `{
                 }
             }
         },
-        "/v1/maintenance/admin": {
-            "get": {
-                "description": "Get all maintenance entries for admin view",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Maintenance"
-                ],
-                "summary": "Get all maintenance entries",
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/models.MaintenanceAdminResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/httpsuite.APIError"
-                        }
-                    }
-                }
-            }
-        },
         "/v1/maintenance/{maintenance-id}": {
             "put": {
+                "security": [
+                    {
+                        "bearer": []
+                    }
+                ],
                 "description": "Update the status of a maintenance entry (e.g., scheduled, in-progress, completed)",
                 "consumes": [
                     "application/json"
@@ -303,6 +347,11 @@ const docTemplate = `{
                 }
             },
             "delete": {
+                "security": [
+                    {
+                        "bearer": []
+                    }
+                ],
                 "description": "Delete a specific maintenance entry by ID",
                 "produces": [
                     "application/json"
@@ -451,6 +500,11 @@ const docTemplate = `{
         },
         "/v1/notifications": {
             "get": {
+                "security": [
+                    {
+                        "bearer": []
+                    }
+                ],
                 "description": "Get all notification vhosts and settings",
                 "produces": [
                     "application/json"
@@ -480,6 +534,11 @@ const docTemplate = `{
         },
         "/v1/notifications/{vhost-name}": {
             "get": {
+                "security": [
+                    {
+                        "bearer": []
+                    }
+                ],
                 "description": "Get notification rules and settings for a specific vhost",
                 "produces": [
                     "application/json"
@@ -519,6 +578,11 @@ const docTemplate = `{
                 }
             },
             "delete": {
+                "security": [
+                    {
+                        "bearer": []
+                    }
+                ],
                 "description": "Deletes the notification configuration for a specific vhost",
                 "produces": [
                     "application/json"
@@ -560,6 +624,11 @@ const docTemplate = `{
         },
         "/v1/notifications/{vhost-name}/recipients": {
             "post": {
+                "security": [
+                    {
+                        "bearer": []
+                    }
+                ],
                 "description": "Add a new notification recipient for a specific vhost",
                 "consumes": [
                     "application/json"
@@ -613,6 +682,11 @@ const docTemplate = `{
         },
         "/v1/notifications/{vhost-name}/recipients/{recipient-id}": {
             "delete": {
+                "security": [
+                    {
+                        "bearer": []
+                    }
+                ],
                 "description": "Delete a specific notification recipient for a vhost",
                 "tags": [
                     "Notifications"
@@ -658,6 +732,11 @@ const docTemplate = `{
         },
         "/v1/notifications/{vhost-name}/rules": {
             "post": {
+                "security": [
+                    {
+                        "bearer": []
+                    }
+                ],
                 "description": "Add a new notification rule for a specific vhost",
                 "consumes": [
                     "application/json"
@@ -717,6 +796,11 @@ const docTemplate = `{
         },
         "/v1/notifications/{vhost-name}/rules/{rule-id}": {
             "post": {
+                "security": [
+                    {
+                        "bearer": []
+                    }
+                ],
                 "description": "Delete a specific notification rule for a vhost",
                 "tags": [
                     "Notifications"
@@ -769,6 +853,11 @@ const docTemplate = `{
                 }
             },
             "delete": {
+                "security": [
+                    {
+                        "bearer": []
+                    }
+                ],
                 "description": "Delete a specific notification rule for a vhost",
                 "tags": [
                     "Notifications"
@@ -814,6 +903,11 @@ const docTemplate = `{
         },
         "/v1/notifications/{vhost-name}/rules/{rule-id}/test": {
             "post": {
+                "security": [
+                    {
+                        "bearer": []
+                    }
+                ],
                 "description": "Send a test notification using the specified rule to verify its configuration",
                 "produces": [
                     "application/json"
@@ -862,6 +956,11 @@ const docTemplate = `{
         },
         "/v1/notifications/{vhost-name}/rules/{rule-id}/toggle": {
             "post": {
+                "security": [
+                    {
+                        "bearer": []
+                    }
+                ],
                 "description": "Enable or disable a specific notification rule for a vhost",
                 "tags": [
                     "Notifications"
@@ -907,6 +1006,11 @@ const docTemplate = `{
         },
         "/v1/vhosts": {
             "get": {
+                "security": [
+                    {
+                        "bearer": []
+                    }
+                ],
                 "description": "Get a list of all vhosts in the RabbitMQ cluster",
                 "produces": [
                     "application/json"
@@ -939,6 +1043,11 @@ const docTemplate = `{
         },
         "/v1/vhosts/{vhost-name}": {
             "get": {
+                "security": [
+                    {
+                        "bearer": []
+                    }
+                ],
                 "description": "Get details of a specific vhost by name",
                 "produces": [
                     "application/json"
@@ -980,6 +1089,11 @@ const docTemplate = `{
         },
         "/v1/vhosts/{vhost-name}/metrics": {
             "get": {
+                "security": [
+                    {
+                        "bearer": []
+                    }
+                ],
                 "description": "Get real-time metrics for a specific vhost, including queue lengths, message rates, and resource usage",
                 "produces": [
                     "application/json"
@@ -1021,6 +1135,11 @@ const docTemplate = `{
         },
         "/v1/vhosts/{vhost-name}/queues": {
             "get": {
+                "security": [
+                    {
+                        "bearer": []
+                    }
+                ],
                 "description": "Fetches a list of all queues in a specified virtual host.",
                 "produces": [
                     "application/json"
@@ -1071,6 +1190,11 @@ const docTemplate = `{
         },
         "/v1/vhosts/{vhost-name}/queues/{queue-id}": {
             "get": {
+                "security": [
+                    {
+                        "bearer": []
+                    }
+                ],
                 "description": "Fetches details of all queues in a specified virtual host.",
                 "produces": [
                     "application/json"
@@ -1128,6 +1252,25 @@ const docTemplate = `{
         }
     },
     "definitions": {
+        "authcontroller.LoginResponse": {
+            "type": "object",
+            "properties": {
+                "token": {
+                    "type": "string"
+                }
+            }
+        },
+        "authcontroller.User": {
+            "type": "object",
+            "properties": {
+                "password": {
+                    "type": "string"
+                },
+                "username": {
+                    "type": "string"
+                }
+            }
+        },
         "httpsuite.APIError": {
             "type": "object",
             "properties": {
@@ -1302,17 +1445,6 @@ const docTemplate = `{
                 "LogEventFired",
                 "LogEventResolved"
             ]
-        },
-        "models.MaintenanceAdminResponse": {
-            "type": "object",
-            "properties": {
-                "entries": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/models.MaintenanceEntry"
-                    }
-                }
-            }
         },
         "models.MaintenanceEditLog": {
             "type": "object",

@@ -1,5 +1,17 @@
 basePath: /api
 definitions:
+  authcontroller.LoginResponse:
+    properties:
+      token:
+        type: string
+    type: object
+  authcontroller.User:
+    properties:
+      password:
+        type: string
+      username:
+        type: string
+    type: object
   httpsuite.APIError:
     properties:
       error:
@@ -124,13 +136,6 @@ definitions:
     x-enum-varnames:
     - LogEventFired
     - LogEventResolved
-  models.MaintenanceAdminResponse:
-    properties:
-      entries:
-        items:
-          $ref: '#/definitions/models.MaintenanceEntry'
-        type: array
-    type: object
   models.MaintenanceEditLog:
     properties:
       description:
@@ -469,6 +474,35 @@ info:
   title: RabbitMQ Dashboard API
   version: "1.0"
 paths:
+  /login:
+    post:
+      consumes:
+      - application/json
+      description: |-
+        This endpoint accepts a JSON payload containing the username and password. If the credentials are valid, it returns a JWT token that can be used for subsequent requests to protected endpoints.
+        To use the token, include it in the Authorization header of your requests as follows: `Authorization: Bearer <token>`.
+      parameters:
+      - description: Login credentials
+        in: body
+        name: login
+        required: true
+        schema:
+          $ref: '#/definitions/authcontroller.User'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Login successful
+          schema:
+            $ref: '#/definitions/authcontroller.LoginResponse'
+        "401":
+          description: Invalid credentials
+          schema:
+            $ref: '#/definitions/httpsuite.APIError'
+      summary: Login handles user login requests and returns a JWT token upon successful
+        authentication.
+      tags:
+      - Authentication
   /v1/alarms:
     get:
       description: Get alarm history for all vhosts
@@ -491,6 +525,8 @@ paths:
           description: Bad Gateway
           schema:
             $ref: '#/definitions/httpsuite.APIError'
+      security:
+      - bearer: []
       summary: Get Alarm History
       tags:
       - Alarms
@@ -539,6 +575,8 @@ paths:
           description: Bad Gateway
           schema:
             $ref: '#/definitions/httpsuite.APIError'
+      security:
+      - bearer: []
       summary: Get Alarm History for Vhost
       tags:
       - Alarms
@@ -556,6 +594,8 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/httpsuite.APIError'
+      security:
+      - bearer: []
       summary: Get Cluster Stats
       tags:
       - Cluster
@@ -573,6 +613,8 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/httpsuite.APIError'
+      security:
+      - bearer: []
       summary: Get scheduled  maintenance information and history
       tags:
       - Maintenance
@@ -601,6 +643,8 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/httpsuite.APIError'
+      security:
+      - bearer: []
       summary: Add new scheduled maintenance entry
       tags:
       - Maintenance
@@ -632,6 +676,8 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/httpsuite.APIError'
+      security:
+      - bearer: []
       summary: Delete a maintenance entry
       tags:
       - Maintenance
@@ -710,6 +756,8 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/httpsuite.APIError'
+      security:
+      - bearer: []
       summary: Update maintenance entry status
       tags:
       - Maintenance
@@ -742,23 +790,6 @@ paths:
       summary: Get edit history for a maintenance entry
       tags:
       - Maintenance
-  /v1/maintenance/admin:
-    get:
-      description: Get all maintenance entries for admin view
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/models.MaintenanceAdminResponse'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/httpsuite.APIError'
-      summary: Get all maintenance entries
-      tags:
-      - Maintenance
   /v1/notifications:
     get:
       description: Get all notification vhosts and settings
@@ -775,6 +806,8 @@ paths:
           description: Bad Gateway
           schema:
             $ref: '#/definitions/httpsuite.APIError'
+      security:
+      - bearer: []
       summary: Get Notifications
       tags:
       - Notifications
@@ -802,6 +835,8 @@ paths:
           description: Bad Gateway
           schema:
             $ref: '#/definitions/httpsuite.APIError'
+      security:
+      - bearer: []
       summary: Delete Notifications
       tags:
       - Notifications
@@ -828,6 +863,8 @@ paths:
           description: Bad Gateway
           schema:
             $ref: '#/definitions/httpsuite.APIError'
+      security:
+      - bearer: []
       summary: Get Notification on Vhost
       tags:
       - Notifications
@@ -863,6 +900,8 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/httpsuite.APIError'
+      security:
+      - bearer: []
       summary: Add a new notification recipient
       tags:
       - Notifications
@@ -893,6 +932,8 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/httpsuite.APIError'
+      security:
+      - bearer: []
       summary: Delete a notification recipient
       tags:
       - Notifications
@@ -932,6 +973,8 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/httpsuite.APIError'
+      security:
+      - bearer: []
       summary: Add a new notification rule
       tags:
       - Notifications
@@ -962,6 +1005,8 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/httpsuite.APIError'
+      security:
+      - bearer: []
       summary: Delete a notification rule
       tags:
       - Notifications
@@ -997,6 +1042,8 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/httpsuite.APIError'
+      security:
+      - bearer: []
       summary: Update a notification rule
       tags:
       - Notifications
@@ -1030,6 +1077,8 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/httpsuite.APIError'
+      security:
+      - bearer: []
       summary: Test Notification Rule
       tags:
       - Notifications
@@ -1060,6 +1109,8 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/httpsuite.APIError'
+      security:
+      - bearer: []
       summary: Toggle a notification rule
       tags:
       - Notifications
@@ -1081,6 +1132,8 @@ paths:
           description: Bad Gateway
           schema:
             $ref: '#/definitions/httpsuite.APIError'
+      security:
+      - bearer: []
       summary: Get all vhosts
       tags:
       - Vhosts
@@ -1108,6 +1161,8 @@ paths:
           description: Bad Gateway
           schema:
             $ref: '#/definitions/httpsuite.APIError'
+      security:
+      - bearer: []
       summary: Get vhost details
       tags:
       - Vhosts
@@ -1136,6 +1191,8 @@ paths:
           description: Bad Gateway
           schema:
             $ref: '#/definitions/httpsuite.APIError'
+      security:
+      - bearer: []
       summary: Get Vhost Metrics
       tags:
       - Vhosts
@@ -1169,6 +1226,8 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/httpsuite.APIError'
+      security:
+      - bearer: []
       summary: Get Queues for a specific vhost
       tags:
       - Queues
@@ -1207,6 +1266,8 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/httpsuite.APIError'
+      security:
+      - bearer: []
       summary: Get a specific queue to a specified virtual host
       tags:
       - Queues
