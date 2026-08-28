@@ -134,6 +134,14 @@ func (c *Config) CheckURLs() error {
 	}
 	slog.Info("successfully connected to MongoDB URL", "host", c.MongoDBHost, "port", c.MongoDBPort)
 
+	if !c.OIDC.IsValid() {
+		return fmt.Errorf("OIDC configuration is not valid")
+	}
+
+	if !c.Email.IsValid() {
+		slog.Warn("Email configuration is not valid, email notifications will be disabled")
+	}
+
 	return nil
 }
 
@@ -256,4 +264,22 @@ func checkParameters(parameter map[string]bool) string {
 		return errString
 	}
 	return ""
+}
+
+func (o *OIDCConfig) IsValid() bool {
+
+	if o.OIDCClientID == "" || o.OIDCClientSecret == "" || o.OIDCURL == "" || o.OIDCRedirectURL == "" {
+		return false
+	}
+
+	return true
+}
+
+func (e *EmailConfig) IsValid() bool {
+
+	if e.EmailSMTPHost == "" || e.EmailFromAddress == "" {
+		return false
+	}
+
+	return true
 }
