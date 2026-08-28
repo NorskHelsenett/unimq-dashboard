@@ -11,10 +11,11 @@ import (
 )
 
 const (
-	recipientID   = "e45957ef-b817-414e-95e8-c4ea89c4ad3e"
-	ruleID        = "090e10a0-4c2c-46e4-8870-9e354232a037"
-	firingRuleID  = "b8f2a1c4-3e7d-4f90-a5b6-1c2d3e4f5a6b"
-	MaintenanceID = "e45957ef-b817-414e-95e8-c4ea89c4ad3e"
+	recipientID      = "e45957ef-b817-414e-95e8-c4ea89c4ad3e"
+	recipientEmailID = "a1b2c3d4-e5f6-7890-abcd-ef1234567890"
+	ruleID           = "090e10a0-4c2c-46e4-8870-9e354232a037"
+	firingRuleID     = "b8f2a1c4-3e7d-4f90-a5b6-1c2d3e4f5a6b"
+	MaintenanceID    = "e45957ef-b817-414e-95e8-c4ea89c4ad3e"
 )
 
 func (dbc *Database) Seed(ctx context.Context) error {
@@ -109,7 +110,7 @@ func (dbc *Database) seedNotificationRecipients(ctx context.Context, name string
 	}
 
 	err = dbc.AddNotificationRecipient(ctx, name, &models.Recipient{
-		ID:    recipientID,
+		ID:    recipientEmailID,
 		Name:  "Matias",
 		Email: "matias.nordmann@example.no",
 		Type:  models.RecipientTypeEmail,
