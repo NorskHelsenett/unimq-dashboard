@@ -20,6 +20,7 @@ import (
 // @Failure		400			{object}	httpsuite.APIError
 // @Failure		500			{object}	httpsuite.APIError
 // @Router			/v1/notifications/{vhost-name}/recipients [post]
+// @security		bearer
 func (rc *APIService) AddNotificationsRecipientHandler(w http.ResponseWriter, r *http.Request) {
 	vhost := chi.URLParam(r, "vhost")
 	if vhost == "" {
@@ -69,6 +70,7 @@ func (rc *APIService) AddNotificationsRecipientHandler(w http.ResponseWriter, r 
 // @Failure		400				{object}	httpsuite.APIError
 // @Failure		500				{object}	httpsuite.APIError
 // @Router			/v1/notifications/{vhost-name}/recipients/{recipient-id} [delete]
+// @security		bearer
 func (rc *APIService) DeleteNotificationsRecipientHandler(w http.ResponseWriter, r *http.Request) {
 	vhost := chi.URLParam(r, "vhost")
 	if vhost == "" {

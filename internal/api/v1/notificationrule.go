@@ -28,6 +28,7 @@ import (
 // @Failure		404			{object}	httpsuite.APIError
 // @Failure		500			{object}	httpsuite.APIError
 // @Router			/v1/notifications/{vhost-name}/rules [post]
+// @security		bearer
 func (rc *APIService) AddNotificationsRuleHandler(w http.ResponseWriter, r *http.Request) {
 	vhost := chi.URLParam(r, "vhost")
 	if vhost == "" {
@@ -82,6 +83,7 @@ func (rc *APIService) AddNotificationsRuleHandler(w http.ResponseWriter, r *http
 // @Failure		400			{object}	httpsuite.APIError
 // @Failure		500			{object}	httpsuite.APIError
 // @Router			/v1/notifications/{vhost-name}/rules/{rule-id} [delete]
+// @security		bearer
 func (rc *APIService) DeleteNotificationsRuleHandler(w http.ResponseWriter, r *http.Request) {
 	vhost := chi.URLParam(r, "vhost")
 	if vhost == "" {
@@ -119,6 +121,7 @@ func (rc *APIService) DeleteNotificationsRuleHandler(w http.ResponseWriter, r *h
 // @Failure		400			{object}	httpsuite.APIError
 // @Failure		500			{object}	httpsuite.APIError
 // @Router			/v1/notifications/{vhost-name}/rules/{rule-id} [Post]
+// @security		bearer
 func (rc *APIService) UpdateNotificationsRuleHandler(w http.ResponseWriter, r *http.Request) {
 	vhost := chi.URLParam(r, "vhost")
 	if vhost == "" {
@@ -169,6 +172,7 @@ func (rc *APIService) UpdateNotificationsRuleHandler(w http.ResponseWriter, r *h
 // @Failure		400			{object}	httpsuite.APIError
 // @Failure		500			{object}	httpsuite.APIError
 // @Router			/v1/notifications/{vhost-name}/rules/{rule-id}/toggle [post]
+// @security		bearer
 func (rc *APIService) ToggleNotificationsRuleHandler(w http.ResponseWriter, r *http.Request) {
 	vhost := chi.URLParam(r, "vhost")
 	if vhost == "" {
@@ -218,6 +222,7 @@ func (rc *APIService) ToggleNotificationsRuleHandler(w http.ResponseWriter, r *h
 // @Failure		400			{object}	httpsuite.APIError
 // @Failure		500			{object}	httpsuite.APIError
 // @Router			/v1/notifications/{vhost-name}/rules/{rule-id}/test [post]
+// @security		bearer
 func (rc *APIService) TestNotificationsRuleHandler(w http.ResponseWriter, r *http.Request) {
 	vhost := chi.URLParam(r, "vhost")
 	if vhost == "" {

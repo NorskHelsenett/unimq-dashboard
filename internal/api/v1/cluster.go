@@ -13,6 +13,7 @@ import (
 // @Success		200	{object}	models.ClusterStats
 // @Failure		500	{object}	httpsuite.APIError
 // @Router			/v1/cluster [get]
+// @security		bearer
 func (rc *APIService) GetClusterHandler(w http.ResponseWriter, r *http.Request) {
 	stats, err := rc.RMQClient.GetClusterStats()
 	if err != nil {

@@ -15,6 +15,7 @@ import (
 // @Success		200	{array}		[]models.Vhost
 // @Failure		502	{object}	httpsuite.APIError
 // @Router			/v1/vhosts [get]
+// @security		bearer
 func (rc *APIService) VhostsHandler(w http.ResponseWriter, r *http.Request) {
 	vhosts, err := rc.RMQClient.GetVhosts()
 	if err != nil {
@@ -34,6 +35,7 @@ func (rc *APIService) VhostsHandler(w http.ResponseWriter, r *http.Request) {
 // @Failure		400			{object}	httpsuite.APIError
 // @Failure		502			{object}	httpsuite.APIError
 // @Router			/v1/vhosts/{vhost-name} [get]
+// @security		bearer
 func (rc *APIService) VhostHandler(w http.ResponseWriter, r *http.Request) {
 	vhostName := chi.URLParam(r, "vhost")
 	if vhostName == "" {

@@ -18,6 +18,7 @@ import (
 // @Failure		404			{object}	httpsuite.APIError			"Not Found"
 // @Failure		500			{object}	httpsuite.APIError			"Internal Server Error"
 // @Router			/v1/vhosts/{vhost-name}/queues [get]
+// @security		bearer
 func (rc *APIService) GetQueuesHandler(w http.ResponseWriter, r *http.Request) {
 	vhost := chi.URLParam(r, "vhost")
 	if vhost == "" {
@@ -51,6 +52,7 @@ func (rc *APIService) GetQueuesHandler(w http.ResponseWriter, r *http.Request) {
 // @Failure		404			{object}	httpsuite.APIError	"Not Found"
 // @Failure		500			{object}	httpsuite.APIError	"Internal Server Error"
 // @Router			/v1/vhosts/{vhost-name}/queues/{queue-id} [get]
+// @security		bearer
 func (rc *APIService) GetQueuesByNameHandler(w http.ResponseWriter, r *http.Request) {
 	vhost := chi.URLParam(r, "vhost")
 	if vhost == "" {

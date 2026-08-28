@@ -15,10 +15,11 @@ import (
 // @Description	Get alarm history for all vhosts
 // @Tags			Alarms
 // @Produce		json
-// @Success		200			{array}		[]models.AlarmEntry
-// @Failure		400			{object}	httpsuite.APIError
-// @Failure		502			{object}	httpsuite.APIError
+// @Success		200	{array}		[]models.AlarmEntry
+// @Failure		400	{object}	httpsuite.APIError
+// @Failure		502	{object}	httpsuite.APIError
 // @Router			/v1/alarms [get]
+// @security		bearer
 func (rc *APIService) GetAlarmHistoryAllHandler(w http.ResponseWriter, r *http.Request) {
 
 	alarms, err := rc.DB.GetAlarmsAll(r.Context())
@@ -34,13 +35,14 @@ func (rc *APIService) GetAlarmHistoryAllHandler(w http.ResponseWriter, r *http.R
 // @Description	Get alarm history for a specific vhost
 // @Tags			Alarms
 // @Produce		json
-// @Param			vhost-name	path		string	true	"Vhost Name"
+// @Param			vhost-name	path		string				true	"Vhost Name"
 // @Param			type		query		models.AlarmType	false	"Alarm Type"
 // @Success		200			{array}		[]models.AlarmEntry
 // @Failure		400			{object}	httpsuite.APIError
 // @Failure		404			{object}	httpsuite.APIError
 // @Failure		502			{object}	httpsuite.APIError
 // @Router			/v1/alarms/{vhost-name} [get]
+// @security		bearer
 func (rc *APIService) GetAlarmHistoryHandler(w http.ResponseWriter, r *http.Request) {
 
 	vhost := chi.URLParam(r, "vhost")

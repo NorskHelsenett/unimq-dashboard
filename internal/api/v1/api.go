@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/sisneve/rabbitmq-dashboard/internal/clients/dex"
 	"github.com/sisneve/rabbitmq-dashboard/internal/clients/prometheus"
 	"github.com/sisneve/rabbitmq-dashboard/internal/clients/rabbitmq"
 	"github.com/sisneve/rabbitmq-dashboard/internal/config"
@@ -17,6 +18,7 @@ type APIService struct {
 	Ctx         context.Context
 	RMQClient   *rabbitmq.RMQClient
 	PromClient  *prometheus.PromClient
+	DexClient   *dex.DexClient
 	DB          *database.Database
 	EmailClient *mail.Client
 	EmailConfig *config.EmailConfig
@@ -47,16 +49,16 @@ func WithPromClient(prom *prometheus.PromClient) APIServiceOption {
 	}
 }
 
-func WithDatabase(db *database.Database) APIServiceOption {
+func WithDexClient(dex *dex.DexClient) APIServiceOption {
 	return func(rc *APIService) error {
-		rc.DB = db
+		rc.DexClient = dex
 		return nil
 	}
 }
 
-func WithRMQLimits(limits *models.Limits) APIServiceOption {
+func WithDatabase(db *database.Database) APIServiceOption {
 	return func(rc *APIService) error {
-		rc.RMQLimits = limits
+		rc.DB = db
 		return nil
 	}
 }
@@ -81,7 +83,6 @@ func newAPIServiceConfig() *APIService {
 		RMQClient:   nil,
 		PromClient:  nil,
 		DB:          nil,
-		RMQLimits:   &models.Limits{},
 		EmailConfig: nil,
 		EmailClient: nil,
 	}

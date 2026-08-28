@@ -17,6 +17,7 @@ import (
 // @Failure		400			{object}	httpsuite.APIError
 // @Failure		502			{object}	httpsuite.APIError
 // @Router			/v1/vhosts/{vhost-name}/metrics [get]
+// @security		bearer
 func (rc *APIService) MetricHandler(w http.ResponseWriter, r *http.Request) {
 	vhost := chi.URLParam(r, "vhost")
 	if vhost == "" {

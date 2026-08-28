@@ -18,6 +18,7 @@ import (
 // @Success		200	{object}	[]models.VhostNotification
 // @Failure		502	{object}	httpsuite.APIError
 // @Router			/v1/notifications [get]
+// @security		bearer
 func (rc *APIService) GetNotificationsHandler(w http.ResponseWriter, r *http.Request) {
 
 	notifications, err := rc.DB.GetNotificationsAll(r.Context())
@@ -38,6 +39,7 @@ func (rc *APIService) GetNotificationsHandler(w http.ResponseWriter, r *http.Req
 // @Failure		400			{object}	httpsuite.APIError
 // @Failure		502			{object}	httpsuite.APIError
 // @Router			/v1/notifications/{vhost-name} [get]
+// @security		bearer
 func (rc *APIService) GetNotificationsVhostHandler(w http.ResponseWriter, r *http.Request) {
 
 	vhost := chi.URLParam(r, "vhost")
@@ -75,6 +77,7 @@ func (rc *APIService) GetNotificationsVhostHandler(w http.ResponseWriter, r *htt
 // @Failure		400			{object}	httpsuite.APIError
 // @Failure		502			{object}	httpsuite.APIError
 // @Router			/v1/notifications/{vhost-name} [delete]
+// @security		bearer
 func (rc *APIService) DeleteNotificationsHandler(w http.ResponseWriter, r *http.Request) {
 	vhost := chi.URLParam(r, "vhost")
 	if vhost == "" {
