@@ -12,9 +12,9 @@ interface LayoutProps {
 export function Layout({ children }: LayoutProps) {
   return (
     <TooltipProvider>
-        <div className="flex min-h-screen bg-surface-page">
+        <div className="flex h-screen overflow-hidden bg-surface-page">
             <Sidebar/>
-            <div className="flex flex-col flex-1 min-w-0">
+            <div className="flex flex-col flex-1 min-w-0 overflow-y-auto">
                 <SessionExpiryBanner />
                 <TopBar />
                 <main className="flex-1 p-4 mx-6 mb-6 rounded-lg">

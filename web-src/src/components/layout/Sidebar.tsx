@@ -22,13 +22,13 @@ export function Sidebar() {
 
     return (
         <aside style={{ width }} className="overflow-x-auto">
-            <nav className="sticky top-0 self-start h-full flex flex-col pt-4 border-r border-border-sidebar overflow-y-auto">
+            <nav className="h-full flex flex-col pt-4 border-r border-border-sidebar">
             <div
                 className="absolute right-0 top-0 h-full w-1 cursor-col-resize"
                 onMouseDown={onMouseDown}
             />
                     <LogoLink collapsed={collapsed} />
-                    <div className="flex flex-col gap-1 pt-10">
+                    <div className="flex flex-col gap-1 pt-10 flex-1 overflow-y-auto">
                         {NAV_ITEMS.map((item) => {
                             const active = isActive(item.href, currentPath)
                             return (
