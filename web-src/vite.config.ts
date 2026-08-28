@@ -59,6 +59,13 @@ export default defineConfig({
           return null
         },
       },
+      "/profile": {
+        target: "http://localhost:8080",
+        bypass: (req) => {
+          if (req.method === "GET") return "/entries/profile.html"
+          return null
+        },
+      },
     },
   },
 });
