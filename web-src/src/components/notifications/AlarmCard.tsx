@@ -80,11 +80,14 @@ function ExistingAlarms({existingAlarms, vhost, disabledIds, onToggle}: {
                                                     </td>
                                                 </tr>
                                             )}
-                                            <tr className={
-                                                isDisabled ? '' :
-                                                alarm.status === 'firing' ? 'bg-red-50 hover:bg-red-100' :
-                                                'hover:bg-surface-page'
-                                            }>
+                                            <tr
+                                                className={cn('cursor-pointer',
+                                                    isDisabled ? '' :
+                                                    alarm.status === 'firing' ? 'bg-red-50 hover:bg-red-100' :
+                                                    'hover:bg-surface-page'
+                                                )}
+                                                onClick={() => { window.location.href = `/notifications/rule?vhost=${encodeURIComponent(vhost)}&id=${alarm.id}` }}
+                                            >
                                                 <td className={cn("border-b border-border-card py-2 px-4 text-sm font-medium", fadedCell)}>
                                                     <span className="flex items-center gap-2">
                                                         <StatusDot color={alarm.status === 'firing' ? 'danger' : alarm.status === 'fired' ? 'warning' : alarm.status === 'ok' ? 'ok' : 'warning'} />
@@ -124,7 +127,7 @@ function ExistingAlarms({existingAlarms, vhost, disabledIds, onToggle}: {
                                                         onCheckedChange={() => alarm.id && toggleAlarm(alarm.id)}
                                                     />
                                                 </td>
-                                                <td className="border-b border-border-card py-2 pl-6 pr-4">
+                                                <td className="border-b border-border-card py-2 pl-6 pr-4" onClick={e => e.stopPropagation()}>
                                                     <div className="flex items-center justify-end gap-2">
                                                         <Tooltip>
                                                             <TooltipTrigger asChild>

@@ -7,16 +7,16 @@ export interface DashboardWidget {
 }
 
 export const ALL_WIDGETS: DashboardWidget[] = [
-  { id: 'limits',           label: 'Limits & metrics',          defaultVisible: true },
-  { id: 'queues',           label: 'Queues',                    defaultVisible: true },
+  { id: 'maintenance',      label: 'Upcoming maintenance',      defaultVisible: true },
   { id: 'alarms',           label: 'Alarms',                    defaultVisible: true },
   { id: 'recipients',       label: 'Notification recipients',   defaultVisible: true },
-  { id: 'maintenance',      label: 'Upcoming maintenance',      defaultVisible: true },
   { id: 'cluster',          label: 'Cluster & Vhost resources', defaultVisible: true },
+  { id: 'limits',           label: 'Limits & metrics',          defaultVisible: true },
   { id: 'sizeDistribution', label: 'Message size distribution', defaultVisible: false },
+  { id: 'queues',           label: 'Queues',                    defaultVisible: true },
 ]
-
 type WidgetVisibility = Record<string, boolean>
+
 
 export function useDashboard() {
   const defaultVisibility = Object.fromEntries(

@@ -48,6 +48,8 @@
     --radius-4xl: calc(var(--radius) * 2.6);
 
     --color-brand: #f97316;
+    --color-submit-button: var(--submit-button);
+    --color-submit-button: var(--submit-button);
 
     --color-surface-sidebar: var(--surface-sidebar);
     --color-surface-sidebar-active: var(--surface-sidebar-active);

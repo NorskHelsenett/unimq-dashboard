@@ -2,7 +2,6 @@ import { cn } from '@/lib/utils'
 import { useCheckerStatus } from '@/hooks/useCheckerStatus'
 
 interface LiveDataWidgetProps {
-  // vhost?: string
   className?: string
 }
 

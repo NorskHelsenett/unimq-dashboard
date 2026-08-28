@@ -114,7 +114,7 @@ export const EditAlarm = ({ alarm, vhost }: { alarm: AlarmProps, vhost: string }
     }
 
     return (
-        <div className="mt-2">
+        <div className="mt-2 max-w-3xl">
         <DeleteItem alarm={alarm} vhost={vhost} open={deletingId !== null} onClose={() => setDeletingId(null)} onDeleted={redirectAfterDelete} />
         {hasAlarmId && (
             <AlarmLogSheet alarmId={alarmId} alarmName={alarm.name ?? ""} alarmType={alarm.type} open={showLogs} onClose={() => setShowLogs(false)} />

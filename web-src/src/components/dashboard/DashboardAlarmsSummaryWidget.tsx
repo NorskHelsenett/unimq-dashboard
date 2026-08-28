@@ -3,7 +3,7 @@ import { SectionCard, SectionCardHeader } from '../ui/section-card'
 import { Pill } from '../ui/pill'
 import { StatusDot } from '../ui/status-dot'
 import { cn } from '@/lib/utils'
-import { Bell, AlertCircle, CheckCircle2 } from 'lucide-react'
+import { Bell, AlertCircle, CheckCircle2, ArrowRight } from 'lucide-react'
 
 const STATUS_PRIORITY: Record<string, number> = {
   firing: 0, fired: 1, active: 2, ok: 3, inactive: 4, unknown: 5, '': 6,
@@ -81,17 +81,20 @@ function AlarmStatusBanner({ alarms }: { alarms: AlarmProps[] }) {
   )
 }
 
-function AlarmRow({ alarm }: { alarm: AlarmProps }) {
+function AlarmRow({ alarm, vhost }: { alarm: AlarmProps; vhost: string }) {
   const isDisabled = alarm.enabled === false
   const dotColor = alarmDotColor(alarm.status)
   const pillVariant = alarmPillVariant(alarm.status)
   const pulse = alarm.status === 'firing' && !isDisabled
 
   return (
-    <div className={cn(
-      "flex items-center justify-between py-1.5 border-b last:border-0 border-border-card",
-      isDisabled && "opacity-50"
-    )}>
+    <a
+      href={`/notifications/rule?id=${encodeURIComponent(alarm.id ?? '')}&vhost=${encodeURIComponent(vhost)}`}
+      className={cn(
+        "flex items-center justify-between py-1.5 px-1 -mx-1 rounded border-b last:border-0 border-border-card [text-decoration:none] hover:bg-surface-page transition-colors",
+        isDisabled && "opacity-50"
+      )}
+    >
       <span className="flex items-center gap-2 text-sm min-w-0">
         <StatusDot color={isDisabled ? 'blue' : dotColor} pulse={pulse} className="shrink-0" />
         <span className="truncate font-medium">{alarm.name || alarm.type}</span>
@@ -108,7 +111,7 @@ function AlarmRow({ alarm }: { alarm: AlarmProps }) {
           <Pill variant={pillVariant}>{alarmStatusLabel(alarm.status)}</Pill>
         )}
       </div>
-    </div>
+    </a>
   )
 }
 
@@ -120,8 +123,6 @@ export function DashboardAlarmsSummaryWidget({
   const alarms = notification?.Rules ?? []
   const firingCount = alarms.filter(a => a.status === 'firing').length
   const firedCount = alarms.filter(a => a.status === 'fired').length
-  const okCount = alarms.filter(a => a.status === 'ok').length
-  const disabledCount = alarms.filter(a => a.enabled === false).length
 
   const sorted = [...alarms].sort(
     (a, b) =>
@@ -142,11 +143,16 @@ export function DashboardAlarmsSummaryWidget({
       ) : (
         <>
           <AlarmStatusBanner alarms={alarms} />
-          <div className="max-h-56 overflow-y-auto">
+          <div>
             {sorted.map(a => (
-              <AlarmRow key={a.id} alarm={a} />
+              <AlarmRow key={a.id} alarm={a} vhost={notification?.Name ?? ''} />
             ))}
           </div>
+          <p className="mt-auto pt-3">
+            <a href={`/notifications?vhost=${encodeURIComponent(notification?.Name ?? '')}`} className={cn("text-submit-button text-xs hover:font-semibold transition-colors inline-flex items-center gap-1 [text-decoration:none] hover:[text-decoration:none]")}>
+              View all alarms <ArrowRight className="w-3 h-3 inline ml-1" />
+            </a>
+          </p>
         </>
       )}
     </SectionCard>

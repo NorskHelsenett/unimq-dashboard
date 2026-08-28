@@ -20,7 +20,6 @@ function MaintenancePage() {
              <div className="space-y-6">
                 <div>
                   <h1 className='text-3xl tracking-tight'>Maintenance</h1>
-                  <LiveDataWidget />
                 </div>
      
                <div className='mx-auto flex flex-col mr-20 gap-4 pt-4'>

@@ -1,7 +1,8 @@
 import { VhostNotification } from '@/types/notifications'
 import { SectionCard, SectionCardHeader } from '../ui/section-card'
 import { StatusDot } from '../ui/status-dot'
-import { Users } from 'lucide-react'
+import { ArrowRight, Users } from 'lucide-react'
+import { cn } from '@/lib/utils'
 
 const TYPE_LABELS: Record<string, string> = {
   teams: 'Teams',
@@ -17,7 +18,7 @@ export function DashboardActiveRecipientsWidget({
   const recipients = notification?.Recipients ?? []
 
   return (
-    <SectionCard accent="blue" className="min-w-0 h-full">
+    <SectionCard accent="blue" className="min-w-0 h-full flex flex-col">
       <SectionCardHeader
         title="Notification recipients"
         icon={<Users className="w-4 h-4 text-blue-400" />}
@@ -42,6 +43,11 @@ export function DashboardActiveRecipientsWidget({
           ))}
         </div>
       )}
+      <p className="mt-auto pt-3">
+        <a href={`/notifications?vhost=${encodeURIComponent(notification?.Name ?? '')}`} className={cn("text-submit-button text-xs hover:font-semibold transition-colors inline-flex items-center gap-1 [text-decoration:none] hover:[text-decoration:none]")}>
+          View all recipients <ArrowRight className="w-3 h-3 inline ml-1" />
+        </a>
+      </p>
     </SectionCard>
   )
 }

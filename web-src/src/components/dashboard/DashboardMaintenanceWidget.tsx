@@ -1,7 +1,7 @@
 import { Maintenance } from '@/types/maintenance'
 import { SectionCard, SectionCardHeader } from '../ui/section-card'
 import { Pill } from '../ui/pill'
-import { CalendarClock, Wrench } from 'lucide-react'
+import { CalendarClock, Wrench, ArrowRight } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { formatDateRange } from '../maintenance/MaintenanceHistoryCard'
 
@@ -18,7 +18,7 @@ export function DashboardMaintenanceWidget({ schedule }: { schedule: Maintenance
   const accent = hasInProgress ? 'amber' : 'blue'
 
   return (
-    <SectionCard accent={accent} className="min-w-0 h-full">
+    <SectionCard accent={accent} className="min-w-0 h-full flex flex-col">
       <SectionCardHeader
         title="Maintenance"
         icon={
@@ -37,10 +37,11 @@ export function DashboardMaintenanceWidget({ schedule }: { schedule: Maintenance
               ? { variant: 'amber' as const, label: 'In progress' }
               : { variant: 'lightBlue' as const, label: 'Scheduled' }
             return (
-              <div
+              <a
                 key={m.id}
+                href={`/maintenance/edit?id=${encodeURIComponent(m.id ?? '')}`}
                 className={cn(
-                  'py-2 border-b last:border-0 border-border-card',
+                  'block py-2 px-1 -mx-1 rounded border-b last:border-0 border-border-card [text-decoration:none] hover:bg-surface-page transition-colors',
                   inProgress && 'rounded-lg px-2 -mx-2 mb-1 bg-maintenance-in-progress-bg hover:bg-maintenance-in-progress-bg-hover border-amber-200'
                 )}
               >
@@ -54,11 +55,16 @@ export function DashboardMaintenanceWidget({ schedule }: { schedule: Maintenance
                 <p className={cn('text-xs', inProgress ? 'text-amber-600' : 'text-text-muted')}>
                   {formatDateRange(m.start, m.end)}
                 </p>
-              </div>
+              </a>
             )
           })}
         </div>
       )}
+      <p className="mt-auto pt-3">
+        <a href="/maintenance" className={cn("text-submit-button text-xs mt-2 hover:font-semibold transition-colors inline-flex items-center gap-1 [text-decoration:none] hover:[text-decoration:none]")}>
+          View maintenance schedule <ArrowRight className="w-3 h-3 inline ml-1" />
+        </a>
+      </p>
     </SectionCard>
   )
 }

@@ -11,7 +11,6 @@ import { DashboardActiveRecipientsWidget } from "@/components/dashboard/Dashboar
 import { DashboardMaintenanceWidget } from "@/components/dashboard/DashboardMaintenanceWidget";
 import { DashboardClusterWidget } from "@/components/dashboard/DashboardClusterWidget";
 import { DashboardCustomizer } from "@/components/dashboard/DashboardCustomizer";
-import { LiveDataWidget } from "@/components/dashboard/LiveDataWidget";
 import { useIndex } from "@/hooks/useIndex";
 import { useClusters } from "@/hooks/useClusters";
 import { useQueues } from "@/hooks/useQueues";
@@ -20,7 +19,6 @@ import { useScheduledMaintenance } from "@/hooks/useMaintenance";
 import { useDashboard } from "@/hooks/useDashboard";
 import { useAuth } from 'react-oidc-context'
 import type { Metrics } from "@/types/metrics"
-import { VhostSelector } from "@/components/layout/VhostSelector";
 
 
 export interface Limits {
@@ -74,12 +72,10 @@ const MainPage = () => {
                         {/* <LiveDataWidget vhost={Selected} /> */}
                     </div>
                     <div className="flex items-center gap-4">
-                        <LiveDataWidget />
-                        <VhostSelector Vhosts={Vhosts} Selected={Selected} />
                         <DashboardCustomizer widgets={widgets} isVisible={isVisible} toggle={toggle} />
                     </div>
                 </div>
-                
+
                 {/* Notification cards row */}
                 {hasRightCards && (
                     <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">

@@ -91,7 +91,7 @@ export function EditMaintenance({ maintenance }: { maintenance: Maintenance }) {
     }
 
     return (
-        <div className="max-w-2xl">
+        <div className="max-w-4xl">
             <Response
                 open={success}
                 status="success"
@@ -114,7 +114,7 @@ export function EditMaintenance({ maintenance }: { maintenance: Maintenance }) {
             />
             <h1 className="text-3xl font-semibold mb-6">Edit maintenance</h1>
 
-            <form onSubmit={handleSubmit} className="flex flex-col gap-6">
+            <form onSubmit={handleSubmit} className="grid grid-cols-2 gap-6">
                 {/* Main fields */}
                 <div className="bg-surface-card border border-border-card rounded-lg p-5 flex flex-col gap-4">
                     <h2 className="text-sm font-semibold text-text-muted uppercase tracking-wide">Details</h2>
@@ -194,9 +194,9 @@ export function EditMaintenance({ maintenance }: { maintenance: Maintenance }) {
                     </div>
                 </div>
 
-                {error && <p className="text-destructive text-sm">{error}</p>}
+                {error && <p className="text-destructive text-sm col-span-2">{error}</p>}
 
-                <div className="flex items-center justify-between">
+                <div className="flex items-center justify-between col-span-2">
                     <Button
                         type="button"
                         variant="destructive"

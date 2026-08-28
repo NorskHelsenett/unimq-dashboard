@@ -7,6 +7,7 @@ import { Button } from "../ui/button"
 import { Response } from "../ui/response"
 import { Tooltip, TooltipContent, TooltipTrigger } from "../ui/tooltip"
 import { Pencil, CalendarClock } from "lucide-react"
+import { cn } from "@/lib/utils"
 import { useState } from "react"
 import { DeleteMaintenance } from "./DeleteMaintenance"
 import { SectionCard, SectionCardHeader } from "../ui/section-card"
@@ -149,7 +150,14 @@ export function MaintenanceScheduleCard({ maintenanceSchedule, onRefresh }: { ma
                                             </td>
                                         </tr>
                                     )}
-                                    <tr className={maintenance.status === 'in_progress' ? 'bg-maintenance-in-progress-bg hover:bg-maintenance-in-progress-bg-hover' : 'hover:bg-surface-page'}>
+                                    <tr
+                        className={cn('cursor-pointer', maintenance.status === 'in_progress' ? 'bg-maintenance-in-progress-bg hover:bg-maintenance-in-progress-bg-hover' : 'hover:bg-surface-page')}
+                        onClick={() => {
+                            const vhost = new URLSearchParams(window.location.search).get('vhost')
+                            const vhostSuffix = vhost ? `&vhost=${encodeURIComponent(vhost)}` : ''
+                            window.location.href = `/maintenance/edit?id=${maintenance.id}${vhostSuffix}`
+                        }}
+                    >
                                         <td className="border-b border-border-card py-2 px-4 text-sm font-medium">
                                             <span className="flex items-center gap-2">
                                                 {maintenance.status === 'in_progress' && <StatusDot color="warning" />}
@@ -165,7 +173,7 @@ export function MaintenanceScheduleCard({ maintenanceSchedule, onRefresh }: { ma
                                                 {upperCaseStatus(maintenance.status)}
                                             </Pill>
                                         </td>
-                                        <td className="border-b border-border-card py-2 px-4">
+                                        <td className="border-b border-border-card py-2 px-4" onClick={e => e.stopPropagation()}>
                                             <div className="flex items-center justify-end gap-2">
                                                 <Tooltip>
                                                     <TooltipTrigger asChild>
