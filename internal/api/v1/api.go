@@ -82,6 +82,7 @@ func newAPIServiceConfig() *APIService {
 		Ctx:         context.Background(),
 		RMQClient:   nil,
 		PromClient:  nil,
+		DexClient:   nil,
 		DB:          nil,
 		EmailConfig: nil,
 		EmailClient: nil,
