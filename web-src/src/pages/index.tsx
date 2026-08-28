@@ -22,6 +22,7 @@ import { useAuth } from 'react-oidc-context'
 import type { Metrics } from "@/types/metrics"
 import { VhostSelector } from "@/components/layout/VhostSelector";
 
+
 export interface Limits {
     MaxConnections: number;
     MaxQueues: number;
@@ -78,21 +79,10 @@ const MainPage = () => {
                         <DashboardCustomizer widgets={widgets} isVisible={isVisible} toggle={toggle} />
                     </div>
                 </div>
-
-                {isVisible('limits') && Metrics && (
-                    <LimitsCard
-                        connections={Metrics.connections}
-                        channels={Metrics.channels}
-                        queues={Metrics.queues}
-                        unacked={Metrics.unacked}
-                        maxConnections={Limits.MaxConnections}
-                        maxQueues={Limits.MaxQueues}
-                    />
-                )}
-
+                
                 {/* Notification cards row */}
                 {hasRightCards && (
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
                         {isVisible('maintenance') && (
                             <DashboardMaintenanceWidget schedule={maintenanceSchedule} />
                         )}
@@ -105,20 +95,33 @@ const MainPage = () => {
                     </div>
                 )}
 
-                {/* Bottom row: cluster + size distribution */}
-                {(isVisible('cluster') || isVisible('sizeDistribution')) && (
-                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
+                {/* Cluster + limits row */}
+                {(isVisible('cluster') || isVisible('limits')) && (
+                    <div className="grid grid-cols-1 lg:grid-cols-6 gap-5">
                         {isVisible('cluster') && (
-                            <div className={isVisible('sizeDistribution') ? 'lg:col-span-2' : 'lg:col-span-3'}>
+                            <div className={isVisible('limits') ? 'lg:col-span-3' : 'lg:col-span-6'}>
                                 <DashboardClusterWidget clusters={clusters} vhost={Selected} />
                             </div>
                         )}
-                        {isVisible('sizeDistribution') && (
-                            <div className={!isVisible('cluster') ? 'lg:col-span-3' : ''}>
-                                <SizeDistributionCard queues={queues} />
+                        {isVisible('limits') && Metrics && (
+                            <div className={isVisible('cluster') ? 'lg:col-span-3' : 'lg:col-span-6'}>
+                                <LimitsCard
+                                    connections={Metrics.connections}
+                                    channels={Metrics.channels}
+                                    queues={Metrics.queues}
+                                    unacked={Metrics.unacked}
+                                    maxConnections={Limits.MaxConnections}
+                                    maxQueues={Limits.MaxQueues}
+                                />
                             </div>
                         )}
                     </div>
+                )}
+
+
+                {/* Size distribution row */}
+                {isVisible('sizeDistribution') && (
+                    <SizeDistributionCard queues={queues} />
                 )}
 
                 {/* Queues table */}

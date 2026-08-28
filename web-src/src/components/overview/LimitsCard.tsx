@@ -36,7 +36,7 @@ const progressBarColor: Record<StatusKey, string> = {
 function ProgressBar({ value, max, colorKey }: { value: number; max: number; colorKey: StatusKey }) {
   const pct = Math.min(100, Math.max(0, (value / max) * 100))
   return (
-    <div className="flex items-center gap-2 mt-3">
+    <div className="flex items-center gap-2 mt-2">
       <div className="h-1 flex-1 rounded-full bg-black/10 dark:bg-white/10 overflow-hidden">
         <div
           className={cn('h-full rounded-full transition-[width] duration-300', progressBarColor[colorKey])}
@@ -58,7 +58,7 @@ function QueueBar({ value }: { value: number }) {
     filled >= BLOCKS * 0.5 ? 'bg-amber-400' :
     'bg-teal-400'
   return (
-    <div className="flex gap-0.5 mt-3">
+    <div className="flex gap-0.5 mt-1">
       {Array.from({ length: BLOCKS }).map((_, i) => (
         <div
           key={i}
@@ -86,10 +86,10 @@ interface StatCardProps {
 function StatCard({ label, tooltip, value, sub, max, icon, cardBg, cardBorder, iconBg, iconColor, bar }: StatCardProps) {
   const colorKey: StatusKey = max ? limitColor(value, max) : 'neutral'
   return (
-    <div className={cn('rounded-xl border p-4', cardBg, cardBorder)}>
-      <div className="flex items-start justify-between mb-3">
-        <div className="flex items-center gap-6">
-          <div className={cn('w-9 h-9 rounded-lg flex items-center justify-center shrink-0', iconBg)}>
+    <div className={cn('rounded-xl border p-3 h-full flex flex-col gap-2', cardBg, cardBorder)}>
+      <div className="flex items-start justify-between">
+        <div className="flex items-center gap-3">
+          <div className={cn('w-8 h-8 rounded-lg flex items-center justify-center shrink-0', iconBg)}>
             <div className={iconColor}>{icon}</div>
           </div>
           <div className="flex flex-col gap-0.5 min-w-0">
@@ -114,11 +114,7 @@ function StatCard({ label, tooltip, value, sub, max, icon, cardBg, cardBorder, i
           </TooltipContent>
         </Tooltip>
       </div>
-      <div className="flex items-end justify-between gap-2">
-        <div>
-          <div className="text-sm mt-0.5 font-medium text-text-muted">{sub}</div>
-        </div>
-      </div>
+      <div className="text-sm font-medium text-text-muted">{sub}</div>
       {bar}
     </div>
   )
@@ -129,7 +125,7 @@ export function LimitsCard({ connections, channels, queues, unacked, maxConnecti
   const queueColorKey = limitColor(queues, maxQueues)
   const channelColorKey = limitColor(channels, 1000)
   return (
-    <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 h-full">
       <StatCard
         label="Connections"
         tooltip={`Maks antall connections til en vhost er ${maxConnections}. Etter at dette antallet er nådd, vil det ikke lenger være mulig å opprette nye connections før du er under grensen igjen.`}
