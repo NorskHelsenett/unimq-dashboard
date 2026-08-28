@@ -1,3 +1,9 @@
+# TODO: For authentication
+
+- Dex integration for OpenID Connect (OIDC) authentication
+- JWT generation and validation
+- Maintenance data has signed who created it
+
 # TODO: This should be moved to issues or discarded based
 
 - Helm chart variables updated with new environment variables and configuration options
