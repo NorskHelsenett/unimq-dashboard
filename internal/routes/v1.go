@@ -3,9 +3,22 @@ package routes
 import (
 	"github.com/go-chi/chi/v5"
 	api "github.com/sisneve/rabbitmq-dashboard/internal/api/v1"
+	httpSwagger "github.com/swaggo/http-swagger/v2"
 )
 
-func SetupV1Routes(r chi.Router, apiservice *api.APIService) {
+func SetupUnprotectedRoutes(r chi.Router, apiservice *api.APIService) {
+
+	r.Get("/swagger/*", httpSwagger.WrapHandler)
+	r.Post("/login", apiservice.DexClient.HandleRedirect)
+	r.Post("/callback", apiservice.DexClient.HandleAuthCallback)
+
+	r.Route("/apikeys", func(r chi.Router) {
+		r.Post("/", apiservice.LoginHandler)
+	})
+
+}
+
+func SetupProtectedRoutes(r chi.Router, apiservice *api.APIService) {
 
 	r.Route("/v1", func(r chi.Router) {
 		r.Route("/vhosts", func(r chi.Router) {
@@ -21,7 +34,6 @@ func SetupV1Routes(r chi.Router, apiservice *api.APIService) {
 		})
 		r.Route("/maintenance", func(r chi.Router) {
 			r.Get("/", apiservice.GetMaintenanceHandler)
-			r.Get("/admin", apiservice.GetMaintenanceAdminHandler)
 			r.Post("/", apiservice.AddMaintenanceHandler)
 			r.Patch("/{maintenance}", apiservice.PatchMaintenanceHandler)
 			r.Put("/{maintenance}", apiservice.UpdateMaintenanceStatusHandler)
