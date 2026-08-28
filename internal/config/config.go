@@ -35,6 +35,8 @@ type Config struct {
 	PrometheusPort int    `mapstructure:"PROMETHEUS_PORT"`
 
 	Email *EmailConfig `mapstructure:",squash"`
+
+	OIDC *OIDCConfig `mapstructure:",squash"`
 }
 
 type EmailConfig struct {
@@ -43,6 +45,13 @@ type EmailConfig struct {
 	EmailSMTPUsername string `mapstructure:"EMAIL_SMTP_USERNAME"`
 	EmailSMTPPassword string `mapstructure:"EMAIL_SMTP_PASSWORD"`
 	EmailFromAddress  string `mapstructure:"EMAIL_FROM_ADDRESS"`
+}
+
+type OIDCConfig struct {
+	OIDCClientID     string `mapstructure:"OIDC_CLIENT_ID"`
+	OIDCClientSecret string `mapstructure:"OIDC_CLIENT_SECRET"`
+	OIDCURL          string `mapstructure:"OIDC_URL"`
+	OIDCRedirectURL  string `mapstructure:"OIDC_REDIRECT_URL"`
 }
 
 func NewConfig() *Config {
@@ -71,6 +80,12 @@ func NewConfig() *Config {
 			EmailSMTPUsername: "",
 			EmailSMTPPassword: "",
 			EmailFromAddress:  "unimq@example.com",
+		},
+		OIDC: &OIDCConfig{
+			OIDCClientID:     "",
+			OIDCClientSecret: "",
+			OIDCURL:          "",
+			OIDCRedirectURL:  "",
 		},
 	}
 	return c
@@ -171,6 +186,11 @@ func (c *Config) loadEnvironmentVariables() {
 	_ = viper.BindEnv("EMAIL_SMTP_USERNAME")
 	_ = viper.BindEnv("EMAIL_SMTP_PASSWORD")
 	_ = viper.BindEnv("EMAIL_FROM_ADDRESS")
+
+	_ = viper.BindEnv("OIDC_CLIENT_ID")
+	_ = viper.BindEnv("OIDC_CLIENT_SECRET")
+	_ = viper.BindEnv("OIDC_URL")
+	_ = viper.BindEnv("OIDC_REDIRECT_URL")
 }
 
 func (c *Config) validateConfiguration() error {
