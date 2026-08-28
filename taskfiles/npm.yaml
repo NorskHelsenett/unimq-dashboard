@@ -1,0 +1,21 @@
+# yaml-language-server: $schema=https://taskfile.dev/schema.json
+
+version: "3"
+
+vars:
+  name: unimq-dashboard
+  NPM: ./web-src
+
+tasks:
+  default:
+    desc: Print the NPM available scripts
+    cmds:
+      - npm --prefix {{.NPM}} run
+    silent: true
+  run*:
+    desc: Print the NPM available scripts
+    vars:
+      SCRIPT: "{{index .MATCH 0}}"
+    cmds:
+      - npm --prefix {{.NPM}} run {{.SCRIPT}}
+    silent: true

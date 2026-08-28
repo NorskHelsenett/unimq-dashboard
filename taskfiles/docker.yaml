@@ -1,0 +1,43 @@
+# yaml-language-server: $schema=https://taskfile.dev/schema.json
+
+version: "3"
+
+vars:
+  DOCKER_TAG: latest
+  DOCKER_REGISTRY:
+
+  # Build info
+  BUILD_TIME: $(shell date -u '+%Y-%m-%d_%H:%M:%S')
+  GIT_COMMIT: $(shell git rev-parse --short HEAD 2>/dev/null || echo "unknown")
+  GIT_BRANCH: $(shell git rev-parse --abbrev-ref HEAD 2>/dev/null || echo "unknown")
+  VERSION: $(shell git describe --tags --always --dirty 2>/dev/null || echo "dev")
+
+  LOCALBIN: $(shell pwd)/bin
+
+tasks:
+  default:
+    deps:
+      - check-docker-installed
+    desc: Print Docker version
+    cmds:
+      - docker --version
+    silent: true
+  up:
+    deps:
+      - check-docker-installed
+    desc: Start the Docker containers
+    cmds:
+      - docker compose up -d
+    silent: true
+  down:
+    deps:
+      - check-docker-installed
+    desc: Stop the Docker containers
+    cmds:
+      - docker compose down
+    silent: true
+  check-docker-installed:
+    desc: Check if Docker is installed
+    cmds:
+      - bash -c 'command -v docker >/dev/null 2>&1 || { echo >&2 "Docker is not installed. Please install Docker to proceed."; exit 1; }'
+    silent: true

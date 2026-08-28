@@ -1,0 +1,126 @@
+# yaml-language-server: $schema=https://taskfile.dev/schema.json
+
+version: "3"
+
+vars:
+  NAME: unimq-dashboard
+  GO: go
+  GOFMT: gofmt
+  MAIN_PATH: ./cmd/unimq
+  GENERATOR_PATH: ./cmd/generator
+  GO_VERSION: $(shell go version | cut -d' ' -f3)
+
+  GOLANGCI_LINT: golangci-lint
+  GOLANGCI_LINT_VERSION: latest
+
+  LOCALBIN: $(shell pwd)/bin
+
+tasks:
+  default:
+    deps:
+      - check-go-installed
+    desc: Print the Go version
+    cmds:
+      - go version
+    silent: true
+
+  vet:
+    deps:
+      - check-go-installed
+    desc: Run go vet on the project
+    cmds:
+      - go vet ./...
+    silent: true
+
+  test:
+    deps:
+      - check-go-installed
+    desc: Run tests on the project
+    cmds:
+      - go test ./...
+    silent: true
+
+  lint:
+    desc: Run golangci-lint on the project
+    cmds:
+      - "{{.GOLANGCI_LINT}} run --timeout 5m"
+    silent: true
+
+  upgrade-lint:
+    desc: Upgrade golangci-lint to the latest version
+    cmds:
+      - go install github.com/golangci/golangci-lint/cmd/golangci-lint@{{.GOLANGCI_LINT_VERSION}}
+    silent: true
+
+  upgrade-mod:
+    deps:
+      - check-go-installed
+    desc: Upgrade Go modules to the latest versions
+    cmds:
+      - go get -u ./...
+      - go mod tidy
+    silent: true
+
+  generator:
+    deps:
+      - check-go-installed
+    desc: Run the generator tool
+    cmds:
+      - go run {{.GENERATOR_PATH}}/main.go
+    silent: true
+
+  run:
+    deps:
+      - check-go-installed
+    desc: Start the application
+    cmds:
+      - go run {{.MAIN_PATH}}/main.go
+    silent: true
+
+  build:
+    deps:
+      - check-go-installed
+    desc: Build the application
+    cmds:
+      - CGO_ENABLED=0 go build -o dist/{{.NAME}} -ldflags "-w -extldflags '-static'" {{.MAIN_PATH}}/
+    silent: true
+
+  check-swag:
+    desc: Generate Swagger documentation
+    cmds:
+      - go install github.com/swaggo/swag/cmd/swag@latest
+    silent: true
+
+  generate-swag:
+    desc: Generate Swagger documentation
+    deps:
+      - check-swag
+    cmds:
+      - swag init -g {{.MAIN_PATH}}/main.go -o ./internal/docs --parseInternal
+    silent: true
+
+  format-swag:
+    desc: Format Swagger documentation
+    deps:
+      - generate-swag
+    cmds:
+      - swag fmt -d .
+    silent: true
+
+  check-go-installed:
+    desc: Check if Go is installed
+    cmds:
+      - bash -c 'command -v go >/dev/null 2>&1 || { echo >&2 "Go is not installed. Please install Go to proceed."; exit 1; }'
+    silent: true
+
+  check-golangci-lint-installed:
+    desc: Check if golangci-lint is installed
+    cmds:
+      - bash -c 'command -v golangci-lint >/dev/null 2>&1 || { echo >&2 "golangci-lint is not installed. Please install golangci-lint to proceed."; exit 1; }'
+    silent: true
+
+  check-swag-installed:
+    desc: Check if swag is installed
+    cmds:
+      - bash -c 'command -v swag >/dev/null 2>&1 || { echo >&2 "swag is not installed. Please install swag to proceed."; exit 1; }'
+    silent: true
