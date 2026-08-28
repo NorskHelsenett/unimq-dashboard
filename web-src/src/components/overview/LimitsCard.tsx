@@ -27,21 +27,63 @@ const valueColor: Record<StatusKey, string> = {
   neutral: 'text-text-primary',
 }
 
+const progressBarColor: Record<StatusKey, string> = {
+  danger: 'bg-red-500',
+  warning: 'bg-amber-400',
+  neutral: 'bg-gray-300',
+}
+
+function ProgressBar({ value, max, colorKey }: { value: number; max: number; colorKey: StatusKey }) {
+  const pct = Math.min(100, Math.max(0, (value / max) * 100))
+  return (
+    <div className="flex items-center gap-2 mt-3">
+      <div className="h-1 flex-1 rounded-full bg-black/10 dark:bg-white/10 overflow-hidden">
+        <div
+          className={cn('h-full rounded-full transition-[width] duration-300', progressBarColor[colorKey])}
+          style={{ width: `${pct}%` }}
+        />
+      </div>
+      <span className="text-xs text-text-muted tabular-nums w-9 text-right">{Math.round(pct)}%</span>
+    </div>
+  )
+}
+
+// Visualises unacked messages as a queue of blocks (soft cap: 100)
+function QueueBar({ value }: { value: number }) {
+  const BLOCKS = 10
+  const SOFT_MAX = 100
+  const filled = value > 0 ? Math.min(BLOCKS, Math.max(1, Math.ceil((value / SOFT_MAX) * BLOCKS))) : 0
+  const blockColor =
+    filled >= BLOCKS * 0.8 ? 'bg-red-400' :
+    filled >= BLOCKS * 0.5 ? 'bg-amber-400' :
+    'bg-teal-400'
+  return (
+    <div className="flex gap-0.5 mt-3">
+      {Array.from({ length: BLOCKS }).map((_, i) => (
+        <div
+          key={i}
+          className={cn('h-2 flex-1 rounded-[2px]', i < filled ? blockColor : 'bg-black/10 dark:bg-white/10')}
+        />
+      ))}
+    </div>
+  )
+}
+
 interface StatCardProps {
   label: string
   tooltip: string
   value: number
-  sub: string
+  sub: ReactNode
   max?: number
   icon: ReactNode
   cardBg: string
   cardBorder: string
   iconBg: string
   iconColor: string
-  subColor: string
+  bar?: ReactNode
 }
 
-function StatCard({ label, tooltip, value, sub, max, icon, cardBg, cardBorder, iconBg, iconColor, subColor }: StatCardProps) {
+function StatCard({ label, tooltip, value, sub, max, icon, cardBg, cardBorder, iconBg, iconColor, bar }: StatCardProps) {
   const colorKey: StatusKey = max ? limitColor(value, max) : 'neutral'
   return (
     <div className={cn('rounded-xl border p-4', cardBg, cardBorder)}>
@@ -74,44 +116,51 @@ function StatCard({ label, tooltip, value, sub, max, icon, cardBg, cardBorder, i
       </div>
       <div className="flex items-end justify-between gap-2">
         <div>
-          <div className={cn('text-xs mt-0.5 font-medium', subColor)}>{sub}</div>
+          <div className="text-sm mt-0.5 font-medium text-text-muted">{sub}</div>
         </div>
       </div>
+      {bar}
     </div>
   )
 }
 
 export function LimitsCard({ connections, channels, queues, unacked, maxConnections, maxQueues }: LimitsCardProps) {
+  const connColorKey = limitColor(connections, maxConnections)
+  const queueColorKey = limitColor(queues, maxQueues)
+  const channelColorKey = limitColor(channels, 1000)
   return (
     <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
       <StatCard
         label="Connections"
         tooltip={`Maks antall connections til en vhost er ${maxConnections}. Etter at dette antallet er nådd, vil det ikke lenger være mulig å opprette nye connections før du er under grensen igjen.`}
         value={connections}
-        sub={`limit ${maxConnections}`}
+        sub={<>of <span className="text-blue-400">{maxConnections}</span> allowed</>}
         max={maxConnections > 0 ? maxConnections : undefined}
         icon={<Network className="w-4 h-4" />}
         cardBg="bg-surface-card" cardBorder="border-border-card"
-        iconBg="bg-blue-100" iconColor="text-blue-500" subColor="text-blue-400"
+        iconBg="bg-blue-100" iconColor="text-blue-500"
+        bar={maxConnections > 0 ? <ProgressBar value={connections} max={maxConnections} colorKey={connColorKey} /> : undefined}
       />
       <StatCard
         label="Channels"
         tooltip="Vi anbefaler å holde antallet channels per vhost under 1000."
         value={channels}
-        sub="rec. <1000"
+        sub={<>of <span className="text-violet-400">1000</span> recommended</>}
         icon={<GitBranch className="w-4 h-4" />}
         cardBg="bg-surface-card" cardBorder="border-border-card"
-        iconBg="bg-violet-100" iconColor="text-violet-500" subColor="text-violet-400"
+        iconBg="bg-violet-100" iconColor="text-violet-500"
+        bar={<ProgressBar value={channels} max={1000} colorKey={channelColorKey} />}
       />
       <StatCard
         label="Queues"
         tooltip={`Maks antall queues på en vhost er ${maxQueues}. Etter at dette antallet er nådd, vil det ikke lenger være mulig å opprette nye queues før du er under grensen igjen.`}
         value={queues}
-        sub={`limit ${maxQueues}`}
+        sub={<>of <span className="text-orange-400">{maxQueues}</span> allowed</>}
         max={maxQueues > 0 ? maxQueues : undefined}
         icon={<LayoutList className="w-4 h-4" />}
         cardBg="bg-surface-card" cardBorder="border-border-card"
-        iconBg="bg-orange-100" iconColor="text-orange-500" subColor="text-orange-400"
+        iconBg="bg-orange-100" iconColor="text-orange-500"
+        bar={maxConnections > 0 ? <ProgressBar value={queues} max={maxQueues} colorKey={queueColorKey} /> : undefined}
       />
       <StatCard
         label="Unacked messages"
@@ -120,7 +169,8 @@ export function LimitsCard({ connections, channels, queues, unacked, maxConnecti
         sub="keep low"
         icon={<Hourglass className="w-4 h-4" />}
         cardBg="bg-surface-card" cardBorder="border-border-card"
-        iconBg="bg-teal-100" iconColor="text-teal-500" subColor="text-teal-400"
+        iconBg="bg-teal-100" iconColor="text-teal-500"
+        bar={<QueueBar value={unacked} />}
       />
     </div>
   )

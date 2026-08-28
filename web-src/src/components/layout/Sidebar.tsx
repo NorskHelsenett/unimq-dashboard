@@ -1,7 +1,6 @@
 import { NAV_ITEMS } from "@/lib/navItems"
 import { LogoLink } from "./LogoLink"
 import { cn } from "@/lib/utils"
-import { Vhosts } from "@/types/vhosts"
 import { User, Sun, Moon } from "lucide-react"
 import { Selector, SelectorTrigger, SelectorContent, SelectorItem } from "../ui/selector"
 import { useAuth } from "react-oidc-context"
@@ -22,9 +21,8 @@ export function Sidebar() {
     const { theme, toggle } = useTheme()
 
     return (
-
-        <aside style={{ width }} className="overflow-hidden">
-            <nav className="relative flex flex-col pt-4 border-r border-border-sidebar h-screen sticky top-0 overflow-y-auto">
+        <aside style={{ width }} className="overflow-x-auto">
+            <nav className="sticky top-0 self-start h-full flex flex-col pt-4 border-r border-border-sidebar overflow-y-auto">
             <div
                 className="absolute right-0 top-0 h-full w-1 cursor-col-resize"
                 onMouseDown={onMouseDown}
@@ -63,8 +61,8 @@ export function Sidebar() {
                                         window.location.href = value
                                     }
                                 }}>
-                                    <SelectorTrigger className={cn(
-                                        "flex items-center justify-center p-2 rounded-md w-full border-none shadow-none",
+                                    <SelectorTrigger hideChevron className={cn(
+                                        "flex items-center justify-center p-2 rounded-md w-auto h-auto border-none shadow-none",
                                         currentPath === '/profile'
                                             ? "bg-surface-sidebar-active border-l-3"
                                             : "hover:bg-surface-sidebar-active"
@@ -86,8 +84,8 @@ export function Sidebar() {
                                         window.location.href = value
                                     }
                                 }}>
-                                    <SelectorTrigger className={cn(
-                                        "flex items-center gap-2 px-2 py-2 rounded-md border-none shadow-none",
+                                    <SelectorTrigger hideChevron className={cn(
+                                        "flex items-center gap-2 px-2 py-2 rounded-md w-auto h-auto border-none shadow-none",
                                         currentPath === '/profile'
                                             ? "bg-surface-sidebar-active border-l-3"
                                             : "hover:bg-surface-sidebar-active"
