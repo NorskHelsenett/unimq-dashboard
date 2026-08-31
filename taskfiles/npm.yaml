@@ -12,7 +12,7 @@ tasks:
     cmds:
       - npm --prefix {{.NPM}} run
     silent: true
-  run*:
+  run:*:
     desc: Print the NPM available scripts
     vars:
       SCRIPT: "{{index .MATCH 0}}"
