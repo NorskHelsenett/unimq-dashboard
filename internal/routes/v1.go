@@ -9,7 +9,7 @@ import (
 func SetupUnprotectedRoutes(r chi.Router, apiservice *api.APIService) {
 
 	r.Get("/swagger/*", httpSwagger.WrapHandler)
-	r.Post("/login", apiservice.DexClient.HandleRedirect)
+	r.Post("/login", apiservice.LoginHandler)
 	r.Post("/callback", apiservice.DexClient.HandleAuthCallback)
 
 	r.Route("/apikeys", func(r chi.Router) {
