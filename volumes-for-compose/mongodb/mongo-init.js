@@ -15,6 +15,10 @@ let res = [
                 actions: ["find", "insert", "update", "remove"],
             },
             {
+                resource: { db: "unimq", collection: "maintenance_edit_logs" },
+                actions: ["find", "insert", "update", "remove"],
+            },
+            {
                 resource: { db: "unimq", collection: "notifications" },
                 actions: ["find", "insert", "update", "remove"],
             },
