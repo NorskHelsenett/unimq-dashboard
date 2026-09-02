@@ -41,3 +41,11 @@ tasks:
     cmds:
       - bash -c 'command -v docker >/dev/null 2>&1 || { echo >&2 "Docker is not installed. Please install Docker to proceed."; exit 1; }'
     silent: true
+  reload:
+    deps:
+      - check-docker-installed
+    desc: Reload the Docker containers
+    cmds:
+      - docker compose down
+      - docker compose up -d
+    silent: true
