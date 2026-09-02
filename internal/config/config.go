@@ -224,6 +224,11 @@ func (c *Config) validateConfiguration() error {
 	parameterChecks["PROMETHEUS_HOST"] = isPresent(c.PrometheusHost)
 	parameterChecks["PROMETHEUS_PORT"] = isPresent(c.PrometheusPort)
 
+	parameterChecks["OIDC_CLIENT_ID"] = isPresent(c.OIDC.OIDCClientID)
+	parameterChecks["OIDC_CLIENT_SECRET"] = isPresent(c.OIDC.OIDCClientSecret)
+	parameterChecks["OIDC_URL"] = isPresent(c.OIDC.OIDCURL)
+	parameterChecks["OIDC_REDIRECT_URL"] = isPresent(c.OIDC.OIDCRedirectURL)
+
 	errString := checkParameters(parameterChecks)
 	if len(errString) > 0 {
 		return errors.New(errString)
