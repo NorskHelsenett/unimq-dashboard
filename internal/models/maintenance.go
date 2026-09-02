@@ -192,6 +192,19 @@ type MaintenanceEditLog struct {
 	UpdatedAt     time.Time `json:"updated_at" bson:"updated_at"`
 }
 
+func NewMaintenaceEditLog(maintenanceID string, description string, start time.Time, end time.Time, reason string, updatedBy string) *MaintenanceEditLog {
+	return &MaintenanceEditLog{
+		ID:            uuid.New().String(),
+		MaintenanceID: maintenanceID,
+		Description:   description,
+		Start:         start,
+		End:           end,
+		Reason:        reason,
+		UpdatedBy:     updatedBy,
+		UpdatedAt:     time.Now(),
+	}
+}
+
 type MaintenanceAdminResponse struct {
 	Entries []MaintenanceEntry
 }
