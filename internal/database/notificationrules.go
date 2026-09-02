@@ -10,14 +10,14 @@ import (
 	"github.com/sisneve/rabbitmq-dashboard/internal/models"
 )
 
-func (dbc *Database) GetNotificationRules(ctx context.Context, id string) ([]*models.AlarmRule, error) {
+func (dbc *Database) GetNotificationRules(ctx context.Context, notificationID string) ([]*models.AlarmRule, error) {
 	start := time.Now()
-	notification, err := dbc.GetVhost(ctx, id)
+	notification, err := dbc.GetVhost(ctx, notificationID)
 	if err != nil {
 		return nil, err
 	}
 
-	slog.DebugContext(ctx, "retrieved notification rules", "runtime", time.Since(start), id, id, "count", len(notification.Rules))
+	slog.DebugContext(ctx, "retrieved notification rules", "runtime", time.Since(start), id, notificationID, "count", len(notification.Rules))
 	return notification.Rules, nil
 }
 
@@ -25,9 +25,9 @@ var (
 	ErrNotificationRuleNotFound = fmt.Errorf("notification rule not found")
 )
 
-func (dbc *Database) GetNotificationRule(ctx context.Context, vhost string, ruleid string) (*models.AlarmRule, error) {
+func (dbc *Database) GetNotificationRule(ctx context.Context, notificationID string, ruleID string) (*models.AlarmRule, error) {
 	start := time.Now()
-	notification, err := dbc.GetVhost(ctx, vhost)
+	notification, err := dbc.GetVhost(ctx, notificationID)
 	if err != nil {
 		if errors.Is(err, ErrVhostNotFound) {
 			return nil, err
@@ -36,10 +36,10 @@ func (dbc *Database) GetNotificationRule(ctx context.Context, vhost string, rule
 	}
 
 	for _, rule := range notification.Rules {
-		if rule.ID == ruleid {
+		if rule.ID == ruleID {
 			slog.DebugContext(ctx, "retrieved notification rule",
 				"runtime", time.Since(start),
-				"vhost", vhost,
+				"vhost", notificationID,
 				"rule", rule.Name,
 				id, rule.ID,
 			)
@@ -79,13 +79,13 @@ func (dbc *Database) AddNotificationRule(ctx context.Context, vhost string, rule
 	return err
 }
 
-func (dbc *Database) DeleteNotificationRule(ctx context.Context, vhost string, id string) error {
+func (dbc *Database) DeleteNotificationRule(ctx context.Context, vhost string, ruleID string) error {
 	start := time.Now()
 
 	filter := map[string]any{id: vhost}
 	update := map[string]any{
 		"$pull": map[string]any{
-			"rules": map[string]any{"id": id},
+			"rules": map[string]any{"id": ruleID},
 		},
 	}
 
@@ -94,7 +94,7 @@ func (dbc *Database) DeleteNotificationRule(ctx context.Context, vhost string, i
 		slog.ErrorContext(ctx, "failed to delete notification rule",
 			"runtime", time.Since(start),
 			"vhost", vhost,
-			id, id,
+			id, ruleID,
 			"error", err,
 		)
 		return fmt.Errorf("failed to delete notification rule. %w", err)
@@ -103,7 +103,7 @@ func (dbc *Database) DeleteNotificationRule(ctx context.Context, vhost string, i
 	slog.DebugContext(ctx, "deleted notification rule",
 		"runtime", time.Since(start),
 		"vhost", vhost,
-		id, id,
+		id, ruleID,
 	)
 	return nil
 }

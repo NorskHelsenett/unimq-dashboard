@@ -7,23 +7,25 @@ import (
 	"time"
 
 	"github.com/sisneve/rabbitmq-dashboard/internal/models"
+	"go.mongodb.org/mongo-driver/v2/bson"
 )
 
 var (
 	ErrRecipientNotFound = fmt.Errorf("notification recipient not found")
 )
 
-func (dbc *Database) GetNotificationRecipient(ctx context.Context, vhost string, id string) (*models.Recipient, error) {
+func (dbc *Database) GetNotificationRecipient(ctx context.Context, vhost string, recipientID string) (*models.Recipient, error) {
 	start := time.Now()
 
 	var notification models.VhostNotification
-	err := dbc.Collections.Notifications.FindOne(ctx, map[string]any{id: vhost}).Decode(&notification)
+	filter := bson.M{id: vhost}
+	err := dbc.Collections.Notifications.FindOne(ctx, filter).Decode(&notification)
 	if err != nil {
 		return nil, fmt.Errorf("failed to retrieve notification recipient %v. %w", vhost, err)
 	}
 
 	for _, recipient := range notification.Recipients {
-		if recipient.ID == id {
+		if recipient.ID == recipientID {
 			slog.DebugContext(ctx, "retrieved notification recipient",
 				"runtime", time.Since(start),
 				id, vhost,

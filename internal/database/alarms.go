@@ -39,17 +39,18 @@ func (dbc *Database) GetAlarmsAll(ctx context.Context) ([]models.AlarmEntry, err
 	return alarms, nil
 }
 
-func (dbc *Database) GetAlarm(ctx context.Context, id string) (*models.AlarmEntry, error) {
+func (dbc *Database) GetAlarm(ctx context.Context, alarmID string) (*models.AlarmEntry, error) {
 	start := time.Now()
 	var alarm models.AlarmEntry
 
-	err := dbc.Collections.Alarms.FindOne(ctx, bson.M{id: id}).Decode(&alarm)
+	filter := bson.M{id: alarmID}
+	err := dbc.Collections.Alarms.FindOne(ctx, filter).Decode(&alarm)
 	if err != nil {
-		slog.ErrorContext(ctx, "failed to find alarm", "runtime", time.Since(start), id, id, "error", err)
+		slog.ErrorContext(ctx, "failed to find alarm", "runtime", time.Since(start), "_id", alarmID, "error", err)
 		return nil, fmt.Errorf("failed to find alarm. %w", err)
 	}
 
-	slog.DebugContext(ctx, "retrieved alarm", "runtime", time.Since(start), id, id)
+	slog.DebugContext(ctx, "retrieved alarm", "runtime", time.Since(start), "_id", alarmID)
 
 	return &alarm, nil
 }

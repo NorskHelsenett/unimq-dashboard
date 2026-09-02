@@ -87,21 +87,21 @@ func (dbc *Database) UpdateNotification(ctx context.Context, name string, notifi
 	return err
 }
 
-func (dbc *Database) DeleteNotification(ctx context.Context, id string) error {
+func (dbc *Database) DeleteNotification(ctx context.Context, notificationID string) error {
 	start := time.Now()
 
-	status, err := dbc.Collections.Notifications.DeleteOne(ctx, bson.M{id: id})
+	status, err := dbc.Collections.Notifications.DeleteOne(ctx, bson.M{id: notificationID})
 	if err != nil {
-		slog.ErrorContext(ctx, "failed to delete notification", "runtime", time.Since(start), id, id, "error", err)
+		slog.ErrorContext(ctx, "failed to delete notification", "runtime", time.Since(start), id, notificationID, "error", err)
 		return err
 	}
 
 	if status.DeletedCount == 0 {
-		slog.ErrorContext(ctx, "no notification found to delete", "runtime", time.Since(start), id, id)
+		slog.ErrorContext(ctx, "no notification found to delete", "runtime", time.Since(start), id, notificationID)
 		return fmt.Errorf("notification not found for vhost %s. %w", id, mongo.ErrNoDocuments)
 	}
 
-	slog.DebugContext(ctx, "deleted notification", "runtime", time.Since(start), id, id)
+	slog.DebugContext(ctx, "deleted notification", "runtime", time.Since(start), id, notificationID)
 
 	return nil
 }
