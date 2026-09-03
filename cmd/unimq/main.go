@@ -38,9 +38,12 @@ func main() {
 
 	logger.SetupLogger()
 
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
 	config := config.NewConfig()
 	if err := config.Load(); err != nil {
-		slog.Error("failed to load config", "error", err)
+		slog.ErrorContext(ctx, "failed to load config", "error", err)
 		return
 	}
 
@@ -48,7 +51,7 @@ func main() {
 
 	err := config.CheckURLs()
 	if err != nil {
-		slog.Error("failed to validate URLs", "error", err)
+		slog.ErrorContext(ctx, "failed to validate URLs", "error", err)
 		return
 	}
 
@@ -60,12 +63,9 @@ func main() {
 		database.WithPassword(config.MongoDBPassword),
 	)
 	if err != nil {
-		slog.Error("failed to connect to database", "error", err)
+		slog.ErrorContext(ctx, "failed to connect to database", "error", err)
 		return
 	}
-
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
 
 	limits := &models.Limits{
 		MaxChannels:    config.RabbitMQChannelLimit,
@@ -82,7 +82,7 @@ func main() {
 		rabbitmq.WithRMQLimits(limits),
 	)
 	if err != nil {
-		slog.Error("failed to create RabbitMQ client", "error", err)
+		slog.ErrorContext(ctx, "failed to create RabbitMQ client", "error", err)
 		return
 	}
 
@@ -95,12 +95,12 @@ func main() {
 
 	routes, err := routes.SetupRoutes(ctx, config, db, rmq, checker)
 	if err != nil {
-		slog.Error("failed to set up routes", "error", err)
+		slog.ErrorContext(ctx, "failed to set up routes", "error", err)
 		return
 	}
 
-	slog.Info("starting RabbitMQ Dashboard", "URL", config.BaseURL, "port", config.BasePort)
-	slog.Info("Swagger documentation available at", "URL", fmt.Sprintf("http://%v:%d/api/swagger/index.html", config.BaseURL, config.BasePort))
+	slog.InfoContext(ctx, "starting RabbitMQ Dashboard", "URL", config.BaseURL, "port", config.BasePort)
+	slog.InfoContext(ctx, "Swagger documentation available at", "URL", fmt.Sprintf("http://%v:%d/api/swagger/index.html", config.BaseURL, config.BasePort))
 	wg := &sync.WaitGroup{}
 
 	server := &http.Server{
@@ -117,10 +117,10 @@ func main() {
 		err = server.ListenAndServe()
 		if err != nil {
 			if errors.Is(err, http.ErrServerClosed) {
-				slog.Info("http server closed")
+				slog.InfoContext(ctx, "http server closed")
 				return
 			}
-			slog.Error("failed to start server", "error", err)
+			slog.ErrorContext(ctx, "failed to start server", "error", err)
 			return
 		}
 	})
@@ -136,7 +136,7 @@ func main() {
 	case <-ctx.Done():
 	}
 
-	slog.Info("shutting down server...")
+	slog.InfoContext(ctx, "shutting down server...")
 	cancel()
 	timeoutCtx, timeoutCancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer timeoutCancel()
@@ -149,7 +149,7 @@ func main() {
 		}
 	} else {
 		wg.Wait()
-		slog.Info("server stopped gracefully, good bye :)")
+		slog.InfoContext(ctx, "server stopped gracefully, good bye :)")
 	}
 
 }
