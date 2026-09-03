@@ -7,6 +7,10 @@ let res = [
         role: "roleApiUser",
         privileges: [
             {
+                resource: { db: "unimq", collection: "acls" },
+                actions: ["find", "insert", "update", "remove"],
+            },
+            {
                 resource: { db: "unimq", collection: "alarms" },
                 actions: ["find", "insert", "update", "remove"],
             },

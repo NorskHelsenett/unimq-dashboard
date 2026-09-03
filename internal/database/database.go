@@ -22,6 +22,7 @@ type Collections struct {
 	Maintenance         *mongo.Collection
 	MaintenanceEditLogs *mongo.Collection
 	Notifications       *mongo.Collection
+	ACLs                *mongo.Collection
 }
 
 // MongoConstants
@@ -135,7 +136,8 @@ func (dbc *Database) initCollections() error {
 		Maintenance:         client.Database(dbc.db).Collection("maintenance"),
 		MaintenanceEditLogs: client.Database(dbc.db).Collection("maintenance_edit_logs"),
 		Notifications:       client.Database(dbc.db).Collection("notifications"),
-	} 
+		ACLs:                client.Database(dbc.db).Collection("acls"),
+	}
 
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
