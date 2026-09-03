@@ -1,8 +1,7 @@
+import "../index.css";
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
-import "../index.css";
 import { RequireAuth } from "@/auth/RequireAuth";
-import { getPageData } from "@/lib/pageData";
 import { Layout } from "@/components/layout/Layout";
 import { LimitsCard } from "@/components/overview/LimitsCard";
 import { QueueSizeInfoCard } from "@/components/overview/QueueSizeInfoCard";
@@ -11,14 +10,9 @@ import { ClusterResourceCard } from "@/components/overview/ClusterResourceCard";
 import { VhostResourceCard } from "@/components/overview/VhostResourceCard";
 import { SizeDistributionCard } from "@/components/overview/SizeDistributionCard";
 import { useIndex } from "@/hooks/useIndex";
-
-export interface Metrics {
-    connections: number;
-    channels: number;
-    queues: number;
-    unacked: number;
-    name: string;
-}
+import { useClusters } from "@/hooks/useClusters";
+import { useQueues } from "@/hooks/useQueues";
+import type { Metrics } from "@/types/metrics"
 
 export interface Limits {
     MaxConnections: number;
@@ -32,62 +26,53 @@ export interface IndexData {
     Limits: Limits;
 }
 
-//const data = getPageData<IndexData>();
-
 const root = document.getElementById("app");
 if (!root) throw new Error("Missing #app mount point");
 
-const MainPage = ({ selected, metrics, limits }: { selected: string; metrics: Metrics | null; limits: Limits }) => {
-    return (
-        <div className="text-text-primary text-base">
-            <h1 className="text-4xl mb-6">{selected}</h1>
-            <div className="flex gap-8 items-end flex-wrap">
-                {metrics ? (
-                    <LimitsCard
-                        connections={metrics.connections}
-                        channels={metrics.channels}
-                        queues={metrics.queues}
-                        unacked={metrics.unacked}
-                        maxConnections={limits.MaxConnections}
-                        maxQueues={limits.MaxQueues}
-                    />
-                ) : (
-                    <p className="text-sm text-text-muted">No metrics available.</p>
-                )}
+const MainPage = () => {
+    const { Vhosts, Selected, Metrics, Limits } = useIndex()
+    const { clusters, loading } = useClusters()
+    const { queues, loading: queuesLoading, error: queuesError } = useQueues(Selected)
 
-                {/* Respons er endret til dette formatet */}
-                {/* type Response struct { */}
-                {/* Code    int    `json:"code"` */}
-                {/* Message string `json:"message"` */}
-                {/* Body    T      `json:"body"` */}
-
-                <QueueSizeInfoCard />
-                {/* todo: queuesCard og sizedistributionCard */}
-                <QueuesCard vhost={selected} /> 
-                <SizeDistributionCard vhost={selected} />
-                <div className="flex gap-4">
-                    <ClusterResourceCard />
-                    {/* Fix VhostResourceCard */}
-                    <VhostResourceCard vhost={selected} />
-                </div>
-            </div>
-        </div>
-    );
-};
-
-const App = () => {
-    const { Vhosts, Selected, Metrics, Limits } = useIndex();
     return (
         <Layout Vhosts={Vhosts} Selected={Selected}>
-            <MainPage selected={Selected} metrics={Metrics} limits={Limits} />
+            {loading ? (
+                <div className="p-8 text-text-muted">Loading...</div>
+            ) : (
+                <div>
+                    <h1 className="text-4xl mb-6">{Selected}</h1>
+                    <div className="flex gap-8 items-end flex-wrap">
+                        {Metrics ? (
+                            <LimitsCard
+                                connections={Metrics.connections}
+                                channels={Metrics.channels}
+                                queues={Metrics.queues}
+                                unacked={Metrics.unacked}
+                                maxConnections={Limits.MaxConnections}
+                                maxQueues={Limits.MaxQueues}
+                            />
+                        ) : (
+                            <p className="text-sm text-text-muted">No metrics available.</p>
+                        )}
+
+                        <QueueSizeInfoCard />
+                        <QueuesCard vhost={Selected} queues={queues} loading={queuesLoading} error={queuesError} />
+                        <SizeDistributionCard queues={queues} />
+                        <div className="flex gap-4">
+                            <ClusterResourceCard clusters={clusters}/>
+                            <VhostResourceCard vhost={Selected} clusters={clusters} />
+                        </div>
+                    </div>
+                </div>
+            )}
         </Layout>
-    );
-};
+    )
+}
 
 createRoot(document.getElementById("app")!).render(
     <StrictMode>
         <RequireAuth>
-            <App />
+            <MainPage />
         </RequireAuth>
     </StrictMode>,
 );

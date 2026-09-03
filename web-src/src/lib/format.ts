@@ -5,7 +5,7 @@ export function fmtBytes(b: number): string {
   return `${b} B`;
 }
 
-export function fmtRate(r: number): string {
-  if (r === 0) return "0";
+export function fmtRate(r: number | undefined | null): string {
+  if (!r) return "0";
   return `${r.toFixed(2)}/s`;
 }

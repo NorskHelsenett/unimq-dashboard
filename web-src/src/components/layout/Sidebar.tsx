@@ -14,10 +14,12 @@ function isActive(itemHref: string, currentPath: string): boolean {
 
 export function Sidebar({ Vhosts, Selected }: Vhosts ) {
     const currentPath = window.location.pathname
+    const currentVhost = new URLSearchParams(window.location.search).get('vhost')
+    const vhostParam = currentVhost ? `?vhost=${encodeURIComponent(currentVhost)}` : ''
     const auth = useAuth()
 
     return (
-        <nav className="relative flex flex-col pt-4 border-r border-border-sidebar h-full min-h-screen">
+        <nav className="relative flex flex-col pt-4 border-r border-border-sidebar h-screen sticky top-0 overflow-y-auto">
             <LogoLink />
             <div className="p-4 flex gap-2 items-center border-y my-4">
                 <span>Vhost:</span>
@@ -27,7 +29,7 @@ export function Sidebar({ Vhosts, Selected }: Vhosts ) {
                 {NAV_ITEMS.map((item) => {
                     const active = isActive(item.href, currentPath)
                     return (
-                        <a href={item.href} className={cn(
+                        <a href={item.href + vhostParam} className={cn(
                             "py-2 px-4", 
                             active 
                                 ? "bg-surface-sidebar-active text-text-sidebar-active border-l-3 border-brand font-bold" 
@@ -38,7 +40,7 @@ export function Sidebar({ Vhosts, Selected }: Vhosts ) {
                     )
                 })}
             </div>
-            <div className="absolute bottom-4 right-4 left-4">
+            <div className="mt-auto p-4">
                 <Selector onValueChange={(value) => {
                     if (value === 'signout') {
                         auth.signoutRedirect()

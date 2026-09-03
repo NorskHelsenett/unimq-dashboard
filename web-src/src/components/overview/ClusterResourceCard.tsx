@@ -3,34 +3,16 @@
 import { RatioChart } from "../charts/RatioChart"
 import { GaugeChart } from "../charts/GaugeChart"
 import { Tile } from "../layout/Tile"
-import { useEffect, useState } from "react"
 import { ClusterStats } from "@/types/clusterStats"
 import { convertBytes } from "@/lib/bytes"
-import { apiFetch } from "@/lib/apiClient"
 
-export const ClusterResourceCard = () => {
-    const [data, setData] = useState<ClusterStats | null>(null)
+export const ClusterResourceCard = ({ clusters }: { clusters: ClusterStats | null }) => {
+    if (!clusters) return <p>ClusterStats does not exist</p>
 
-    useEffect(() => {
-        const load = () =>
-        apiFetch('/v1/cluster')
-            .then((r) => {
-            if (!r.ok) throw new Error()
-            return r.json() as Promise<ClusterStats>
-            })
-            .then(setData)
-            .catch(() => {})
-
-        load()
-        const id = setInterval(load, 15_000)
-        return () => clearInterval(id)
-    }, [])
-    if (!data) return <p>ClusterStats does not exist</p>
-
-    const totalMemUsed = data.total_mem_used || 0
-    const totalMemLimit = data.total_mem_limit || 0
-    const totalDiskFree = data.total_disk_free || 0
-    const minDiskLimit = data.min_disk_limit || 0
+    const totalMemUsed = clusters.total_mem_used
+    const totalMemLimit = clusters.total_mem_limit 
+    const totalDiskFree = clusters.total_disk_free
+    const minDiskLimit = clusters.min_disk_limit
 
     const DiskDescription = ({ free, limit }: { free: number, limit: number }) => (
         <div>

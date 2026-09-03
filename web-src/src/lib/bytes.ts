@@ -1,16 +1,15 @@
 const BYTE_SIZE_UNITS = ["Bytes", "KB", "MB", "GB", "TB", "PB"];
 
-export function convertBytes(bytes: number) {
+export function convertBytes(bytes: number | null | undefined) {
+  if (bytes == null) return "N/A";
   let count = 0;
-  let unit = BYTE_SIZE_UNITS[0];
   let num = bytes;
-  while (num.toString().split(".")[0].length > 3) {
+  while (Math.floor(num) >= 1000 && count < BYTE_SIZE_UNITS.length - 1) {
     num = num / 1000;
     count++;
-    unit = BYTE_SIZE_UNITS[count];
   }
   if (count === 0) {
-    return `${num} ${unit}`;
+    return `${num} ${BYTE_SIZE_UNITS[0]}`;
   }
-  return `${num.toFixed(2)} ${unit}`;
+  return `${num.toFixed(2)} ${BYTE_SIZE_UNITS[count]}`;
 }

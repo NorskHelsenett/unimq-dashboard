@@ -1034,7 +1034,7 @@ const docTemplate = `{
                         "type": "string",
                         "description": "Virtual Host",
                         "name": "vhost-name",
-                        "in": "query",
+                        "in": "path",
                         "required": true
                     }
                 ],
@@ -1405,12 +1405,14 @@ const docTemplate = `{
             "type": "string",
             "enum": [
                 "scheduled",
+                "in_progress",
                 "done",
                 "skipped",
                 "unknown"
             ],
             "x-enum-varnames": [
                 "MaintenanceStatusScheduled",
+                "MaintenanceStatusInProgress",
                 "MaintenanceStatusDone",
                 "MaintenanceStatusSkipped",
                 "MaintenanceStatusUnknown"
