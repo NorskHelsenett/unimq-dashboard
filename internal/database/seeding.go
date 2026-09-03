@@ -19,12 +19,28 @@ const (
 )
 
 var (
-	MaintenanceIDs = []string{
-		"e45957ef-b817-414e-95e8-c4ea89c4ad3e",
-		"1fdbdeba-13c8-496f-9747-51a40679034e",
-		"2fdbdeba-13c8-496f-9747-51a40679034e",
-		"3fdbdeba-13c8-496f-9747-51a40679034e",
-		"4fdbdeba-13c8-496f-9747-51a40679034e",
+	maintenanceEntries = []models.MaintenanceEntry{
+		{
+			ID:          "e45957ef-b817-414e-95e8-c4ea89c4ad3e",
+			Description: "Test maintenance entry 1",
+			Start:       time.Now(),
+			End:         time.Now().Add(2 * time.Hour),
+			Status:      models.MaintenanceStatusScheduled,
+		},
+		{
+			ID:          "1fdbdeba-13c8-496f-9747-51a40679034e",
+			Description: "Test maintenance entry 2",
+			Start:       time.Now(),
+			End:         time.Now().Add(2 * time.Hour),
+			Status:      models.MaintenanceStatusInProgress,
+		},
+		{
+			ID:          "2fdbdeba-13c8-496f-9747-51a40679034e",
+			Description: "Test maintenance entry 3",
+			Start:       time.Now(),
+			End:         time.Now().Add(2 * time.Hour),
+			Status:      models.MaintenanceStatusDone,
+		},
 	}
 )
 
@@ -187,8 +203,8 @@ func (dbc *Database) seedNotificationRules(ctx context.Context, name string) err
 
 func (dbc *Database) seedMaintenace(ctx context.Context) error {
 
-	for _, MaintenanceID := range MaintenanceIDs {
-		existing, err := dbc.GetMaintenanceEntry(ctx, MaintenanceID)
+	for _, MaintenanceEntry := range maintenanceEntries {
+		existing, err := dbc.GetMaintenanceEntry(ctx, MaintenanceEntry.ID)
 		if err != nil {
 			if !errors.Is(err, mongo.ErrNoDocuments) {
 				return fmt.Errorf("failed to check existing maintenance entry. %w", err)
@@ -197,21 +213,13 @@ func (dbc *Database) seedMaintenace(ctx context.Context) error {
 			if existing == nil {
 				return fmt.Errorf("unexpected nil maintenance entry")
 			}
-			if existing.ID == MaintenanceID {
+			if existing.ID == MaintenanceEntry.ID {
 				continue
 			}
 			return fmt.Errorf("unexpected maintenance entry ID. expected %s, got %s", "test-maintenance", existing.ID)
 		}
 
-		maintenance := models.MaintenanceEntry{
-			ID:          MaintenanceID,
-			Description: "Test maintenance entry",
-			Start:       time.Now(),
-			End:         time.Now().Add(2 * time.Hour),
-			Status:      models.MaintenanceStatusScheduled,
-		}
-
-		err = dbc.AddMaintenanceEntry(ctx, &maintenance)
+		err = dbc.AddMaintenanceEntry(ctx, &MaintenanceEntry)
 		if err != nil {
 			return err
 		}
@@ -219,17 +227,41 @@ func (dbc *Database) seedMaintenace(ctx context.Context) error {
 	return nil
 }
 
+func (dbc *Database) SeedMaintenanceEntry(ctx context.Context, entry *models.MaintenanceEntry) error {
+	existing, err := dbc.GetMaintenanceEntry(ctx, entry.ID)
+	if err != nil {
+		if !errors.Is(err, mongo.ErrNoDocuments) {
+			return fmt.Errorf("failed to check existing maintenance entry. %w", err)
+		}
+	} else {
+		if existing == nil {
+			return fmt.Errorf("unexpected nil maintenance entry")
+		}
+		if existing.ID == entry.ID {
+			return nil
+		}
+		return fmt.Errorf("unexpected maintenance entry ID. expected %s, got %s", entry.ID, existing.ID)
+	}
+
+	err = dbc.AddMaintenanceEntry(ctx, entry)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func (dbc *Database) SeedMaintenanceLogs(ctx context.Context) error {
 
-	for _, MaintenanceID := range MaintenanceIDs {
+	for _, MaintenanceEntry := range maintenanceEntries {
 
 		logEntries := []models.MaintenanceEditLog{}
-		logEntries = append(logEntries, *models.NewMaintenaceEditLog(MaintenanceID, "Test maintenance log entry 1", time.Now(), time.Now().Add(2*time.Hour), "Initial creation", "user1"))
-		logEntries = append(logEntries, *models.NewMaintenaceEditLog(MaintenanceID, "Test maintenance log entry 2", time.Now(), time.Now().Add(2*time.Hour), "Updated description", "user2"))
-		logEntries = append(logEntries, *models.NewMaintenaceEditLog(MaintenanceID, "Test maintenance log entry 3", time.Now(), time.Now().Add(2*time.Hour), "Updated start and end times", "user3"))
+		logEntries = append(logEntries, *models.NewMaintenaceEditLog(MaintenanceEntry.ID, "Test maintenance log entry 1", time.Now(), time.Now().Add(2*time.Hour), "Initial creation", "user1"))
+		logEntries = append(logEntries, *models.NewMaintenaceEditLog(MaintenanceEntry.ID, "Test maintenance log entry 2", time.Now(), time.Now().Add(2*time.Hour), "Updated description", "user2"))
+		logEntries = append(logEntries, *models.NewMaintenaceEditLog(MaintenanceEntry.ID, "Test maintenance log entry 3", time.Now(), time.Now().Add(2*time.Hour), "Updated start and end times", "user3"))
 
 		missingEntries := []models.MaintenanceEditLog{}
-		existing, err := dbc.GetMaintenanceEditLogs(ctx, MaintenanceID)
+		existing, err := dbc.GetMaintenanceEditLogs(ctx, MaintenanceEntry.ID)
 		if err != nil {
 			if !errors.Is(err, mongo.ErrNoDocuments) {
 				return fmt.Errorf("failed to check existing maintenance edit logs. %w", err)
