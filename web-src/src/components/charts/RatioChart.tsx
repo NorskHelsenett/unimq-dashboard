@@ -25,14 +25,14 @@ export const RatioChart = ({ title, description, free, limit }: RatioChartProps)
     
     return (
         <Card className="flex flex-col w-66">
-            <CardHeader className="items-center pb-0">
+            <CardHeader className="items-center pt-4 pb-0">
                 <CardTitle>{title}</CardTitle>
             </CardHeader>
-            <CardContent className="items-center pb-0">
+            <CardContent className="items-center pb-2 px-4">
                 {description}
                 <ChartContainer
                     config={{}}
-                    className="mx-auto aspect-square w-full max-w-62 h-12 mt-7"
+                    className="mx-auto aspect-square w-full max-w-62 h-12 mt-3 mb-3"
                 >
                     <BarChart
                         accessibilityLayer

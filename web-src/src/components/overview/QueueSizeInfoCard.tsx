@@ -12,11 +12,11 @@ export function QueueSizeInfoCard() {
         </p>
         <p>
           For å unngå meldingstap kan du sette overflow til{' '}
-          <code className="bg-gray-100 border border-gray-200 px-1 py-0.5 rounded text-xs font-mono whitespace-nowrap">
+          <code className="bg-surface-page border border-border-card px-1 py-0.5 rounded text-xs font-mono whitespace-nowrap">
             reject-publish
           </code>
           , samt sette{' '}
-          <code className="bg-gray-100 border border-gray-200 px-1 py-0.5 rounded text-xs font-mono whitespace-nowrap">
+          <code className="bg-surface-page border border-border-card px-1 py-0.5 rounded text-xs font-mono whitespace-nowrap">
             publish confirm
           </code>
           . Dette vil sørge for at publisher informeres dersom meldinger ikke kan sendes til kø.

@@ -114,16 +114,16 @@ export const EditAlarm = ({ alarm, vhost }: { alarm: AlarmProps, vhost: string }
     }
 
     return (
-        <div className="mt-2">
+        <div className="mt-2 max-w-3xl">
         <DeleteItem alarm={alarm} vhost={vhost} open={deletingId !== null} onClose={() => setDeletingId(null)} onDeleted={redirectAfterDelete} />
         {hasAlarmId && (
             <AlarmLogSheet alarmId={alarmId} alarmName={alarm.name ?? ""} alarmType={alarm.type} open={showLogs} onClose={() => setShowLogs(false)} />
         )}
         <Response onClose={() => setUpdated(false)} open={updated} status="success" message={`Alarm updated successfully!`} />
         <Response onClose={() => setTestResult(null)} open={testResult !== null} status={testResult?.status ?? 'success'} message={testResult?.message ?? ''} />
-        <div className="border border-gray-200 bg-white rounded-lg overflow-hidden">
+        <div className="border border-border-card bg-surface-card rounded-lg overflow-hidden">
             {/* Header row */}
-            <div className="flex items-center gap-3 px-5 py-4 border-b border-gray-100">
+            <div className="flex items-center gap-3 px-5 py-4 border-b border-border-card">
                 <h3 className="text-lg font-semibold flex-1">{alarm.name}</h3>
                 <label className="flex items-center gap-1.5 text-sm text-text-muted cursor-pointer select-none">
                     Activated
@@ -135,7 +135,7 @@ export const EditAlarm = ({ alarm, vhost }: { alarm: AlarmProps, vhost: string }
             </div>
 
             {/* Meta grid */}
-            <div className="grid grid-cols-2 gap-x-8 gap-y-1 px-5 py-4 text-sm border-b border-gray-100">
+            <div className="grid grid-cols-2 gap-x-8 gap-y-1 px-5 py-4 text-sm border-b border-border-card">
                 <div className="flex justify-between py-1.5">
                     <span className="text-text-muted">Type</span>
                     <span className="text-text-primary">{alarm.type}</span>
@@ -178,12 +178,12 @@ export const EditAlarm = ({ alarm, vhost }: { alarm: AlarmProps, vhost: string }
                                 <DropdownMenu.Content
                                     align="end"
                                     sideOffset={4}
-                                    className="z-50 min-w-[10rem] overflow-hidden rounded-md border border-gray-200 bg-white shadow-md text-sm text-text-primary p-1"
+                                    className="z-50 min-w-[10rem] overflow-hidden rounded-md border border-border-card bg-surface-card shadow-md text-sm text-text-primary p-1"
                                     >
                                     {secondaryActions.map((action, index) => (
                                         <DropdownMenu.Item
                                         key={index}
-                                        className={`flex cursor-pointer select-none items-center rounded px-3 py-2 outline-none hover:bg-gray-100 ${action.label === "Delete alarm" ? "text-destructive hover:bg-red-50" : ""}`}
+                                        className={`flex cursor-pointer select-none items-center rounded px-3 py-2 outline-none hover:bg-surface-page ${action.label === "Delete alarm" ? "text-destructive hover:bg-red-50" : ""}`}
                                         onSelect={action.onClick}
                                         >
                                             {action.label}

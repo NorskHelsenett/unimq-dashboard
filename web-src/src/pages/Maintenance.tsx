@@ -5,23 +5,24 @@ import { RequireAuth } from '@/auth/RequireAuth'
 import { Layout } from '@/components/layout/Layout'
 import { MaintenanceHistoryCard } from '@/components/maintenance/MaintenanceHistoryCard'
 import { useHistoricMaintenance, useScheduledMaintenance } from '@/hooks/useMaintenance'
-import { useIndex } from '@/hooks/useIndex'
 import { MaintenanceScheduleCard } from '@/components/maintenance/MaintenanceScheduleCard'
+import { LiveDataWidget } from '@/components/dashboard/LiveDataWidget'
 
 function MaintenancePage() {
 
   const { maintenanceHistory, loading } = useHistoricMaintenance()
   const { maintenanceSchedule, loading: loadingSchedule, refetch } = useScheduledMaintenance()
-
-  const { Vhosts, Selected } = useIndex()
   return (
-    <Layout Vhosts={Vhosts} Selected={Selected} >
+    <Layout >
           {loading || loadingSchedule ? (
             <div className="p-8 text-text-muted">Loading...</div>
           ) : (
-            <div>
-              <h1 className='text-4xl mb-6'>Maintenance</h1>
-              <div className='max-w-4xl mx-auto flex flex-col gap-4'>
+             <div className="space-y-6">
+                <div>
+                  <h1 className='text-3xl tracking-tight'>Maintenance</h1>
+                </div>
+     
+               <div className='mx-auto flex flex-col mr-20 gap-4 pt-4'>
                 <MaintenanceScheduleCard maintenanceSchedule={maintenanceSchedule} onRefresh={refetch} />
                 <MaintenanceHistoryCard maintenanceHistory={maintenanceHistory} />
               </div>

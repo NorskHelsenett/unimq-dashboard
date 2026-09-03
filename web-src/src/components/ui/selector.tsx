@@ -7,7 +7,7 @@ function Selector({ ...props }: React.ComponentProps<typeof Select.Root>) {
   return <Select.Root {...props}/>
 }
 
-function SelectorTrigger({ className, children, ...props }: React.ComponentProps<typeof Select.Trigger>) {
+function SelectorTrigger({ className, children, hideChevron, ...props }: React.ComponentProps<typeof Select.Trigger> & { hideChevron?: boolean }) {
   return (
     <Select.Trigger
       data-slot="select-trigger"
@@ -18,9 +18,11 @@ function SelectorTrigger({ className, children, ...props }: React.ComponentProps
       {...props}
     >
       {children}
-      <Select.Icon asChild>
-        <ChevronDown className="size-4 shrink-0 text-muted-foreground" />
-      </Select.Icon>
+      {!hideChevron && (
+        <Select.Icon asChild>
+          <ChevronDown className="size-4 shrink-0 text-muted-foreground" />
+        </Select.Icon>
+      )}
     </Select.Trigger>
   )
 }

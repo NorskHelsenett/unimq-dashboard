@@ -12,7 +12,7 @@ export function VhostSelector({ Vhosts, Selected }: Vhosts) {
         <select
             value={Selected}
             onChange={handleChange}
-            className="text-sm text-text-secondary border border-border-card rounded-md px-2.5 py-1.5 bg-surface-card focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent cursor-pointer w-full"
+            className="text-xs border border-border-card rounded-md px-2 py-2 bg-surface-card focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent cursor-pointer shadow-sm"
         >
             {Vhosts.map((v) => (
                 <option key={v} value={v}>

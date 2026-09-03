@@ -4,6 +4,9 @@ import { SelectLabel, Selector, SelectorContent, SelectorItem, SelectorTrigger, 
 import { Input } from "../ui/input"
 import { DeleteItem } from "./DeleteItem"
 import { addRecipient } from '@/services/notifications'
+import { StatusDot } from "../ui/status-dot"
+import { SectionCard, SectionCardHeader } from "../ui/section-card"
+import { Users } from "lucide-react"
 
 
 export interface RecipientsProps {
@@ -20,39 +23,52 @@ const recipientTypeOptions = [
 ]
 
 function ExisitingRecipients({existingRecipients, vhost}: {existingRecipients: RecipientsProps[], vhost: string}) {
-    
     const recipients = existingRecipients || []
-
     const [deletingId, setDeletingId] = useState<string | null>(null)
     const deletingRecipient = recipients.find(r => r.id === deletingId)
 
-    
     return (
-        <div className="mt-4">
+        <div className="mt-2">
             <DeleteItem recipient={deletingRecipient} vhost={vhost} open={deletingId !== null} onClose={() => setDeletingId(null)} />
-            <div className="flex flex-col divide-y divide-gray-100 border border-gray-200 rounded-lg overflow-hidden">
-                {recipients.length != null ? (
-                    recipients.map(recipient => (
-                        <div key={recipient.id} className="flex items-center justify-between p-4 hover:bg-gray-50">
-                            <div className="flex items-center gap-3">
-                                <span className="relative flex size-3 shrink-0 items-center justify-center">
-                                    <span className="relative inline-flex size-2 rounded-full bg-blue-500" />
-                                </span>
-                                <div>
-                                    <p className="text-sm font-medium text-gray-900">{recipient.name}</p>
-                                    <p className="text-xs text-gray-500">{recipient.type} · {recipient.url}</p>
-                                </div>
-                            </div>
-                            <div className="flex items-center gap-2">
-                                <Button variant="destructive" size="xs" onClick={() => recipient.id && setDeletingId(recipient.id)}>Delete</Button>
-                            </div>
-                        </div>
-                    ))
-                ) : (
-                    <p className="p-4 text-sm text-gray-500">No recipients configured for this vhost.</p>
-                )}
-
-            </div>
+            {recipients.length === 0 ? (
+                <p className="text-sm text-text-muted py-2">No recipients configured for this vhost.</p>
+            ) : (
+                <div className="overflow-y-auto max-h-64">
+                    <table className="w-full text-left border-collapse">
+                        <thead>
+                            <tr>
+                                <th className="border-b border-border-card py-2 px-4 text-xs text-text-muted">Name</th>
+                                <th className="border-b border-border-card py-2 px-4 text-xs text-text-muted">Type</th>
+                                <th className="border-b border-border-card py-2 px-4 text-xs text-text-muted">Endpoint</th>
+                                <th className="border-b border-border-card py-2 px-4 text-xs text-text-muted text-right">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {recipients.map(recipient => (
+                                <tr key={recipient.id} className="hover:bg-surface-page">
+                                    <td className="border-b border-border-card py-2 px-4 text-sm font-medium">
+                                        <span className="flex items-center gap-2">
+                                            <StatusDot color="blue" pulse={false} />
+                                            {recipient.name}
+                                        </span>
+                                    </td>
+                                    <td className="border-b border-border-card py-2 px-4 text-sm text-text-muted">
+                                        {recipient.type}
+                                    </td>
+                                    <td className="border-b border-border-card py-2 px-4 text-sm text-text-muted truncate">
+                                        {recipient.url}
+                                    </td>
+                                    <td className="border-b border-border-card py-2 px-4">
+                                        <div className="flex items-center justify-end">
+                                            <Button variant="destructive" size="xs" onClick={() => recipient.id && setDeletingId(recipient.id)}>Delete</Button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                </div>
+            )}
         </div>
     )
 }
@@ -72,23 +88,18 @@ function AddRecipientForm({selectedType, vhost, onClose}: {selectedType: string,
     }
 
     return (
-        <form onSubmit={handleSubmit} className="bg-gray-50 border border-gray-300 rounded-lg p-4">
-            <h2 className="text-sm font-semibold mb-3">New recipient: {recipientTypeOptions.find(o => o.value === selectedType)?.label}</h2>
-            {selectedType && (
-                <div className="grid grid-cols-2 gap-4 mb-3">
-                    <div>
-                        <p className="text-sm mb-1">Name</p>
-                        <Input name="name" placeholder="E.g #alerts-kanalen" className="bg-white" required />
-                    </div>
-                    <div>
-                        <p className="text-sm mb-1">Webhook URL</p>
-                        <Input name="url" type='url' placeholder="testtest" className="bg-white" required />
-                    </div>
+        <form onSubmit={handleSubmit} className="bg-surface-card border border-blue-200 rounded-lg p-4 mb-4 shadow">
+            <div className="flex flex-wrap items-end gap-2">
+                <div className="flex flex-col gap-1 flex-1 min-w-[160px]">
+                    <label className="text-sm font-medium">{recipientTypeOptions.find(o => o.value === selectedType)?.label}</label>
+                    <Input name="name" placeholder="E.g. #alerts-channel" className="bg-surface-card" required />
                 </div>
-            )}
-            <div className="flex justify-between mt-2">
-                <Button type="submit">Add recipient</Button>
-                <Button type="button" variant="outline" onClick={onClose}>Cancel</Button>
+                <div className="flex flex-col gap-1 flex-1 min-w-[200px]">
+                    <label className="text-xs text-text-muted">Webhook URL</label>
+                    <Input name="url" type="url" placeholder="https://hooks.example.com/..." className="bg-surface-card" required />
+                </div>
+                <Button type="submit" variant="orange" size="sm">Save</Button>
+                <Button type="button" variant="ghost" size="sm" onClick={onClose}>Cancel</Button>
             </div>
         </form>
     )
@@ -98,27 +109,29 @@ export function RecipientCard({existingRecipients, vhost}: {existingRecipients: 
     const [selectedType, setSelectedType] = useState('')
 
     return (
-        <div className="bg-white shadow rounded-lg p-6">
-            <div className="flex items-center justify-between mb-2">
-
-                <h2 className="text-lg font-semibold">Existing Recipients</h2>
-                <Selector value={selectedType} onValueChange={(val) => setSelectedType(val)}>
-                    <SelectorTrigger className="w-60 ml-3">
-                        <SelectorValue placeholder="Add new recipient" />
-                    </SelectorTrigger>
-                    <SelectorContent>
-                    <SelectLabel>Select type</SelectLabel>
-                        {recipientTypeOptions.map(option => (
-                            <SelectorItem key={option.value} value={option.value}>
-                                {option.label}
-                            </SelectorItem>
-                        ))}
-                    </SelectorContent>
-                </Selector>
-            </div>
-
+        <SectionCard accent="blue">
+            <SectionCardHeader
+                title="Recipients"
+                icon={<Users className="w-5 h-5 text-blue-400" />}
+                action={
+                    <Selector value={selectedType} onValueChange={(val) => setSelectedType(val)}>
+                        <SelectorTrigger className="w-60 ml-3">
+                            <SelectorValue placeholder="Add new recipient" />
+                        </SelectorTrigger>
+                        <SelectorContent>
+                            <SelectLabel>Select type</SelectLabel>
+                            {recipientTypeOptions.map(option => (
+                                <SelectorItem key={option.value} value={option.value}>
+                                    {option.label}
+                                </SelectorItem>
+                            ))}
+                        </SelectorContent>
+                    </Selector>
+                }
+            />
             <AddRecipientForm selectedType={selectedType} vhost={vhost} onClose={() => setSelectedType('')} />
+            {selectedType && <hr className="border-border-card mb-4" />}
             <ExisitingRecipients existingRecipients={existingRecipients} vhost={vhost} />
-        </div>
+        </SectionCard>
     )
 }

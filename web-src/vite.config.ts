@@ -16,12 +16,12 @@ export default defineConfig({
       input: {
         index: resolve(__dirname, "index.html"),
         queue: resolve(__dirname, "src/pages/Queue.tsx"),
-        notifications: resolve(__dirname, "notifications.html"),
-        notifRule: resolve(__dirname, "notification_rule.html"),
-        maintenance: resolve(__dirname, "maintenance.html"),
-        editMaintenance: resolve(__dirname, "edit_maintenance.html"),
-        profile: resolve(__dirname, "profile.html"),
-        callback: resolve(__dirname, "callback.html"),
+        notifications: resolve(__dirname, "entries/notifications.html"),
+        notifRule: resolve(__dirname, "entries/notification_rule.html"),
+        maintenance: resolve(__dirname, "entries/maintenance.html"),
+        editMaintenance: resolve(__dirname, "entries/edit_maintenance.html"),
+        profile: resolve(__dirname, "entries/profile.html"),
+        callback: resolve(__dirname, "entries/callback.html"),
       },
       output: {
         entryFileNames: "[name].js",
@@ -37,22 +37,35 @@ export default defineConfig({
       "/notifications/rule": {
         target: "http://localhost:8080",
         bypass: (req) => {
-          if (req.method === "GET") return "/notification_rule.html"
+          if (req.method === "GET") return "/entries/notification_rule.html"
           return null
         },
       },
-      "/notifications/": "http://localhost:8080",
+      "/notifications": {
+        target: "http://localhost:8080",
+        bypass: (req) => {
+          if (req.method === "GET" && !req.url?.startsWith("/notifications/rule"))
+            return "/entries/notifications.html"
+          return null
+        },
+      },
       "/maintenance": {
         target: "http://localhost:8080",
         bypass: (req) => {
           if (req.method === "GET") {
-            if (req.url?.startsWith("/maintenance/edit")) return "/edit_maintenance.html"
-            return "/maintenance.html"
+            if (req.url?.startsWith("/maintenance/edit")) return "/entries/edit_maintenance.html"
+            return "/entries/maintenance.html"
           }
           return null
         },
       },
-      "/static/logo": "http://localhost:8080",
+      "/profile": {
+        target: "http://localhost:8080",
+        bypass: (req) => {
+          if (req.method === "GET") return "/entries/profile.html"
+          return null
+        },
+      },
     },
   },
 });

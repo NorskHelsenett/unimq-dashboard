@@ -3,6 +3,7 @@ import { upperCaseStatus } from "@/services/maintenance"
 import { Pill } from "../ui/pill"
 import { ChevronDown, ChevronUp, History } from "lucide-react"
 import { useLocalStorage } from "@/hooks/useLocalStorage"
+import { SectionCard, SectionCardHeader } from "../ui/section-card"
 
 export function formatDateRange(start: string, end: string): string {
     const pad = (n: number) => String(n).padStart(2, '0')
@@ -31,43 +32,35 @@ export function MaintenanceHistoryCard({ maintenanceHistory }: { maintenanceHist
     const [open, setOpen] = useLocalStorage("maintenance-history-open", true)
 
     return (
-        <div className="bg-white rounded-lg shadow p-4 min-w-[300px] border border-border-card border-l-4 border-l-green-200">
-            <button
+        <SectionCard accent="green">
+        <button
                 onClick={() => setOpen(o => !o)}
-                className="flex justify-between items-center w-full text-left mb-2"
+                className="w-full text-left"
             >
-                <h3 className="text-lg font-semibold flex items-center gap-2">
-                        <History className="w-5 h-5 text-gray-400" />
-                        Maintenance history
-                    </h3>
-                {open ? <ChevronUp className="w-4 h-4 text-gray-400" /> : <ChevronDown className="w-4 h-4 text-gray-400" />}
+            <SectionCardHeader
+                title="Maintenance history"
+                icon={<History className="w-4 h-4 text-green-400" />}
+                action={open ? <ChevronUp className="w-4 h-4 text-text-muted" /> : <ChevronDown className="w-4 h-4 text-text-muted" />}
+                />
             </button>
             {open && (
                 maintenanceHistory.length === 0 ? (
-                    <p className="text-gray-500">No maintenance history available.</p>
+                    <p className="text-text-muted">No maintenance history available.</p>
                 ) : (
                     <div className="overflow-y-auto max-h-64 text-sm">
-                        <table className="w-full text-left border-collapse table-fixed">
-                            <colgroup>
-                                <col />
-                                <col className="w-52" />
-                                <col className="w-20" />
-                                <col className="w-28" />
-                                {/* spacer matches the Actions column width in the schedule table */}
-                                <col className="w-32" />
-                            </colgroup>
+                        <table className="w-full text-left border-collapse">
                             <thead>
                                 <tr>
-                                    <th className="border-b border-border-card py-2 px-4 text-xs text-gray-500">Description</th>
-                                    <th className="border-b border-border-card py-2 px-4 text-xs text-gray-500">Date</th>
-                                    <th className="border-b border-border-card py-2 px-4 text-xs text-gray-500">Duration</th>
-                                    <th className="border-b border-border-card py-2 px-4 text-xs text-gray-500">Status</th>
+                                    <th className="border-b border-border-card py-2 px-4 text-xs text-text-muted">Description</th>
+                                    <th className="border-b border-border-card py-2 px-4 text-xs text-text-muted">Date</th>
+                                    <th className="border-b border-border-card py-2 px-4 text-xs text-text-muted">Duration</th>
+                                    <th className="border-b border-border-card py-2 px-4 text-xs text-text-muted">Status</th>
                                     <th className="border-b border-border-card py-2 px-4" />
                                 </tr>
                             </thead>
                             <tbody>
                                 {maintenanceHistorySorted.map((maintenance) => (
-                                    <tr key={maintenance.id} className="text-gray-500">
+                                    <tr key={maintenance.id} className="text-text-muted">
                                         <td className="border-b font-medium border-border-card py-2 px-4">{maintenance.description}</td>
                                         <td className="border-b border-border-card py-2 px-4">{formatDateRange(maintenance.start, maintenance.end)}</td>
                                         <td className="border-b border-border-card py-2 px-4">{durationInMinutes(maintenance.start, maintenance.end)} min</td>
@@ -84,6 +77,6 @@ export function MaintenanceHistoryCard({ maintenanceHistory }: { maintenanceHist
                     </div>
                 )
             )}
-        </div>
+        </SectionCard>
     )
 }

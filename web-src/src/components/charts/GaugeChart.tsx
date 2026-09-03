@@ -1,5 +1,5 @@
 
-import { Label, Pie, PieChart } from "recharts"
+import { Pie, PieChart } from "recharts"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { ChartContainer, type ChartConfig } from "@/components/ui/chart"
 
@@ -43,46 +43,33 @@ export const GaugeChart = ({ title, usage, max, labelText, fontSize }: GaugeChar
         { name: "Usage", value: usage, fill: chartColor },
         { name: "NonUsage", value: nonUsage, fill: chartBgColor },
     ];
-    const sumValues = usageData.map((cur) => cur.value).reduce((a, b) => a + b);
-    const labelData = [
-        { value: sumValues }
-    ];
     
     return (
         <Card className="flex flex-col w-66">
-            <CardHeader className="items-center pb-0">
+            <CardHeader className="items-center pt-4 pb-0">
                 <CardTitle>{title}</CardTitle>
             </CardHeader>
-            <CardContent className="flex flex-1 items-center pb-0">
-                <ChartContainer
-                    config={chartConfig}
-                    className="mx-auto aspect-square w-full max-w-62"
-                >
-                    <PieChart accessibilityLayer data={usageData}>
-                        <Pie
-                            stroke="none"
-                            data={usageData}
-                            fill={chartColor}
-                            innerRadius={(widthNum / 2) * 0.8}
-                            outerRadius={(widthNum / 2)}
-                            cornerRadius="5%"
-                            {...pieProps}
-                        />
-
-                        <Pie
-                            stroke="none"
-                            fill="none"
-                            data={labelData}
-                        >
-                            <Label
-                                value={labelText}
-                                position="centerBottom" 
-                                fontSize={`${fontSize}px`}
-                                fontWeight="bold"
+            <CardContent className="flex flex-col items-center pb-3 px-2">
+                {/* overflow-hidden clips the empty bottom half of the square SVG */}
+                <div className="overflow-hidden w-full max-w-62 max-h-36">
+                    <ChartContainer
+                        config={chartConfig}
+                        className="mx-auto w-full aspect-square"
+                    >
+                        <PieChart accessibilityLayer data={usageData}>
+                            <Pie
+                                stroke="none"
+                                data={usageData}
+                                fill={chartColor}
+                                innerRadius={(widthNum / 2) * 0.8}
+                                outerRadius={(widthNum / 2)}
+                                cornerRadius="5%"
+                                {...pieProps}
                             />
-                        </Pie>
-                    </PieChart>
-                </ChartContainer>
+                        </PieChart>
+                    </ChartContainer>
+                </div>
+                <p className="text-sm font-bold mt-1" style={{ fontSize: `${fontSize}px` }}>{labelText}</p>
             </CardContent>
         </Card>
     )

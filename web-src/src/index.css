@@ -48,20 +48,25 @@
     --radius-4xl: calc(var(--radius) * 2.6);
 
     --color-brand: #f97316;
-    
-    --color-surface-sidebar: #ffffff;
-    --color-surface-sidebar-active: #f3f4f6;
-    --color-border-sidebar: #e5e7eb;
-    --color-surface-page: #f9fafb;
-    --color-surface-card: #ffffff;
-    --color-border-card: #e5e7eb;
-  
-    --color-text-primary: #111827;
-    --color-text-secondary: #374151;
-    --color-text-muted: #6b7280;
-    --color-text-sidebar: #374151;
-    --color-text-sidebar-active: #111827;
-  
+    --color-submit-button: var(--submit-button);
+    --color-submit-button: var(--submit-button);
+
+    --color-surface-sidebar: var(--surface-sidebar);
+    --color-surface-sidebar-active: var(--surface-sidebar-active);
+    --color-border-sidebar: var(--border-sidebar);
+    --color-surface-page: var(--surface-page);
+    --color-surface-card: var(--surface-card);
+    --color-border-card: var(--border-card);
+
+    --color-text-primary: var(--text-primary);
+    --color-text-secondary: var(--text-secondary);
+    --color-text-muted: var(--text-muted);
+    --color-text-sidebar: var(--text-sidebar);
+    --color-text-sidebar-active: var(--text-sidebar-active);
+
+    --color-maintenance-in-progress-bg: var(--maintenance-in-progress-bg);
+    --color-maintenance-in-progress-bg-hover: var(--maintenance-in-progress-bg-hover);
+
     --color-status-ok: #15803d;
     --color-status-ok-bg: #f0fff4;
     --color-status-ok-bg-subtle: #fbfffb;
@@ -126,6 +131,21 @@
     --status-unknown-bg: #f3f4f6;
     --status-unknown-border: #e5e7eb;
     --submit-button: oklch(55.59% 0.11609 249.465);
+
+    --surface-sidebar: #ffffff;
+    --surface-sidebar-active: #f3f4f6;
+    --border-sidebar: #e5e7eb;
+    --surface-page: #f9fafb;
+    --surface-card: #ffffff;
+    --border-card: #e5e7eb;
+    --text-primary: #111827;
+    --text-secondary: #374151;
+    --text-muted: #6b7280;
+    --text-sidebar: #374151;
+    --text-sidebar-active: #111827;
+
+    --maintenance-in-progress-bg: #fffbeb;
+    --maintenance-in-progress-bg-hover: #fef3c7;
 }
 
 .dark {
@@ -161,6 +181,21 @@
     --sidebar-border: oklch(1 0 0 / 10%);
     --sidebar-ring: oklch(0.556 0 0);
     --submit-button: oklch(59.094% 0.10329 248.413);
+
+    --surface-sidebar: oklch(0.205 0 0);
+    --surface-sidebar-active: oklch(0.269 0 0);
+    --border-sidebar: oklch(1 0 0 / 10%);
+    --surface-page: oklch(0.145 0 0);
+    --surface-card: oklch(0.205 0 0);
+    --border-card: oklch(1 0 0 / 10%);
+    --text-primary: oklch(0.985 0 0);
+    --text-secondary: oklch(0.87 0 0);
+    --text-muted: oklch(0.708 0 0);
+    --text-sidebar: oklch(0.87 0 0);
+    --text-sidebar-active: oklch(0.985 0 0);
+
+    --maintenance-in-progress-bg: oklch(0.25 0.04 85);
+    --maintenance-in-progress-bg-hover: oklch(0.28 0.05 85);
 }
 
 @layer base {

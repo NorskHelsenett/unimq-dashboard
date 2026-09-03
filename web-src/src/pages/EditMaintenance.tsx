@@ -4,13 +4,11 @@ import '../index.css'
 import { RequireAuth } from '@/auth/RequireAuth'
 import { Layout } from '@/components/layout/Layout'
 import { EditMaintenance } from '@/components/maintenance/EditMaintenance'
-import { useIndex } from '@/hooks/useIndex'
 import { useEffect, useState } from 'react'
 import { getMaintenanceAdmin } from '@/services/maintenance'
 import { Maintenance } from '@/types/maintenance'
 
 function EditMaintenancePage() {
-    const { Vhosts, Selected } = useIndex()
     const id = new URLSearchParams(window.location.search).get('id')
     const [maintenance, setMaintenance] = useState<Maintenance | null>(null)
     const [loading, setLoading] = useState(true)
@@ -33,7 +31,7 @@ function EditMaintenancePage() {
     }, [id])
 
     return (
-        <Layout Vhosts={Vhosts} Selected={Selected}>
+        <Layout>
             <div className="max-w-4xl mx-auto">
                 <a href="/maintenance" className="text-sm text-text-muted hover:text-text-primary mb-6 inline-block">
                     ← Back to maintenance

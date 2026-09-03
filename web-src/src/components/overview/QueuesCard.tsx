@@ -17,7 +17,7 @@ function QueueRow({ queue, vhost }: { queue: QueueDetail; vhost: string }) {
     const href = `/queue?vhost=${encodeURIComponent(vhost)}&name=${encodeURIComponent(queue.name)}`
 
     return (
-        <tr className="border-b last:border-0 hover:bg-gray-50">
+        <tr className="border-b last:border-0 hover:bg-surface-page">
             <td className={cellPaddingStyling}>
                 <a href={href} className="font-medium text-orange-500 hover:text-orange-600 hover:underline text-center block w-full">
                     {queue.name}
@@ -87,10 +87,11 @@ function SubHeaderCell({ children, className }: { children?: React.ReactNode; cl
 
 export function QueuesCard({ vhost, queues, loading, error }: QueuesCardProps) {
     return (
-        <div className='w-full'>
-            <h2 className="text-lg font-semibold text-text-primary mb-3">Queues</h2>
-            <div className="rounded-lg border bg-surface-card overflow-hidden w-full">
-                <div className="overflow-x-auto">
+        <div className="rounded-xl border border-border-card bg-surface-card shadow-sm overflow-hidden w-full">
+            <div className="px-5 py-4 border-b border-border-card">
+                <h3 className="text-sm font-semibold text-text-primary">Queues</h3>
+            </div>
+            <div className="overflow-x-auto">
                     <table className="w-full border-collapse text-sm">
                         <thead>
                             <tr>
@@ -147,7 +148,6 @@ export function QueuesCard({ vhost, queues, loading, error }: QueuesCardProps) {
                             ))}
                         </tbody>
                     </table>
-                </div>
             </div>
         </div>
     )
