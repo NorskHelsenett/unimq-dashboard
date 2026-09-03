@@ -196,6 +196,21 @@
 
     --maintenance-in-progress-bg: oklch(0.25 0.04 85);
     --maintenance-in-progress-bg-hover: oklch(0.28 0.05 85);
+
+    --status-ok: #4ade80;
+    --status-ok-bg: #052e13;
+    --status-ok-bg-subtle: #06210e;
+    --status-ok-border: #14532d;
+    --status-warning: #fbbf24;
+    --status-warning-bg: #3a2205;
+    --status-warning-bg-subtle: #2b1a05;
+    --status-warning-border: #78350f;
+    --status-danger: #f87171;
+    --status-danger-bg: #3a0a0a;
+    --status-danger-border: #7f1d1d;
+    --status-unknown: #9ca3af;
+    --status-unknown-bg: #1f2937;
+    --status-unknown-border: #374151;
 }
 
 @layer base {

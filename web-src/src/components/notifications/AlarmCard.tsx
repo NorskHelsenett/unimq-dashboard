@@ -83,7 +83,7 @@ function ExistingAlarms({existingAlarms, vhost, disabledIds, onToggle}: {
                                             <tr
                                                 className={cn('cursor-pointer',
                                                     isDisabled ? '' :
-                                                    alarm.status === 'firing' ? 'bg-red-50 hover:bg-red-100' :
+                                                    alarm.status === 'firing' ? 'bg-red-50 hover:bg-red-100 dark:bg-red-950/40 dark:hover:bg-red-950/60' :
                                                     'hover:bg-surface-page'
                                                 )}
                                                 onClick={() => { window.location.href = `/notifications/rule?vhost=${encodeURIComponent(vhost)}&id=${alarm.id}` }}
