@@ -14,7 +14,6 @@ import (
 	"github.com/sisneve/rabbitmq-dashboard/internal/clients/prometheus"
 	"github.com/sisneve/rabbitmq-dashboard/internal/clients/rabbitmq"
 	"github.com/sisneve/rabbitmq-dashboard/internal/config"
-	"github.com/sisneve/rabbitmq-dashboard/internal/controllers/authcontroller"
 	"github.com/sisneve/rabbitmq-dashboard/internal/database"
 	_ "github.com/sisneve/rabbitmq-dashboard/internal/docs"
 )
@@ -56,7 +55,7 @@ func SetupRoutes(ctx context.Context, config *config.Config, db *database.Databa
 			SetupUnprotectedRoutes(r, apiservice)
 
 			r.Group(func(r chi.Router) {
-				r.Use(authcontroller.AuthenticationMiddleware)
+				// r.Use(authcontroller.AuthenticationMiddleware)
 				SetupProtectedRoutes(r, apiservice)
 			})
 		})
