@@ -30,9 +30,9 @@ import (
 
 //	@host					localhost:8080
 //	@basePath				/api
-//	@securityDefinitions	bearer		Authorization
-//	@securityDefinitions.oauth2.implicit	OAuth2Implicit	Implicit OAuth2 flow
-//  @authorizationurl	https://dex.example.com/dex/auth
+//	@securityDefinitions	bearer					Authorization
+//	@in						header	Authorization	"Bearer {token}"
+//	@name					Authorization
 
 func main() {
 
