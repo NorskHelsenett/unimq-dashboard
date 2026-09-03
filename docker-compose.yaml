@@ -36,7 +36,7 @@ services:
       - unimq-dashboard-network
 
   mongodb:
-    image: ${DOCKER_MIRROR}mongo:8.3.2-noble
+    image: ${DOCKER_MIRROR}mongo:7.0.40-jammy
     volumes:
       - ./volumes-for-compose/data/mongodb:/data/db:rw
       - ./volumes-for-compose/mongodb:/docker-entrypoint-initdb.d:ro
