@@ -85,13 +85,13 @@ tasks:
       - CGO_ENABLED=0 go build -o dist/{{.NAME}} -ldflags "-w -extldflags '-static'" {{.MAIN_PATH}}/
     silent: true
 
-  check-swag:
+  swag-check:
     desc: Generate Swagger documentation
     cmds:
       - go install github.com/swaggo/swag/cmd/swag@latest
     silent: true
 
-  generate-swag:
+  swag-generate:
     desc: Generate Swagger documentation
     deps:
       - check-swag
@@ -99,7 +99,7 @@ tasks:
       - swag init -g {{.MAIN_PATH}}/main.go -o ./internal/docs --parseInternal
     silent: true
 
-  format-swag:
+  swag-format:
     desc: Format Swagger documentation
     deps:
       - generate-swag
