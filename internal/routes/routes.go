@@ -16,9 +16,10 @@ import (
 	"github.com/sisneve/rabbitmq-dashboard/internal/config"
 	"github.com/sisneve/rabbitmq-dashboard/internal/database"
 	_ "github.com/sisneve/rabbitmq-dashboard/internal/docs"
+	"github.com/sisneve/rabbitmq-dashboard/internal/notify"
 )
 
-func SetupRoutes(ctx context.Context, config *config.Config, db *database.Database, rmq *rabbitmq.RMQClient) (chi.Router, error) {
+func SetupRoutes(ctx context.Context, config *config.Config, db *database.Database, rmq *rabbitmq.RMQClient, checker *notify.Checker) (chi.Router, error) {
 
 	prom, err := prometheus.NewPromClient(config.PrometheusHost, "v1", "", "", config.PrometheusPort)
 	if err != nil {
