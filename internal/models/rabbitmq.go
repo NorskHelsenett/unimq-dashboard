@@ -35,11 +35,12 @@ type MessageRate struct {
 }
 
 type VhostMetrics struct {
-	Name        string `json:"name"`
-	Connections int    `json:"connections"`
-	Channels    int    `json:"channels"`
-	Queues      int    `json:"queues"`
-	Unacked     int    `json:"unacked"`
+	Name            string `json:"name"`
+	Connections     int    `json:"connections"`
+	Channels        int    `json:"channels"`
+	Queues          int    `json:"queues"`
+	UnackedMessages int    `json:"unacked_messages"`
+	ReadyMessages   int    `json:"ready_messages"`
 }
 
 type QueueDetail struct {
