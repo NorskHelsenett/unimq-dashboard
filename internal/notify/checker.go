@@ -156,84 +156,153 @@ func (c *Checker) runChecks() {
 		}
 
 		urls := vhost.WebhookURLs()
+
+		// Check for any scheduled maintenance and send notifications if there are any new ones.
+		checkMaintenanceSchedules(c.Ctx, c.DB, urls)
+
+		// Evaluate each rule for the vhost and send notifications if needed.
 		for _, rule := range vhost.Rules {
 			c.checkRule(rule, vhost.Name, urls, metrics, queues)
 		}
 	}
 }
 
-func (c *Checker) checkRule(rule *models.AlarmRule, vhostName string, urls []string, metrics *models.VhostMetrics, queues []models.QueueDetail) {
+var (
+	ErrNotificationRuleDisabled      = fmt.Errorf("notification rule is disabled")
+	ErrNotificationRuleInMaintenance = fmt.Errorf("notification rule is in maintenance mode")
+	ErrNotificationRuleNoChange      = fmt.Errorf("notification rule status has not changed")
+)
+
+type evaluationResult struct {
+	Triggered bool
+	Value     *float64
+	NewStatus models.AlarmStatus
+}
+
+// EvaluateMetrics evaluates a single alarm rule against the current metrics and returns whether it is triggered, the current value, and the new status.
+func EvaluateMetrics(rule *models.AlarmRule, metrics *models.VhostMetrics, queues []models.QueueDetail) (*evaluationResult, error) {
 
 	if !rule.Enabled {
-		return
+		return nil, ErrNotificationRuleDisabled
 	}
 	if rule.Type == models.AlarmTypeMaintenance {
-		checkMaintenanceRule(c.Ctx, c.DB, urls)
-		return
+		return nil, ErrNotificationRuleInMaintenance
 	}
 	triggered, value := evaluate(rule, metrics, queues)
 	newStatus := models.AlarmStatusOK
 	if triggered {
 		newStatus = models.AlarmStatusFiring
 	}
-	shouldNotify := triggered && rule.Status != models.AlarmStatusFiring && len(urls) > 0
+
+	output := &evaluationResult{
+		Triggered: triggered,
+		Value:     value,
+		NewStatus: newStatus,
+	}
+
+	return output, nil
+}
+
+// EvaluateRule checks if the status of the rule has changed and returns an AlarmEntry if it has.
+func EvaluateRule(rule *models.AlarmRule, newStatus models.AlarmStatus, newValue float64) (*models.AlarmEntry, error) {
+
+	if !rule.Enabled {
+		return nil, ErrNotificationRuleDisabled
+	}
+
+	if rule.Status != models.AlarmStatusFiring && newStatus == models.AlarmStatusFiring {
+		entry := models.NewLogEntry(models.LogEventFired, &newValue, rule.Threshold, rule.Type)
+		alarm := models.AlarmEntry{
+			AlarmID: rule.ID,
+			Entries: []models.LogEntry{entry},
+		}
+
+		return &alarm, nil
+
+	} else if rule.Status == models.AlarmStatusFiring && newStatus == models.AlarmStatusOK {
+		entry := models.NewLogEntry(models.LogEventResolved, &newValue, rule.Threshold, rule.Type)
+		alarm := models.AlarmEntry{
+			AlarmID: rule.ID,
+			Entries: []models.LogEntry{entry},
+		}
+		return &alarm, nil
+	}
+
+	return nil, ErrNotificationRuleNoChange
+}
+
+// checkRule evaluates a single alarm rule against the current metrics and sends notifications if needed.
+func (c *Checker) checkRule(rule *models.AlarmRule, vhostName string, urls []string, metrics *models.VhostMetrics, queues []models.QueueDetail) {
+
+	evalResult, err := EvaluateMetrics(rule, metrics, queues)
+	if err != nil {
+		switch err {
+		case ErrNotificationRuleDisabled:
+			slog.DebugContext(c.Ctx, "Skipping disabled rule", "vhost", vhostName, "rule", rule.Name)
+			return
+		case ErrNotificationRuleInMaintenance:
+			slog.DebugContext(c.Ctx, "Skipping maintenance rule evaluation", "vhost", vhostName, "rule", rule.Name)
+			return
+		default:
+			slog.ErrorContext(c.Ctx, "Failed to evaluate rule", "vhost", vhostName, "rule", rule.Name, "error", err)
+			return
+		}
+	}
+
+	shouldNotify := evalResult.Triggered && rule.Status != models.AlarmStatusFiring && len(urls) > 0
 	slog.DebugContext(c.Ctx, "Evaluating rule",
 		"vhost", vhostName,
 		"rule", rule.Name,
 		"type", rule.Type,
-		"value", *value,
+		"value", *evalResult.Value,
 		"threshold", rule.Threshold,
-		"triggered", triggered,
-		"urls", len(urls),
+		"triggered", evalResult.Triggered,
+		// "urls", len(urls),
 	)
 
-	// TODO: This shouldn't run on every check, only on status changes.
-	// This would require a local cache of the last known status, or a more complex DB query to check if the status has changed.
-	err := c.DB.UpdateNotificationRule(
+	// If the status is changing to firing, it will update the LastFired timestamp.
+	err = c.DB.UpdateNotificationRule(
 		c.Ctx,
 		vhostName,
 		rule.ID,
-		newStatus,
-		*value,
+		evalResult.NewStatus,
+		*evalResult.Value,
 		shouldNotify,
 	)
 	if err != nil {
 		slog.ErrorContext(c.Ctx, "Failed to update notification rule status", "vhost", vhostName, "rule", rule.Name, "error", err)
 	}
 
-	if rule.Status != models.AlarmStatusFiring && newStatus == models.AlarmStatusFiring {
-		entry := models.NewLogEntry(models.LogEventFired, value, rule.Threshold, rule.Type)
-		alarm := models.AlarmEntry{
-			AlarmID: rule.ID,
-			Entries: []models.LogEntry{entry},
+	alarm, err := EvaluateRule(rule, evalResult.NewStatus, *evalResult.Value)
+	if err != nil {
+		if err != ErrNotificationRuleNoChange {
+			slog.ErrorContext(c.Ctx, "Failed to evaluate rule for alarm entry", "vhost", vhostName, "rule", rule.Name, "error", err)
 		}
-		err := c.DB.AddAlarm(c.Ctx, &alarm)
-		if err != nil {
-			slog.ErrorContext(c.Ctx, "notify: failed to add alarm entry", "error", err)
-		}
-
-	} else if rule.Status == models.AlarmStatusFiring && newStatus == models.AlarmStatusOK {
-		entry := models.NewLogEntry(models.LogEventResolved, value, rule.Threshold, rule.Type)
-		alarm := models.AlarmEntry{
-			AlarmID: rule.ID,
-			Entries: []models.LogEntry{entry},
-		}
-		err = c.DB.AddAlarm(c.Ctx, &alarm)
-		if err != nil {
-			slog.ErrorContext(c.Ctx, "notify: failed to add alarm entry", "error", err)
-		}
+		return
+	}
+	err = c.DB.AddAlarm(c.Ctx, alarm)
+	if err != nil {
+		slog.ErrorContext(c.Ctx, "notify: failed to add alarm entry", "error", err)
 	}
 
 	if shouldNotify {
-		subject := fmt.Sprintf("[UniMQ] Alarm: %s — %s", rule.Name, vhostName)
-		body := rule.BuildMessage(vhostName)
-		err := notificationhelper.SendWebhooks(urls, subject, body)
+		err = Notify(c.Ctx, urls, rule, vhostName)
 		if err != nil {
-			slog.ErrorContext(c.Ctx, "notify: webhook failed", "rule", rule.Name, "error", err)
-		} else {
-			slog.InfoContext(c.Ctx, "notify: webhook sent", "rule", rule.Name, "vhost", vhostName)
+			slog.ErrorContext(c.Ctx, "notify: failed to send notification", "vhost", vhostName, "rule", rule.Name, "error", err)
 		}
 	}
+}
+
+// Notify sends a notification to the provided URLs with the alarm rule and vhost name.
+func Notify(ctx context.Context, urls []string, rule *models.AlarmRule, vhostName string) error {
+	subject := fmt.Sprintf("[UniMQ] Alarm: %s — %s", rule.Name, vhostName)
+	body := rule.BuildMessage(vhostName)
+	err := notificationhelper.SendWebhooks(urls, subject, body)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 // nolint:gocyclo // While it is marked as complex, it only evaluates a single rule against the current metrics and returns whether it is triggered and the current value.
@@ -286,7 +355,8 @@ func evaluate(rule *models.AlarmRule, metrics *models.VhostMetrics, queues []mod
 	return v >= rule.Threshold, &v
 }
 
-func checkMaintenanceRule(ctx context.Context, db *database.Database, urls []string) {
+// checkMaintenanceRule checks for any scheduled maintenance and sends notifications if there are any new ones.
+func checkMaintenanceSchedules(ctx context.Context, db *database.Database, urls []string) {
 	scheduled, err := db.GetMaintenanceScheduled(ctx)
 	if err != nil {
 		slog.ErrorContext(ctx, "Failed to fetch scheduled maintenance", "error", err)
