@@ -23,11 +23,12 @@ func TestEvaluateMetrics(t *testing.T) {
 			Name: "Test case 1: Queue size exceeds threshold",
 			Rule: models.NewAlarmRule("queue length", models.AlarmTypeQueueSize, "test-queue", 10, "Queue length exceeded threshold", true),
 			Metric: &models.VhostMetrics{
-				Name:        "/",
-				Connections: 0,
-				Channels:    0,
-				Queues:      15,
-				Unacked:     0,
+				Name:            "/",
+				Connections:     0,
+				Channels:        0,
+				Queues:          15,
+				UnackedMessages: 0,
+				ReadyMessages:   0,
 			},
 			Queues: []models.QueueDetail{
 				{
