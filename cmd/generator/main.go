@@ -43,7 +43,9 @@ func main() {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
-	err = db.Seed(ctx)
+	vhosts := []string{"/", "unimq", "unimq-test"}
+
+	err = db.Seed(ctx, vhosts)
 	if err != nil {
 		slog.Error("failed to seed database", "error", err)
 		return
@@ -63,7 +65,7 @@ func main() {
 		return
 	}
 
-	err = rmq.Seed(ctx)
+	err = rmq.Seed(ctx, vhosts)
 	if err != nil {
 		slog.Error("failed to seed RabbitMQ", "error", err)
 		return

@@ -8,9 +8,8 @@ import (
 	"github.com/sisneve/rabbitmq-dashboard/internal/models"
 )
 
-func (rmq *RMQClient) Seed(ctx context.Context) error {
+func (rmq *RMQClient) Seed(ctx context.Context, vhosts []string) error {
 
-	vhosts := []string{"unimq", "unimq-test"}
 	for _, vhost := range vhosts {
 		err := rmq.NewVhost(vhost)
 		if err != nil {

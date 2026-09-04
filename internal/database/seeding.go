@@ -21,7 +21,7 @@ var (
 		{
 			ID:        "090e10a0-4c2c-46e4-8870-9e354232a037",
 			Name:      "High queue size",
-			Threshold: 1500.0,
+			Threshold: 15.0,
 			Type:      models.AlarmTypeQueueSize,
 			Enabled:   true,
 			Status:    models.AlarmStatusActive,
@@ -75,7 +75,7 @@ var (
 	}
 )
 
-func (dbc *Database) Seed(ctx context.Context) error {
+func (dbc *Database) Seed(ctx context.Context, vhosts []string) error {
 	// Drop stale data so re-seeding always produces a clean state.
 	if err := dbc.Collections.Notifications.Drop(ctx); err != nil {
 		return fmt.Errorf("failed to drop notifications collection: %w", err)
@@ -83,8 +83,6 @@ func (dbc *Database) Seed(ctx context.Context) error {
 	if err := dbc.Collections.Alarms.Drop(ctx); err != nil {
 		return fmt.Errorf("failed to drop alarms collection: %w", err)
 	}
-
-	vhosts := []string{"/", "unimq", "unimq-test"}
 
 	for _, vhost := range vhosts {
 		err := dbc.seedNotifications(ctx, vhost)
