@@ -28,11 +28,12 @@ import (
 //	@contact.name	Norsk helsenett SF
 //	@contact.url	https://github.com/NorskHelsenett/unimq-dashboard
 
-//	@host					localhost:8080
-//	@basePath				/api
-//	@securityDefinitions	bearer					Authorization
-//	@in						header	Authorization	"Bearer {token}"
-//	@name					Authorization
+//	@host						localhost:8080
+//	@basePath					/api
+//	@securityDefinitions.apikey	bearer
+//	@in							header
+//	@name						Authorization
+//	@description				"JWT token for authentication, obtained from the Dex OIDC provider, formatted as 'Bearer {token}' in the Authorization header"
 
 func main() {
 
