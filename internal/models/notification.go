@@ -98,47 +98,44 @@ func (p *PostAlarmRule) ToAlarmRule() (*AlarmRule, error) {
 		return nil, fmt.Errorf("invalid alarm type: %s", p.Type)
 	}
 	return &AlarmRule{
-		ID:           uuid.New().String(),
-		Name:         p.Name,
-		Type:         p.Type,
-		QueueName:    p.QueueName,
-		Threshold:    p.Threshold,
-		Message:      p.Message,
-		Enabled:      p.Enabled,
-		Status:       AlarmStatusActive,
-		LastFired:    nil,
-		LastResolved: nil,
-		LastValue:    nil,
+		ID:        uuid.New().String(),
+		Name:      p.Name,
+		Type:      p.Type,
+		QueueName: p.QueueName,
+		Threshold: p.Threshold,
+		Message:   p.Message,
+		Enabled:   p.Enabled,
+		Status:    AlarmStatusActive,
+		LastFired: nil,
+		LastValue: nil,
 	}, nil
 }
 
 type AlarmRule struct {
-	ID           string      `json:"id" bson:"id"`
-	Name         string      `json:"name" bson:"name"`
-	Type         AlarmType   `json:"type" bson:"type"`
-	QueueName    string      `json:"queue_name,omitempty" bson:"queueName"`
-	Threshold    float64     `json:"threshold,omitempty" bson:"threshold"`
-	Message      string      `json:"message" bson:"message"`
-	Enabled      bool        `json:"enabled" bson:"enabled"`
-	Status       AlarmStatus `json:"status" bson:"status"`
-	LastFired    *time.Time  `json:"last_fired,omitempty" bson:"lastFired"`
-	LastResolved *time.Time  `json:"last_resolved,omitempty" bson:"lastResolved"`
-	LastValue    *float64    `json:"last_value,omitempty" bson:"lastValue"`
+	ID        string      `json:"id" bson:"id"`
+	Name      string      `json:"name" bson:"name"`
+	Type      AlarmType   `json:"type" bson:"type"`
+	QueueName string      `json:"queue_name,omitempty" bson:"queueName"`
+	Threshold float64     `json:"threshold,omitempty" bson:"threshold"`
+	Message   string      `json:"message" bson:"message"`
+	Enabled   bool        `json:"enabled" bson:"enabled"`
+	Status    AlarmStatus `json:"status" bson:"status"`
+	LastFired *time.Time  `json:"last_fired,omitempty" bson:"lastFired"`
+	LastValue *float64    `json:"last_value,omitempty" bson:"lastValue"`
 }
 
 func NewAlarmRule(name string, typ AlarmType, queueName string, threshold float64, message string, enabled bool) *AlarmRule {
 	return &AlarmRule{
-		ID:           uuid.New().String(),
-		Name:         name,
-		Type:         typ,
-		QueueName:    queueName,
-		Threshold:    threshold,
-		Message:      message,
-		Enabled:      enabled,
-		Status:       AlarmStatusActive,
-		LastFired:    nil,
-		LastResolved: nil,
-		LastValue:    nil,
+		ID:        uuid.New().String(),
+		Name:      name,
+		Type:      typ,
+		QueueName: queueName,
+		Threshold: threshold,
+		Message:   message,
+		Enabled:   enabled,
+		Status:    AlarmStatusActive,
+		LastFired: nil,
+		LastValue: nil,
 	}
 }
 
