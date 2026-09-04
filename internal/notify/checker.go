@@ -232,6 +232,7 @@ func EvaluateRule(rule *models.AlarmRule, newStatus models.AlarmStatus, newValue
 }
 
 // checkRule evaluates a single alarm rule against the current metrics and sends notifications if needed.
+// TODO: Check that the rules are evaluated
 func (c *Checker) checkRule(rule *models.AlarmRule, vhostName string, urls []string, metrics *models.VhostMetrics, queues []models.QueueDetail) {
 
 	evalResult, err := EvaluateMetrics(rule, metrics, queues)
@@ -322,8 +323,11 @@ func evaluate(rule *models.AlarmRule, metrics *models.VhostMetrics, queues []mod
 			v = float64(metrics.Queues)
 		}
 	case models.AlarmTypeUnacked:
-		if metrics != nil {
-			v = float64(metrics.Unacked)
+		for _, q := range queues {
+			if q.Name == rule.QueueName {
+				v = float64(q.Unacked)
+				break
+			}
 		}
 	case models.AlarmTypeQueueMessages:
 		for _, q := range queues {
