@@ -94,7 +94,7 @@ tasks:
   swag-generate:
     desc: Generate Swagger documentation
     deps:
-      - check-swag
+      - swag-check
     cmds:
       - swag init -g {{.MAIN_PATH}}/main.go -o ./internal/docs --parseInternal
     silent: true
@@ -102,7 +102,7 @@ tasks:
   swag-format:
     desc: Format Swagger documentation
     deps:
-      - generate-swag
+      - swag-generate
     cmds:
       - swag fmt -d .
     silent: true
