@@ -43,16 +43,16 @@ func main() {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
-	vhosts := []string{"/", "unimq", "unimq-test"}
-	queues := []string{"unimq-queue", "unimq-test-queue"}
-
-	err = db.Seed(ctx, vhosts)
-	if err != nil {
-		slog.Error("failed to seed database", "error", err)
-		return
+	queueMapping := map[string][]string{
+		"/":          {},
+		"unimq":      {},
+		"unimq-test": {},
 	}
 
-	slog.Info("database seeded successfully")
+	vhosts := []string{}
+	for vhost := range queueMapping {
+		vhosts = append(vhosts, vhost)
+	}
 
 	rmq, err := rabbitmq.NewRMQClient(
 		rabbitmq.WithRMQHost(config.RabbitMQHost),
@@ -66,11 +66,19 @@ func main() {
 		return
 	}
 
-	err = rmq.Seed(ctx, vhosts, queues)
+	queueMapping, err = rmq.Seed(ctx, vhosts)
 	if err != nil {
 		slog.Error("failed to seed RabbitMQ", "error", err)
 		return
 	}
 
 	slog.Info("RabbitMQ seeded successfully")
+
+	err = db.Seed(ctx, queueMapping)
+	if err != nil {
+		slog.Error("failed to seed database", "error", err)
+		return
+	}
+
+	slog.Info("database seeded successfully")
 }
