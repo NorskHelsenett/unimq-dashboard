@@ -19,6 +19,16 @@ const (
 var (
 	alarmsSeed = []models.AlarmRule{
 		{
+			ID:        "72397f36-a013-46c4-aea4-c6635fee962d",
+			Name:      "High queue message size",
+			Threshold: 50.0,
+			Type:      models.AlarmTypeQueueMessages,
+			Enabled:   true,
+			Status:    models.AlarmStatusActive,
+			LastFired: new(time.Now().Add(-10 * time.Minute)),
+			LastValue: new(47.0),
+		},
+		{
 			ID:        "090e10a0-4c2c-46e4-8870-9e354232a037",
 			Name:      "High queue size",
 			Threshold: 15.0,
@@ -26,7 +36,7 @@ var (
 			Enabled:   true,
 			Status:    models.AlarmStatusActive,
 			LastFired: new(time.Now().Add(-10 * time.Minute)),
-			LastValue: new(47.0),
+			LastValue: new(15.0),
 		},
 		{
 			ID:        "b8f2a1c4-3e7d-4f90-a5b6-1c2d3e4f5a6b",

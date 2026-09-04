@@ -8,7 +8,7 @@ import (
 	"github.com/sisneve/rabbitmq-dashboard/internal/models"
 )
 
-func (rmq *RMQClient) Seed(ctx context.Context, vhosts []string) error {
+func (rmq *RMQClient) Seed(ctx context.Context, vhosts []string, queues []string) error {
 
 	for _, vhost := range vhosts {
 		err := rmq.NewVhost(vhost)
@@ -17,14 +17,13 @@ func (rmq *RMQClient) Seed(ctx context.Context, vhosts []string) error {
 		}
 	}
 
-	queues := []string{"unimq-queue", "unimq-test-queue"}
 	for _, queue := range queues {
 		for _, vhost := range vhosts {
 			err := rmq.NewQueue(vhost, queue)
 			if err != nil {
 				return fmt.Errorf("failed to create queue %s in vhost %s: %w", queue, vhost, err)
 			}
-			for i := range 25 {
+			for i := range 50 {
 				payload := fmt.Sprintf(`{"id":%d,"event":"seed","source":"%s/%s"}`, i, vhost, queue)
 				err = rmq.PublishMessage(vhost, queue, payload)
 				if err != nil {

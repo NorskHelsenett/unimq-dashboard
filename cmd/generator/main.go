@@ -44,6 +44,7 @@ func main() {
 	defer cancel()
 
 	vhosts := []string{"/", "unimq", "unimq-test"}
+	queues := []string{"unimq-queue", "unimq-test-queue"}
 
 	err = db.Seed(ctx, vhosts)
 	if err != nil {
@@ -65,7 +66,7 @@ func main() {
 		return
 	}
 
-	err = rmq.Seed(ctx, vhosts)
+	err = rmq.Seed(ctx, vhosts, queues)
 	if err != nil {
 		slog.Error("failed to seed RabbitMQ", "error", err)
 		return
