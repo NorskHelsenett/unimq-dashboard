@@ -2,13 +2,13 @@ package database
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"log/slog"
+	"slices"
 	"time"
+	"uuid"
 
 	"github.com/sisneve/rabbitmq-dashboard/internal/models"
-	"go.mongodb.org/mongo-driver/v2/mongo"
 )
 
 const (
@@ -19,7 +19,8 @@ const (
 var (
 	alarmsSeed = []models.AlarmRule{
 		{
-			ID:        "72397f36-a013-46c4-aea4-c6635fee962d",
+			ID:        "",
+			QueueName: "",
 			Name:      "High queue message size",
 			Threshold: 50.0,
 			Type:      models.AlarmTypeQueueMessages,
@@ -29,7 +30,8 @@ var (
 			LastValue: new(47.0),
 		},
 		{
-			ID:        "090e10a0-4c2c-46e4-8870-9e354232a037",
+			ID:        "",
+			QueueName: "",
 			Name:      "High queue size",
 			Threshold: 15.0,
 			Type:      models.AlarmTypeQueueSize,
@@ -39,7 +41,8 @@ var (
 			LastValue: new(15.0),
 		},
 		{
-			ID:        "b8f2a1c4-3e7d-4f90-a5b6-1c2d3e4f5a6b",
+			ID:        "",
+			QueueName: "",
 			Name:      "High channel count",
 			Threshold: 10.0,
 			Type:      models.AlarmTypeChannels,
@@ -49,7 +52,8 @@ var (
 			LastValue: new(47.0),
 		},
 		{
-			ID:        "95639405-dfa1-4b3b-b453-bea86abf7bde",
+			ID:        "",
+			QueueName: "",
 			Name:      "High connection count",
 			Threshold: 10.0,
 			Type:      models.AlarmTypeConnections,
@@ -85,22 +89,53 @@ var (
 	}
 )
 
-func (dbc *Database) Seed(ctx context.Context, vhosts []string) error {
-	// Drop stale data so re-seeding always produces a clean state.
+// Seed populates the database with initial data for testing and development purposes.
+// It drops existing collections and inserts predefined notification rules,
+// recipients, alarms, maintenance entries, and maintenance logs based on the provided queue mapping.
+// The provided queue mapping is a map where the keys are vhost names and the values are slices of queue names associated with each vhost.
+func (dbc *Database) Seed(ctx context.Context, queueMapping map[string][]string) error {
+
 	if err := dbc.Collections.Notifications.Drop(ctx); err != nil {
 		return fmt.Errorf("failed to drop notifications collection: %w", err)
 	}
+
 	if err := dbc.Collections.Alarms.Drop(ctx); err != nil {
 		return fmt.Errorf("failed to drop alarms collection: %w", err)
 	}
 
+	if err := dbc.Collections.Maintenance.Drop(ctx); err != nil {
+		return fmt.Errorf("failed to drop maintenance collection: %w", err)
+	}
+
+	if err := dbc.Collections.MaintenanceEditLogs.Drop(ctx); err != nil {
+		return fmt.Errorf("failed to drop maintenance logs collection: %w", err)
+	}
+
+	vhosts := make([]string, 0, len(queueMapping))
+	for vhost := range queueMapping {
+		vhosts = append(vhosts, vhost)
+	}
+
 	for _, vhost := range vhosts {
-		err := dbc.seedNotifications(ctx, vhost)
+
+		queues := queueMapping[vhost]
+		alarmSeedsCount := len(alarmsSeed)
+		alarmRules := make([]models.AlarmRule, 0, alarmSeedsCount)
+
+		for _, queue := range queues {
+			alarmRules = slices.Clone(alarmsSeed)
+			for i := range alarmRules {
+				alarmRules[i].ID = uuid.New().String()
+				alarmRules[i].QueueName = queue
+			}
+		}
+
+		err := dbc.seedNotifications(ctx, vhost, alarmRules)
 		if err != nil {
 			return err
 		}
 
-		err = dbc.SeedAlarms(ctx, vhost)
+		err = dbc.SeedAlarms(ctx, vhost, alarmRules)
 		if err != nil {
 			return err
 		}
@@ -111,10 +146,15 @@ func (dbc *Database) Seed(ctx context.Context, vhosts []string) error {
 		return err
 	}
 
+	err = dbc.SeedMaintenanceLogs(ctx)
+	if err != nil {
+		return err
+	}
+
 	return nil
 }
 
-func (dbc *Database) seedNotifications(ctx context.Context, name string) error {
+func (dbc *Database) seedNotifications(ctx context.Context, name string, alarmRules []models.AlarmRule) error {
 
 	err := dbc.EnsureVhostExists(ctx, name)
 	if err != nil {
@@ -126,7 +166,7 @@ func (dbc *Database) seedNotifications(ctx context.Context, name string) error {
 		return err
 	}
 
-	err = dbc.seedNotificationRules(ctx, name)
+	err = dbc.seedNotificationRules(ctx, name, alarmRules)
 	if err != nil {
 		return err
 	}
@@ -136,24 +176,9 @@ func (dbc *Database) seedNotifications(ctx context.Context, name string) error {
 
 func (dbc *Database) seedNotificationRecipients(ctx context.Context, name string) error {
 
-	recipient, err := dbc.GetNotificationRecipient(ctx, name, recipientID)
-	if err == nil {
-		if recipient == nil {
-			return fmt.Errorf("unexpected nil recipient")
-		}
-		if recipientID != recipient.ID {
-			return fmt.Errorf("unexpected recipient ID. expected %s, got %s", recipientID, recipient.ID)
-		}
-		return nil
-	}
+	slog.DebugContext(ctx, "seeding notification recipient", "vhost", name, "recipientID", recipientID)
 
-	if !errors.Is(err, mongo.ErrNoDocuments) && !errors.Is(err, ErrRecipientNotFound) {
-		return fmt.Errorf("failed to check existing recipient entry. %w", err)
-	}
-
-	slog.InfoContext(ctx, "seeding notification recipient", "vhost", name, "recipientID", recipientID, "existing", recipient)
-
-	err = dbc.AddNotificationRecipient(ctx, name, &models.Recipient{
+	err := dbc.AddNotificationRecipient(ctx, name, &models.Recipient{
 		ID:   recipientID,
 		Name: "Matias",
 		URL:  "https://hooks.slack.com/services/T00000000/B00000000/XXXXXXXXXXXXXXXXXXXXXXXX",
@@ -176,38 +201,10 @@ func (dbc *Database) seedNotificationRecipients(ctx context.Context, name string
 	return nil
 }
 
-func (dbc *Database) seedNotificationRules(ctx context.Context, vhost string) error {
+func (dbc *Database) seedNotificationRules(ctx context.Context, vhost string, alarmRules []models.AlarmRule) error {
 
-	rules, err := dbc.GetNotificationRules(ctx, vhost)
-	if err != nil {
-		if !errors.Is(err, mongo.ErrNoDocuments) {
-			return fmt.Errorf("failed to get existing notification rules. %w", err)
-		}
-	}
-
-	missingRules := []models.AlarmRule{}
-	for _, rule := range alarmsSeed {
-		found := false
-		if rules != nil {
-			for _, existingRule := range rules {
-				if rule.ID == existingRule.ID {
-					found = true
-					break
-				}
-			}
-		}
-		if !found {
-			missingRules = append(missingRules, rule)
-		}
-
-	}
-
-	if len(missingRules) == 0 {
-		return nil
-	}
-
-	for _, missingRule := range missingRules {
-		err = dbc.AddNotificationRule(ctx, vhost, &missingRule)
+	for _, missingRule := range alarmRules {
+		err := dbc.AddNotificationRule(ctx, vhost, &missingRule)
 		if err != nil {
 			return err
 		}
@@ -219,22 +216,7 @@ func (dbc *Database) seedNotificationRules(ctx context.Context, vhost string) er
 func (dbc *Database) seedMaintenace(ctx context.Context) error {
 
 	for _, MaintenanceEntry := range maintenanceEntries {
-		existing, err := dbc.GetMaintenanceEntry(ctx, MaintenanceEntry.ID)
-		if err != nil {
-			if !errors.Is(err, mongo.ErrNoDocuments) {
-				return fmt.Errorf("failed to check existing maintenance entry. %w", err)
-			}
-		} else {
-			if existing == nil {
-				return fmt.Errorf("unexpected nil maintenance entry")
-			}
-			if existing.ID == MaintenanceEntry.ID {
-				continue
-			}
-			return fmt.Errorf("unexpected maintenance entry ID. expected %s, got %s", "test-maintenance", existing.ID)
-		}
-
-		err = dbc.AddMaintenanceEntry(ctx, &MaintenanceEntry)
+		err := dbc.AddMaintenanceEntry(ctx, &MaintenanceEntry)
 		if err != nil {
 			return err
 		}
@@ -243,22 +225,8 @@ func (dbc *Database) seedMaintenace(ctx context.Context) error {
 }
 
 func (dbc *Database) SeedMaintenanceEntry(ctx context.Context, entry *models.MaintenanceEntry) error {
-	existing, err := dbc.GetMaintenanceEntry(ctx, entry.ID)
-	if err != nil {
-		if !errors.Is(err, mongo.ErrNoDocuments) {
-			return fmt.Errorf("failed to check existing maintenance entry. %w", err)
-		}
-	} else {
-		if existing == nil {
-			return fmt.Errorf("unexpected nil maintenance entry")
-		}
-		if existing.ID == entry.ID {
-			return nil
-		}
-		return fmt.Errorf("unexpected maintenance entry ID. expected %s, got %s", entry.ID, existing.ID)
-	}
 
-	err = dbc.AddMaintenanceEntry(ctx, entry)
+	err := dbc.AddMaintenanceEntry(ctx, entry)
 	if err != nil {
 		return err
 	}
@@ -275,38 +243,10 @@ func (dbc *Database) SeedMaintenanceLogs(ctx context.Context) error {
 		logEntries = append(logEntries, *models.NewMaintenaceEditLog(MaintenanceEntry.ID, "Test maintenance log entry 2", time.Now(), time.Now().Add(2*time.Hour), "Updated description", "user2"))
 		logEntries = append(logEntries, *models.NewMaintenaceEditLog(MaintenanceEntry.ID, "Test maintenance log entry 3", time.Now(), time.Now().Add(2*time.Hour), "Updated start and end times", "user3"))
 
-		missingEntries := []models.MaintenanceEditLog{}
-		existing, err := dbc.GetMaintenanceEditLogs(ctx, MaintenanceEntry.ID)
-		if err != nil {
-			if !errors.Is(err, mongo.ErrNoDocuments) {
-				return fmt.Errorf("failed to check existing maintenance edit logs. %w", err)
-			}
-		} else {
-			if len(existing) > 0 {
-				for _, log := range logEntries {
-					found := false
-					for _, existingLog := range existing {
-						if log.MaintenanceID == existingLog.MaintenanceID {
-							found = true
-							break
-						}
-					}
-					if !found {
-						missingEntries = append(missingEntries, log)
-					}
-
-				}
-			} else {
-				missingEntries = logEntries
-			}
-		}
-
-		if len(missingEntries) > 0 {
-			for _, log := range missingEntries {
-				err = dbc.AddMaintenanceEditLog(ctx, &log)
-				if err != nil {
-					return err
-				}
+		for _, log := range logEntries {
+			err := dbc.AddMaintenanceEditLog(ctx, &log)
+			if err != nil {
+				return err
 			}
 		}
 
@@ -315,24 +255,9 @@ func (dbc *Database) SeedMaintenanceLogs(ctx context.Context) error {
 	return nil
 }
 
-func (dbc *Database) SeedAlarms(ctx context.Context, name string) error {
-	for _, rule := range alarmsSeed {
+func (dbc *Database) SeedAlarms(ctx context.Context, name string, alarmRules []models.AlarmRule) error {
 
-		alarm, err := dbc.GetAlarm(ctx, rule.ID)
-		if err != nil {
-			if !errors.Is(err, mongo.ErrNoDocuments) {
-				return fmt.Errorf("failed to check existing alarm entry. %w", err)
-			}
-		} else {
-			if alarm == nil {
-				return fmt.Errorf("unexpected nil alarm entry")
-			}
-
-			if alarm.AlarmID != rule.ID {
-				return fmt.Errorf("unexpected alarm entry name. expected %s, got %s", "name", alarm.AlarmID)
-			}
-			return nil
-		}
+	for _, rule := range alarmRules {
 
 		entries := models.AlarmEntry{
 			AlarmID: rule.ID,
@@ -346,22 +271,10 @@ func (dbc *Database) SeedAlarms(ctx context.Context, name string) error {
 		entries.Entries = append(entries.Entries, models.NewLogEntry(models.LogEventResolved, &val, 69.0, rule.Type))
 		entries.Entries = append(entries.Entries, models.NewLogEntry(models.LogEventFired, new(47.0), 10.0, rule.Type))
 
-		err = dbc.AddAlarm(ctx, &entries)
+		err := dbc.AddAlarm(ctx, &entries)
 		if err != nil {
 			return err
 		}
-	}
-
-	// This is mostly to test the InsertAlarmEntries function, which is used to insert log entries for a specific vhost.
-	alarms := make([]*models.LogEntry, 0, 2)
-	entry := models.NewLogEntry(models.LogEventFired, new(5.0), 1.337, models.AlarmTypeQueueMessages)
-	alarms = append(alarms, &entry)
-	entry = models.NewLogEntry(models.LogEventResolved, new(5.0), 5.318008, models.AlarmTypeQueueMessages)
-	alarms = append(alarms, &entry)
-
-	err := dbc.InsertAlarmEntries(ctx, name, alarms)
-	if err != nil {
-		return err
 	}
 
 	return nil

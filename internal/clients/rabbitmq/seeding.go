@@ -3,36 +3,50 @@ package rabbitmq
 import (
 	"context"
 	"fmt"
+	"math/rand/v2"
 	"net/url"
 
 	"github.com/sisneve/rabbitmq-dashboard/internal/models"
 )
 
-func (rmq *RMQClient) Seed(ctx context.Context, vhosts []string, queues []string) error {
+func (rmq *RMQClient) Seed(ctx context.Context, vhosts []string) (map[string][]string, error) {
 
 	for _, vhost := range vhosts {
 		err := rmq.NewVhost(vhost)
 		if err != nil {
-			return fmt.Errorf("failed to create vhost %s: %w", vhost, err)
+			return nil, fmt.Errorf("failed to create vhost %s: %w", vhost, err)
 		}
 	}
 
-	for _, queue := range queues {
-		for _, vhost := range vhosts {
-			err := rmq.NewQueue(vhost, queue)
+	queueMapping := make(map[string][]string, len(vhosts))
+
+	queuePrefix := "seeded-queue"
+
+	for _, vhost := range vhosts {
+
+		queueCount := rand.IntN(20)
+		if queueCount < 5 {
+			queueCount = 5
+		}
+
+		for count := range queueCount {
+
+			queueName := fmt.Sprintf("%v-%v", queuePrefix, count)
+			queueMapping[vhost] = append(queueMapping[vhost], queueName)
+			err := rmq.NewQueue(vhost, queueName)
 			if err != nil {
-				return fmt.Errorf("failed to create queue %s in vhost %s: %w", queue, vhost, err)
+				return nil, fmt.Errorf("failed to create queue %s in vhost %s: %w", queueName, vhost, err)
 			}
 			for i := range 50 {
-				payload := fmt.Sprintf(`{"id":%d,"event":"seed","source":"%s/%s"}`, i, vhost, queue)
-				err = rmq.PublishMessage(vhost, queue, payload)
+				payload := fmt.Sprintf(`{"id":%d,"event":"seed","source":"%s/%s"}`, i, vhost, queueName)
+				err = rmq.PublishMessage(vhost, queueName, payload)
 				if err != nil {
-					return fmt.Errorf("failed to publish seed message to %s/%s: %w", vhost, queue, err)
+					return nil, fmt.Errorf("failed to publish seed message to %s/%s: %w", vhost, queueName, err)
 				}
 			}
 		}
 	}
-	return nil
+	return queueMapping, nil
 }
 
 func (r *RMQClient) PublishMessage(vhost, queue, payload string) error {
