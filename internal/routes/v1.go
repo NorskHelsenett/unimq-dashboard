@@ -37,7 +37,7 @@ func SetupProtectedRoutes(r chi.Router, apiservice *api.APIService) {
 
 		r.Route("/alarms", func(r chi.Router) {
 			r.Get("/", apiservice.GetAlarmHistoryAllHandler)
-			r.Get("/{vhost}", apiservice.GetAlarmHistoryHandler)
+			r.Get("/{rule-id}", apiservice.GetAlarmHistoryHandler)
 		})
 
 		r.Get("/cluster", apiservice.GetClusterHandler)
