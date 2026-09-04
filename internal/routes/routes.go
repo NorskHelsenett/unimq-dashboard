@@ -56,7 +56,7 @@ func SetupRoutes(ctx context.Context, config *config.Config, db *database.Databa
 			SetupUnprotectedRoutes(r, apiservice)
 
 			r.Group(func(r chi.Router) {
-				// r.Use(authcontroller.AuthenticationMiddleware)
+				r.Use(dex.Authorization())
 				SetupProtectedRoutes(r, apiservice)
 			})
 		})
