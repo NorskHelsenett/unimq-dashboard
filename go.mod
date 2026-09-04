@@ -1,6 +1,6 @@
 module github.com/sisneve/rabbitmq-dashboard
 
-go 1.26.5
+go 1.27.0
 
 require (
 	github.com/coreos/go-oidc/v3 v3.21.0
