@@ -6,9 +6,7 @@ import { setAuthToken } from "@/lib/apiClient"
 function AuthGuard({ children }: { children: React.ReactNode }) {
   const auth = useAuth()
 
-  useEffect(() => {
-    setAuthToken(auth.user?.access_token ?? null)
-  }, [auth.user])
+  setAuthToken(auth.user?.access_token ?? null)
 
   useEffect(() => {
     return auth.events.addSilentRenewError(() => {
