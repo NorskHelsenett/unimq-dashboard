@@ -126,6 +126,22 @@ type AlarmRule struct {
 	LastValue    *float64    `json:"last_value,omitempty" bson:"lastValue"`
 }
 
+func NewAlarmRule(name string, typ AlarmType, queueName string, threshold float64, message string, enabled bool) *AlarmRule {
+	return &AlarmRule{
+		ID:           uuid.New().String(),
+		Name:         name,
+		Type:         typ,
+		QueueName:    queueName,
+		Threshold:    threshold,
+		Message:      message,
+		Enabled:      enabled,
+		Status:       AlarmStatusActive,
+		LastFired:    nil,
+		LastResolved: nil,
+		LastValue:    nil,
+	}
+}
+
 func (r *AlarmRule) IsTriggered(value float64) bool {
 	return value >= r.Threshold
 }
