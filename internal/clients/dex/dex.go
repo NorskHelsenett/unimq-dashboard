@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"log/slog"
 	"net/http"
-	"time"
 
 	"github.com/coreos/go-oidc/v3/oidc"
 	"github.com/sisneve/rabbitmq-dashboard/internal/config"
@@ -41,54 +40,48 @@ func NewDexClient(ctx context.Context, config *config.OIDCConfig) (*DexClient, e
 	}, nil
 }
 
-func (d *DexClient) HandleRedirect(w http.ResponseWriter, r *http.Request) {
-	// generate a CSRF state
-	state := fmt.Sprintf("st_%d", time.Now().UnixNano())
-	// Simple example using a cookie:
-	http.SetCookie(w, &http.Cookie{
-		Name:     "oauth_state",
-		Value:    state,
-		Path:     "/",
-		HttpOnly: true,
-		Secure:   true,
-		SameSite: http.SameSiteLaxMode,
-		Expires:  time.Now().Add(10 * time.Minute),
-	})
-	http.Redirect(w, r, d.Config.AuthCodeURL(state), http.StatusFound)
+func (d *DexClient) ValidateToken(ctx context.Context, token string) (*oidc.IDToken, error) {
+	idToken, err := d.Verifier.Verify(ctx, token)
+	if err != nil {
+		slog.ErrorContext(ctx, "failed to verify ID Token", "error", err)
+		return nil, fmt.Errorf("failed to verify ID Token: %w", err)
+	}
+
+	return idToken, nil
 }
 
-func (d *DexClient) HandleAuthCallback(w http.ResponseWriter, r *http.Request) {
-	state := r.URL.Query().Get("state")
+// Authorization is a middleware that checks for a valid OIDC token in the Authorization header.
+// If the token is valid, it adds the claims to the request context.
+func (d *DexClient) Authorization() func(http.Handler) http.Handler {
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			// Extract the token from the Authorization header
+			authHeader := r.Header.Get("Authorization")
+			if authHeader == "" {
+				http.Error(w, "Authorization header missing", http.StatusUnauthorized)
+				return
+			}
 
-	slog.Info("Received OAuth2 callback", "state", state)
+			token := authHeader[len("Bearer "):]
 
-	oauth2Token, err := d.Config.Exchange(r.Context(), r.URL.Query().Get("code"))
-	if err != nil {
-		httpsuite.WriteJSONError(w, "failed to exchange token: "+err.Error(), http.StatusInternalServerError)
-		return
-	}
+			idToken, err := d.ValidateToken(r.Context(), token)
+			if err != nil {
+				http.Error(w, "Invalid token: "+err.Error(), http.StatusUnauthorized)
+				return
+			}
 
-	// Extract the ID Token from OAuth2 token.
-	rawIDToken, ok := oauth2Token.Extra("id_token").(string)
-	if !ok {
-		httpsuite.WriteJSONError(w, "no id_token field in oauth2 token", http.StatusInternalServerError)
-		return
-	}
+			var claims struct {
+				Email    string   `json:"email"`
+				Verified bool     `json:"email_verified"`
+				Groups   []string `json:"groups"`
+			}
+			if err := idToken.Claims(&claims); err != nil {
+				httpsuite.WriteJSONError(w, "Failed to parse claims: "+err.Error(), http.StatusInternalServerError)
+				return
+			}
 
-	// Parse and verify ID Token payload.
-	idToken, err := d.Verifier.Verify(r.Context(), rawIDToken)
-	if err != nil {
-		httpsuite.WriteJSONError(w, "failed to verify ID Token: "+err.Error(), http.StatusInternalServerError)
-		return
-	}
-
-	// Extract custom claims.
-	var claims struct {
-		Email    string   `json:"email"`
-		Verified bool     `json:"email_verified"`
-		Groups   []string `json:"groups"`
-	}
-	if err := idToken.Claims(&claims); err != nil {
-		httpsuite.WriteJSONError(w, "failed to parse claims: "+err.Error(), http.StatusInternalServerError)
+			ctx := context.WithValue(r.Context(), "claims", claims)
+			next.ServeHTTP(w, r.WithContext(ctx))
+		})
 	}
 }
