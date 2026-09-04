@@ -14,11 +14,42 @@ import (
 const (
 	recipientID      = "e45957ef-b817-414e-95e8-c4ea89c4ad3e"
 	recipientEmailID = "a1b2c3d4-e5f6-7890-abcd-ef1234567890"
-	ruleID           = "090e10a0-4c2c-46e4-8870-9e354232a037"
-	firingRuleID     = "b8f2a1c4-3e7d-4f90-a5b6-1c2d3e4f5a6b"
 )
 
 var (
+	alarmsSeed = []models.AlarmRule{
+		{
+			ID:        "090e10a0-4c2c-46e4-8870-9e354232a037",
+			Name:      "High queue size",
+			Threshold: 1500.0,
+			Type:      models.AlarmTypeQueueSize,
+			Enabled:   true,
+			Status:    models.AlarmStatusActive,
+			LastFired: new(time.Now().Add(-10 * time.Minute)),
+			LastValue: new(47.0),
+		},
+		{
+			ID:        "b8f2a1c4-3e7d-4f90-a5b6-1c2d3e4f5a6b",
+			Name:      "High channel count",
+			Threshold: 10.0,
+			Type:      models.AlarmTypeChannels,
+			Enabled:   true,
+			Status:    models.AlarmStatusFiring,
+			LastFired: new(time.Now().Add(-10 * time.Minute)),
+			LastValue: new(47.0),
+		},
+		{
+			ID:        "95639405-dfa1-4b3b-b453-bea86abf7bde",
+			Name:      "High connection count",
+			Threshold: 10.0,
+			Type:      models.AlarmTypeConnections,
+			Enabled:   true,
+			Status:    models.AlarmStatusFiring,
+			LastFired: new(time.Now().Add(-10 * time.Minute)),
+			LastValue: new(47.0),
+		},
+	}
+
 	maintenanceEntries = []models.MaintenanceEntry{
 		{
 			ID:          "e45957ef-b817-414e-95e8-c4ea89c4ad3e",
@@ -53,7 +84,7 @@ func (dbc *Database) Seed(ctx context.Context) error {
 		return fmt.Errorf("failed to drop alarms collection: %w", err)
 	}
 
-	vhosts := []string{"unimq", "unimq-test"}
+	vhosts := []string{"/", "unimq", "unimq-test"}
 
 	for _, vhost := range vhosts {
 		err := dbc.seedNotifications(ctx, vhost)
@@ -70,21 +101,6 @@ func (dbc *Database) Seed(ctx context.Context) error {
 	err := dbc.seedMaintenace(ctx)
 	if err != nil {
 		return err
-	}
-
-	// seed per-rule log for the firing alarm (rule-scoped, not per-vhost)
-	firingVal := 47.0
-	firingEntries := models.AlarmEntry{
-		AlarmID: firingRuleID,
-		Entries: []models.LogEntry{
-			models.NewLogEntry(models.LogEventFired, &firingVal, 10.0, models.AlarmTypeChannels),
-		},
-	}
-	if err := dbc.AddAlarm(ctx, &firingEntries); err != nil {
-		err = dbc.SeedMaintenanceLogs(ctx)
-		if err != nil {
-			return err
-		}
 	}
 
 	return nil
@@ -152,50 +168,41 @@ func (dbc *Database) seedNotificationRecipients(ctx context.Context, name string
 	return nil
 }
 
-func (dbc *Database) seedNotificationRules(ctx context.Context, name string) error {
+func (dbc *Database) seedNotificationRules(ctx context.Context, vhost string) error {
 
-	rules, err := dbc.GetNotificationRules(ctx, name)
+	rules, err := dbc.GetNotificationRules(ctx, vhost)
 	if err != nil {
 		if !errors.Is(err, mongo.ErrNoDocuments) {
 			return fmt.Errorf("failed to get existing notification rules. %w", err)
 		}
 	}
 
-	if len(rules) != 0 {
-		for _, r := range rules {
-			if r.ID == ruleID {
-				return nil
+	missingRules := []models.AlarmRule{}
+	for _, rule := range alarmsSeed {
+		found := false
+		if rules != nil {
+			for _, existingRule := range rules {
+				if rule.ID == existingRule.ID {
+					found = true
+					break
+				}
 			}
 		}
+		if !found {
+			missingRules = append(missingRules, rule)
+		}
+
 	}
 
-	err = dbc.AddNotificationRule(ctx, name, &models.AlarmRule{
-		ID:        ruleID,
-		Name:      "forks",
-		Threshold: 10.0,
-		Type:      models.AlarmTypeChannels,
-		Message:   "Test rule triggered",
-		Enabled:   true,
-		Status:    "active",
-	})
-	if err != nil {
-		return err
+	if len(missingRules) == 0 {
+		return nil
 	}
 
-	lastFired := time.Now().Add(-10 * time.Minute)
-	lastVal := 47.0
-	err = dbc.AddNotificationRule(ctx, name, &models.AlarmRule{
-		ID:        firingRuleID,
-		Name:      "High channel count",
-		Threshold: 10.0,
-		Type:      models.AlarmTypeChannels,
-		Enabled:   true,
-		Status:    models.AlarmStatusFiring,
-		LastFired: &lastFired,
-		LastValue: &lastVal,
-	})
-	if err != nil {
-		return err
+	for _, missingRule := range missingRules {
+		err = dbc.AddNotificationRule(ctx, vhost, &missingRule)
+		if err != nil {
+			return err
+		}
 	}
 
 	return nil
@@ -301,50 +308,50 @@ func (dbc *Database) SeedMaintenanceLogs(ctx context.Context) error {
 }
 
 func (dbc *Database) SeedAlarms(ctx context.Context, name string) error {
-	alarm, err := dbc.GetAlarm(ctx, name)
-	if err != nil {
-		if !errors.Is(err, mongo.ErrNoDocuments) {
-			return fmt.Errorf("failed to check existing alarm entry. %w", err)
+	for _, rule := range alarmsSeed {
+
+		alarm, err := dbc.GetAlarm(ctx, rule.ID)
+		if err != nil {
+			if !errors.Is(err, mongo.ErrNoDocuments) {
+				return fmt.Errorf("failed to check existing alarm entry. %w", err)
+			}
+		} else {
+			if alarm == nil {
+				return fmt.Errorf("unexpected nil alarm entry")
+			}
+
+			if alarm.AlarmID != rule.ID {
+				return fmt.Errorf("unexpected alarm entry name. expected %s, got %s", "name", alarm.AlarmID)
+			}
+			return nil
 		}
-	} else {
-		if alarm == nil {
-			return fmt.Errorf("unexpected nil alarm entry")
+
+		entries := models.AlarmEntry{
+			AlarmID: rule.ID,
+			Entries: []models.LogEntry{},
 		}
 
-		if alarm.AlarmID != name {
-			return fmt.Errorf("unexpected alarm entry name. expected %s, got %s", "name", alarm.AlarmID)
+		val := 5.0
+		entries.Entries = append(entries.Entries, models.NewLogEntry(models.LogEventFired, &val, 3.4, rule.Type))
+		entries.Entries = append(entries.Entries, models.NewLogEntry(models.LogEventResolved, &val, 42.0, rule.Type))
+		entries.Entries = append(entries.Entries, models.NewLogEntry(models.LogEventFired, &val, 0.67, rule.Type))
+		entries.Entries = append(entries.Entries, models.NewLogEntry(models.LogEventResolved, &val, 69.0, rule.Type))
+		entries.Entries = append(entries.Entries, models.NewLogEntry(models.LogEventFired, new(47.0), 10.0, rule.Type))
+
+		err = dbc.AddAlarm(ctx, &entries)
+		if err != nil {
+			return err
 		}
-		return nil
-	}
-
-	entries := models.AlarmEntry{
-		AlarmID: name,
-		Entries: []models.LogEntry{},
-	}
-
-	val := 5.0
-	entries.Entries = append(entries.Entries, models.NewLogEntry(models.LogEventFired, &val, 3.4, models.AlarmTypeChannels))
-	entries.Entries = append(entries.Entries, models.NewLogEntry(models.LogEventResolved, &val, 42.0, models.AlarmTypeChannels))
-	entries.Entries = append(entries.Entries, models.NewLogEntry(models.LogEventFired, &val, 0.67, models.AlarmTypeQueueSize))
-	entries.Entries = append(entries.Entries, models.NewLogEntry(models.LogEventResolved, &val, 69.0, models.AlarmTypeQueueSize))
-
-	// trailing fired entry — alarm is still above threshold
-	firingVal := 47.0
-	entries.Entries = append(entries.Entries, models.NewLogEntry(models.LogEventFired, &firingVal, 10.0, models.AlarmTypeChannels))
-
-	err = dbc.AddAlarm(ctx, &entries)
-	if err != nil {
-		return err
 	}
 
 	// This is mostly to test the InsertAlarmEntries function, which is used to insert log entries for a specific vhost.
 	alarms := make([]*models.LogEntry, 0, 2)
-	entry := models.NewLogEntry(models.LogEventFired, &val, 1.337, models.AlarmTypeQueueMessages)
+	entry := models.NewLogEntry(models.LogEventFired, new(5.0), 1.337, models.AlarmTypeQueueMessages)
 	alarms = append(alarms, &entry)
-	entry = models.NewLogEntry(models.LogEventResolved, &val, 5.318008, models.AlarmTypeQueueMessages)
+	entry = models.NewLogEntry(models.LogEventResolved, new(5.0), 5.318008, models.AlarmTypeQueueMessages)
 	alarms = append(alarms, &entry)
 
-	err = dbc.InsertAlarmEntries(ctx, name, alarms)
+	err := dbc.InsertAlarmEntries(ctx, name, alarms)
 	if err != nil {
 		return err
 	}
