@@ -18,46 +18,6 @@ const docTemplate = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
-        "/login": {
-            "post": {
-                "description": "This endpoint accepts a JSON payload containing the username and password. If the credentials are valid, it returns a JWT token that can be used for subsequent requests to protected endpoints.\nTo use the token, include it in the Authorization header of your requests as follows: ` + "`" + `Authorization: Bearer \u003ctoken\u003e` + "`" + `.",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Authentication"
-                ],
-                "summary": "Login handles user login requests and returns a JWT token upon successful authentication.",
-                "parameters": [
-                    {
-                        "description": "Login credentials",
-                        "name": "login",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/authcontroller.User"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "Login successful",
-                        "schema": {
-                            "$ref": "#/definitions/authcontroller.LoginResponse"
-                        }
-                    },
-                    "401": {
-                        "description": "Invalid credentials",
-                        "schema": {
-                            "$ref": "#/definitions/httpsuite.APIError"
-                        }
-                    }
-                }
-            }
-        },
         "/v1/alarms": {
             "get": {
                 "security": [
@@ -65,7 +25,7 @@ const docTemplate = `{
                         "bearer": []
                     }
                 ],
-                "description": "Get alarm history for all vhosts",
+                "description": "Get alarm history for all rules",
                 "produces": [
                     "application/json"
                 ],
@@ -101,44 +61,28 @@ const docTemplate = `{
                 }
             }
         },
-        "/v1/alarms/{vhost-name}": {
+        "/v1/alarms/{rule-id}": {
             "get": {
                 "security": [
                     {
                         "bearer": []
                     }
                 ],
-                "description": "Get alarm history for a specific vhost",
+                "description": "Get alarm history for a specific rule",
                 "produces": [
                     "application/json"
                 ],
                 "tags": [
                     "Alarms"
                 ],
-                "summary": "Get Alarm History for Vhost",
+                "summary": "Get Alarm History for a rule",
                 "parameters": [
                     {
                         "type": "string",
-                        "description": "Vhost Name",
-                        "name": "vhost-name",
+                        "description": "Rule ID",
+                        "name": "rule-id",
                         "in": "path",
                         "required": true
-                    },
-                    {
-                        "enum": [
-                            "channels",
-                            "connections",
-                            "queues",
-                            "unacked",
-                            "queue_messages",
-                            "queue_size",
-                            "no_consumer",
-                            "maintenance"
-                        ],
-                        "type": "string",
-                        "description": "Alarm Type",
-                        "name": "type",
-                        "in": "query"
                     }
                 ],
                 "responses": {
@@ -1252,25 +1196,6 @@ const docTemplate = `{
         }
     },
     "definitions": {
-        "authcontroller.LoginResponse": {
-            "type": "object",
-            "properties": {
-                "token": {
-                    "type": "string"
-                }
-            }
-        },
-        "authcontroller.User": {
-            "type": "object",
-            "properties": {
-                "password": {
-                    "type": "string"
-                },
-                "username": {
-                    "type": "string"
-                }
-            }
-        },
         "httpsuite.APIError": {
             "type": "object",
             "properties": {
@@ -1902,7 +1827,10 @@ const docTemplate = `{
                 "queues": {
                     "type": "integer"
                 },
-                "unacked": {
+                "ready_messages": {
+                    "type": "integer"
+                },
+                "unacked_messages": {
                     "type": "integer"
                 }
             }
@@ -1943,6 +1871,14 @@ const docTemplate = `{
                     "type": "string"
                 }
             }
+        }
+    },
+    "securityDefinitions": {
+        "bearer": {
+            "description": "\"JWT token for authentication, obtained from the Dex OIDC provider, formatted as 'Bearer {token}' in the Authorization header\"",
+            "type": "apiKey",
+            "name": "Authorization",
+            "in": "header"
         }
     }
 }`

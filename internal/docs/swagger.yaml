@@ -1,17 +1,5 @@
 basePath: /api
 definitions:
-  authcontroller.LoginResponse:
-    properties:
-      token:
-        type: string
-    type: object
-  authcontroller.User:
-    properties:
-      password:
-        type: string
-      username:
-        type: string
-    type: object
   httpsuite.APIError:
     properties:
       error:
@@ -438,7 +426,9 @@ definitions:
         type: string
       queues:
         type: integer
-      unacked:
+      ready_messages:
+        type: integer
+      unacked_messages:
         type: integer
     type: object
   models.VhostNotification:
@@ -474,38 +464,9 @@ info:
   title: RabbitMQ Dashboard API
   version: "1.0"
 paths:
-  /login:
-    post:
-      consumes:
-      - application/json
-      description: |-
-        This endpoint accepts a JSON payload containing the username and password. If the credentials are valid, it returns a JWT token that can be used for subsequent requests to protected endpoints.
-        To use the token, include it in the Authorization header of your requests as follows: `Authorization: Bearer <token>`.
-      parameters:
-      - description: Login credentials
-        in: body
-        name: login
-        required: true
-        schema:
-          $ref: '#/definitions/authcontroller.User'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: Login successful
-          schema:
-            $ref: '#/definitions/authcontroller.LoginResponse'
-        "401":
-          description: Invalid credentials
-          schema:
-            $ref: '#/definitions/httpsuite.APIError'
-      summary: Login handles user login requests and returns a JWT token upon successful
-        authentication.
-      tags:
-      - Authentication
   /v1/alarms:
     get:
-      description: Get alarm history for all vhosts
+      description: Get alarm history for all rules
       produces:
       - application/json
       responses:
@@ -530,27 +491,14 @@ paths:
       summary: Get Alarm History
       tags:
       - Alarms
-  /v1/alarms/{vhost-name}:
+  /v1/alarms/{rule-id}:
     get:
-      description: Get alarm history for a specific vhost
+      description: Get alarm history for a specific rule
       parameters:
-      - description: Vhost Name
+      - description: Rule ID
         in: path
-        name: vhost-name
+        name: rule-id
         required: true
-        type: string
-      - description: Alarm Type
-        enum:
-        - channels
-        - connections
-        - queues
-        - unacked
-        - queue_messages
-        - queue_size
-        - no_consumer
-        - maintenance
-        in: query
-        name: type
         type: string
       produces:
       - application/json
@@ -577,7 +525,7 @@ paths:
             $ref: '#/definitions/httpsuite.APIError'
       security:
       - bearer: []
-      summary: Get Alarm History for Vhost
+      summary: Get Alarm History for a rule
       tags:
       - Alarms
   /v1/cluster:
@@ -1271,4 +1219,11 @@ paths:
       summary: Get a specific queue to a specified virtual host
       tags:
       - Queues
+securityDefinitions:
+  bearer:
+    description: '"JWT token for authentication, obtained from the Dex OIDC provider,
+      formatted as ''Bearer {token}'' in the Authorization header"'
+    in: header
+    name: Authorization
+    type: apiKey
 swagger: "2.0"
