@@ -98,30 +98,58 @@ func (p *PostAlarmRule) ToAlarmRule() (*AlarmRule, error) {
 		return nil, fmt.Errorf("invalid alarm type: %s", p.Type)
 	}
 	return &AlarmRule{
-		ID:        uuid.New().String(),
-		Name:      p.Name,
-		Type:      p.Type,
-		QueueName: p.QueueName,
-		Threshold: p.Threshold,
-		Message:   p.Message,
-		Enabled:   p.Enabled,
-		Status:    AlarmStatusActive,
-		LastFired: nil,
-		LastValue: nil,
+		ID:           uuid.New().String(),
+		Name:         p.Name,
+		Type:         p.Type,
+		QueueName:    p.QueueName,
+		Threshold:    p.Threshold,
+		Message:      p.Message,
+		Enabled:      p.Enabled,
+		Status:       AlarmStatusActive,
+		LastFired:    nil,
+		LastResolved: nil,
+		LastValue:    nil,
 	}, nil
 }
 
 type AlarmRule struct {
-	ID        string      `json:"id" bson:"id"`
-	Name      string      `json:"name" bson:"name"`
-	Type      AlarmType   `json:"type" bson:"type"`
-	QueueName string      `json:"queue_name,omitempty" bson:"queueName"`
-	Threshold float64     `json:"threshold,omitempty" bson:"threshold"`
-	Message   string      `json:"message" bson:"message"`
-	Enabled   bool        `json:"enabled" bson:"enabled"`
-	Status    AlarmStatus `json:"status" bson:"status"`
-	LastFired *time.Time  `json:"last_fired,omitempty" bson:"lastFired"`
-	LastValue *float64    `json:"last_value,omitempty" bson:"lastValue"`
+	ID           string      `json:"id" bson:"id"`
+	Name         string      `json:"name" bson:"name"`
+	Type         AlarmType   `json:"type" bson:"type"`
+	QueueName    string      `json:"queue_name,omitempty" bson:"queueName"`
+	Threshold    float64     `json:"threshold,omitempty" bson:"threshold"`
+	Message      string      `json:"message" bson:"message"`
+	Enabled      bool        `json:"enabled" bson:"enabled"`
+	Status       AlarmStatus `json:"status" bson:"status"`
+	LastFired    *time.Time  `json:"last_fired,omitempty" bson:"lastFired"`
+	LastResolved *time.Time  `json:"last_resolved,omitempty" bson:"lastResolved"`
+	LastValue    *float64    `json:"last_value,omitempty" bson:"lastValue"`
+}
+
+func (r *AlarmRule) IsTriggered(value float64) bool {
+	return value >= r.Threshold
+}
+
+func (r *AlarmRule) IsChanged(other *AlarmRule) bool {
+	if r.Name != other.Name {
+		return true
+	}
+	if r.Type != other.Type {
+		return true
+	}
+	if r.QueueName != other.QueueName {
+		return true
+	}
+	if r.Threshold != other.Threshold {
+		return true
+	}
+	if r.Message != other.Message {
+		return true
+	}
+	if r.Enabled != other.Enabled {
+		return true
+	}
+	return false
 }
 
 type AlarmRuleUpdate struct {
