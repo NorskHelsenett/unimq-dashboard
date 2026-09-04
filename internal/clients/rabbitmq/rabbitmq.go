@@ -233,11 +233,12 @@ func (r *RMQClient) GetMetrics(vhost string) (*models.VhostMetrics, error) {
 	}
 
 	return &models.VhostMetrics{
-		Name:        vhost,
-		Connections: connCount,
-		Channels:    chanCount,
-		Queues:      len(queues),
-		Unacked:     vhostObject.MessagesUnacknowledged,
+		Name:            vhost,
+		Connections:     connCount,
+		Channels:        chanCount,
+		Queues:          len(queues),
+		UnackedMessages: vhostObject.MessagesUnacknowledged,
+		ReadyMessages:   vhostObject.Messages,
 	}, nil
 }
 
