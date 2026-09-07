@@ -28,6 +28,7 @@ func SetupProtectedRoutes(r chi.Router, apiservice *api.APIService) {
 		})
 		r.Route("/maintenance", func(r chi.Router) {
 			r.Get("/", apiservice.GetMaintenanceHandler)
+			r.Get("/{maintenance}", apiservice.GetMaintenanceEntryHandler)
 			r.Post("/", apiservice.AddMaintenanceHandler)
 			r.Patch("/{maintenance}", apiservice.PatchMaintenanceHandler)
 			r.Put("/{maintenance}", apiservice.UpdateMaintenanceStatusHandler)
@@ -51,6 +52,7 @@ func SetupProtectedRoutes(r chi.Router, apiservice *api.APIService) {
 				r.Delete("/recipients/{recipient}", apiservice.DeleteNotificationsRecipientHandler)
 
 				r.Post("/rules", apiservice.AddNotificationsRuleHandler)
+				r.Get("/rules/{rule}", apiservice.GetNotificationRuleHandler)
 				r.Post("/rules/{rule}", apiservice.UpdateNotificationsRuleHandler)
 				r.Post("/rules/{rule}/toggle", apiservice.ToggleNotificationsRuleHandler)
 				r.Post("/rules/{rule}/test", apiservice.TestNotificationsRuleHandler)
