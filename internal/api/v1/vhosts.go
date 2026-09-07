@@ -1,6 +1,7 @@
 package api
 
 import (
+	"log/slog"
 	"net/http"
 	"net/url"
 
@@ -13,15 +14,31 @@ import (
 // @Tags			Vhosts
 // @Produce		json
 // @Success		200	{array}		[]models.Vhost
-// @Failure		502	{object}	httpsuite.APIError
+// @Failure		400	{object}	httpsuite.ErrorResponse
+// @Failure		502	{object}	httpsuite.ErrorResponse
 // @Router			/v1/vhosts [get]
 // @security		bearer
 func (rc *APIService) VhostsHandler(w http.ResponseWriter, r *http.Request) {
 	vhosts, err := rc.RMQClient.GetVhosts()
 	if err != nil {
-		httpsuite.WriteJSONError(w, "error fetching vhosts", http.StatusInternalServerError)
+		httpsuite.WriteJSONError(w,
+			http.StatusInternalServerError,
+			httpsuite.WithError(err),
+			httpsuite.WithErrorMessage("failed to fetch vhosts"),
+		)
 		return
 	}
+
+	claims, ok := httpsuite.GetClaimsFromContext(r.Context())
+	if !ok {
+		httpsuite.WriteJSONError(w,
+			http.StatusInternalServerError,
+			httpsuite.WithError(err),
+			httpsuite.WithExternalErrorMessage("unauthorized"),
+		)
+		return
+	}
+	slog.Info("user claims", "claims", claims)
 
 	httpsuite.SendResponse(r.Context(), w, "", http.StatusOK, &vhosts)
 }
@@ -32,26 +49,37 @@ func (rc *APIService) VhostsHandler(w http.ResponseWriter, r *http.Request) {
 // @Produce		json
 // @Param			vhost-name	path		string	true	"Vhost Name"
 // @Success		200			{object}	models.Vhost
-// @Failure		400			{object}	httpsuite.APIError
-// @Failure		502			{object}	httpsuite.APIError
+// @Failure		400			{object}	httpsuite.ErrorResponse
+// @Failure		502			{object}	httpsuite.ErrorResponse
 // @Router			/v1/vhosts/{vhost-name} [get]
 // @security		bearer
 func (rc *APIService) VhostHandler(w http.ResponseWriter, r *http.Request) {
 	vhostName := chi.URLParam(r, "vhost")
 	if vhostName == "" {
-		httpsuite.WriteJSONError(w, "vhost name is required", http.StatusBadRequest)
+		httpsuite.WriteJSONError(w,
+			http.StatusBadRequest,
+			httpsuite.WithErrorMessage("vhost name is required"),
+		)
 		return
 	}
 
 	eVhostName, err := url.QueryUnescape(vhostName)
 	if err != nil {
-		httpsuite.WriteJSONError(w, "error decoding vhost name", http.StatusBadRequest)
+		httpsuite.WriteJSONError(w,
+			http.StatusInternalServerError,
+			httpsuite.WithError(err),
+			httpsuite.WithErrorMessage("failed to decode vhost name"),
+		)
 		return
 	}
 
 	vhostData, err := rc.RMQClient.GetVhost(eVhostName)
 	if err != nil {
-		httpsuite.WriteJSONError(w, "error fetching vhost data", http.StatusBadGateway)
+		httpsuite.WriteJSONError(w,
+			http.StatusInternalServerError,
+			httpsuite.WithError(err),
+			httpsuite.WithErrorMessage("failed to fetch vhosts data"),
+		)
 		return
 	}
 

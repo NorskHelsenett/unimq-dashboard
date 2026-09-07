@@ -15,15 +15,19 @@ import (
 // @Tags			Alarms
 // @Produce		json
 // @Success		200	{array}		[]models.AlarmEntry
-// @Failure		400	{object}	httpsuite.APIError
-// @Failure		502	{object}	httpsuite.APIError
+// @Failure		400	{object}	httpsuite.ErrorResponse
+// @Failure		502	{object}	httpsuite.ErrorResponse
 // @Router			/v1/alarms [get]
 // @security		bearer
 func (rc *APIService) GetAlarmHistoryAllHandler(w http.ResponseWriter, r *http.Request) {
 
 	alarms, err := rc.DB.GetAlarmsAll(r.Context())
 	if err != nil {
-		httpsuite.WriteJSONError(w, "error fetching alarm history: "+err.Error(), http.StatusInternalServerError)
+		httpsuite.WriteJSONError(w,
+			http.StatusInternalServerError,
+			httpsuite.WithError(err),
+			httpsuite.WithErrorMessage("error fetching alarm history"),
+		)
 		return
 	}
 
@@ -36,37 +40,54 @@ func (rc *APIService) GetAlarmHistoryAllHandler(w http.ResponseWriter, r *http.R
 // @Produce		json
 // @Param			rule-id	path		string	true	"Rule ID"
 // @Success		200		{array}		[]models.AlarmEntry
-// @Failure		400		{object}	httpsuite.APIError
-// @Failure		404		{object}	httpsuite.APIError
-// @Failure		502		{object}	httpsuite.APIError
+// @Failure		400		{object}	httpsuite.ErrorResponse
+// @Failure		404		{object}	httpsuite.ErrorResponse
+// @Failure		502		{object}	httpsuite.ErrorResponse
 // @Router			/v1/alarms/{rule-id} [get]
 // @security		bearer
 func (rc *APIService) GetAlarmHistoryHandler(w http.ResponseWriter, r *http.Request) {
 
 	ruleID := chi.URLParam(r, "rule-id")
 	if ruleID == "" {
-		httpsuite.WriteJSONError(w, "missing required rule-id parameter", http.StatusBadRequest)
+		httpsuite.WriteJSONError(w,
+			http.StatusBadRequest,
+			httpsuite.WithErrorMessage("missing required rule-id parameter"),
+		)
 		return
 	}
 
 	eRuleID, err := url.QueryUnescape(ruleID)
 	if err != nil {
-		httpsuite.WriteJSONError(w, "error decoding rule-id  name", http.StatusBadRequest)
+		httpsuite.WriteJSONError(w,
+			http.StatusBadRequest,
+			httpsuite.WithError(err),
+			httpsuite.WithErrorMessage("failed to decode rule-id parameter"),
+		)
 		return
 	}
 
 	alarms, err := rc.DB.GetAlarm(r.Context(), eRuleID)
 	if err != nil {
 		if errors.Is(err, mongo.ErrNoDocuments) {
-			httpsuite.WriteJSONError(w, "no alarm history found for rule ID: "+eRuleID, http.StatusNotFound)
+			httpsuite.WriteJSONError(w,
+				http.StatusNotFound,
+				httpsuite.WithErrorMessage("no alarm history found for rule ID: "+eRuleID),
+			)
 			return
 		}
-		httpsuite.WriteJSONError(w, "error fetching alarm history: "+err.Error(), http.StatusInternalServerError)
+		httpsuite.WriteJSONError(w,
+			http.StatusInternalServerError,
+			httpsuite.WithError(err),
+			httpsuite.WithErrorMessage("failed to fetch alarm history for rule ID: "+eRuleID),
+		)
 		return
 	}
 
 	if alarms == nil {
-		httpsuite.WriteJSONError(w, "no alarm history found for rule ID: "+eRuleID, http.StatusNotFound)
+		httpsuite.WriteJSONError(w,
+			http.StatusNotFound,
+			httpsuite.WithErrorMessage("no alarm history found for rule ID: "+eRuleID),
+		)
 		return
 	}
 

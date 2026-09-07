@@ -14,26 +14,38 @@ import (
 // @Produce		json
 // @Param			vhost-name	path		string	true	"Vhost Name"
 // @Success		200			{object}	models.VhostMetrics
-// @Failure		400			{object}	httpsuite.APIError
-// @Failure		502			{object}	httpsuite.APIError
+// @Failure		400			{object}	httpsuite.ErrorResponse
+// @Failure		502			{object}	httpsuite.ErrorResponse
 // @Router			/v1/vhosts/{vhost-name}/metrics [get]
 // @security		bearer
 func (rc *APIService) MetricHandler(w http.ResponseWriter, r *http.Request) {
 	vhost := chi.URLParam(r, "vhost")
 	if vhost == "" {
-		httpsuite.WriteJSONError(w, "vhost name is required", http.StatusBadRequest)
+		httpsuite.WriteJSONError(w,
+			http.StatusBadRequest,
+			httpsuite.WithErrorMessage("vhost name is required"),
+		)
 		return
 	}
 
 	eVhost, err := url.QueryUnescape(vhost)
 	if err != nil {
-		httpsuite.WriteJSONError(w, "error decoding vhost name", http.StatusBadRequest)
+		httpsuite.WriteJSONError(w,
+			http.StatusBadRequest,
+			httpsuite.WithError(err),
+			httpsuite.WithExternalErrorMessage("failed to decode vhost name"),
+			httpsuite.WithInternalErrorMessage("error decoding vhost name: "+vhost),
+		)
 		return
 	}
 
 	metrics, err := rc.RMQClient.GetMetrics(eVhost)
 	if err != nil {
-		httpsuite.WriteJSONError(w, "error fetching metrics for vhost. "+err.Error(), http.StatusInternalServerError)
+		httpsuite.WriteJSONError(w,
+			http.StatusInternalServerError,
+			httpsuite.WithError(err),
+			httpsuite.WithErrorMessage("failed to fetch metrics for vhost"),
+		)
 		return
 	}
 	httpsuite.SendResponse(r.Context(), w, "", http.StatusOK, &metrics)

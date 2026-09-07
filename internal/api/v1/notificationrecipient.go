@@ -17,44 +17,68 @@ import (
 // @Param			vhost-name	path		string					true	"Vhost Name"
 // @Param			recipient	body		models.PostRecipient	true	"Notification Recipient Object"
 // @Success		201			{object}	string					"Recipient added successfully"
-// @Failure		400			{object}	httpsuite.APIError
-// @Failure		500			{object}	httpsuite.APIError
+// @Failure		400			{object}	httpsuite.ErrorResponse
+// @Failure		500			{object}	httpsuite.ErrorResponse
 // @Router			/v1/notifications/{vhost-name}/recipients [post]
 // @security		bearer
 func (rc *APIService) AddNotificationsRecipientHandler(w http.ResponseWriter, r *http.Request) {
 	vhost := chi.URLParam(r, "vhost")
 	if vhost == "" {
-		httpsuite.WriteJSONError(w, "missing required vhost parameter", http.StatusBadRequest)
+		httpsuite.WriteJSONError(w,
+			http.StatusBadRequest,
+			httpsuite.WithErrorMessage("missing required vhost parameter"),
+		)
 		return
 	}
 
 	eVhost, err := url.QueryUnescape(vhost)
 	if err != nil {
-		httpsuite.WriteJSONError(w, "error decoding vhost name", http.StatusBadRequest)
+		httpsuite.WriteJSONError(w,
+			http.StatusInternalServerError,
+			httpsuite.WithError(err),
+			httpsuite.WithExternalErrorMessage("failed to decode vhost name"),
+			httpsuite.WithInternalErrorMessage("error decoding vhost name: "+vhost),
+		)
 		return
 	}
 
 	var recipient models.PostRecipient
 	err = httpsuite.ReadResponse(r, &recipient)
 	if err != nil {
-		httpsuite.WriteJSONError(w, "invalid request body: "+err.Error(), http.StatusBadRequest)
+		httpsuite.WriteJSONError(w,
+			http.StatusBadRequest,
+			httpsuite.WithError(err),
+			httpsuite.WithErrorMessage("invalid request body"),
+		)
 		return
 	}
 	out, err := recipient.ToRecipient()
 	if err != nil {
-		httpsuite.WriteJSONError(w, "invalid recipient data: "+err.Error(), http.StatusBadRequest)
+		httpsuite.WriteJSONError(w,
+			http.StatusBadRequest,
+			httpsuite.WithError(err),
+			httpsuite.WithErrorMessage("invalid recipient data"),
+		)
 		return
 	}
 
 	vhostNotification, err := rc.ensureNotificationHostExists(r.Context(), eVhost)
 	if err != nil {
-		httpsuite.WriteJSONError(w, "error fetching vhost: "+err.Error(), http.StatusInternalServerError)
+		httpsuite.WriteJSONError(w,
+			http.StatusInternalServerError,
+			httpsuite.WithError(err),
+			httpsuite.WithErrorMessage("failed to fetch vhost"),
+		)
 		return
 	}
 
 	err = rc.DB.AddNotificationRecipient(r.Context(), vhostNotification.Name, out)
 	if err != nil {
-		httpsuite.WriteJSONError(w, "error adding recipient: "+err.Error(), http.StatusInternalServerError)
+		httpsuite.WriteJSONError(w,
+			http.StatusInternalServerError,
+			httpsuite.WithError(err),
+			httpsuite.WithErrorMessage("failed to add recipient"),
+		)
 		return
 	}
 
@@ -67,32 +91,49 @@ func (rc *APIService) AddNotificationsRecipientHandler(w http.ResponseWriter, r 
 // @Param			vhost-name		path		string	true	"Vhost Name"
 // @Param			recipient-id	path		string	true	"Recipient ID"
 // @Success		200				{string}	string	"Recipient deleted successfully"
-// @Failure		400				{object}	httpsuite.APIError
-// @Failure		500				{object}	httpsuite.APIError
+// @Failure		400				{object}	httpsuite.ErrorResponse
+// @Failure		500				{object}	httpsuite.ErrorResponse
 // @Router			/v1/notifications/{vhost-name}/recipients/{recipient-id} [delete]
 // @security		bearer
 func (rc *APIService) DeleteNotificationsRecipientHandler(w http.ResponseWriter, r *http.Request) {
 	vhost := chi.URLParam(r, "vhost")
 	if vhost == "" {
-		httpsuite.WriteJSONError(w, "missing required vhost parameter", http.StatusBadRequest)
+		httpsuite.WriteJSONError(w,
+			http.StatusBadRequest,
+			httpsuite.WithErrorMessage("missing required vhost parameter"),
+		)
 		return
 	}
 
 	eVhost, err := url.QueryUnescape(vhost)
 	if err != nil {
-		httpsuite.WriteJSONError(w, "error decoding vhost name", http.StatusBadRequest)
+		httpsuite.WriteJSONError(w,
+			http.StatusBadRequest,
+			httpsuite.WithError(err),
+			httpsuite.WithExternalErrorMessage("failed to decode vhost name"),
+			httpsuite.WithInternalErrorMessage("error decoding vhost name: "+vhost),
+		)
 		return
 	}
 
 	id := chi.URLParam(r, "recipient")
 	if id == "" {
-		httpsuite.WriteJSONError(w, "missing required id parameter", http.StatusBadRequest)
+		httpsuite.WriteJSONError(w,
+			http.StatusBadRequest,
+			httpsuite.WithError(err),
+			httpsuite.WithErrorMessage("missing required recipient id parameter"),
+		)
 		return
 	}
 
 	err = rc.DB.DeleteNotificationRecipient(r.Context(), eVhost, id)
 	if err != nil {
-		httpsuite.WriteJSONError(w, "error deleting recipient: "+err.Error(), http.StatusInternalServerError)
+		httpsuite.WriteJSONError(w,
+			http.StatusInternalServerError,
+			httpsuite.WithError(err),
+			httpsuite.WithExternalErrorMessage("failed to delete recipient"),
+			httpsuite.WithInternalErrorMessage("failed to delete recipient: "+id),
+		)
 		return
 	}
 

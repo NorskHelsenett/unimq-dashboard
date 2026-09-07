@@ -19,7 +19,7 @@ import (
 // @Tags			Maintenance
 // @Produce		json
 // @Success		200	{object}	models.MaintenanceResponse
-// @Failure		500	{object}	httpsuite.APIError
+// @Failure		500	{object}	httpsuite.ErrorResponse
 // @Router			/v1/maintenance [get]
 // @security		bearer
 func (rc *APIService) GetMaintenanceHandler(w http.ResponseWriter, r *http.Request) {
@@ -30,13 +30,21 @@ func (rc *APIService) GetMaintenanceHandler(w http.ResponseWriter, r *http.Reque
 
 	scheduled, err := rc.DB.GetMaintenanceScheduled(r.Context())
 	if err != nil {
-		httpsuite.WriteJSONError(w, "error fetching scheduled maintenance", http.StatusInternalServerError)
+		httpsuite.WriteJSONError(w,
+			http.StatusInternalServerError,
+			httpsuite.WithError(err),
+			httpsuite.WithErrorMessage("failed to fetch scheduled maintenance"),
+		)
 		return
 	}
 
 	maintenanceHistory, err := rc.DB.GetMaintenanceHistory(r.Context())
 	if err != nil {
-		httpsuite.WriteJSONError(w, "error fetching maintenance history", http.StatusInternalServerError)
+		httpsuite.WriteJSONError(w,
+			http.StatusInternalServerError,
+			httpsuite.WithError(err),
+			httpsuite.WithErrorMessage("failed to fetch maintenance history"),
+		)
 		maintenanceHistory = []models.MaintenanceEntry{}
 	}
 
@@ -50,8 +58,8 @@ func (rc *APIService) GetMaintenanceHandler(w http.ResponseWriter, r *http.Reque
 // @Produce		json
 // @Param			entry	body		models.PostMaintenanceEntry	true	"Maintenance Entry Data"
 // @Success		201		{string}	string						"Maintenance entry added successfully"
-// @Failure		400		{object}	httpsuite.APIError
-// @Failure		500		{object}	httpsuite.APIError
+// @Failure		400		{object}	httpsuite.ErrorResponse
+// @Failure		500		{object}	httpsuite.ErrorResponse
 // @Router			/v1/maintenance [post]
 // @security		bearer
 func (rc *APIService) AddMaintenanceHandler(w http.ResponseWriter, r *http.Request) {
@@ -59,20 +67,32 @@ func (rc *APIService) AddMaintenanceHandler(w http.ResponseWriter, r *http.Reque
 	var entry models.PostMaintenanceEntry
 	err := httpsuite.ReadResponse(r, &entry)
 	if err != nil {
-		httpsuite.WriteJSONError(w, "invalid request body: "+err.Error(), http.StatusBadRequest)
+		httpsuite.WriteJSONError(w,
+			http.StatusBadRequest,
+			httpsuite.WithError(err),
+			httpsuite.WithErrorMessage("invalid request body"),
+		)
 		return
 	}
 
 	dbentry, err := entry.ToMaintenanceEntry()
 	if err != nil {
 		slog.Error("error converting to maintenance entry", "error", err)
-		httpsuite.WriteJSONError(w, "invalid maintenance entry data: "+err.Error(), http.StatusBadRequest)
+		httpsuite.WriteJSONError(w,
+			http.StatusInternalServerError,
+			httpsuite.WithError(err),
+			httpsuite.WithErrorMessage("failed to convert to maintenance entry"),
+		)
 		return
 	}
 
 	err = rc.DB.AddMaintenanceEntry(r.Context(), dbentry)
 	if err != nil {
-		httpsuite.WriteJSONError(w, "error adding maintenance entry", http.StatusInternalServerError)
+		httpsuite.WriteJSONError(w,
+			http.StatusInternalServerError,
+			httpsuite.WithError(err),
+			httpsuite.WithErrorMessage("failed to add maintenance entry"),
+		)
 		return
 	}
 
@@ -87,28 +107,39 @@ func (rc *APIService) AddMaintenanceHandler(w http.ResponseWriter, r *http.Reque
 // @Param			maintenance-id	path		string						true	"Maintenance Entry ID"
 // @Param			status			body		models.UpdateMaintenance	true	"New Maintenance Status"
 // @Success		200				{string}	string						"Maintenance status updated successfully"
-// @Failure		400				{object}	httpsuite.APIError
-// @Failure		404				{object}	httpsuite.APIError
-// @Failure		500				{object}	httpsuite.APIError
+// @Failure		400				{object}	httpsuite.ErrorResponse
+// @Failure		404				{object}	httpsuite.ErrorResponse
+// @Failure		500				{object}	httpsuite.ErrorResponse
 // @Router			/v1/maintenance/{maintenance-id} [put]
 // @security		bearer
 func (rc *APIService) UpdateMaintenanceStatusHandler(w http.ResponseWriter, r *http.Request) {
 	id := chi.URLParam(r, "maintenance")
 	if id == "" {
-		httpsuite.WriteJSONError(w, "maintenance id is required", http.StatusBadRequest)
+		httpsuite.WriteJSONError(w,
+			http.StatusBadRequest,
+			httpsuite.WithErrorMessage("maintenance id is required"),
+		)
 		return
 	}
 
 	var request models.UpdateMaintenance
 	err := httpsuite.ReadResponse(r, &request)
 	if err != nil {
-		httpsuite.WriteJSONError(w, fmt.Sprintf("invalid request body %w. expected any of %v"+err.Error(), models.GetMaintenanceStatusAllString()), http.StatusBadRequest)
+		httpsuite.WriteJSONError(w,
+			http.StatusBadRequest,
+			httpsuite.WithError(err),
+			httpsuite.WithExternalErrorMessage(fmt.Sprintf("invalid request, expected any of %v", models.GetMaintenanceStatusAllString())),
+		)
 		return
 	}
 
 	err = rc.DB.SetMaintenanceEntryStatus(r.Context(), id, request.Status)
 	if err != nil {
-		httpsuite.WriteJSONError(w, "error updating maintenance status", http.StatusInternalServerError)
+		httpsuite.WriteJSONError(w,
+			http.StatusInternalServerError,
+			httpsuite.WithError(err),
+			httpsuite.WithErrorMessage("failed to update maintenance status"),
+		)
 		return
 	}
 
@@ -123,25 +154,36 @@ func (rc *APIService) UpdateMaintenanceStatusHandler(w http.ResponseWriter, r *h
 // @Param			maintenance-id	path		string							true	"Maintenance Entry ID"
 // @Param			entry			body		models.PatchMaintenanceEntry	true	"Updated Maintenance Data"
 // @Success		200				{string}	string							"Maintenance entry updated successfully"
-// @Failure		400				{object}	httpsuite.APIError
-// @Failure		404				{object}	httpsuite.APIError
-// @Failure		500				{object}	httpsuite.APIError
+// @Failure		400				{object}	httpsuite.ErrorResponse
+// @Failure		404				{object}	httpsuite.ErrorResponse
+// @Failure		500				{object}	httpsuite.ErrorResponse
 // @Router			/v1/maintenance/{maintenance-id} [patch]
 func (rc *APIService) PatchMaintenanceHandler(w http.ResponseWriter, r *http.Request) {
 	id := chi.URLParam(r, "maintenance")
 	if id == "" {
-		httpsuite.WriteJSONError(w, "maintenance id is required", http.StatusBadRequest)
+		httpsuite.WriteJSONError(w,
+			http.StatusBadRequest,
+			httpsuite.WithErrorMessage("maintenance id is required"),
+		)
 		return
 	}
 
 	var request models.PatchMaintenanceEntry
 	if err := httpsuite.ReadResponse(r, &request); err != nil {
-		httpsuite.WriteJSONError(w, "invalid request body: "+err.Error(), http.StatusBadRequest)
+		httpsuite.WriteJSONError(w,
+			http.StatusBadRequest,
+			httpsuite.WithError(err),
+			httpsuite.WithErrorMessage("invalid request body"),
+		)
 		return
 	}
 
 	if err := request.Validate(); err != nil {
-		httpsuite.WriteJSONError(w, err.Error(), http.StatusBadRequest)
+		httpsuite.WriteJSONError(w,
+			http.StatusBadRequest,
+			httpsuite.WithError(err),
+			httpsuite.WithErrorMessage("request validation failed"),
+		)
 		return
 	}
 
@@ -151,10 +193,18 @@ func (rc *APIService) PatchMaintenanceHandler(w http.ResponseWriter, r *http.Req
 	err := rc.DB.PatchMaintenanceEntry(r.Context(), id, request.Description, start, end, request.Reason, request.UpdatedBy)
 	if err != nil {
 		if errors.Is(err, database.ErrMaintenanceNotFound) {
-			httpsuite.WriteJSONError(w, "maintenance entry not found", http.StatusNotFound)
+			httpsuite.WriteJSONError(w,
+				http.StatusNotFound,
+				httpsuite.WithError(err),
+				httpsuite.WithErrorMessage("failed to find maintenance entry"),
+			)
 			return
 		}
-		httpsuite.WriteJSONError(w, "error updating maintenance entry", http.StatusInternalServerError)
+		httpsuite.WriteJSONError(w,
+			http.StatusInternalServerError,
+			httpsuite.WithError(err),
+			httpsuite.WithErrorMessage("failed to update maintenance entry"),
+		)
 		return
 	}
 
@@ -181,19 +231,26 @@ func (rc *APIService) PatchMaintenanceHandler(w http.ResponseWriter, r *http.Req
 // @Produce		json
 // @Param			maintenance-id	path		string	true	"Maintenance Entry ID"
 // @Success		200				{array}		models.MaintenanceEditLog
-// @Failure		400				{object}	httpsuite.APIError
-// @Failure		500				{object}	httpsuite.APIError
+// @Failure		400				{object}	httpsuite.ErrorResponse
+// @Failure		500				{object}	httpsuite.ErrorResponse
 // @Router			/v1/maintenance/{maintenance-id}/logs [get]
 func (rc *APIService) GetMaintenanceEditLogsHandler(w http.ResponseWriter, r *http.Request) {
 	id := chi.URLParam(r, "maintenance")
 	if id == "" {
-		httpsuite.WriteJSONError(w, "maintenance id is required", http.StatusBadRequest)
+		httpsuite.WriteJSONError(w,
+			http.StatusBadRequest,
+			httpsuite.WithErrorMessage("maintenance id is required"),
+		)
 		return
 	}
 
 	logs, err := rc.DB.GetMaintenanceEditLogs(r.Context(), id)
 	if err != nil {
-		httpsuite.WriteJSONError(w, "error fetching maintenance edit logs", http.StatusInternalServerError)
+		httpsuite.WriteJSONError(w,
+			http.StatusInternalServerError,
+			httpsuite.WithError(err),
+			httpsuite.WithErrorMessage("failed to fetch maintenance edit logs"),
+		)
 		return
 	}
 
@@ -209,25 +266,34 @@ func (rc *APIService) GetMaintenanceEditLogsHandler(w http.ResponseWriter, r *ht
 // @Param			maintenance-id	path	string	true	"Maintenance Entry ID"
 // @Produce		json
 // @Success		200	{string}	string	"Maintenance entry deleted successfully"
-// @Failure		400	{object}	httpsuite.APIError
-// @Failure		404	{object}	httpsuite.APIError
-// @Failure		500	{object}	httpsuite.APIError
+// @Failure		400	{object}	httpsuite.ErrorResponse
+// @Failure		404	{object}	httpsuite.ErrorResponse
+// @Failure		500	{object}	httpsuite.ErrorResponse
 // @Router			/v1/maintenance/{maintenance-id} [delete]
 // @security		bearer
 func (rc *APIService) DeleteMaintenanceHandler(w http.ResponseWriter, r *http.Request) {
 	id := chi.URLParam(r, "maintenance")
 	if id == "" {
-		httpsuite.WriteJSONError(w, "maintenance id is required", http.StatusBadRequest)
+		httpsuite.WriteJSONError(w,
+			http.StatusBadRequest,
+			httpsuite.WithErrorMessage("maintenace id is required"),
+		)
 		return
 	}
 
 	err := rc.DB.DeleteMaintenanceEntry(r.Context(), id)
 	if err != nil {
 		if errors.Is(err, database.ErrMaintenanceNotFound) {
-			httpsuite.WriteJSONError(w, err.Error(), http.StatusNotFound)
+			httpsuite.WriteJSONError(w,
+				http.StatusNotFound,
+				httpsuite.WithError(err),
+			)
 			return
 		}
-		httpsuite.WriteJSONError(w, err.Error(), http.StatusInternalServerError)
+		httpsuite.WriteJSONError(w,
+			http.StatusInternalServerError,
+			httpsuite.WithError(err),
+		)
 		return
 	}
 

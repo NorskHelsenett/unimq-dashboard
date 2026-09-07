@@ -16,14 +16,18 @@ import (
 // @Tags			Notifications
 // @Produce		json
 // @Success		200	{object}	[]models.VhostNotification
-// @Failure		502	{object}	httpsuite.APIError
+// @Failure		502	{object}	httpsuite.ErrorResponse
 // @Router			/v1/notifications [get]
 // @security		bearer
 func (rc *APIService) GetNotificationsHandler(w http.ResponseWriter, r *http.Request) {
 
 	notifications, err := rc.DB.GetNotificationsAll(r.Context())
 	if err != nil {
-		httpsuite.WriteJSONError(w, "error fetching notification configs: "+err.Error(), http.StatusInternalServerError)
+		httpsuite.WriteJSONError(w,
+			http.StatusInternalServerError,
+			httpsuite.WithError(err),
+			httpsuite.WithErrorMessage("failed to fetch notifications"),
+		)
 		return
 	}
 
@@ -36,21 +40,29 @@ func (rc *APIService) GetNotificationsHandler(w http.ResponseWriter, r *http.Req
 // @Produce		json
 // @Param			vhost-name	path		string	true	"Vhost Name"
 // @Success		200			{object}	models.VhostNotification
-// @Failure		400			{object}	httpsuite.APIError
-// @Failure		502			{object}	httpsuite.APIError
+// @Failure		400			{object}	httpsuite.ErrorResponse
+// @Failure		502			{object}	httpsuite.ErrorResponse
 // @Router			/v1/notifications/{vhost-name} [get]
 // @security		bearer
 func (rc *APIService) GetNotificationsVhostHandler(w http.ResponseWriter, r *http.Request) {
 
 	vhost := chi.URLParam(r, "vhost")
 	if vhost == "" {
-		httpsuite.WriteJSONError(w, "missing required vhost parameter", http.StatusBadRequest)
+		httpsuite.WriteJSONError(w,
+			http.StatusBadRequest,
+			httpsuite.WithErrorMessage("missing required vhost parameter"),
+		)
 		return
 	}
 
 	eVhost, err := url.QueryUnescape(vhost)
 	if err != nil {
-		httpsuite.WriteJSONError(w, "error decoding vhost name", http.StatusBadRequest)
+		httpsuite.WriteJSONError(w,
+			http.StatusBadRequest,
+			httpsuite.WithError(err),
+			httpsuite.WithExternalErrorMessage("failed to decode vhost name"),
+			httpsuite.WithInternalErrorMessage("error decoding vhost name: "+vhost),
+		)
 		return
 	}
 
@@ -61,7 +73,11 @@ func (rc *APIService) GetNotificationsVhostHandler(w http.ResponseWriter, r *htt
 			httpsuite.SendResponse(r.Context(), w, "Gathered notifications on vhost", http.StatusOK, empty)
 			return
 		}
-		httpsuite.WriteJSONError(w, "error fetching notification config: "+err.Error(), http.StatusInternalServerError)
+		httpsuite.WriteJSONError(w,
+			http.StatusInternalServerError,
+			httpsuite.WithError(err),
+			httpsuite.WithErrorMessage("failed to fetch notifications"),
+		)
 		return
 	}
 
@@ -74,26 +90,38 @@ func (rc *APIService) GetNotificationsVhostHandler(w http.ResponseWriter, r *htt
 // @Produce		json
 // @Param			vhost-name	path		string	true	"Vhost Name"
 // @Success		200			{object}	string
-// @Failure		400			{object}	httpsuite.APIError
-// @Failure		502			{object}	httpsuite.APIError
+// @Failure		400			{object}	httpsuite.ErrorResponse
+// @Failure		502			{object}	httpsuite.ErrorResponse
 // @Router			/v1/notifications/{vhost-name} [delete]
 // @security		bearer
 func (rc *APIService) DeleteNotificationsHandler(w http.ResponseWriter, r *http.Request) {
 	vhost := chi.URLParam(r, "vhost")
 	if vhost == "" {
-		httpsuite.WriteJSONError(w, "missing required vhost parameter", http.StatusBadRequest)
+		httpsuite.WriteJSONError(w,
+			http.StatusBadRequest,
+			httpsuite.WithErrorMessage("missing required vhost parameter"),
+		)
 		return
 	}
 
 	eVhost, err := url.QueryUnescape(vhost)
 	if err != nil {
-		httpsuite.WriteJSONError(w, "error decoding vhost name", http.StatusBadRequest)
+		httpsuite.WriteJSONError(w,
+			http.StatusBadRequest,
+			httpsuite.WithError(err),
+			httpsuite.WithExternalErrorMessage("failed to decode vhost name"),
+			httpsuite.WithInternalErrorMessage("error decoding vhost name: "+vhost),
+		)
 		return
 	}
 
 	err = rc.DB.DeleteNotification(r.Context(), eVhost)
 	if err != nil {
-		httpsuite.WriteJSONError(w, "error deleting notification config: "+err.Error(), http.StatusInternalServerError)
+		httpsuite.WriteJSONError(w,
+			http.StatusInternalServerError,
+			httpsuite.WithError(err),
+			httpsuite.WithErrorMessage("failed to delete notifications"),
+		)
 		return
 	}
 

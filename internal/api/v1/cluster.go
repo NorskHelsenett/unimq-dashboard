@@ -11,13 +11,17 @@ import (
 // @Tags			Cluster
 // @Produce		json
 // @Success		200	{object}	models.ClusterStats
-// @Failure		500	{object}	httpsuite.APIError
+// @Failure		500	{object}	httpsuite.ErrorResponse
 // @Router			/v1/cluster [get]
 // @security		bearer
 func (rc *APIService) GetClusterHandler(w http.ResponseWriter, r *http.Request) {
 	stats, err := rc.RMQClient.GetClusterStats()
 	if err != nil {
-		httpsuite.WriteJSONError(w, "error fetching cluster stats", http.StatusInternalServerError)
+		httpsuite.WriteJSONError(w,
+			http.StatusInternalServerError,
+			httpsuite.WithError(err),
+			httpsuite.WithErrorMessage("failed to fetch cluster stats"),
+		)
 		return
 	}
 
