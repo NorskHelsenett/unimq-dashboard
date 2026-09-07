@@ -13,11 +13,11 @@ import (
 // @Description	Get a specific notification recipient for a vhost
 // @Tags			Notifications
 // @Produce		json
-// @Param			vhost-name	path		string	true	"Vhost Name"
+// @Param			vhost-name		path		string	true	"Vhost Name"
 // @Param			recipient-id	path		string	true	"Recipient ID"
-// @Success		200			{object}	models.NotificationRecipient
-// @Failure		400			{object}	httpsuite.ErrorResponse
-// @Failure		500			{object}	httpsuite.ErrorResponse
+// @Success		200				{object}	models.Recipient
+// @Failure		400				{object}	httpsuite.ErrorResponse
+// @Failure		500				{object}	httpsuite.ErrorResponse
 // @Router			/v1/notifications/{vhost-name}/recipients/{recipient-id} [get]
 // @security		bearer
 func (rc *APIService) GetNotificationsRecipientHandler(w http.ResponseWriter, r *http.Request) {

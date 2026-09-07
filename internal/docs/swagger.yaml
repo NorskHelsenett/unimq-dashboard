@@ -949,6 +949,39 @@ paths:
       summary: Delete a notification recipient
       tags:
       - Notifications
+    get:
+      description: Get a specific notification recipient for a vhost
+      parameters:
+      - description: Vhost Name
+        in: path
+        name: vhost-name
+        required: true
+        type: string
+      - description: Recipient ID
+        in: path
+        name: recipient-id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.Recipient'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/httpsuite.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/httpsuite.ErrorResponse'
+      security:
+      - bearer: []
+      summary: Get a notification recipient
+      tags:
+      - Notifications
   /v1/notifications/{vhost-name}/rules:
     post:
       consumes:
