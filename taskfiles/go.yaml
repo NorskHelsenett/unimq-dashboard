@@ -91,6 +91,14 @@ tasks:
       - go install github.com/swaggo/swag/cmd/swag@latest
     silent: true
 
+  swag:
+    desc: Generate and format Swagger documentation
+    deps:
+      - swag-check
+      - swag-format
+      - swag-generate
+    silent: true
+
   swag-generate:
     desc: Generate Swagger documentation
     deps:
@@ -102,7 +110,7 @@ tasks:
   swag-format:
     desc: Format Swagger documentation
     deps:
-      - swag-generate
+      - swag-check
     cmds:
       - swag fmt -d .
     silent: true
