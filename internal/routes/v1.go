@@ -49,6 +49,7 @@ func SetupProtectedRoutes(r chi.Router, apiservice *api.APIService) {
 				r.Get("/", apiservice.GetNotificationsVhostHandler)
 				r.Delete("/", apiservice.DeleteNotificationsHandler)
 				r.Post("/recipients", apiservice.AddNotificationsRecipientHandler)
+				r.Get("/recipients/{recipient}", apiservice.GetNotificationsRecipientHandler)
 				r.Delete("/recipients/{recipient}", apiservice.DeleteNotificationsRecipientHandler)
 
 				r.Post("/rules", apiservice.AddNotificationsRuleHandler)

@@ -9,6 +9,63 @@ import (
 	"github.com/sisneve/rabbitmq-dashboard/internal/routes/httpsuite"
 )
 
+// @Summary		Get a notification recipient
+// @Description	Get a specific notification recipient for a vhost
+// @Tags			Notifications
+// @Produce		json
+// @Param			vhost-name	path		string	true	"Vhost Name"
+// @Param			recipient-id	path		string	true	"Recipient ID"
+// @Success		200			{object}	models.NotificationRecipient
+// @Failure		400			{object}	httpsuite.ErrorResponse
+// @Failure		500			{object}	httpsuite.ErrorResponse
+// @Router			/v1/notifications/{vhost-name}/recipients/{recipient-id} [get]
+// @security		bearer
+func (rc *APIService) GetNotificationsRecipientHandler(w http.ResponseWriter, r *http.Request) {
+	vhost := chi.URLParam(r, "vhost")
+	if vhost == "" {
+		httpsuite.WriteJSONError(w,
+			http.StatusBadRequest,
+			httpsuite.WithErrorMessage("missing required vhost parameter"),
+		)
+		return
+	}
+
+	eVhost, err := url.QueryUnescape(vhost)
+	if err != nil {
+		httpsuite.WriteJSONError(w,
+			http.StatusInternalServerError,
+			httpsuite.WithError(err),
+			httpsuite.WithExternalErrorMessage("failed to decode vhost name"),
+			httpsuite.WithInternalErrorMessage("error decoding vhost name: "+vhost),
+		)
+		return
+	}
+
+	id := chi.URLParam(r, "recipient")
+	if id == "" {
+		httpsuite.WriteJSONError(w,
+			http.StatusBadRequest,
+			httpsuite.WithErrorMessage("missing required recipient id parameter"),
+		)
+		return
+	}
+
+	recipient, err := rc.DB.GetNotificationRecipient(r.Context(), eVhost, id)
+	if err != nil {
+		httpsuite.WriteJSONError(w,
+			http.StatusInternalServerError,
+			httpsuite.WithError(err),
+			httpsuite.WithExternalErrorMessage("failed to fetch recipients"),
+			httpsuite.WithInternalErrorMessage("failed to fetch recipients for vhost: "+eVhost),
+		)
+		return
+	}
+
+	httpsuite.SendResponse(r.Context(), w, "", http.StatusOK, &recipient)
+	return
+
+}
+
 // @Summary		Add a new notification recipient
 // @Description	Add a new notification recipient for a specific vhost
 // @Tags			Notifications
