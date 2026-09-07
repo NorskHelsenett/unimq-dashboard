@@ -37,6 +37,8 @@ type Config struct {
 	Email *EmailConfig `mapstructure:",squash"`
 
 	OIDC *OIDCConfig `mapstructure:",squash"`
+
+	AdminGroups []string `mapstructure:"ADMIN_GROUPS"`
 }
 
 type EmailConfig struct {
@@ -87,6 +89,8 @@ func NewConfig() *Config {
 			OIDCURL:          "",
 			OIDCRedirectURL:  "",
 		},
+
+		AdminGroups: []string{},
 	}
 	return c
 }
@@ -199,6 +203,8 @@ func (c *Config) loadEnvironmentVariables() {
 	_ = viper.BindEnv("OIDC_CLIENT_SECRET")
 	_ = viper.BindEnv("OIDC_URL")
 	_ = viper.BindEnv("OIDC_REDIRECT_URL")
+
+	_ = viper.BindEnv("ADMIN_GROUPS")
 }
 
 func (c *Config) validateConfiguration() error {
