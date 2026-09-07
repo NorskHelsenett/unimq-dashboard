@@ -49,13 +49,13 @@ const docTemplate = `{
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/httpsuite.APIError"
+                            "$ref": "#/definitions/httpsuite.ErrorResponse"
                         }
                     },
                     "502": {
                         "description": "Bad Gateway",
                         "schema": {
-                            "$ref": "#/definitions/httpsuite.APIError"
+                            "$ref": "#/definitions/httpsuite.ErrorResponse"
                         }
                     }
                 }
@@ -101,19 +101,50 @@ const docTemplate = `{
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/httpsuite.APIError"
+                            "$ref": "#/definitions/httpsuite.ErrorResponse"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/httpsuite.APIError"
+                            "$ref": "#/definitions/httpsuite.ErrorResponse"
                         }
                     },
                     "502": {
                         "description": "Bad Gateway",
                         "schema": {
-                            "$ref": "#/definitions/httpsuite.APIError"
+                            "$ref": "#/definitions/httpsuite.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/v1/checker/status": {
+            "get": {
+                "security": [
+                    {
+                        "bearer": []
+                    }
+                ],
+                "description": "Get the current status of the notification checker",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Notifications"
+                ],
+                "summary": "Get checker status",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/notify.CheckerStatus"
+                        }
+                    },
+                    "503": {
+                        "description": "Service Unavailable",
+                        "schema": {
+                            "$ref": "#/definitions/httpsuite.ErrorResponse"
                         }
                     }
                 }
@@ -144,7 +175,7 @@ const docTemplate = `{
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/httpsuite.APIError"
+                            "$ref": "#/definitions/httpsuite.ErrorResponse"
                         }
                     }
                 }
@@ -175,7 +206,7 @@ const docTemplate = `{
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/httpsuite.APIError"
+                            "$ref": "#/definitions/httpsuite.ErrorResponse"
                         }
                     }
                 }
@@ -215,19 +246,69 @@ const docTemplate = `{
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/httpsuite.APIError"
+                            "$ref": "#/definitions/httpsuite.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/httpsuite.APIError"
+                            "$ref": "#/definitions/httpsuite.ErrorResponse"
                         }
                     }
                 }
             }
         },
         "/v1/maintenance/{maintenance-id}": {
+            "get": {
+                "security": [
+                    {
+                        "bearer": []
+                    }
+                ],
+                "description": "Get a specific maintenance entry by ID",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Maintenance"
+                ],
+                "summary": "Get a specific maintenance entry",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Maintenance Entry ID",
+                        "name": "maintenance-id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/models.MaintenanceEntry"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/httpsuite.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/httpsuite.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/httpsuite.ErrorResponse"
+                        }
+                    }
+                }
+            },
             "put": {
                 "security": [
                     {
@@ -273,19 +354,19 @@ const docTemplate = `{
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/httpsuite.APIError"
+                            "$ref": "#/definitions/httpsuite.ErrorResponse"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/httpsuite.APIError"
+                            "$ref": "#/definitions/httpsuite.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/httpsuite.APIError"
+                            "$ref": "#/definitions/httpsuite.ErrorResponse"
                         }
                     }
                 }
@@ -323,19 +404,19 @@ const docTemplate = `{
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/httpsuite.APIError"
+                            "$ref": "#/definitions/httpsuite.ErrorResponse"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/httpsuite.APIError"
+                            "$ref": "#/definitions/httpsuite.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/httpsuite.APIError"
+                            "$ref": "#/definitions/httpsuite.ErrorResponse"
                         }
                     }
                 }
@@ -380,19 +461,19 @@ const docTemplate = `{
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/httpsuite.APIError"
+                            "$ref": "#/definitions/httpsuite.ErrorResponse"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/httpsuite.APIError"
+                            "$ref": "#/definitions/httpsuite.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/httpsuite.APIError"
+                            "$ref": "#/definitions/httpsuite.ErrorResponse"
                         }
                     }
                 }
@@ -430,13 +511,13 @@ const docTemplate = `{
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/httpsuite.APIError"
+                            "$ref": "#/definitions/httpsuite.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/httpsuite.APIError"
+                            "$ref": "#/definitions/httpsuite.ErrorResponse"
                         }
                     }
                 }
@@ -470,7 +551,7 @@ const docTemplate = `{
                     "502": {
                         "description": "Bad Gateway",
                         "schema": {
-                            "$ref": "#/definitions/httpsuite.APIError"
+                            "$ref": "#/definitions/httpsuite.ErrorResponse"
                         }
                     }
                 }
@@ -510,13 +591,13 @@ const docTemplate = `{
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/httpsuite.APIError"
+                            "$ref": "#/definitions/httpsuite.ErrorResponse"
                         }
                     },
                     "502": {
                         "description": "Bad Gateway",
                         "schema": {
-                            "$ref": "#/definitions/httpsuite.APIError"
+                            "$ref": "#/definitions/httpsuite.ErrorResponse"
                         }
                     }
                 }
@@ -554,13 +635,13 @@ const docTemplate = `{
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/httpsuite.APIError"
+                            "$ref": "#/definitions/httpsuite.ErrorResponse"
                         }
                     },
                     "502": {
                         "description": "Bad Gateway",
                         "schema": {
-                            "$ref": "#/definitions/httpsuite.APIError"
+                            "$ref": "#/definitions/httpsuite.ErrorResponse"
                         }
                     }
                 }
@@ -612,13 +693,13 @@ const docTemplate = `{
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/httpsuite.APIError"
+                            "$ref": "#/definitions/httpsuite.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/httpsuite.APIError"
+                            "$ref": "#/definitions/httpsuite.ErrorResponse"
                         }
                     }
                 }
@@ -662,13 +743,13 @@ const docTemplate = `{
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/httpsuite.APIError"
+                            "$ref": "#/definitions/httpsuite.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/httpsuite.APIError"
+                            "$ref": "#/definitions/httpsuite.ErrorResponse"
                         }
                     }
                 }
@@ -720,25 +801,82 @@ const docTemplate = `{
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/httpsuite.APIError"
+                            "$ref": "#/definitions/httpsuite.ErrorResponse"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/httpsuite.APIError"
+                            "$ref": "#/definitions/httpsuite.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/httpsuite.APIError"
+                            "$ref": "#/definitions/httpsuite.ErrorResponse"
                         }
                     }
                 }
             }
         },
         "/v1/notifications/{vhost-name}/rules/{rule-id}": {
+            "get": {
+                "security": [
+                    {
+                        "bearer": []
+                    }
+                ],
+                "description": "Retrieve a specific notification rule for a vhost",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Notifications"
+                ],
+                "summary": "Get a notification rule",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Vhost Name",
+                        "name": "vhost-name",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Notification Rule ID",
+                        "name": "rule-id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Notification rule retrieved successfully",
+                        "schema": {
+                            "$ref": "#/definitions/models.AlarmRule"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/httpsuite.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/httpsuite.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/httpsuite.ErrorResponse"
+                        }
+                    }
+                }
+            },
             "post": {
                 "security": [
                     {
@@ -785,13 +923,13 @@ const docTemplate = `{
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/httpsuite.APIError"
+                            "$ref": "#/definitions/httpsuite.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/httpsuite.APIError"
+                            "$ref": "#/definitions/httpsuite.ErrorResponse"
                         }
                     }
                 }
@@ -833,13 +971,13 @@ const docTemplate = `{
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/httpsuite.APIError"
+                            "$ref": "#/definitions/httpsuite.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/httpsuite.APIError"
+                            "$ref": "#/definitions/httpsuite.ErrorResponse"
                         }
                     }
                 }
@@ -886,13 +1024,13 @@ const docTemplate = `{
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/httpsuite.APIError"
+                            "$ref": "#/definitions/httpsuite.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/httpsuite.APIError"
+                            "$ref": "#/definitions/httpsuite.ErrorResponse"
                         }
                     }
                 }
@@ -936,13 +1074,13 @@ const docTemplate = `{
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/httpsuite.APIError"
+                            "$ref": "#/definitions/httpsuite.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/httpsuite.APIError"
+                            "$ref": "#/definitions/httpsuite.ErrorResponse"
                         }
                     }
                 }
@@ -976,10 +1114,16 @@ const docTemplate = `{
                             }
                         }
                     },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/httpsuite.ErrorResponse"
+                        }
+                    },
                     "502": {
                         "description": "Bad Gateway",
                         "schema": {
-                            "$ref": "#/definitions/httpsuite.APIError"
+                            "$ref": "#/definitions/httpsuite.ErrorResponse"
                         }
                     }
                 }
@@ -1019,13 +1163,13 @@ const docTemplate = `{
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/httpsuite.APIError"
+                            "$ref": "#/definitions/httpsuite.ErrorResponse"
                         }
                     },
                     "502": {
                         "description": "Bad Gateway",
                         "schema": {
-                            "$ref": "#/definitions/httpsuite.APIError"
+                            "$ref": "#/definitions/httpsuite.ErrorResponse"
                         }
                     }
                 }
@@ -1065,13 +1209,13 @@ const docTemplate = `{
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/httpsuite.APIError"
+                            "$ref": "#/definitions/httpsuite.ErrorResponse"
                         }
                     },
                     "502": {
                         "description": "Bad Gateway",
                         "schema": {
-                            "$ref": "#/definitions/httpsuite.APIError"
+                            "$ref": "#/definitions/httpsuite.ErrorResponse"
                         }
                     }
                 }
@@ -1114,19 +1258,19 @@ const docTemplate = `{
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/httpsuite.APIError"
+                            "$ref": "#/definitions/httpsuite.ErrorResponse"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/httpsuite.APIError"
+                            "$ref": "#/definitions/httpsuite.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/httpsuite.APIError"
+                            "$ref": "#/definitions/httpsuite.ErrorResponse"
                         }
                     }
                 }
@@ -1176,19 +1320,19 @@ const docTemplate = `{
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/httpsuite.APIError"
+                            "$ref": "#/definitions/httpsuite.ErrorResponse"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/httpsuite.APIError"
+                            "$ref": "#/definitions/httpsuite.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/httpsuite.APIError"
+                            "$ref": "#/definitions/httpsuite.ErrorResponse"
                         }
                     }
                 }
@@ -1196,11 +1340,17 @@ const docTemplate = `{
         }
     },
     "definitions": {
-        "httpsuite.APIError": {
+        "httpsuite.ErrorResponse": {
             "type": "object",
             "properties": {
                 "error": {
                     "type": "string"
+                },
+                "message": {
+                    "type": "string"
+                },
+                "status_code": {
+                    "type": "integer"
                 }
             }
         },
@@ -1869,6 +2019,20 @@ const docTemplate = `{
                 },
                 "name": {
                     "type": "string"
+                }
+            }
+        },
+        "notify.CheckerStatus": {
+            "type": "object",
+            "properties": {
+                "interval_s": {
+                    "type": "integer"
+                },
+                "last_checked": {
+                    "type": "string"
+                },
+                "runtime_ms": {
+                    "type": "integer"
                 }
             }
         }

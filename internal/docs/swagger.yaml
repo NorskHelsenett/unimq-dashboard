@@ -1,9 +1,13 @@
 basePath: /api
 definitions:
-  httpsuite.APIError:
+  httpsuite.ErrorResponse:
     properties:
       error:
         type: string
+      message:
+        type: string
+      status_code:
+        type: integer
     type: object
   models.AlarmEntry:
     properties:
@@ -455,6 +459,15 @@ definitions:
       name:
         type: string
     type: object
+  notify.CheckerStatus:
+    properties:
+      interval_s:
+        type: integer
+      last_checked:
+        type: string
+      runtime_ms:
+        type: integer
+    type: object
 host: localhost:8080
 info:
   contact:
@@ -481,11 +494,11 @@ paths:
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/httpsuite.APIError'
+            $ref: '#/definitions/httpsuite.ErrorResponse'
         "502":
           description: Bad Gateway
           schema:
-            $ref: '#/definitions/httpsuite.APIError'
+            $ref: '#/definitions/httpsuite.ErrorResponse'
       security:
       - bearer: []
       summary: Get Alarm History
@@ -514,20 +527,39 @@ paths:
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/httpsuite.APIError'
+            $ref: '#/definitions/httpsuite.ErrorResponse'
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/httpsuite.APIError'
+            $ref: '#/definitions/httpsuite.ErrorResponse'
         "502":
           description: Bad Gateway
           schema:
-            $ref: '#/definitions/httpsuite.APIError'
+            $ref: '#/definitions/httpsuite.ErrorResponse'
       security:
       - bearer: []
       summary: Get Alarm History for a rule
       tags:
       - Alarms
+  /v1/checker/status:
+    get:
+      description: Get the current status of the notification checker
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/notify.CheckerStatus'
+        "503":
+          description: Service Unavailable
+          schema:
+            $ref: '#/definitions/httpsuite.ErrorResponse'
+      security:
+      - bearer: []
+      summary: Get checker status
+      tags:
+      - Notifications
   /v1/cluster:
     get:
       description: Get overall cluster statistics and health information
@@ -541,7 +573,7 @@ paths:
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/httpsuite.APIError'
+            $ref: '#/definitions/httpsuite.ErrorResponse'
       security:
       - bearer: []
       summary: Get Cluster Stats
@@ -560,7 +592,7 @@ paths:
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/httpsuite.APIError'
+            $ref: '#/definitions/httpsuite.ErrorResponse'
       security:
       - bearer: []
       summary: Get scheduled  maintenance information and history
@@ -586,11 +618,11 @@ paths:
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/httpsuite.APIError'
+            $ref: '#/definitions/httpsuite.ErrorResponse'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/httpsuite.APIError'
+            $ref: '#/definitions/httpsuite.ErrorResponse'
       security:
       - bearer: []
       summary: Add new scheduled maintenance entry
@@ -615,18 +647,50 @@ paths:
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/httpsuite.APIError'
+            $ref: '#/definitions/httpsuite.ErrorResponse'
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/httpsuite.APIError'
+            $ref: '#/definitions/httpsuite.ErrorResponse'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/httpsuite.APIError'
+            $ref: '#/definitions/httpsuite.ErrorResponse'
       security:
       - bearer: []
       summary: Delete a maintenance entry
+      tags:
+      - Maintenance
+    get:
+      description: Get a specific maintenance entry by ID
+      parameters:
+      - description: Maintenance Entry ID
+        in: path
+        name: maintenance-id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.MaintenanceEntry'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/httpsuite.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/httpsuite.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/httpsuite.ErrorResponse'
+      security:
+      - bearer: []
+      summary: Get a specific maintenance entry
       tags:
       - Maintenance
     patch:
@@ -656,15 +720,15 @@ paths:
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/httpsuite.APIError'
+            $ref: '#/definitions/httpsuite.ErrorResponse'
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/httpsuite.APIError'
+            $ref: '#/definitions/httpsuite.ErrorResponse'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/httpsuite.APIError'
+            $ref: '#/definitions/httpsuite.ErrorResponse'
       summary: Edit a maintenance entry
       tags:
       - Maintenance
@@ -695,15 +759,15 @@ paths:
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/httpsuite.APIError'
+            $ref: '#/definitions/httpsuite.ErrorResponse'
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/httpsuite.APIError'
+            $ref: '#/definitions/httpsuite.ErrorResponse'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/httpsuite.APIError'
+            $ref: '#/definitions/httpsuite.ErrorResponse'
       security:
       - bearer: []
       summary: Update maintenance entry status
@@ -730,11 +794,11 @@ paths:
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/httpsuite.APIError'
+            $ref: '#/definitions/httpsuite.ErrorResponse'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/httpsuite.APIError'
+            $ref: '#/definitions/httpsuite.ErrorResponse'
       summary: Get edit history for a maintenance entry
       tags:
       - Maintenance
@@ -753,7 +817,7 @@ paths:
         "502":
           description: Bad Gateway
           schema:
-            $ref: '#/definitions/httpsuite.APIError'
+            $ref: '#/definitions/httpsuite.ErrorResponse'
       security:
       - bearer: []
       summary: Get Notifications
@@ -778,11 +842,11 @@ paths:
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/httpsuite.APIError'
+            $ref: '#/definitions/httpsuite.ErrorResponse'
         "502":
           description: Bad Gateway
           schema:
-            $ref: '#/definitions/httpsuite.APIError'
+            $ref: '#/definitions/httpsuite.ErrorResponse'
       security:
       - bearer: []
       summary: Delete Notifications
@@ -806,11 +870,11 @@ paths:
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/httpsuite.APIError'
+            $ref: '#/definitions/httpsuite.ErrorResponse'
         "502":
           description: Bad Gateway
           schema:
-            $ref: '#/definitions/httpsuite.APIError'
+            $ref: '#/definitions/httpsuite.ErrorResponse'
       security:
       - bearer: []
       summary: Get Notification on Vhost
@@ -843,11 +907,11 @@ paths:
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/httpsuite.APIError'
+            $ref: '#/definitions/httpsuite.ErrorResponse'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/httpsuite.APIError'
+            $ref: '#/definitions/httpsuite.ErrorResponse'
       security:
       - bearer: []
       summary: Add a new notification recipient
@@ -875,11 +939,11 @@ paths:
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/httpsuite.APIError'
+            $ref: '#/definitions/httpsuite.ErrorResponse'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/httpsuite.APIError'
+            $ref: '#/definitions/httpsuite.ErrorResponse'
       security:
       - bearer: []
       summary: Delete a notification recipient
@@ -912,15 +976,15 @@ paths:
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/httpsuite.APIError'
+            $ref: '#/definitions/httpsuite.ErrorResponse'
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/httpsuite.APIError'
+            $ref: '#/definitions/httpsuite.ErrorResponse'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/httpsuite.APIError'
+            $ref: '#/definitions/httpsuite.ErrorResponse'
       security:
       - bearer: []
       summary: Add a new notification rule
@@ -948,14 +1012,51 @@ paths:
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/httpsuite.APIError'
+            $ref: '#/definitions/httpsuite.ErrorResponse'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/httpsuite.APIError'
+            $ref: '#/definitions/httpsuite.ErrorResponse'
       security:
       - bearer: []
       summary: Delete a notification rule
+      tags:
+      - Notifications
+    get:
+      description: Retrieve a specific notification rule for a vhost
+      parameters:
+      - description: Vhost Name
+        in: path
+        name: vhost-name
+        required: true
+        type: string
+      - description: Notification Rule ID
+        in: path
+        name: rule-id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Notification rule retrieved successfully
+          schema:
+            $ref: '#/definitions/models.AlarmRule'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/httpsuite.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/httpsuite.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/httpsuite.ErrorResponse'
+      security:
+      - bearer: []
+      summary: Get a notification rule
       tags:
       - Notifications
     post:
@@ -985,11 +1086,11 @@ paths:
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/httpsuite.APIError'
+            $ref: '#/definitions/httpsuite.ErrorResponse'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/httpsuite.APIError'
+            $ref: '#/definitions/httpsuite.ErrorResponse'
       security:
       - bearer: []
       summary: Update a notification rule
@@ -1020,11 +1121,11 @@ paths:
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/httpsuite.APIError'
+            $ref: '#/definitions/httpsuite.ErrorResponse'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/httpsuite.APIError'
+            $ref: '#/definitions/httpsuite.ErrorResponse'
       security:
       - bearer: []
       summary: Test Notification Rule
@@ -1052,11 +1153,11 @@ paths:
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/httpsuite.APIError'
+            $ref: '#/definitions/httpsuite.ErrorResponse'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/httpsuite.APIError'
+            $ref: '#/definitions/httpsuite.ErrorResponse'
       security:
       - bearer: []
       summary: Toggle a notification rule
@@ -1076,10 +1177,14 @@ paths:
                 $ref: '#/definitions/models.Vhost'
               type: array
             type: array
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/httpsuite.ErrorResponse'
         "502":
           description: Bad Gateway
           schema:
-            $ref: '#/definitions/httpsuite.APIError'
+            $ref: '#/definitions/httpsuite.ErrorResponse'
       security:
       - bearer: []
       summary: Get all vhosts
@@ -1104,11 +1209,11 @@ paths:
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/httpsuite.APIError'
+            $ref: '#/definitions/httpsuite.ErrorResponse'
         "502":
           description: Bad Gateway
           schema:
-            $ref: '#/definitions/httpsuite.APIError'
+            $ref: '#/definitions/httpsuite.ErrorResponse'
       security:
       - bearer: []
       summary: Get vhost details
@@ -1134,11 +1239,11 @@ paths:
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/httpsuite.APIError'
+            $ref: '#/definitions/httpsuite.ErrorResponse'
         "502":
           description: Bad Gateway
           schema:
-            $ref: '#/definitions/httpsuite.APIError'
+            $ref: '#/definitions/httpsuite.ErrorResponse'
       security:
       - bearer: []
       summary: Get Vhost Metrics
@@ -1165,15 +1270,15 @@ paths:
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/httpsuite.APIError'
+            $ref: '#/definitions/httpsuite.ErrorResponse'
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/httpsuite.APIError'
+            $ref: '#/definitions/httpsuite.ErrorResponse'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/httpsuite.APIError'
+            $ref: '#/definitions/httpsuite.ErrorResponse'
       security:
       - bearer: []
       summary: Get Queues for a specific vhost
@@ -1205,15 +1310,15 @@ paths:
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/httpsuite.APIError'
+            $ref: '#/definitions/httpsuite.ErrorResponse'
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/httpsuite.APIError'
+            $ref: '#/definitions/httpsuite.ErrorResponse'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/httpsuite.APIError'
+            $ref: '#/definitions/httpsuite.ErrorResponse'
       security:
       - bearer: []
       summary: Get a specific queue to a specified virtual host
