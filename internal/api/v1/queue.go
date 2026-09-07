@@ -14,9 +14,9 @@ import (
 // @Produce		json
 // @Param			vhost-name	path		string						true	"Virtual Host"
 // @Success		200			{object}	[]models.QueueAPIResponse	"HTML page with queue metrics"
-// @Failure		400			{object}	httpsuite.ErrorResponse			"Bad Request"
-// @Failure		404			{object}	httpsuite.ErrorResponse			"Not Found"
-// @Failure		500			{object}	httpsuite.ErrorResponse			"Internal Server Error"
+// @Failure		400			{object}	httpsuite.ErrorResponse		"Bad Request"
+// @Failure		404			{object}	httpsuite.ErrorResponse		"Not Found"
+// @Failure		500			{object}	httpsuite.ErrorResponse		"Internal Server Error"
 // @Router			/v1/vhosts/{vhost-name}/queues [get]
 // @security		bearer
 func (rc *APIService) GetQueuesHandler(w http.ResponseWriter, r *http.Request) {
@@ -57,9 +57,9 @@ func (rc *APIService) GetQueuesHandler(w http.ResponseWriter, r *http.Request) {
 // @Description	Fetches details of all queues in a specified virtual host.
 // @Tags			Queues
 // @Produce		json
-// @Param			vhost-name	path		string				true	"Virtual Host"
-// @Param			queue-id	path		string				true	"Queue Name"
-// @Success		200			{array}		models.QueueDetail	"List of queue details"
+// @Param			vhost-name	path		string					true	"Virtual Host"
+// @Param			queue-id	path		string					true	"Queue Name"
+// @Success		200			{array}		models.QueueDetail		"List of queue details"
 // @Failure		400			{object}	httpsuite.ErrorResponse	"Bad Request"
 // @Failure		404			{object}	httpsuite.ErrorResponse	"Not Found"
 // @Failure		500			{object}	httpsuite.ErrorResponse	"Internal Server Error"

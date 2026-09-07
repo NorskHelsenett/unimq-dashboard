@@ -16,6 +16,77 @@ import (
 	"go.mongodb.org/mongo-driver/v2/mongo"
 )
 
+// @Summary		Get a notification rule
+// @Description	Retrieve a specific notification rule for a vhost
+// @Tags			Notifications
+// @Produce		json
+// @Param			vhost-name	path		string				true	"Vhost Name"
+// @Param			rule-id		path		string				true	"Notification Rule ID"
+// @Success		200			{object}	models.AlarmRule	"Notification rule retrieved successfully"
+// @Failure		400			{object}	httpsuite.ErrorResponse
+// @Failure		404			{object}	httpsuite.ErrorResponse
+// @Failure		500			{object}	httpsuite.ErrorResponse
+// @Router			/v1/notifications/{vhost-name}/rules/{rule-id} [get]
+// @security		bearer
+func (rc *APIService) GetNotificationRuleHandler(w http.ResponseWriter, r *http.Request) {
+	vhost := chi.URLParam(r, "vhost")
+	if vhost == "" {
+		httpsuite.WriteJSONError(w,
+			http.StatusBadRequest,
+			httpsuite.WithErrorMessage("missing required vhost parameter"),
+		)
+		return
+	}
+
+	eVhost, err := url.QueryUnescape(vhost)
+	if err != nil {
+		httpsuite.WriteJSONError(w,
+			http.StatusBadRequest,
+			httpsuite.WithError(err),
+			httpsuite.WithExternalErrorMessage("failed to decode vhost name"),
+			httpsuite.WithInternalErrorMessage("error decoding vhost name: "+vhost),
+		)
+		return
+	}
+
+	id := chi.URLParam(r, "rule")
+	if id == "" {
+		httpsuite.WriteJSONError(w,
+			http.StatusBadRequest,
+			httpsuite.WithErrorMessage("missing required rule id parameter"),
+		)
+		return
+	}
+
+	rule, err := rc.DB.GetNotificationRule(r.Context(), eVhost, id)
+	if err != nil {
+		if errors.Is(err, database.ErrNotificationRuleNotFound) {
+			httpsuite.WriteJSONError(w,
+				http.StatusNotFound,
+				httpsuite.WithError(err),
+				httpsuite.WithErrorMessage("notification rule not found"),
+			)
+			return
+		}
+		if errors.Is(err, mongo.ErrNoDocuments) {
+			httpsuite.WriteJSONError(w,
+				http.StatusNotFound,
+				httpsuite.WithError(err),
+				httpsuite.WithErrorMessage("notification rule not found"),
+			)
+			return
+		}
+		httpsuite.WriteJSONError(w,
+			http.StatusInternalServerError,
+			httpsuite.WithError(err),
+			httpsuite.WithErrorMessage("failed to fetch notification rule"),
+		)
+		return
+	}
+
+	httpsuite.SendResponse(r.Context(), w, "Notification rule retrieved successfully", http.StatusOK, rule)
+}
+
 // @Summary		Add a new notification rule
 // @Description	Add a new notification rule for a specific vhost
 // @Tags			Notifications

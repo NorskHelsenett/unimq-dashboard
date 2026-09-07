@@ -52,6 +52,48 @@ func (rc *APIService) GetMaintenanceHandler(w http.ResponseWriter, r *http.Reque
 	httpsuite.SendResponse(r.Context(), w, "Fetched sheduled and historic maintenance", http.StatusOK, &response)
 }
 
+// @Summary		Get a specific maintenance entry
+// @Description	Get a specific maintenance entry by ID
+// @Tags			Maintenance
+// @Produce		json
+// @Param			maintenance-id	path		string	true	"Maintenance Entry ID"
+// @Success		200				{object}	models.MaintenanceEntry
+// @Failure		400				{object}	httpsuite.ErrorResponse
+// @Failure		404				{object}	httpsuite.ErrorResponse
+// @Failure		500				{object}	httpsuite.ErrorResponse
+// @Router			/v1/maintenance/{maintenance-id} [get]
+// @security		bearer
+func (rc *APIService) GetMaintenanceEntryHandler(w http.ResponseWriter, r *http.Request) {
+	id := chi.URLParam(r, "maintenance")
+	if id == "" {
+		httpsuite.WriteJSONError(w,
+			http.StatusBadRequest,
+			httpsuite.WithErrorMessage("maintenance id is required"),
+		)
+		return
+	}
+
+	entry, err := rc.DB.GetMaintenanceEntry(r.Context(), id)
+	if err != nil {
+		if errors.Is(err, database.ErrMaintenanceNotFound) {
+			httpsuite.WriteJSONError(w,
+				http.StatusNotFound,
+				httpsuite.WithError(err),
+				httpsuite.WithErrorMessage("maintenance entry not found"),
+			)
+			return
+		}
+		httpsuite.WriteJSONError(w,
+			http.StatusInternalServerError,
+			httpsuite.WithError(err),
+			httpsuite.WithErrorMessage("failed to fetch maintenance entry"),
+		)
+		return
+	}
+
+	httpsuite.SendResponse(r.Context(), w, "Fetched maintenance entry", http.StatusOK, &entry)
+}
+
 // @Summary		Add new scheduled maintenance entry
 // @Description	Add new maintenance entry with description, start time, and end time that will have the status Scheduled
 // @Tags			Maintenance

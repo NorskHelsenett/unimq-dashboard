@@ -10,7 +10,7 @@ import (
 // @Description	Get the current status of the notification checker
 // @Tags			Notifications
 // @Produce		json
-// @Success		200	{object}	models.CheckerStatus
+// @Success		200	{object}	notify.CheckerStatus
 // @Failure		503	{object}	httpsuite.ErrorResponse
 // @Router			/v1/checker/status [get]
 // @security		bearer
