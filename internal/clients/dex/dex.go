@@ -76,7 +76,12 @@ func (d *DexClient) Authorization() func(http.Handler) http.Handler {
 				Groups   []string `json:"groups"`
 			}
 			if err := idToken.Claims(&claims); err != nil {
-				httpsuite.WriteJSONError(w, "Failed to parse claims: "+err.Error(), http.StatusInternalServerError)
+				httpsuite.WriteJSONError(w,
+					http.StatusInternalServerError,
+					httpsuite.WithError(err),
+					httpsuite.WithExternalErrorMessage("Unauthorized"),
+					httpsuite.WithInternalErrorMessage("Failed to parse claims"),
+				)
 				return
 			}
 
