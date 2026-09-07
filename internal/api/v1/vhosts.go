@@ -1,7 +1,6 @@
 package api
 
 import (
-	"log/slog"
 	"net/http"
 	"net/url"
 
@@ -29,16 +28,16 @@ func (rc *APIService) VhostsHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	claims, ok := httpsuite.GetClaimsFromContext(r.Context())
-	if !ok {
-		httpsuite.WriteJSONError(w,
-			http.StatusInternalServerError,
-			httpsuite.WithError(err),
-			httpsuite.WithExternalErrorMessage("unauthorized"),
-		)
-		return
-	}
-	slog.Info("user claims", "claims", claims)
+	// claims, ok := httpsuite.GetClaimsFromContext(r.Context())
+	// if !ok {
+	// 	httpsuite.WriteJSONError(w,
+	// 		http.StatusInternalServerError,
+	// 		httpsuite.WithError(err),
+	// 		httpsuite.WithExternalErrorMessage("unauthorized"),
+	// 	)
+	// 	return
+	// }
+	// slog.Info("user claims", "claims", claims)
 
 	httpsuite.SendResponse(r.Context(), w, "", http.StatusOK, &vhosts)
 }
