@@ -1,10 +1,48 @@
+enabled: true
+name: unimq-dashboard
+namespace: unimq-dashboard
+replicaCount: 1
+
+image:
+  backend:
+    repository: ghcr.io/norskhelsenett/unimq-dashboard/backend
+    pullPolicy: IfNotPresent
+    tag: ""
+  frontend:
+    repository: ghcr.io/norskhelsenett/unimq-dashboard/frontend
+    pullPolicy: IfNotPresent
+    tag: ""
+
+service:
+  backend:
+    port: 8080
+  frontend:
+    port: 80
+
+# Gateway API (HTTPRoute) settings. Routes "/api" to the backend service and
+# everything else to the frontend service, matching the app's own dev-server
+# proxy behaviour (see web-src/vite.config.ts).
+gateway:
+  enabled: true
+  name: lt-integrasjon
+  namespace: lt-integrasjon
+  sectionName: unimq-dashboard.example.no
+  hostname: unimq-dashboard.example.no
+  annotations:
+    gatewayapi-operator.vitistack.io/cluster-issuer: dummy
+    gatewayapi-operator.vitistack.io/enabled: "true"
+
 unimq:
+  # Vite/frontend settings are baked into the frontend image at build time
+  # (Vite only reads VITE_* variables at `npm run build`), so they cannot be
+  # injected at container runtime and are kept here for documentation only.
   vite:
     auth_issuer: ""
     client_id: ""
+
   backend:
     # API connection settings
-    base_url: "localhost"
+    base_url: "0.0.0.0"
     base_port: "8080"
 
     # Log level settings, valid values: -8 (trace), -4 (debug), 0 (info), 4 (warn), 8 (error)
@@ -14,6 +52,7 @@ unimq:
     mongodb_host: "localhost"
     mongodb_port: "27017"
     mongodb_username: "admin"
+    # Remember to update this with a real value; it is base64 encoded automatically.
     mongodb_password: "password"
     mongodb_database: "unimq"
 
@@ -21,6 +60,7 @@ unimq:
     rabbitmq_host: "http://localhost"
     rabbitmq_port: "15672"
     rabbitmq_username: "guest"
+    # Remember to update this with a real value; it is base64 encoded automatically.
     rabbitmq_password: "guest"
 
     rabbitmq_channel_limit: 1000
@@ -31,14 +71,19 @@ unimq:
     prometheus_host: "http://localhost"
     prometheus_port: "9090"
 
-image:
-  repository: ghcr.io/norskhelsenett/unimq
-  pullPolicy: IfNotPresent
-  tag: "0.0.1"
+    # email/smtp settings, notifications are disabled when smtp_host is empty
+    email_smtp_host: ""
+    email_smtp_port: "587"
+    email_smtp_username: ""
+    # Remember to update this with a real value; it is base64 encoded automatically.
+    email_smtp_password: ""
+    email_from_address: "unimq@example.com"
 
-enabled: true
-name: unimq-dashboard
-namespace: unimq-dashboard
-replicaCount: 1
+    # OIDC authentication settings
+    oidc_client_id: "unimq-dashboard"
+    # Remember to update this with a real value; it is base64 encoded automatically.
+    oidc_client_secret: "placeholder"
+    oidc_url: "http://localhost:5556/dex"
+    oidc_redirect_url: "http://localhost:8080/api/callback"
 
-# Remember to update the secret value with a base64 encoded string.
+    admin_groups: "group.name1@local,group.name2@local"

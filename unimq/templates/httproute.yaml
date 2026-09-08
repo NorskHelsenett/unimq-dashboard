@@ -1,0 +1,40 @@
+{{- if $.Values.gateway.enabled }}
+---
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: "{{ $.Values.name }}"
+  namespace: "{{ $.Values.namespace }}"
+  annotations:
+    {{- toYaml $.Values.gateway.annotations | nindent 4 }}
+spec:
+  parentRefs:
+    - name: "{{ $.Values.gateway.name }}"
+      sectionName: "{{ $.Values.gateway.sectionName }}"
+      namespace: "{{ $.Values.gateway.namespace }}"
+  hostnames:
+    - "{{ $.Values.gateway.hostname }}"
+  rules:
+    # API requests go to the backend service
+    - matches:
+        - path:
+            type: PathPrefix
+            value: /api
+      backendRefs:
+        - group: ""
+          kind: Service
+          name: "{{ $.Values.name }}-backend"
+          port: {{ $.Values.service.backend.port }}
+          weight: 1
+    # Everything else is served by the frontend's static files
+    - matches:
+        - path:
+            type: PathPrefix
+            value: /
+      backendRefs:
+        - group: ""
+          kind: Service
+          name: "{{ $.Values.name }}-frontend"
+          port: {{ $.Values.service.frontend.port }}
+          weight: 1
+{{- end }}

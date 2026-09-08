@@ -5,6 +5,32 @@ metadata:
   name: "{{ $.Values.name }}-configmap"
   namespace: "{{ $.Values.namespace }}"
 data:
-  vite:
-    auth_issuer: "{{ $.Values.unimq.vite.auth_issuer }}"
-    client_id: "{{ $.Values.unimq.vite.client_id }}"
+  BASE_URL: "{{ $.Values.unimq.backend.base_url }}"
+  BASE_PORT: "{{ $.Values.unimq.backend.base_port }}"
+  LOG_LEVEL: "{{ $.Values.unimq.backend.log_level }}"
+
+  MONGODB_HOST: "{{ $.Values.unimq.backend.mongodb_host }}"
+  MONGODB_PORT: "{{ $.Values.unimq.backend.mongodb_port }}"
+  MONGODB_USERNAME: "{{ $.Values.unimq.backend.mongodb_username }}"
+  MONGODB_DATABASE: "{{ $.Values.unimq.backend.mongodb_database }}"
+
+  RABBITMQ_HOST: "{{ $.Values.unimq.backend.rabbitmq_host }}"
+  RABBITMQ_PORT: "{{ $.Values.unimq.backend.rabbitmq_port }}"
+  RABBITMQ_USERNAME: "{{ $.Values.unimq.backend.rabbitmq_username }}"
+  RABBITMQ_CHANNEL_LIMIT: "{{ $.Values.unimq.backend.rabbitmq_channel_limit }}"
+  RABBITMQ_CONNECTION_LIMIT: "{{ $.Values.unimq.backend.rabbitmq_connection_limit }}"
+  RABBITMQ_QUEUE_LIMIT: "{{ $.Values.unimq.backend.rabbitmq_queue_limit }}"
+
+  PROMETHEUS_HOST: "{{ $.Values.unimq.backend.prometheus_host }}"
+  PROMETHEUS_PORT: "{{ $.Values.unimq.backend.prometheus_port }}"
+
+  EMAIL_SMTP_HOST: "{{ $.Values.unimq.backend.email_smtp_host }}"
+  EMAIL_SMTP_PORT: "{{ $.Values.unimq.backend.email_smtp_port }}"
+  EMAIL_SMTP_USERNAME: "{{ $.Values.unimq.backend.email_smtp_username }}"
+  EMAIL_FROM_ADDRESS: "{{ $.Values.unimq.backend.email_from_address }}"
+
+  OIDC_CLIENT_ID: "{{ $.Values.unimq.backend.oidc_client_id }}"
+  OIDC_URL: "{{ $.Values.unimq.backend.oidc_url }}"
+  OIDC_REDIRECT_URL: "{{ $.Values.unimq.backend.oidc_redirect_url }}"
+
+  ADMIN_GROUPS: "{{ $.Values.unimq.backend.admin_groups }}"
