@@ -39,6 +39,7 @@ func SetupRoutes(ctx context.Context, config *config.Config, db *database.Databa
 		api.WithDatabase(db),
 		api.WithEmailConfig(config.Email),
 		api.WithChecker(checker),
+		api.WithAdminGroups(config.AdminGroups),
 	)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create API service: %w", err)
