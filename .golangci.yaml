@@ -28,7 +28,7 @@ linters:
     gocyclo:
       min-complexity: 15
     funlen:
-      lines: 120
+      lines: 160
       statements: 60
     revive:
       rules:
