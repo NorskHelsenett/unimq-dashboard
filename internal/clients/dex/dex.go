@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log/slog"
 	"net/http"
+	"strings"
 
 	"github.com/coreos/go-oidc/v3/oidc"
 	"github.com/sisneve/rabbitmq-dashboard/internal/config"
@@ -50,43 +51,75 @@ func (d *DexClient) ValidateToken(ctx context.Context, token string) (*oidc.IDTo
 	return idToken, nil
 }
 
+const bearerPrefix = "Bearer "
+
 // Authorization is a middleware that checks for a valid OIDC token in the Authorization header.
 // If the token is valid, it adds the claims to the request context.
 func (d *DexClient) Authorization() func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			// Extract the token from the Authorization header
 			authHeader := r.Header.Get("Authorization")
+
 			if authHeader == "" {
-				http.Error(w, "Authorization header missing", http.StatusUnauthorized)
+				httpsuite.WriteJSONError(w,
+					http.StatusUnauthorized,
+					httpsuite.WithExternalErrorMessage("unauthorized"),
+					httpsuite.WithInternalErrorMessage("Authorization header missing"),
+				)
 				return
 			}
 
-			token := authHeader[len("Bearer "):]
+			if !strings.HasPrefix(authHeader, bearerPrefix) {
+				httpsuite.WriteJSONError(w,
+					http.StatusUnauthorized,
+					httpsuite.WithExternalErrorMessage("unauthorized"),
+					httpsuite.WithInternalErrorMessage("Authorization header does not start with 'Bearer '"),
+				)
+				return
+			}
+
+			token := strings.TrimPrefix(authHeader, bearerPrefix)
+			if token == "" {
+				httpsuite.WriteJSONError(w,
+					http.StatusUnauthorized,
+					httpsuite.WithExternalErrorMessage("unauthorized"),
+					httpsuite.WithInternalErrorMessage("token missing in Authorization header"),
+				)
+				return
+			}
 
 			idToken, err := d.ValidateToken(r.Context(), token)
 			if err != nil {
-				http.Error(w, "Invalid token: "+err.Error(), http.StatusUnauthorized)
+				httpsuite.WriteJSONError(w,
+					http.StatusUnauthorized,
+					httpsuite.WithError(err),
+					httpsuite.WithExternalErrorMessage("unauthorized"),
+					httpsuite.WithInternalErrorMessage("failed to validate token"),
+				)
 				return
 			}
 
-			var claims struct {
-				Email    string   `json:"email"`
-				Verified bool     `json:"email_verified"`
-				Groups   []string `json:"groups"`
-			}
+			var claims map[string]any
+
 			if err := idToken.Claims(&claims); err != nil {
 				httpsuite.WriteJSONError(w,
 					http.StatusInternalServerError,
 					httpsuite.WithError(err),
-					httpsuite.WithExternalErrorMessage("Unauthorized"),
+					httpsuite.WithExternalErrorMessage("unauthorized"),
 					httpsuite.WithInternalErrorMessage("Failed to parse claims"),
 				)
 				return
 			}
 
-			ctx := context.WithValue(r.Context(), "claims", claims)
-			next.ServeHTTP(w, r.WithContext(ctx))
+			ctx := context.WithValue(
+				r.Context(),
+				httpsuite.ClaimsContextKey,
+				claims,
+			)
+
+			r = r.WithContext(ctx)
+
+			next.ServeHTTP(w, r)
 		})
 	}
 }
