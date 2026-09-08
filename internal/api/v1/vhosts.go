@@ -14,10 +14,19 @@ import (
 // @Produce		json
 // @Success		200	{array}		[]models.Vhost
 // @Failure		400	{object}	httpsuite.ErrorResponse
+// @Failure		401	{object}	httpsuite.ErrorResponse
+// @Failure		403	{object}	httpsuite.ErrorResponse
 // @Failure		502	{object}	httpsuite.ErrorResponse
 // @Router			/v1/vhosts [get]
 // @security		bearer
 func (rc *APIService) VhostsHandler(w http.ResponseWriter, r *http.Request) {
+
+	_, err := httpsuite.IsAGroupInClaim(r.Context(), rc.AdminGroups)
+	if err != nil {
+		httpsuite.WriteJSONErrorForbidden(w, httpsuite.WithInternalErrorMessage(err.Error()))
+		return
+	}
+
 	vhosts, err := rc.RMQClient.GetVhosts()
 	if err != nil {
 		httpsuite.WriteJSONError(w,
@@ -27,17 +36,6 @@ func (rc *APIService) VhostsHandler(w http.ResponseWriter, r *http.Request) {
 		)
 		return
 	}
-
-	// claims, ok := httpsuite.GetClaimsFromContext(r.Context())
-	// if !ok {
-	// 	httpsuite.WriteJSONError(w,
-	// 		http.StatusInternalServerError,
-	// 		httpsuite.WithError(err),
-	// 		httpsuite.WithExternalErrorMessage("unauthorized"),
-	// 	)
-	// 	return
-	// }
-	// slog.Info("user claims", "claims", claims)
 
 	httpsuite.SendResponse(r.Context(), w, "", http.StatusOK, &vhosts)
 }
@@ -49,10 +47,19 @@ func (rc *APIService) VhostsHandler(w http.ResponseWriter, r *http.Request) {
 // @Param			vhost-name	path		string	true	"Vhost Name"
 // @Success		200			{object}	models.Vhost
 // @Failure		400			{object}	httpsuite.ErrorResponse
+// @Failure		401			{object}	httpsuite.ErrorResponse
+// @Failure		403			{object}	httpsuite.ErrorResponse
 // @Failure		502			{object}	httpsuite.ErrorResponse
 // @Router			/v1/vhosts/{vhost-name} [get]
 // @security		bearer
 func (rc *APIService) VhostHandler(w http.ResponseWriter, r *http.Request) {
+
+	_, err := httpsuite.IsAGroupInClaim(r.Context(), rc.AdminGroups)
+	if err != nil {
+		httpsuite.WriteJSONErrorForbidden(w, httpsuite.WithInternalErrorMessage(err.Error()))
+		return
+	}
+
 	vhostName := chi.URLParam(r, "vhost")
 	if vhostName == "" {
 		httpsuite.WriteJSONError(w,

@@ -17,10 +17,19 @@ import (
 // @Param			recipient-id	path		string	true	"Recipient ID"
 // @Success		200				{object}	models.Recipient
 // @Failure		400				{object}	httpsuite.ErrorResponse
+// @Failure		401				{object}	httpsuite.ErrorResponse
+// @Failure		403				{object}	httpsuite.ErrorResponse
 // @Failure		500				{object}	httpsuite.ErrorResponse
 // @Router			/v1/notifications/{vhost-name}/recipients/{recipient-id} [get]
 // @security		bearer
 func (rc *APIService) GetNotificationsRecipientHandler(w http.ResponseWriter, r *http.Request) {
+
+	_, err := httpsuite.IsAGroupInClaim(r.Context(), rc.AdminGroups)
+	if err != nil {
+		httpsuite.WriteJSONErrorForbidden(w, httpsuite.WithInternalErrorMessage(err.Error()))
+		return
+	}
+
 	vhost := chi.URLParam(r, "vhost")
 	if vhost == "" {
 		httpsuite.WriteJSONError(w,
@@ -75,10 +84,19 @@ func (rc *APIService) GetNotificationsRecipientHandler(w http.ResponseWriter, r 
 // @Param			recipient	body		models.PostRecipient	true	"Notification Recipient Object"
 // @Success		201			{object}	string					"Recipient added successfully"
 // @Failure		400			{object}	httpsuite.ErrorResponse
+// @Failure		401			{object}	httpsuite.ErrorResponse
+// @Failure		403			{object}	httpsuite.ErrorResponse
 // @Failure		500			{object}	httpsuite.ErrorResponse
 // @Router			/v1/notifications/{vhost-name}/recipients [post]
 // @security		bearer
 func (rc *APIService) AddNotificationsRecipientHandler(w http.ResponseWriter, r *http.Request) {
+
+	_, err := httpsuite.IsAGroupInClaim(r.Context(), rc.AdminGroups)
+	if err != nil {
+		httpsuite.WriteJSONErrorForbidden(w, httpsuite.WithInternalErrorMessage(err.Error()))
+		return
+	}
+
 	vhost := chi.URLParam(r, "vhost")
 	if vhost == "" {
 		httpsuite.WriteJSONError(w,
@@ -149,10 +167,19 @@ func (rc *APIService) AddNotificationsRecipientHandler(w http.ResponseWriter, r 
 // @Param			recipient-id	path		string	true	"Recipient ID"
 // @Success		200				{string}	string	"Recipient deleted successfully"
 // @Failure		400				{object}	httpsuite.ErrorResponse
+// @Failure		401				{object}	httpsuite.ErrorResponse
+// @Failure		403				{object}	httpsuite.ErrorResponse
 // @Failure		500				{object}	httpsuite.ErrorResponse
 // @Router			/v1/notifications/{vhost-name}/recipients/{recipient-id} [delete]
 // @security		bearer
 func (rc *APIService) DeleteNotificationsRecipientHandler(w http.ResponseWriter, r *http.Request) {
+
+	_, err := httpsuite.IsAGroupInClaim(r.Context(), rc.AdminGroups)
+	if err != nil {
+		httpsuite.WriteJSONErrorForbidden(w, httpsuite.WithInternalErrorMessage(err.Error()))
+		return
+	}
+
 	vhost := chi.URLParam(r, "vhost")
 	if vhost == "" {
 		httpsuite.WriteJSONError(w,

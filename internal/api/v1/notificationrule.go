@@ -24,11 +24,20 @@ import (
 // @Param			rule-id		path		string				true	"Notification Rule ID"
 // @Success		200			{object}	models.AlarmRule	"Notification rule retrieved successfully"
 // @Failure		400			{object}	httpsuite.ErrorResponse
+// @Failure		401			{object}	httpsuite.ErrorResponse
+// @Failure		403			{object}	httpsuite.ErrorResponse
 // @Failure		404			{object}	httpsuite.ErrorResponse
 // @Failure		500			{object}	httpsuite.ErrorResponse
 // @Router			/v1/notifications/{vhost-name}/rules/{rule-id} [get]
 // @security		bearer
 func (rc *APIService) GetNotificationRuleHandler(w http.ResponseWriter, r *http.Request) {
+
+	_, err := httpsuite.IsAGroupInClaim(r.Context(), rc.AdminGroups)
+	if err != nil {
+		httpsuite.WriteJSONErrorForbidden(w, httpsuite.WithInternalErrorMessage(err.Error()))
+		return
+	}
+
 	vhost := chi.URLParam(r, "vhost")
 	if vhost == "" {
 		httpsuite.WriteJSONError(w,
@@ -96,11 +105,20 @@ func (rc *APIService) GetNotificationRuleHandler(w http.ResponseWriter, r *http.
 // @Param			rule		body		models.PostAlarmRule	true	"Notification Rule Object"
 // @Success		201			{object}	string					"Rule added successfully"
 // @Failure		400			{object}	httpsuite.ErrorResponse
+// @Failure		401			{object}	httpsuite.ErrorResponse
+// @Failure		403			{object}	httpsuite.ErrorResponse
 // @Failure		404			{object}	httpsuite.ErrorResponse
 // @Failure		500			{object}	httpsuite.ErrorResponse
 // @Router			/v1/notifications/{vhost-name}/rules [post]
 // @security		bearer
 func (rc *APIService) AddNotificationsRuleHandler(w http.ResponseWriter, r *http.Request) {
+
+	_, err := httpsuite.IsAGroupInClaim(r.Context(), rc.AdminGroups)
+	if err != nil {
+		httpsuite.WriteJSONErrorForbidden(w, httpsuite.WithInternalErrorMessage(err.Error()))
+		return
+	}
+
 	vhost := chi.URLParam(r, "vhost")
 	if vhost == "" {
 		httpsuite.WriteJSONError(w,
@@ -180,10 +198,19 @@ func (rc *APIService) AddNotificationsRuleHandler(w http.ResponseWriter, r *http
 // @Param			rule-id		path		string	true	"Notification Rule ID"
 // @Success		200			{string}	string	"Rule deleted successfully"
 // @Failure		400			{object}	httpsuite.ErrorResponse
+// @Failure		401			{object}	httpsuite.ErrorResponse
+// @Failure		403			{object}	httpsuite.ErrorResponse
 // @Failure		500			{object}	httpsuite.ErrorResponse
 // @Router			/v1/notifications/{vhost-name}/rules/{rule-id} [delete]
 // @security		bearer
 func (rc *APIService) DeleteNotificationsRuleHandler(w http.ResponseWriter, r *http.Request) {
+
+	_, err := httpsuite.IsAGroupInClaim(r.Context(), rc.AdminGroups)
+	if err != nil {
+		httpsuite.WriteJSONErrorForbidden(w, httpsuite.WithInternalErrorMessage(err.Error()))
+		return
+	}
+
 	vhost := chi.URLParam(r, "vhost")
 	if vhost == "" {
 		httpsuite.WriteJSONError(w,
@@ -233,10 +260,19 @@ func (rc *APIService) DeleteNotificationsRuleHandler(w http.ResponseWriter, r *h
 // @Param			rule		body		models.AlarmRuleUpdate	true	"Updated Notification Rule Object"
 // @Success		200			{string}	string					"Rule updated successfully"
 // @Failure		400			{object}	httpsuite.ErrorResponse
+// @Failure		401			{object}	httpsuite.ErrorResponse
+// @Failure		403			{object}	httpsuite.ErrorResponse
 // @Failure		500			{object}	httpsuite.ErrorResponse
 // @Router			/v1/notifications/{vhost-name}/rules/{rule-id} [Post]
 // @security		bearer
 func (rc *APIService) UpdateNotificationsRuleHandler(w http.ResponseWriter, r *http.Request) {
+
+	_, err := httpsuite.IsAGroupInClaim(r.Context(), rc.AdminGroups)
+	if err != nil {
+		httpsuite.WriteJSONErrorForbidden(w, httpsuite.WithInternalErrorMessage(err.Error()))
+		return
+	}
+
 	vhost := chi.URLParam(r, "vhost")
 	if vhost == "" {
 		httpsuite.WriteJSONError(w,
@@ -307,10 +343,19 @@ func (rc *APIService) UpdateNotificationsRuleHandler(w http.ResponseWriter, r *h
 // @Param			rule-id		path		string	true	"Notification Rule ID"
 // @Success		200			{string}	string	"Rule toggled successfully"
 // @Failure		400			{object}	httpsuite.ErrorResponse
+// @Failure		401			{object}	httpsuite.ErrorResponse
+// @Failure		403			{object}	httpsuite.ErrorResponse
 // @Failure		500			{object}	httpsuite.ErrorResponse
 // @Router			/v1/notifications/{vhost-name}/rules/{rule-id}/toggle [post]
 // @security		bearer
 func (rc *APIService) ToggleNotificationsRuleHandler(w http.ResponseWriter, r *http.Request) {
+
+	_, err := httpsuite.IsAGroupInClaim(r.Context(), rc.AdminGroups)
+	if err != nil {
+		httpsuite.WriteJSONErrorForbidden(w, httpsuite.WithInternalErrorMessage(err.Error()))
+		return
+	}
+
 	vhost := chi.URLParam(r, "vhost")
 	if vhost == "" {
 		httpsuite.WriteJSONError(w,
@@ -381,10 +426,19 @@ func (rc *APIService) ToggleNotificationsRuleHandler(w http.ResponseWriter, r *h
 // @Param			rule-id		path		string							true	"Notification Rule ID"
 // @Success		200			{object}	models.TestNotificationResponse	"Test notification sent successfully"
 // @Failure		400			{object}	httpsuite.ErrorResponse
+// @Failure		401			{object}	httpsuite.ErrorResponse
+// @Failure		403			{object}	httpsuite.ErrorResponse
 // @Failure		500			{object}	httpsuite.ErrorResponse
 // @Router			/v1/notifications/{vhost-name}/rules/{rule-id}/test [post]
 // @security		bearer
 func (rc *APIService) TestNotificationsRuleHandler(w http.ResponseWriter, r *http.Request) {
+
+	_, err := httpsuite.IsAGroupInClaim(r.Context(), rc.AdminGroups)
+	if err != nil {
+		httpsuite.WriteJSONErrorForbidden(w, httpsuite.WithInternalErrorMessage(err.Error()))
+		return
+	}
+
 	vhost := chi.URLParam(r, "vhost")
 	if vhost == "" {
 		httpsuite.WriteJSONError(w,

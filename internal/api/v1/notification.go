@@ -16,10 +16,18 @@ import (
 // @Tags			Notifications
 // @Produce		json
 // @Success		200	{object}	[]models.VhostNotification
+// @Failure		401	{object}	httpsuite.ErrorResponse
+// @Failure		403	{object}	httpsuite.ErrorResponse
 // @Failure		502	{object}	httpsuite.ErrorResponse
 // @Router			/v1/notifications [get]
 // @security		bearer
 func (rc *APIService) GetNotificationsHandler(w http.ResponseWriter, r *http.Request) {
+
+	_, err := httpsuite.IsAGroupInClaim(r.Context(), rc.AdminGroups)
+	if err != nil {
+		httpsuite.WriteJSONErrorForbidden(w, httpsuite.WithInternalErrorMessage(err.Error()))
+		return
+	}
 
 	notifications, err := rc.DB.GetNotificationsAll(r.Context())
 	if err != nil {
@@ -41,10 +49,18 @@ func (rc *APIService) GetNotificationsHandler(w http.ResponseWriter, r *http.Req
 // @Param			vhost-name	path		string	true	"Vhost Name"
 // @Success		200			{object}	models.VhostNotification
 // @Failure		400			{object}	httpsuite.ErrorResponse
+// @Failure		401			{object}	httpsuite.ErrorResponse
+// @Failure		403			{object}	httpsuite.ErrorResponse
 // @Failure		502			{object}	httpsuite.ErrorResponse
 // @Router			/v1/notifications/{vhost-name} [get]
 // @security		bearer
 func (rc *APIService) GetNotificationsVhostHandler(w http.ResponseWriter, r *http.Request) {
+
+	_, err := httpsuite.IsAGroupInClaim(r.Context(), rc.AdminGroups)
+	if err != nil {
+		httpsuite.WriteJSONErrorForbidden(w, httpsuite.WithInternalErrorMessage(err.Error()))
+		return
+	}
 
 	vhost := chi.URLParam(r, "vhost")
 	if vhost == "" {
@@ -91,10 +107,19 @@ func (rc *APIService) GetNotificationsVhostHandler(w http.ResponseWriter, r *htt
 // @Param			vhost-name	path		string	true	"Vhost Name"
 // @Success		200			{object}	string
 // @Failure		400			{object}	httpsuite.ErrorResponse
+// @Failure		401			{object}	httpsuite.ErrorResponse
+// @Failure		403			{object}	httpsuite.ErrorResponse
 // @Failure		502			{object}	httpsuite.ErrorResponse
 // @Router			/v1/notifications/{vhost-name} [delete]
 // @security		bearer
 func (rc *APIService) DeleteNotificationsHandler(w http.ResponseWriter, r *http.Request) {
+
+	_, err := httpsuite.IsAGroupInClaim(r.Context(), rc.AdminGroups)
+	if err != nil {
+		httpsuite.WriteJSONErrorForbidden(w, httpsuite.WithInternalErrorMessage(err.Error()))
+		return
+	}
+
 	vhost := chi.URLParam(r, "vhost")
 	if vhost == "" {
 		httpsuite.WriteJSONError(w,

@@ -16,10 +16,18 @@ import (
 // @Produce		json
 // @Success		200	{array}		[]models.AlarmEntry
 // @Failure		400	{object}	httpsuite.ErrorResponse
+// @Failure		401	{object}	httpsuite.ErrorResponse
+// @Failure		403	{object}	httpsuite.ErrorResponse
 // @Failure		502	{object}	httpsuite.ErrorResponse
 // @Router			/v1/alarms [get]
 // @security		bearer
 func (rc *APIService) GetAlarmHistoryAllHandler(w http.ResponseWriter, r *http.Request) {
+
+	_, err := httpsuite.IsAGroupInClaim(r.Context(), rc.AdminGroups)
+	if err != nil {
+		httpsuite.WriteJSONErrorForbidden(w, httpsuite.WithInternalErrorMessage(err.Error()))
+		return
+	}
 
 	alarms, err := rc.DB.GetAlarmsAll(r.Context())
 	if err != nil {
@@ -41,11 +49,19 @@ func (rc *APIService) GetAlarmHistoryAllHandler(w http.ResponseWriter, r *http.R
 // @Param			rule-id	path		string	true	"Rule ID"
 // @Success		200		{array}		[]models.AlarmEntry
 // @Failure		400		{object}	httpsuite.ErrorResponse
+// @Failure		401		{object}	httpsuite.ErrorResponse
+// @Failure		403		{object}	httpsuite.ErrorResponse
 // @Failure		404		{object}	httpsuite.ErrorResponse
 // @Failure		502		{object}	httpsuite.ErrorResponse
 // @Router			/v1/alarms/{rule-id} [get]
 // @security		bearer
 func (rc *APIService) GetAlarmHistoryHandler(w http.ResponseWriter, r *http.Request) {
+
+	_, err := httpsuite.IsAGroupInClaim(r.Context(), rc.AdminGroups)
+	if err != nil {
+		httpsuite.WriteJSONErrorForbidden(w, httpsuite.WithInternalErrorMessage(err.Error()))
+		return
+	}
 
 	ruleID := chi.URLParam(r, "rule-id")
 	if ruleID == "" {

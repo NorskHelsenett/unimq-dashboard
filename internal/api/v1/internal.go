@@ -12,7 +12,7 @@ import (
 )
 
 // Internal is for functionality not exposed to the API.
-// Typically helper functions that use multiple API endpoints.
+// Typically helper functions that is used in multiple API endpoints.
 
 var (
 	errFailedToCreateNotificationHost = errors.New("failed to create notification host")
