@@ -380,7 +380,7 @@ func (rc *APIService) DeleteMaintenanceHandler(w http.ResponseWriter, r *http.Re
 	if id == "" {
 		httpsuite.WriteJSONError(w,
 			http.StatusBadRequest,
-			httpsuite.WithErrorMessage("maintenace id is required"),
+			httpsuite.WithErrorMessage("maintenance id is required"),
 		)
 		return
 	}

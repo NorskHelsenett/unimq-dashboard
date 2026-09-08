@@ -71,8 +71,6 @@ func (rc *APIService) GetNotificationsRecipientHandler(w http.ResponseWriter, r 
 	}
 
 	httpsuite.SendResponse(r.Context(), w, "", http.StatusOK, &recipient)
-	return
-
 }
 
 // @Summary		Add a new notification recipient

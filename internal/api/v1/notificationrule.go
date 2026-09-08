@@ -497,7 +497,7 @@ func (rc *APIService) TestNotificationsRuleHandler(w http.ResponseWriter, r *htt
 
 	vhostobject, err := rc.DB.GetVhost(r.Context(), eVhost)
 	if err != nil {
-		if err == mongo.ErrNoDocuments {
+		if errors.Is(err, mongo.ErrNoDocuments) {
 			httpsuite.WriteJSONError(w,
 				http.StatusNotFound,
 				httpsuite.WithError(err),
