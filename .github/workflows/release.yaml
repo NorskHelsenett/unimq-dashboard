@@ -18,5 +18,8 @@ jobs:
   backend:
     uses: ./.github/workflows/release_backend.yaml
 
+  chart:
+    uses: ./.github/workflows/release_chart.yaml
+
   notes:
     uses: ./.github/workflows/release_notes.yaml

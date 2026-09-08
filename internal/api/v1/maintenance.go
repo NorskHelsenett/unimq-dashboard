@@ -19,10 +19,19 @@ import (
 // @Tags			Maintenance
 // @Produce		json
 // @Success		200	{object}	models.MaintenanceResponse
+// @Failure		401	{object}	httpsuite.ErrorResponse
+// @Failure		403	{object}	httpsuite.ErrorResponse
 // @Failure		500	{object}	httpsuite.ErrorResponse
 // @Router			/v1/maintenance [get]
 // @security		bearer
 func (rc *APIService) GetMaintenanceHandler(w http.ResponseWriter, r *http.Request) {
+
+	_, err := httpsuite.IsAGroupInClaim(r.Context(), rc.AdminGroups)
+	if err != nil {
+		httpsuite.WriteJSONErrorForbidden(w, httpsuite.WithInternalErrorMessage(err.Error()))
+		return
+	}
+
 	// Advance stale entries before returning so callers always see current statuses
 	if _, err := rc.DB.AdvanceMaintenanceStatuses(r.Context()); err != nil {
 		slog.WarnContext(r.Context(), "failed to advance maintenance statuses", "error", err)
@@ -59,11 +68,20 @@ func (rc *APIService) GetMaintenanceHandler(w http.ResponseWriter, r *http.Reque
 // @Param			maintenance-id	path		string	true	"Maintenance Entry ID"
 // @Success		200				{object}	models.MaintenanceEntry
 // @Failure		400				{object}	httpsuite.ErrorResponse
+// @Failure		401				{object}	httpsuite.ErrorResponse
+// @Failure		403				{object}	httpsuite.ErrorResponse
 // @Failure		404				{object}	httpsuite.ErrorResponse
 // @Failure		500				{object}	httpsuite.ErrorResponse
 // @Router			/v1/maintenance/{maintenance-id} [get]
 // @security		bearer
 func (rc *APIService) GetMaintenanceEntryHandler(w http.ResponseWriter, r *http.Request) {
+
+	_, err := httpsuite.IsAGroupInClaim(r.Context(), rc.AdminGroups)
+	if err != nil {
+		httpsuite.WriteJSONErrorForbidden(w, httpsuite.WithInternalErrorMessage(err.Error()))
+		return
+	}
+
 	id := chi.URLParam(r, "maintenance")
 	if id == "" {
 		httpsuite.WriteJSONError(w,
@@ -101,13 +119,21 @@ func (rc *APIService) GetMaintenanceEntryHandler(w http.ResponseWriter, r *http.
 // @Param			entry	body		models.PostMaintenanceEntry	true	"Maintenance Entry Data"
 // @Success		201		{string}	string						"Maintenance entry added successfully"
 // @Failure		400		{object}	httpsuite.ErrorResponse
+// @Failure		401		{object}	httpsuite.ErrorResponse
+// @Failure		403		{object}	httpsuite.ErrorResponse
 // @Failure		500		{object}	httpsuite.ErrorResponse
 // @Router			/v1/maintenance [post]
 // @security		bearer
 func (rc *APIService) AddMaintenanceHandler(w http.ResponseWriter, r *http.Request) {
 
+	_, err := httpsuite.IsAGroupInClaim(r.Context(), rc.AdminGroups)
+	if err != nil {
+		httpsuite.WriteJSONErrorForbidden(w, httpsuite.WithInternalErrorMessage(err.Error()))
+		return
+	}
+
 	var entry models.PostMaintenanceEntry
-	err := httpsuite.ReadResponse(r, &entry)
+	err = httpsuite.ReadResponse(r, &entry)
 	if err != nil {
 		httpsuite.WriteJSONError(w,
 			http.StatusBadRequest,
@@ -150,11 +176,20 @@ func (rc *APIService) AddMaintenanceHandler(w http.ResponseWriter, r *http.Reque
 // @Param			status			body		models.UpdateMaintenance	true	"New Maintenance Status"
 // @Success		200				{string}	string						"Maintenance status updated successfully"
 // @Failure		400				{object}	httpsuite.ErrorResponse
+// @Failure		401				{object}	httpsuite.ErrorResponse
+// @Failure		403				{object}	httpsuite.ErrorResponse
 // @Failure		404				{object}	httpsuite.ErrorResponse
 // @Failure		500				{object}	httpsuite.ErrorResponse
 // @Router			/v1/maintenance/{maintenance-id} [put]
 // @security		bearer
 func (rc *APIService) UpdateMaintenanceStatusHandler(w http.ResponseWriter, r *http.Request) {
+
+	_, err := httpsuite.IsAGroupInClaim(r.Context(), rc.AdminGroups)
+	if err != nil {
+		httpsuite.WriteJSONErrorForbidden(w, httpsuite.WithInternalErrorMessage(err.Error()))
+		return
+	}
+
 	id := chi.URLParam(r, "maintenance")
 	if id == "" {
 		httpsuite.WriteJSONError(w,
@@ -165,7 +200,7 @@ func (rc *APIService) UpdateMaintenanceStatusHandler(w http.ResponseWriter, r *h
 	}
 
 	var request models.UpdateMaintenance
-	err := httpsuite.ReadResponse(r, &request)
+	err = httpsuite.ReadResponse(r, &request)
 	if err != nil {
 		httpsuite.WriteJSONError(w,
 			http.StatusBadRequest,
@@ -197,10 +232,19 @@ func (rc *APIService) UpdateMaintenanceStatusHandler(w http.ResponseWriter, r *h
 // @Param			entry			body		models.PatchMaintenanceEntry	true	"Updated Maintenance Data"
 // @Success		200				{string}	string							"Maintenance entry updated successfully"
 // @Failure		400				{object}	httpsuite.ErrorResponse
+// @Failure		401				{object}	httpsuite.ErrorResponse
+// @Failure		403				{object}	httpsuite.ErrorResponse
 // @Failure		404				{object}	httpsuite.ErrorResponse
 // @Failure		500				{object}	httpsuite.ErrorResponse
 // @Router			/v1/maintenance/{maintenance-id} [patch]
 func (rc *APIService) PatchMaintenanceHandler(w http.ResponseWriter, r *http.Request) {
+
+	_, err := httpsuite.IsAGroupInClaim(r.Context(), rc.AdminGroups)
+	if err != nil {
+		httpsuite.WriteJSONErrorForbidden(w, httpsuite.WithInternalErrorMessage(err.Error()))
+		return
+	}
+
 	id := chi.URLParam(r, "maintenance")
 	if id == "" {
 		httpsuite.WriteJSONError(w,
@@ -232,7 +276,7 @@ func (rc *APIService) PatchMaintenanceHandler(w http.ResponseWriter, r *http.Req
 	start, _ := time.Parse("2006-01-02 15:04:05", request.Start)
 	end, _ := time.Parse("2006-01-02 15:04:05", request.End)
 
-	err := rc.DB.PatchMaintenanceEntry(r.Context(), id, request.Description, start, end, request.Reason, request.UpdatedBy)
+	err = rc.DB.PatchMaintenanceEntry(r.Context(), id, request.Description, start, end, request.Reason, request.UpdatedBy)
 	if err != nil {
 		if errors.Is(err, database.ErrMaintenanceNotFound) {
 			httpsuite.WriteJSONError(w,
@@ -274,9 +318,18 @@ func (rc *APIService) PatchMaintenanceHandler(w http.ResponseWriter, r *http.Req
 // @Param			maintenance-id	path		string	true	"Maintenance Entry ID"
 // @Success		200				{array}		models.MaintenanceEditLog
 // @Failure		400				{object}	httpsuite.ErrorResponse
+// @Failure		401				{object}	httpsuite.ErrorResponse
+// @Failure		403				{object}	httpsuite.ErrorResponse
 // @Failure		500				{object}	httpsuite.ErrorResponse
 // @Router			/v1/maintenance/{maintenance-id}/logs [get]
 func (rc *APIService) GetMaintenanceEditLogsHandler(w http.ResponseWriter, r *http.Request) {
+
+	_, err := httpsuite.IsAGroupInClaim(r.Context(), rc.AdminGroups)
+	if err != nil {
+		httpsuite.WriteJSONErrorForbidden(w, httpsuite.WithInternalErrorMessage(err.Error()))
+		return
+	}
+
 	id := chi.URLParam(r, "maintenance")
 	if id == "" {
 		httpsuite.WriteJSONError(w,
@@ -309,21 +362,30 @@ func (rc *APIService) GetMaintenanceEditLogsHandler(w http.ResponseWriter, r *ht
 // @Produce		json
 // @Success		200	{string}	string	"Maintenance entry deleted successfully"
 // @Failure		400	{object}	httpsuite.ErrorResponse
+// @Failure		401	{object}	httpsuite.ErrorResponse
+// @Failure		403	{object}	httpsuite.ErrorResponse
 // @Failure		404	{object}	httpsuite.ErrorResponse
 // @Failure		500	{object}	httpsuite.ErrorResponse
 // @Router			/v1/maintenance/{maintenance-id} [delete]
 // @security		bearer
 func (rc *APIService) DeleteMaintenanceHandler(w http.ResponseWriter, r *http.Request) {
+
+	_, err := httpsuite.IsAGroupInClaim(r.Context(), rc.AdminGroups)
+	if err != nil {
+		httpsuite.WriteJSONErrorForbidden(w, httpsuite.WithInternalErrorMessage(err.Error()))
+		return
+	}
+
 	id := chi.URLParam(r, "maintenance")
 	if id == "" {
 		httpsuite.WriteJSONError(w,
 			http.StatusBadRequest,
-			httpsuite.WithErrorMessage("maintenace id is required"),
+			httpsuite.WithErrorMessage("maintenance id is required"),
 		)
 		return
 	}
 
-	err := rc.DB.DeleteMaintenanceEntry(r.Context(), id)
+	err = rc.DB.DeleteMaintenanceEntry(r.Context(), id)
 	if err != nil {
 		if errors.Is(err, database.ErrMaintenanceNotFound) {
 			httpsuite.WriteJSONError(w,

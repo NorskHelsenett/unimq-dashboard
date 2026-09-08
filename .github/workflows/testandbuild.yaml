@@ -15,3 +15,6 @@ jobs:
 
   backend:
     uses: ./.github/workflows/testandbuild_backend.yaml
+
+  chart:
+    uses: ./.github/workflows/testandbuild_chart.yaml

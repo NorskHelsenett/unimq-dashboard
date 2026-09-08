@@ -27,9 +27,6 @@ func ParseScope(scope int) Scope {
 
 func AuthorizeScope(scope int, allowedScopes ...int) bool {
 	return slices.ContainsFunc(allowedScopes, func(s int) bool {
-		if s <= scope {
-			return true
-		}
-		return false
+		return s <= scope
 	})
 }

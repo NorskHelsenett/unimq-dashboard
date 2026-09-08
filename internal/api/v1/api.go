@@ -23,6 +23,7 @@ type APIService struct {
 	EmailClient *mail.Client
 	EmailConfig *config.EmailConfig
 	RMQLimits   *models.Limits
+	AdminGroups []string
 	Checker     *notify.Checker
 }
 
@@ -77,6 +78,13 @@ func WithChecker(checker *notify.Checker) APIServiceOption {
 	}
 }
 
+func WithAdminGroups(groups []string) APIServiceOption {
+	return func(rc *APIService) error {
+		rc.AdminGroups = groups
+		return nil
+	}
+}
+
 func newAPIServiceConfig() *APIService {
 	return &APIService{
 		Ctx:         context.Background(),
@@ -86,6 +94,9 @@ func newAPIServiceConfig() *APIService {
 		DB:          nil,
 		EmailConfig: nil,
 		EmailClient: nil,
+		RMQLimits:   nil,
+		AdminGroups: []string{},
+		Checker:     nil,
 	}
 }
 

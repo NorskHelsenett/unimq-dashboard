@@ -11,10 +11,19 @@ import (
 // @Tags			Cluster
 // @Produce		json
 // @Success		200	{object}	models.ClusterStats
+// @Failure		401	{object}	httpsuite.ErrorResponse
+// @Failure		403	{object}	httpsuite.ErrorResponse
 // @Failure		500	{object}	httpsuite.ErrorResponse
 // @Router			/v1/cluster [get]
 // @security		bearer
 func (rc *APIService) GetClusterHandler(w http.ResponseWriter, r *http.Request) {
+
+	_, err := httpsuite.IsAGroupInClaim(r.Context(), rc.AdminGroups)
+	if err != nil {
+		httpsuite.WriteJSONErrorForbidden(w, httpsuite.WithInternalErrorMessage(err.Error()))
+		return
+	}
+
 	stats, err := rc.RMQClient.GetClusterStats()
 	if err != nil {
 		httpsuite.WriteJSONError(w,

@@ -495,6 +495,14 @@ paths:
           description: Bad Request
           schema:
             $ref: '#/definitions/httpsuite.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/httpsuite.ErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/httpsuite.ErrorResponse'
         "502":
           description: Bad Gateway
           schema:
@@ -528,6 +536,14 @@ paths:
           description: Bad Request
           schema:
             $ref: '#/definitions/httpsuite.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/httpsuite.ErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/httpsuite.ErrorResponse'
         "404":
           description: Not Found
           schema:
@@ -551,6 +567,18 @@ paths:
           description: OK
           schema:
             $ref: '#/definitions/notify.CheckerStatus'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/httpsuite.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/httpsuite.ErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/httpsuite.ErrorResponse'
         "503":
           description: Service Unavailable
           schema:
@@ -570,6 +598,14 @@ paths:
           description: OK
           schema:
             $ref: '#/definitions/models.ClusterStats'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/httpsuite.ErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/httpsuite.ErrorResponse'
         "500":
           description: Internal Server Error
           schema:
@@ -589,6 +625,14 @@ paths:
           description: OK
           schema:
             $ref: '#/definitions/models.MaintenanceResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/httpsuite.ErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/httpsuite.ErrorResponse'
         "500":
           description: Internal Server Error
           schema:
@@ -619,6 +663,14 @@ paths:
           description: Bad Request
           schema:
             $ref: '#/definitions/httpsuite.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/httpsuite.ErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/httpsuite.ErrorResponse'
         "500":
           description: Internal Server Error
           schema:
@@ -646,6 +698,14 @@ paths:
             type: string
         "400":
           description: Bad Request
+          schema:
+            $ref: '#/definitions/httpsuite.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/httpsuite.ErrorResponse'
+        "403":
+          description: Forbidden
           schema:
             $ref: '#/definitions/httpsuite.ErrorResponse'
         "404":
@@ -678,6 +738,14 @@ paths:
             $ref: '#/definitions/models.MaintenanceEntry'
         "400":
           description: Bad Request
+          schema:
+            $ref: '#/definitions/httpsuite.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/httpsuite.ErrorResponse'
+        "403":
+          description: Forbidden
           schema:
             $ref: '#/definitions/httpsuite.ErrorResponse'
         "404":
@@ -721,6 +789,14 @@ paths:
           description: Bad Request
           schema:
             $ref: '#/definitions/httpsuite.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/httpsuite.ErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/httpsuite.ErrorResponse'
         "404":
           description: Not Found
           schema:
@@ -760,6 +836,14 @@ paths:
           description: Bad Request
           schema:
             $ref: '#/definitions/httpsuite.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/httpsuite.ErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/httpsuite.ErrorResponse'
         "404":
           description: Not Found
           schema:
@@ -795,6 +879,14 @@ paths:
           description: Bad Request
           schema:
             $ref: '#/definitions/httpsuite.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/httpsuite.ErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/httpsuite.ErrorResponse'
         "500":
           description: Internal Server Error
           schema:
@@ -814,6 +906,14 @@ paths:
             items:
               $ref: '#/definitions/models.VhostNotification'
             type: array
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/httpsuite.ErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/httpsuite.ErrorResponse'
         "502":
           description: Bad Gateway
           schema:
@@ -843,6 +943,14 @@ paths:
           description: Bad Request
           schema:
             $ref: '#/definitions/httpsuite.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/httpsuite.ErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/httpsuite.ErrorResponse'
         "502":
           description: Bad Gateway
           schema:
@@ -869,6 +977,14 @@ paths:
             $ref: '#/definitions/models.VhostNotification'
         "400":
           description: Bad Request
+          schema:
+            $ref: '#/definitions/httpsuite.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/httpsuite.ErrorResponse'
+        "403":
+          description: Forbidden
           schema:
             $ref: '#/definitions/httpsuite.ErrorResponse'
         "502":
@@ -908,6 +1024,14 @@ paths:
           description: Bad Request
           schema:
             $ref: '#/definitions/httpsuite.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/httpsuite.ErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/httpsuite.ErrorResponse'
         "500":
           description: Internal Server Error
           schema:
@@ -938,6 +1062,14 @@ paths:
             type: string
         "400":
           description: Bad Request
+          schema:
+            $ref: '#/definitions/httpsuite.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/httpsuite.ErrorResponse'
+        "403":
+          description: Forbidden
           schema:
             $ref: '#/definitions/httpsuite.ErrorResponse'
         "500":
@@ -971,6 +1103,14 @@ paths:
             $ref: '#/definitions/models.Recipient'
         "400":
           description: Bad Request
+          schema:
+            $ref: '#/definitions/httpsuite.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/httpsuite.ErrorResponse'
+        "403":
+          description: Forbidden
           schema:
             $ref: '#/definitions/httpsuite.ErrorResponse'
         "500":
@@ -1010,6 +1150,14 @@ paths:
           description: Bad Request
           schema:
             $ref: '#/definitions/httpsuite.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/httpsuite.ErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/httpsuite.ErrorResponse'
         "404":
           description: Not Found
           schema:
@@ -1046,6 +1194,14 @@ paths:
           description: Bad Request
           schema:
             $ref: '#/definitions/httpsuite.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/httpsuite.ErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/httpsuite.ErrorResponse'
         "500":
           description: Internal Server Error
           schema:
@@ -1077,6 +1233,14 @@ paths:
             $ref: '#/definitions/models.AlarmRule'
         "400":
           description: Bad Request
+          schema:
+            $ref: '#/definitions/httpsuite.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/httpsuite.ErrorResponse'
+        "403":
+          description: Forbidden
           schema:
             $ref: '#/definitions/httpsuite.ErrorResponse'
         "404":
@@ -1120,6 +1284,14 @@ paths:
           description: Bad Request
           schema:
             $ref: '#/definitions/httpsuite.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/httpsuite.ErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/httpsuite.ErrorResponse'
         "500":
           description: Internal Server Error
           schema:
@@ -1155,6 +1327,14 @@ paths:
           description: Bad Request
           schema:
             $ref: '#/definitions/httpsuite.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/httpsuite.ErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/httpsuite.ErrorResponse'
         "500":
           description: Internal Server Error
           schema:
@@ -1187,6 +1367,14 @@ paths:
           description: Bad Request
           schema:
             $ref: '#/definitions/httpsuite.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/httpsuite.ErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/httpsuite.ErrorResponse'
         "500":
           description: Internal Server Error
           schema:
@@ -1212,6 +1400,14 @@ paths:
             type: array
         "400":
           description: Bad Request
+          schema:
+            $ref: '#/definitions/httpsuite.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/httpsuite.ErrorResponse'
+        "403":
+          description: Forbidden
           schema:
             $ref: '#/definitions/httpsuite.ErrorResponse'
         "502":
@@ -1241,6 +1437,14 @@ paths:
             $ref: '#/definitions/models.Vhost'
         "400":
           description: Bad Request
+          schema:
+            $ref: '#/definitions/httpsuite.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/httpsuite.ErrorResponse'
+        "403":
+          description: Forbidden
           schema:
             $ref: '#/definitions/httpsuite.ErrorResponse'
         "502":
@@ -1273,6 +1477,14 @@ paths:
           description: Bad Request
           schema:
             $ref: '#/definitions/httpsuite.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/httpsuite.ErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/httpsuite.ErrorResponse'
         "502":
           description: Bad Gateway
           schema:
@@ -1302,6 +1514,14 @@ paths:
             type: array
         "400":
           description: Bad Request
+          schema:
+            $ref: '#/definitions/httpsuite.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/httpsuite.ErrorResponse'
+        "403":
+          description: Forbidden
           schema:
             $ref: '#/definitions/httpsuite.ErrorResponse'
         "404":
@@ -1342,6 +1562,14 @@ paths:
             type: array
         "400":
           description: Bad Request
+          schema:
+            $ref: '#/definitions/httpsuite.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/httpsuite.ErrorResponse'
+        "403":
+          description: Forbidden
           schema:
             $ref: '#/definitions/httpsuite.ErrorResponse'
         "404":

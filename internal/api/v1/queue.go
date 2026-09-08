@@ -15,11 +15,20 @@ import (
 // @Param			vhost-name	path		string						true	"Virtual Host"
 // @Success		200			{object}	[]models.QueueAPIResponse	"HTML page with queue metrics"
 // @Failure		400			{object}	httpsuite.ErrorResponse		"Bad Request"
-// @Failure		404			{object}	httpsuite.ErrorResponse		"Not Found"
-// @Failure		500			{object}	httpsuite.ErrorResponse		"Internal Server Error"
+// @Failure		401			{object}	httpsuite.ErrorResponse
+// @Failure		403			{object}	httpsuite.ErrorResponse
+// @Failure		404			{object}	httpsuite.ErrorResponse	"Not Found"
+// @Failure		500			{object}	httpsuite.ErrorResponse	"Internal Server Error"
 // @Router			/v1/vhosts/{vhost-name}/queues [get]
 // @security		bearer
 func (rc *APIService) GetQueuesHandler(w http.ResponseWriter, r *http.Request) {
+
+	_, err := httpsuite.IsAGroupInClaim(r.Context(), rc.AdminGroups)
+	if err != nil {
+		httpsuite.WriteJSONErrorForbidden(w, httpsuite.WithInternalErrorMessage(err.Error()))
+		return
+	}
+
 	vhost := chi.URLParam(r, "vhost")
 	if vhost == "" {
 		httpsuite.WriteJSONError(w,
@@ -61,11 +70,20 @@ func (rc *APIService) GetQueuesHandler(w http.ResponseWriter, r *http.Request) {
 // @Param			queue-id	path		string					true	"Queue Name"
 // @Success		200			{array}		models.QueueDetail		"List of queue details"
 // @Failure		400			{object}	httpsuite.ErrorResponse	"Bad Request"
+// @Failure		401			{object}	httpsuite.ErrorResponse
+// @Failure		403			{object}	httpsuite.ErrorResponse
 // @Failure		404			{object}	httpsuite.ErrorResponse	"Not Found"
 // @Failure		500			{object}	httpsuite.ErrorResponse	"Internal Server Error"
 // @Router			/v1/vhosts/{vhost-name}/queues/{queue-id} [get]
 // @security		bearer
 func (rc *APIService) GetQueuesByNameHandler(w http.ResponseWriter, r *http.Request) {
+
+	_, err := httpsuite.IsAGroupInClaim(r.Context(), rc.AdminGroups)
+	if err != nil {
+		httpsuite.WriteJSONErrorForbidden(w, httpsuite.WithInternalErrorMessage(err.Error()))
+		return
+	}
+
 	vhost := chi.URLParam(r, "vhost")
 	if vhost == "" {
 		httpsuite.WriteJSONError(w,

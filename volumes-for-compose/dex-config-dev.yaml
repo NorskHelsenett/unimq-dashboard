@@ -30,6 +30,10 @@ staticClients:
     redirectURIs:
       - http://localhost:8080/callback
       - http://localhost:5173/callback
+    scopes:
+      - email
+      - profile
+      - groups
 
 staticPasswords:
   - email: olanordmann@test.com
@@ -37,3 +41,5 @@ staticPasswords:
     userID: "123"
     # password
     hash: "$2a$10$2b2cU8CPhOTaGrs1HRQuAueS7JTT5ZHsHSzYiFPm1leZck7Mc8T4W"
+    groups:
+      - group.name1@local

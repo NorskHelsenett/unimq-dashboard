@@ -2,6 +2,7 @@ package notify
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log/slog"
 	"sync"
@@ -237,11 +238,11 @@ func (c *Checker) checkRule(rule *models.AlarmRule, vhostName string, urls []str
 
 	evalResult, err := EvaluateMetrics(rule, metrics, queues)
 	if err != nil {
-		switch err {
-		case ErrNotificationRuleDisabled:
+		switch {
+		case errors.Is(err, ErrNotificationRuleDisabled):
 			slog.DebugContext(c.Ctx, "Skipping disabled rule", "vhost", vhostName, "rule", rule.Name)
 			return
-		case ErrNotificationRuleInMaintenance:
+		case errors.Is(err, ErrNotificationRuleInMaintenance):
 			slog.DebugContext(c.Ctx, "Skipping maintenance rule evaluation", "vhost", vhostName, "rule", rule.Name)
 			return
 		default:
@@ -276,7 +277,7 @@ func (c *Checker) checkRule(rule *models.AlarmRule, vhostName string, urls []str
 
 	alarm, err := EvaluateRule(rule, evalResult.NewStatus, *evalResult.Value)
 	if err != nil {
-		if err != ErrNotificationRuleNoChange {
+		if !errors.Is(err, ErrNotificationRuleNoChange) {
 			slog.ErrorContext(c.Ctx, "Failed to evaluate rule for alarm entry", "vhost", vhostName, "rule", rule.Name, "error", err)
 		}
 		return

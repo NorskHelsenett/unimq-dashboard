@@ -203,6 +203,7 @@ func (dbc *Database) seedNotificationRecipients(ctx context.Context, name string
 
 func (dbc *Database) seedNotificationRules(ctx context.Context, vhost string, alarmRules []models.AlarmRule) error {
 
+	// nolint:gocritic // ignoring rangeValCopy as this is only used for seeding and not performance critical.
 	for _, missingRule := range alarmRules {
 		err := dbc.AddNotificationRule(ctx, vhost, &missingRule)
 		if err != nil {
@@ -215,6 +216,7 @@ func (dbc *Database) seedNotificationRules(ctx context.Context, vhost string, al
 
 func (dbc *Database) seedMaintenace(ctx context.Context) error {
 
+	// nolint:gocritic // ignoring rangeValCopy as this is only used for seeding and not performance critical.
 	for _, MaintenanceEntry := range maintenanceEntries {
 		err := dbc.AddMaintenanceEntry(ctx, &MaintenanceEntry)
 		if err != nil {
@@ -226,6 +228,7 @@ func (dbc *Database) seedMaintenace(ctx context.Context) error {
 
 func (dbc *Database) SeedMaintenanceEntry(ctx context.Context, entry *models.MaintenanceEntry) error {
 
+	// nolint:gocritic // ignoring rangeValCopy as this is only used for seeding and not performance critical.
 	err := dbc.AddMaintenanceEntry(ctx, entry)
 	if err != nil {
 		return err
@@ -236,9 +239,10 @@ func (dbc *Database) SeedMaintenanceEntry(ctx context.Context, entry *models.Mai
 
 func (dbc *Database) SeedMaintenanceLogs(ctx context.Context) error {
 
+	// nolint:gocritic // ignoring rangeValCopy as this is only used for seeding and not performance critical.
 	for _, MaintenanceEntry := range maintenanceEntries {
 
-		logEntries := []models.MaintenanceEditLog{}
+		logEntries := make([]models.MaintenanceEditLog, 0, 3)
 		logEntries = append(logEntries, *models.NewMaintenaceEditLog(MaintenanceEntry.ID, "Test maintenance log entry 1", time.Now(), time.Now().Add(2*time.Hour), "Initial creation", "user1"))
 		logEntries = append(logEntries, *models.NewMaintenaceEditLog(MaintenanceEntry.ID, "Test maintenance log entry 2", time.Now(), time.Now().Add(2*time.Hour), "Updated description", "user2"))
 		logEntries = append(logEntries, *models.NewMaintenaceEditLog(MaintenanceEntry.ID, "Test maintenance log entry 3", time.Now(), time.Now().Add(2*time.Hour), "Updated start and end times", "user3"))
@@ -257,6 +261,7 @@ func (dbc *Database) SeedMaintenanceLogs(ctx context.Context) error {
 
 func (dbc *Database) SeedAlarms(ctx context.Context, name string, alarmRules []models.AlarmRule) error {
 
+	// nolint:gocritic // ignoring rangeValCopy as this is only used for seeding and not performance critical.
 	for _, rule := range alarmRules {
 
 		entries := models.AlarmEntry{
