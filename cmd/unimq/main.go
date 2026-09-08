@@ -122,6 +122,7 @@ func main() {
 				return
 			}
 			slog.ErrorContext(ctx, "failed to start server", "error", err)
+			cancel()
 			return
 		}
 	})
