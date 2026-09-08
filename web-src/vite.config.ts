@@ -66,6 +66,13 @@ export default defineConfig({
           return null
         },
       },
+      "/callback": {
+        target: "http://localhost:8080",
+        bypass: (req) => {
+          if (req.method === "GET") return "/entries/callback.html"
+          return null
+        },
+      },
     },
   },
 });
