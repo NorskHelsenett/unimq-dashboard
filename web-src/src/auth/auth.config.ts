@@ -1,6 +1,5 @@
-import type { UserManagerSettings } from "oidc-client-ts"
-import { WebStorageStateStore } from "oidc-client-ts"
-
+import type { UserManagerSettings } from "oidc-client-ts";
+import { WebStorageStateStore } from "oidc-client-ts";
 
 export const oidcConfig: UserManagerSettings = {
     /** The URL of the OIDC/OAuth2 provider */
@@ -15,13 +14,11 @@ export const oidcConfig: UserManagerSettings = {
     /** The type of response desired from the OIDC/OAuth2 provider (default: "code") */
     response_type: "code",
     /** The scope being requested from the OIDC/OAuth2 provider (default: "openid") */
-    scope: "openid profile email",
+    scope: "openid profile email groups",
     /** Flag to indicate if there should be an automatic attempt to renew the access token prior to its expiration. The automatic renew attempt starts 1 minute before the access token expires (default: true) */
     automaticSilentRenew: true,
     /** The number of seconds before an access token is to expire to raise the accessTokenExpiring event (default: 60) */
     accessTokenExpiringNotificationTimeInSeconds: 60,
     /** Storage object used to persist User for currently authenticated user (default: window.sessionStorage, InMemoryWebStorage iff no window). */
     userStore: new WebStorageStateStore({ store: window.sessionStorage }),
-}
-
-
+};
