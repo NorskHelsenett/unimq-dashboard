@@ -93,7 +93,33 @@ func WriteJSONError(w http.ResponseWriter, status int, opts ...JSONErrorOption) 
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(status)
+	w.WriteHeader(apiErr.statusCode)
+
+	errResponse := newErrorResponse(apiErr.error, apiErr.statusCode, apiErr.externalErrorMessage)
+
+	err := json.NewEncoder(w).Encode(errResponse)
+	if err != nil {
+		http.Error(w, "failed to write error response", http.StatusInternalServerError)
+		slog.Error("failed to write error response", "error", err)
+	}
+}
+
+// WriteJSONErrorUnauthorized is a convenience function that writes a 403 Forbidden status code
+// with external error message "access denied".
+func WriteJSONErrorForbidden(w http.ResponseWriter, opts ...JSONErrorOption) {
+	apiErr := NewAPIError(http.StatusForbidden, opts...)
+	apiErr.externalErrorMessage = "access denied"
+
+	if apiErr.error != nil || apiErr.internalErrorMessage != "" {
+		slog.Error("API error occurred",
+			"error", apiErr.error,
+			"message", apiErr.internalErrorMessage,
+			"status_code", apiErr.statusCode,
+		)
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(apiErr.statusCode)
 
 	errResponse := newErrorResponse(apiErr.error, apiErr.statusCode, apiErr.externalErrorMessage)
 
