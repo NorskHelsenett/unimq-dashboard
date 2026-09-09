@@ -54,7 +54,7 @@ jobs:
           helm push .cr-release-packages/unimq-${{ steps.version.outputs.version }}.tgz "${CHART}"
 
       - name: Install Cosign
-        uses: sigstore/cosign-installer@v4
+        uses: sigstore/cosign-installer@v4.1.2
 
       - name: Sign chart
         run: |
