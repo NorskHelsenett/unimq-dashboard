@@ -10,7 +10,7 @@ permissions:
   actions: write
 
 concurrency:
-  group: release-${{ github.ref }}
+  group: release-frontend-${{ github.ref }}
   cancel-in-progress: false
 
 env:
@@ -22,7 +22,7 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v4
@@ -31,7 +31,7 @@ jobs:
         uses: docker/setup-buildx-action@v4
 
       - name: Login to GHCR
-        uses: docker/login-action@v3
+        uses: docker/login-action@v4
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
@@ -54,6 +54,7 @@ jobs:
           echo '${{ toJSON(steps.meta.outputs) }}'
 
       - name: Build and push frontend
+        id: bake
         uses: docker/bake-action@v7
         with:
           files: |
@@ -70,7 +71,7 @@ jobs:
           echo '${{ toJSON(steps.bake.outputs) }}'
 
       - name: Install Cosign
-        uses: sigstore/cosign-installer@v3
+        uses: sigstore/cosign-installer@v4
 
       - name: Sign frontend image
         run: |
