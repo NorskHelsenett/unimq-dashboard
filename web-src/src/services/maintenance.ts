@@ -1,5 +1,6 @@
 import { apiFetch } from '@/lib/apiClient'
-import { ApiResponse, Maintenance } from '@/types/maintenance'
+import { Maintenance, ApiResponse } from '@/types/maintenance'
+import { ApiResponse as VhostApiResponse } from '@/services/vhosts'
 
 interface AdminApiResponse {
     code: number
@@ -9,12 +10,18 @@ interface AdminApiResponse {
     }
 }
 
-
 export async function getScheduledMaintenance(): Promise<Maintenance[]> {
   const res = await apiFetch('/api/v1/maintenance')
   if (!res.ok) throw new Error('Failed to fetch maintenance data')
   const data: ApiResponse<Maintenance, Maintenance> = await res.json()
   return data.body.Scheduled ?? []
+}
+
+export async function getMaintenanceById(id: string): Promise<Maintenance | null> {
+    const res = await apiFetch(`/api/v1/maintenance/${id}`)
+    if (!res.ok) throw new Error('Failed to fetch maintenance data')
+    const data: VhostApiResponse<Maintenance> = await res.json()
+    return data.body ?? null
 }
 
 export async function getMaintenanceHistory(): Promise<Maintenance[]> {
@@ -59,13 +66,6 @@ export async function getMaintenanceEditLogs(maintenanceId: string): Promise<Mai
     if (!res.ok) throw new Error('Failed to fetch maintenance edit logs')
     const data: { code: number; message: string; body: { logs: MaintenanceEditLog[] } } = await res.json()
     return data.body.logs ?? []
-}
-
-export async function getMaintenanceAdmin(): Promise<Maintenance[]> {
-    const res = await apiFetch('/api/v1/maintenance/admin')
-    if (!res.ok) throw new Error('Failed to fetch maintenance data')
-    const data: AdminApiResponse = await res.json()
-    return data.body.Entries ?? []
 }
 
 export async function updateMaintenance({

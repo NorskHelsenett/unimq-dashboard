@@ -1,12 +1,19 @@
 import { useState, useEffect } from 'react'
-import { getVhostNotification, getSelectedVhost } from '@/services/notifications'
-import type { VhostNotification } from '@/types/notifications'
+import { getVhostNotification, getSelectedVhost, getVhostNotificationById } from '@/services/notifications'
+import type { AlarmProps, VhostNotification } from '@/types/notifications'
 import { getVhosts } from '@/services/vhosts'
 
 interface UseVhostNotificationResult {
   vhosts: string[]
   selected: string
   notification: VhostNotification | null
+  loading: boolean
+}
+
+interface UseVhostNotificationByIdResult {
+  vhost: string
+  ruleId: string
+  alarm: AlarmProps | null
   loading: boolean
 }
 
@@ -29,4 +36,24 @@ export function useVhostNotification(): UseVhostNotificationResult {
   }, [])
 
   return { vhosts, selected, notification, loading }
+}
+
+export function useVhostNotificationById(vhost: string, ruleId: string): UseVhostNotificationByIdResult {
+  const [alarm, setAlarm] = useState<AlarmProps | null>(null)
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    if (!vhost || !ruleId) {
+      setAlarm(null)
+      setLoading(false)
+      return
+    }
+
+    setLoading(true)
+    getVhostNotificationById(vhost, ruleId)
+      .then(data => setAlarm(data))
+      .finally(() => setLoading(false))
+  }, [vhost, ruleId])
+
+  return { vhost, ruleId, alarm, loading }
 }

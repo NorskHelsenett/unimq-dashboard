@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react"
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "../ui/sheet"
 import { AlertTriangle, CheckCircle2 } from "lucide-react"
-import { getAlarmLogs} from '@/services/notifications'
+import { getAlarmLogsByRuleId } from '@/services/notifications'
 import type { LogEntry } from '@/types/notifications'
 
 export const AlarmLogSheet = ({
@@ -23,7 +23,7 @@ export const AlarmLogSheet = ({
     useEffect(() => {
         if (!open) return
         setLoading(true)
-        getAlarmLogs(alarmId, alarmType)
+        getAlarmLogsByRuleId(alarmId)
             .then(data => setEntries(data))
             .catch(() => setEntries([]))
             .finally(() => setLoading(false))
@@ -53,6 +53,7 @@ export const AlarmLogSheet = ({
                                             <p className="text-sm font-semibold text-orange-800">Fired</p>
                                             <p className="text-xs text-orange-600 mt-0.5">
                                                 {new Date(e.ts).toLocaleString("no-NO", {
+                                                    timeZone: "Europe/Oslo",
                                                     day: "2-digit", month: "short", year: "numeric",
                                                     hour: "2-digit", minute: "2-digit",
                                                 })}
@@ -71,6 +72,7 @@ export const AlarmLogSheet = ({
                                             <p className="text-xs font-medium text-text-muted">Resolved</p>
                                             <p className="text-xs text-text-muted">
                                                 {new Date(e.ts).toLocaleString("no-NO", {
+                                                    timeZone: "Europe/Oslo",
                                                     day: "2-digit", month: "short", year: "numeric",
                                                     hour: "2-digit", minute: "2-digit",
                                                 })}

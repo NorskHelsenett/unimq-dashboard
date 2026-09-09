@@ -6,19 +6,28 @@ import { useLocalStorage } from "@/hooks/useLocalStorage"
 import { SectionCard, SectionCardHeader } from "../ui/section-card"
 
 export function formatDateRange(start: string, end: string): string {
-    const pad = (n: number) => String(n).padStart(2, '0')
-    const fmtDate = (d: Date) =>
-        `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}`
-    const fmtTime = (d: Date) =>
-        `${pad(d.getHours())}:${pad(d.getMinutes())}`
+    const formatDateTime = new Intl.DateTimeFormat('no-NO', {
+        timeZone: 'Europe/Oslo',
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit',
+        hourCycle: 'h23',
+    })
+    const formatTime = new Intl.DateTimeFormat('no-NO', {
+        timeZone: 'Europe/Oslo',
+        hour: '2-digit',
+        minute: '2-digit',
+        hourCycle: 'h23',
+    })
 
     const s = new Date(start)
     const e = new Date(end)
-    const sameDay =
-        s.getFullYear() === e.getFullYear() &&
-        s.getMonth() === e.getMonth() &&
-        s.getDate() === e.getDate()
-    return sameDay ? `${fmtDate(s)} - ${fmtTime(e)}` : `${fmtDate(s)} - ${fmtDate(e)}`
+    const sDate = formatDateTime.format(s)
+    const eDate = formatDateTime.format(e)
+    const sameDay = sDate.slice(0, 10) === eDate.slice(0, 10)
+    return sameDay ? `${sDate} - ${formatTime.format(e)}` : `${sDate} - ${eDate}`
 }
 
 export const durationInMinutes = (start: string, end: string) => {

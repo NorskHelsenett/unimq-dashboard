@@ -1,18 +1,69 @@
 import { Maintenance } from '@/types/maintenance'
 import { SectionCard, SectionCardHeader } from '../ui/section-card'
 import { Pill } from '../ui/pill'
-import { CalendarClock, Wrench, ArrowRight } from 'lucide-react'
+import { CalendarClock, CalendarDays, Wrench, ArrowRight } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { formatDateRange } from '../maintenance/MaintenanceHistoryCard'
+import { Selector, SelectorContent, SelectorItem, SelectorTrigger, SelectorValue } from '../ui/selector'
+import { useLocalStorage } from '@/hooks/useLocalStorage'
+
+type MaintenanceRange = 'today' | 'week' | 'month'
+
+const dateKeyInOslo = (date: Date) => {
+  const parts = new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'Europe/Oslo',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  }).formatToParts(date).reduce<Record<string, string>>((result, part) => {
+    result[part.type] = part.value
+    return result
+  }, {})
+  return `${parts.year}-${parts.month}-${parts.day}`
+}
+
+const getRange = (range: MaintenanceRange) => {
+  const now = new Date()
+  const todayKey = dateKeyInOslo(now)
+  const today = new Date(`${todayKey}T00:00:00Z`)
+
+  if (range === 'today') return { start: todayKey, end: todayKey }
+
+  if (range === 'week') {
+    const dayOfWeek = today.getUTCDay() || 7
+    const weekStart = new Date(today)
+    weekStart.setUTCDate(today.getUTCDate() - dayOfWeek + 1)
+    const weekEnd = new Date(weekStart)
+    weekEnd.setUTCDate(weekStart.getUTCDate() + 6)
+    return { start: dateKeyInOslo(weekStart), end: dateKeyInOslo(weekEnd) }
+  }
+
+  const monthEnd = new Date(Date.UTC(today.getUTCFullYear(), today.getUTCMonth() + 1, 0))
+  return { start: `${todayKey.slice(0, 7)}-01`, end: dateKeyInOslo(monthEnd) }
+}
+
+const rangeSelectorLabels: Record<MaintenanceRange, string> = {
+  today: 'Today',
+  week: 'This week',
+  month: 'This month',
+}
 
 export function DashboardMaintenanceWidget({ schedule }: { schedule: Maintenance[] }) {
-  const upcoming = [...schedule]
+  const [range, setRange] = useLocalStorage<MaintenanceRange>('dashboard-maintenance-range', 'today')
+  const selectedRange = getRange(range)
+  const filteredSchedule = schedule.filter(maintenance => {
+    const start = dateKeyInOslo(new Date(maintenance.start))
+    const end = dateKeyInOslo(new Date(maintenance.end))
+    return start <= selectedRange.end && end >= selectedRange.start
+  })
+  const upcoming = [...filteredSchedule]
     .sort((a, b) => {
       if (a.status === 'in_progress' && b.status !== 'in_progress') return -1
       if (b.status === 'in_progress' && a.status !== 'in_progress') return 1
       return new Date(a.start).getTime() - new Date(b.start).getTime()
     })
     .slice(0, 5)
+  const hasMoreMaintenance = filteredSchedule.length > upcoming.length
 
   const hasInProgress = schedule.some(m => m.status === 'in_progress')
   const accent = hasInProgress ? 'amber' : 'blue'
@@ -26,9 +77,24 @@ export function DashboardMaintenanceWidget({ schedule }: { schedule: Maintenance
             className={`w-4 h-4 ${hasInProgress ? 'text-amber-500' : 'text-blue-400'}`}
           />
         }
+        action={
+          <Selector value={range} onValueChange={value => setRange(value as MaintenanceRange)}>
+            <SelectorTrigger className="w-36 border-border-card bg-surface-page px-3 font-medium text-xs text-text-primary shadow-sm hover:border-blue-300 hover:bg-surface-card focus-visible:border-blue-400 focus-visible:ring-blue-200">
+              <span className="flex min-w-0 items-center gap-2">
+                <CalendarDays className="h-4 w-4 shrink-0 text-text-muted" />
+                <SelectorValue />
+              </span>
+            </SelectorTrigger>
+            <SelectorContent>
+              <SelectorItem value="today">{rangeSelectorLabels.today}</SelectorItem>
+              <SelectorItem value="week">{rangeSelectorLabels.week}</SelectorItem>
+              <SelectorItem value="month">{rangeSelectorLabels.month}</SelectorItem>
+            </SelectorContent>
+          </Selector>
+        }
       />
       {upcoming.length === 0 ? (
-        <p className="text-sm text-text-muted">No maintenance scheduled.</p>
+        <p className="text-sm text-text-muted">No maintenance in this period.</p>
       ) : (
         <div>
           {upcoming.map(m => {
@@ -59,6 +125,11 @@ export function DashboardMaintenanceWidget({ schedule }: { schedule: Maintenance
             )
           })}
         </div>
+      )}
+      {hasMoreMaintenance && (
+        <p className="pt-3 text-xs text-text-muted">
+          Showing {upcoming.length} of {filteredSchedule.length} maintenance entries for {rangeSelectorLabels[range].toLowerCase()}.
+        </p>
       )}
       <p className="mt-auto pt-3">
         <a href="/maintenance" className={cn("text-submit-button text-xs mt-2 hover:font-semibold transition-colors inline-flex items-center gap-1 [text-decoration:none] hover:[text-decoration:none]")}>

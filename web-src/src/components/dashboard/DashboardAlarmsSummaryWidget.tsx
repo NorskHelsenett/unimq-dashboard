@@ -132,7 +132,7 @@ export function DashboardAlarmsSummaryWidget({
     firingCount > 0 ? 'danger' : firedCount > 0 ? 'amber' : 'green'
 
   return (
-    <SectionCard accent={accent} className="min-w-0 h-full">
+    <SectionCard accent={accent} className="min-w-0 h-full flex flex-col">
       <SectionCardHeader
         title="Alarms"
         icon={<Bell className={`w-4 h-4 ${firingCount > 0 ? 'text-red-500' : firedCount > 0 ? 'text-amber-500' : 'text-green-500'}`} />}

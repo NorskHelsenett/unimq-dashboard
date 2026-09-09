@@ -16,9 +16,19 @@ import { StatusDot } from "../ui/status-dot"
 function AddMaintenanceForm({onClose, onCancel, onError} : { onClose: () => void, onCancel: () => void, onError: (msg: string) => void }) {
     const [validationError, setValidationError] = useState<string | null>(null)
 
-    const pad = (n: number) => String(n).padStart(2, '0')
-    const now = new Date()
-    const minNow = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}T${pad(now.getHours())}:${pad(now.getMinutes())}`
+    const nowParts = new Intl.DateTimeFormat('no-NO', {
+        timeZone: 'Europe/Oslo',
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit',
+        hourCycle: 'h23',
+    }).formatToParts(new Date()).reduce<Record<string, string>>((parts, part) => {
+        parts[part.type] = part.value
+        return parts
+    }, {})
+    const minNow = `${nowParts.year}-${nowParts.month}-${nowParts.day}T${nowParts.hour}:${nowParts.minute}`
 
     return(
         <form onSubmit={(e) => {
