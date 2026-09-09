@@ -63,6 +63,7 @@ export function DashboardMaintenanceWidget({ schedule }: { schedule: Maintenance
       return new Date(a.start).getTime() - new Date(b.start).getTime()
     })
     .slice(0, 5)
+  const hasMoreMaintenance = filteredSchedule.length > upcoming.length
 
   const hasInProgress = schedule.some(m => m.status === 'in_progress')
   const accent = hasInProgress ? 'amber' : 'blue'
@@ -124,6 +125,11 @@ export function DashboardMaintenanceWidget({ schedule }: { schedule: Maintenance
             )
           })}
         </div>
+      )}
+      {hasMoreMaintenance && (
+        <p className="pt-3 text-xs text-text-muted">
+          Showing {upcoming.length} of {filteredSchedule.length} maintenance entries for {rangeSelectorLabels[range].toLowerCase()}.
+        </p>
       )}
       <p className="mt-auto pt-3">
         <a href="/maintenance" className={cn("text-submit-button text-xs mt-2 hover:font-semibold transition-colors inline-flex items-center gap-1 [text-decoration:none] hover:[text-decoration:none]")}>
