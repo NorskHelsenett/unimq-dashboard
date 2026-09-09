@@ -1,4 +1,4 @@
-import type { VhostNotification } from '@/types/notifications'
+import type { AlarmProps, VhostNotification } from '@/types/notifications'
 import type { LogEntry, TestResult } from '@/types/notifications'
 import { apiFetch } from '@/lib/apiClient'
 import { ApiResponse } from '@/services/vhosts'
@@ -20,8 +20,15 @@ function jsonPost(body: unknown): RequestInit {
 
 export async function getVhostNotification(vhost: string): Promise<VhostNotification | null> {
   const res = await apiFetch(`/api/v1/notifications/${encodeURIComponent(vhost)}`)
-  if (!res.ok) return null
+  if (!res.ok) throw new Error('Failed to fetch vhost notification')
   const data: ApiResponse<VhostNotification> = await res.json()
+  return data.body ?? null
+}
+
+export async function getVhostNotificationById(vhost: string, ruleId: string): Promise<AlarmProps | null> {
+  const res = await apiFetch(`/api/v1/notifications/${encodeURIComponent(vhost)}/rules/${encodeURIComponent(ruleId)}`)
+  if (!res.ok) throw new Error('Failed to fetch vhost notification by ID')
+  const data: ApiResponse<AlarmProps> = await res.json()
   return data.body ?? null
 }
 
@@ -87,11 +94,9 @@ export async function deleteRecipient(vhost: string, recipientId: string): Promi
   )
 }
 
-export async function getAlarmLogs(vHost_name: string, alarmType?: string): Promise<LogEntry[]> {
-  const url = alarmType
-    ? `/api/v1/alarms/${encodeURIComponent(vHost_name)}?type=${encodeURIComponent(alarmType)}`
-    : `/api/v1/alarms/${encodeURIComponent(vHost_name)}`
-  const res = await apiFetch(url)
-  const data: ApiResponse<{ entries?: LogEntry[] }> | null = await res.json().catch(() => null)
-  return data?.body?.entries ?? []
+export async function getAlarmLogsByRuleId(ruleId: string): Promise<LogEntry[]> {
+  const res = await apiFetch(`/api/v1/alarms/${encodeURIComponent(ruleId)}`)
+  if (!res.ok) throw new Error('Failed to fetch notification alarm logs')
+  const data: ApiResponse<{ Entries?: LogEntry[] }> = await res.json()
+  return data.body?.Entries ?? []
 }

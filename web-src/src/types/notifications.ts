@@ -10,7 +10,7 @@ export interface VhostNotification {
 export type Status = 'ok' | 'active' | 'inactive' | 'firing' | 'fired' | 'unknown' | ''
 
 export interface AlarmProps {
-    id?: string
+    id: string
     name?: string
     type?: string    
     queue_name?: string    
@@ -42,6 +42,7 @@ export interface NotifyRuleData {
 }
 
 export interface LogEntry {
+  id: string
   ts: string
   event: 'fired' | 'resolved'
   value?: number
