@@ -4,31 +4,11 @@ import '../index.css'
 import { RequireAuth } from '@/auth/RequireAuth'
 import { Layout } from '@/components/layout/Layout'
 import { EditMaintenance } from '@/components/maintenance/EditMaintenance'
-import { useEffect, useState } from 'react'
-import { getMaintenanceAdmin } from '@/services/maintenance'
-import { Maintenance } from '@/types/maintenance'
+import { useMaintenanceById } from '@/hooks/useMaintenance'
 
 function EditMaintenancePage() {
     const id = new URLSearchParams(window.location.search).get('id')
-    const [maintenance, setMaintenance] = useState<Maintenance | null>(null)
-    const [loading, setLoading] = useState(true)
-    const [notFound, setNotFound] = useState(false)
-
-    useEffect(() => {
-        if (!id) {
-            setNotFound(true)
-            setLoading(false)
-            return
-        }
-        getMaintenanceAdmin()
-            .then(entries => {
-                const found = entries.find(e => e.id === id) ?? null
-                setMaintenance(found)
-                if (!found) setNotFound(true)
-            })
-            .catch(() => setNotFound(true))
-            .finally(() => setLoading(false))
-    }, [id])
+    const { maintenance, loading } = useMaintenanceById(id ?? '')
 
     return (
         <Layout>
@@ -38,7 +18,7 @@ function EditMaintenancePage() {
                 </a>
                 {loading ? (
                     <div className="p-8 text-text-muted">Loading…</div>
-                ) : notFound || !maintenance ? (
+                ) : !maintenance ? (
                     <p className="text-sm text-text-muted">Maintenance entry not found.</p>
                 ) : (
                     <EditMaintenance maintenance={maintenance} />

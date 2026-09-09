@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { getMaintenanceHistory, getScheduledMaintenance, updateMaintenanceStatus as apiUpdateStatus } from '@/services/maintenance'
+import { getMaintenanceHistory, getScheduledMaintenance, getMaintenanceById, updateMaintenanceStatus as apiUpdateStatus } from '@/services/maintenance'
 import type { Maintenance } from '@/types/maintenance'
 import { UseMaintenanceHistoryResult, UseMaintenanceScheduleResult } from '@/types/maintenance'
 
@@ -31,6 +31,20 @@ export function useScheduledMaintenance(): UseMaintenanceScheduleResult {
 
   return { maintenanceSchedule, loading, refetch: () => setTick(t => t + 1) }
 }
+
+export function useMaintenanceById(id: string): { maintenance: Maintenance | null, loading: boolean } {
+  const [maintenance, setMaintenance] = useState<Maintenance | null>(null)
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    setLoading(true)
+      getMaintenanceById(id)
+        .then(data => setMaintenance(data))
+        .finally(() => setLoading(false))
+  }, [id])
+
+  return { maintenance, loading }
+} 
 
 export function updateMaintenanceStatus(maintenanceId: string, status: 'scheduled' | 'done' | 'skipped'): Promise<void> {
   return apiUpdateStatus(maintenanceId, status)

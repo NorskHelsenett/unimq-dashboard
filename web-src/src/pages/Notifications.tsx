@@ -6,7 +6,6 @@ import { Layout } from '@/components/layout/Layout'
 import { AlarmCard } from '@/components/notifications/AlarmCard'
 import { RecipientCard } from '@/components/notifications/RecipientCard'
 import { useVhostNotification } from '@/hooks/useVhostNotification'
-import { LiveDataWidget } from '@/components/dashboard/LiveDataWidget'
 
 
 const Notifications = () => {
