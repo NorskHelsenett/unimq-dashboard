@@ -11,7 +11,7 @@ spec:
     app: "{{ $.Values.name }}-backend"
   ports:
     - name: http
-      port: "{{ $.Values.service.backend.port }}"
+      port: {{ $.Values.service.backend.port }}
       targetPort: http
 ---
 apiVersion: v1
@@ -26,5 +26,5 @@ spec:
     app: "{{ $.Values.name }}-frontend"
   ports:
     - name: http
-      port: "{{ $.Values.service.frontend.port }}"
+      port: {{ $.Values.service.frontend.port }}
       targetPort: http
