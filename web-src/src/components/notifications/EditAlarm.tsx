@@ -148,7 +148,7 @@ export const EditAlarm = ({ alarm, vhost }: { alarm: AlarmProps, vhost: string }
                     <span className="text-text-muted">Last fired</span>
                     <span className="text-text-primary">
                         {alarm.last_fired
-                            ? new Date(alarm.last_fired).toLocaleString('no-NO', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })
+                            ? new Date(alarm.last_fired).toLocaleString('no-NO', { timeZone: 'Europe/Oslo', day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })
                             : "Never"}
                     </span>
                 </div>

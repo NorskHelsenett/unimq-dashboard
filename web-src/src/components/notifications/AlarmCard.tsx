@@ -107,7 +107,7 @@ function ExistingAlarms({existingAlarms, vhost, disabledIds, onToggle}: {
                                                 </td>
                                                 <td className={cn("border-b border-border-card py-2 px-4 text-sm", fadedCell)}>
                                                     {alarm.last_fired
-                                                        ? new Date(alarm.last_fired).toLocaleString('no-NO', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })
+                                                        ? new Date(alarm.last_fired).toLocaleString('no-NO', { timeZone: 'Europe/Oslo', day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })
                                                         : <span className="text-text-muted italic text-xs">Never</span>}
                                                 </td>
                                                 <td className={cn("border-b border-border-card py-2 pl-1 pr-2", fadedCell)}>
