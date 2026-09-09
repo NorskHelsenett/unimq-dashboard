@@ -76,4 +76,4 @@ jobs:
       - name: Sign frontend image
         run: |
           cosign sign --yes --recursive \
-            "${IMAGE}:${{ github.ref_name }}"
+          "${IMAGE}:${{ steps.meta.outputs.version }}"
