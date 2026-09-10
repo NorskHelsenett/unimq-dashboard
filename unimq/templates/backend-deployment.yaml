@@ -7,7 +7,7 @@ metadata:
     app: "{{ $.Values.name }}-backend"
   namespace: "{{ $.Values.namespace }}"
 spec:
-  replicas: { { $.Values.replicaCount } }
+  replicas: {{ $.Values.replicaCount }}
   revisionHistoryLimit: 2
   selector:
     matchLabels:
@@ -36,7 +36,7 @@ spec:
                 - ALL
           ports:
             - name: http
-              containerPort: { { $.Values.service.backend.port } }
+              containerPort: {{ $.Values.service.backend.port }}
           resources:
             requests:
               memory: "64Mi"
