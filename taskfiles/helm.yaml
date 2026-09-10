@@ -1,0 +1,98 @@
+# yaml-language-server: $schema=https://taskfile.dev/schema.json
+
+version: "3"
+
+vars:
+  CHART: '{{.CHART | default "."}}'
+  RELEASE: '{{.RELEASE | default "helm-test"}}'
+  NAMESPACE: '{{.NAMESPACE | default "default"}}'
+  VALUES: '{{.VALUES | default ""}}'
+  KUBE_VERSION: '{{.KUBE_VERSION | default "1.32.0"}}'
+  RENDER_DIR: '{{.RENDER_DIR | default ".task/helm-render"}}'
+
+tasks:
+  default:
+    desc: Print the Helm version
+    cmds:
+      - helm version
+    silent: true
+  lint:
+    desc: Lint the Helm chart
+    cmds:
+      - helm lint {{.CHART}}{{if .VALUES}} -f {{.VALUES}}{{end}}
+
+  dependencies:
+    desc: Build Helm chart dependencies
+    cmds:
+      - helm dependency build {{.CHART}}
+
+  render:
+    desc: Render Helm templates locally
+    deps:
+      - dependencies
+    cmds:
+      - mkdir -p {{.RENDER_DIR}}
+      - >
+        helm template {{.RELEASE}} {{.CHART}}
+        --namespace {{.NAMESPACE}}
+        {{if .VALUES}}-f {{.VALUES}}{{end}}
+        > {{.RENDER_DIR}}/manifests.yaml
+
+  validate:
+    desc: Validate rendered Kubernetes manifests
+    deps:
+      - helm:render
+    cmds:
+      - >
+        kubeconform
+        -strict
+        -summary
+        -kubernetes-version {{.KUBE_VERSION}}
+        {{.RENDER_DIR}}/manifests.yaml
+
+  test:
+    desc: Run Helm unit tests
+    cmds:
+      - helm unittest {{.CHART}}
+
+  check:
+    desc: Run all Helm linting and validation checks
+    cmds:
+      - task: lint
+        vars:
+          CHART: "{{.CHART}}"
+          VALUES: "{{.VALUES}}"
+      - task: render
+        vars:
+          CHART: "{{.CHART}}"
+          RELEASE: "{{.RELEASE}}"
+          NAMESPACE: "{{.NAMESPACE}}"
+          VALUES: "{{.VALUES}}"
+      - task: validate
+        vars:
+          CHART: "{{.CHART}}"
+          RELEASE: "{{.RELEASE}}"
+          NAMESPACE: "{{.NAMESPACE}}"
+          VALUES: "{{.VALUES}}"
+          KUBE_VERSION: "{{.KUBE_VERSION}}"
+
+  check:all:
+    desc: Run Helm checks for multiple values files
+    vars:
+      VALUES_FILES:
+        sh: find {{.CHART}} -maxdepth 1 -name 'values-*.yaml' -print
+    cmds:
+      - task: lint
+        vars:
+          CHART: "{{.CHART}}"
+      - |
+        set -e
+        for values in {{.VALUES_FILES}}; do
+          echo "==> Checking ${values}"
+          task helm:check \
+            CHART={{.CHART}} \
+            VALUES="${values}" \
+            RELEASE={{.RELEASE}} \
+            NAMESPACE={{.NAMESPACE}} \
+            KUBE_VERSION={{.KUBE_VERSION}}
+        done
