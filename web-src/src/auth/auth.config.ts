@@ -1,12 +1,17 @@
 import type { UserManagerSettings } from "oidc-client-ts";
 import { WebStorageStateStore } from "oidc-client-ts";
+import { getEnv } from "@/env";
 
 export const oidcConfig: UserManagerSettings = {
     /** The URL of the OIDC/OAuth2 provider */
-    authority: import.meta.env.VITE_AUTH_ISSUER,
+    authority: getEnv("AUTH_ISSUER", import.meta.env.VITE_AUTH_ISSUER),
+
     /** Your client application's identifier as registered with the OIDC/OAuth2 */
-    client_id: import.meta.env.VITE_AUTH_CLIENT_ID,
-    client_secret: import.meta.env.VITE_AUTH_CLIENT_SECRET,
+    client_id: getEnv("AUTH_CLIENT_ID", import.meta.env.VITE_AUTH_CLIENT_ID),
+    client_secret: getEnv(
+        "AUTH_CLIENT_SECRET",
+        import.meta.env.VITE_AUTH_CLIENT_SECRET,
+    ),
     /** The redirect URI of your client application to receive a response from the OIDC/OAuth2 provider */
     redirect_uri: `${window.location.origin}/callback`,
     /** The OIDC/OAuth2 post-logout redirect URI */
