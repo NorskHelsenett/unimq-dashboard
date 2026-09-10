@@ -3,6 +3,9 @@ name: unimq-dashboard
 namespace: unimq-dashboard
 replicaCount: 1
 
+secret:
+  existingSecret: ""
+
 image:
   backend:
     repository: ghcr.io/norskhelsenett/unimq-dashboard/backend
