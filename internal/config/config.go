@@ -50,10 +50,8 @@ type EmailConfig struct {
 }
 
 type OIDCConfig struct {
-	OIDCClientID     string `mapstructure:"OIDC_CLIENT_ID"`
-	OIDCClientSecret string `mapstructure:"OIDC_CLIENT_SECRET"`
-	OIDCURL          string `mapstructure:"OIDC_URL"`
-	OIDCRedirectURL  string `mapstructure:"OIDC_REDIRECT_URL"`
+	OIDCClientID string `mapstructure:"OIDC_CLIENT_ID"`
+	OIDCURL      string `mapstructure:"OIDC_URL"`
 }
 
 func NewConfig() *Config {
@@ -84,10 +82,8 @@ func NewConfig() *Config {
 			EmailFromAddress:  "unimq@example.com",
 		},
 		OIDC: &OIDCConfig{
-			OIDCClientID:     "",
-			OIDCClientSecret: "",
-			OIDCURL:          "",
-			OIDCRedirectURL:  "",
+			OIDCClientID: "",
+			OIDCURL:      "",
 		},
 
 		AdminGroups: []string{},
@@ -200,9 +196,7 @@ func (c *Config) loadEnvironmentVariables() {
 	_ = viper.BindEnv("EMAIL_FROM_ADDRESS")
 
 	_ = viper.BindEnv("OIDC_CLIENT_ID")
-	_ = viper.BindEnv("OIDC_CLIENT_SECRET")
 	_ = viper.BindEnv("OIDC_URL")
-	_ = viper.BindEnv("OIDC_REDIRECT_URL")
 
 	_ = viper.BindEnv("ADMIN_GROUPS")
 }
@@ -231,9 +225,7 @@ func (c *Config) validateConfiguration() error {
 	parameterChecks["PROMETHEUS_PORT"] = isPresent(c.PrometheusPort)
 
 	parameterChecks["OIDC_CLIENT_ID"] = isPresent(c.OIDC.OIDCClientID)
-	parameterChecks["OIDC_CLIENT_SECRET"] = isPresent(c.OIDC.OIDCClientSecret)
 	parameterChecks["OIDC_URL"] = isPresent(c.OIDC.OIDCURL)
-	parameterChecks["OIDC_REDIRECT_URL"] = isPresent(c.OIDC.OIDCRedirectURL)
 
 	errString := checkParameters(parameterChecks)
 	if len(errString) > 0 {
@@ -279,7 +271,7 @@ func checkParameters(parameter map[string]bool) string {
 
 func (o *OIDCConfig) IsValid() bool {
 
-	if o.OIDCClientID == "" || o.OIDCClientSecret == "" || o.OIDCURL == "" || o.OIDCRedirectURL == "" {
+	if o.OIDCClientID == "" || o.OIDCURL == "" {
 		return false
 	}
 

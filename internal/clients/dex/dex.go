@@ -26,11 +26,9 @@ func NewDexClient(ctx context.Context, config *config.OIDCConfig) (*DexClient, e
 	}
 
 	oauth2Config := oauth2.Config{
-		ClientID:     config.OIDCClientID,
-		ClientSecret: config.OIDCClientSecret,
-		RedirectURL:  config.OIDCRedirectURL,
-		Endpoint:     provider.Endpoint(),
-		Scopes:       []string{oidc.ScopeOpenID, "profile", "email", "groups"},
+		ClientID: config.OIDCClientID,
+		Endpoint: provider.Endpoint(),
+		Scopes:   []string{oidc.ScopeOpenID, "profile", "email", "groups"},
 	}
 
 	return &DexClient{
