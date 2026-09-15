@@ -3,6 +3,7 @@ package database
 import (
 	"context"
 	"fmt"
+	"net/url"
 	"time"
 
 	"go.mongodb.org/mongo-driver/v2/mongo"
@@ -15,6 +16,7 @@ type Database struct {
 	client      *mongo.Client
 	Collections *Collections
 	Inialized   bool
+	TimeoutSecs int
 }
 
 type Collections struct {
@@ -34,11 +36,12 @@ const (
 
 type (
 	databaseConfig struct {
-		Host     string
-		Port     int
-		Username string
-		Password string
-		DB       string
+		Host        string
+		Port        int
+		Username    string
+		Password    string
+		DB          string
+		TimeoutSecs int
 	}
 
 	databaseOptions func(*databaseConfig)
@@ -46,11 +49,12 @@ type (
 
 func newDatabaseConfig() *databaseConfig {
 	return &databaseConfig{
-		Host:     "localhost",
-		Port:     27017,
-		Username: "",
-		Password: "",
-		DB:       "unimq-dashboard",
+		Host:        "localhost",
+		Port:        27017,
+		Username:    "",
+		Password:    "",
+		DB:          "unimq-dashboard",
+		TimeoutSecs: 30,
 	}
 }
 
@@ -84,6 +88,12 @@ func WithDatabase(db string) databaseOptions {
 	}
 }
 
+func WithTimeout(timeoutSecs int) databaseOptions {
+	return func(dc *databaseConfig) {
+		dc.TimeoutSecs = timeoutSecs
+	}
+}
+
 func NewDatabase(opts ...databaseOptions) (*Database, error) {
 	config := newDatabaseConfig()
 
@@ -91,27 +101,22 @@ func NewDatabase(opts ...databaseOptions) (*Database, error) {
 		opt(config)
 	}
 
-	uri := fmt.Sprintf("mongodb://%s:%s@%s:%d",
-		config.Username,
-		config.Password,
-		config.Host,
-		config.Port,
-	)
-
-	client, err := mongo.Connect(
-		options.Client().ApplyURI(uri),
-		options.Client().SetTimeout(10*time.Second),
-	)
-	if err != nil {
-		return nil, fmt.Errorf("failed to connect to mongodb at address %v. %w", uri, err)
-	}
+	uri := CreateUri(config.Host, config.Port, config.Username, config.Password)
 
 	dbc := Database{
 		uri:         uri,
 		db:          config.DB,
-		client:      client,
+		client:      nil,
 		Collections: nil,
+		Inialized:   false,
+		TimeoutSecs: config.TimeoutSecs,
 	}
+
+	client, err := CreateClient(uri, config.TimeoutSecs)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create database client. %w", err)
+	}
+	dbc.client = client
 
 	err = dbc.initCollections()
 	if err != nil {
@@ -121,28 +126,44 @@ func NewDatabase(opts ...databaseOptions) (*Database, error) {
 	return &dbc, nil
 }
 
-func (dbc *Database) initCollections() error {
+func CreateUri(host string, port int, username, password string) string {
+	if username == "" && password == "" {
+		return fmt.Sprintf("mongodb://%s:%d", url.QueryEscape(host), port)
+	}
+	return fmt.Sprintf("mongodb://%s:%s@%s:%d",
+		url.QueryEscape(username),
+		url.QueryEscape(password),
+		url.QueryEscape(host),
+		port,
+	)
+}
 
+func CreateClient(uri string, timeoutSecs int) (*mongo.Client, error) {
 	client, err := mongo.Connect(
-		options.Client().ApplyURI(dbc.uri),
-		options.Client().SetTimeout(30*time.Second),
+		options.Client().ApplyURI(uri),
+		options.Client().SetTimeout(time.Duration(timeoutSecs)*time.Second),
 	)
 	if err != nil {
-		return err
+		return nil, fmt.Errorf("failed to connect to mongodb. %w", err)
 	}
+
+	return client, nil
+}
+
+func (dbc *Database) initCollections() error {
 
 	dbc.Collections = &Collections{
-		Alarms:              client.Database(dbc.db).Collection("alarms"),
-		Maintenance:         client.Database(dbc.db).Collection("maintenance"),
-		MaintenanceEditLogs: client.Database(dbc.db).Collection("maintenance_edit_logs"),
-		Notifications:       client.Database(dbc.db).Collection("notifications"),
-		ACLs:                client.Database(dbc.db).Collection("acls"),
+		Alarms:              dbc.client.Database(dbc.db).Collection("alarms"),
+		Maintenance:         dbc.client.Database(dbc.db).Collection("maintenance"),
+		MaintenanceEditLogs: dbc.client.Database(dbc.db).Collection("maintenance_edit_logs"),
+		Notifications:       dbc.client.Database(dbc.db).Collection("notifications"),
+		ACLs:                dbc.client.Database(dbc.db).Collection("acls"),
 	}
 
-	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(dbc.TimeoutSecs)*time.Second)
 	defer cancel()
 
-	if err = client.Ping(ctx, nil); err != nil {
+	if err := dbc.client.Ping(ctx, nil); err != nil {
 		return fmt.Errorf("failed to verify connection to mongodb. %w", err)
 	}
 
