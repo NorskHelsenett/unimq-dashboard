@@ -130,7 +130,12 @@ func (r *RMQClient) GetVhosts() ([]models.Vhost, error) {
 }
 
 var (
-	ErrVhostNotFound = fmt.Errorf("vhost not found")
+	ErrInternalServerError = fmt.Errorf("internal server error")
+	ErrVhostNotFound       = fmt.Errorf("vhost not found")
+	ErrQueueNotFound       = fmt.Errorf("queue not found")
+	ErrConnectionNotFound  = fmt.Errorf("connection not found")
+	ErrChannelNotFound     = fmt.Errorf("channel not found")
+	ErrNodeNotFound        = fmt.Errorf("node not found")
 )
 
 func (r *RMQClient) GetVhost(name string) (*models.Vhost, error) {
@@ -148,7 +153,7 @@ func (r *RMQClient) GetConnections() ([]models.ConnectionResponse, error) {
 	var connections []models.ConnectionResponse
 	_, err := r.restClient.Get("/connections", &connections)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("%w. %w", ErrConnectionNotFound, err)
 	}
 	return connections, nil
 }
@@ -157,7 +162,7 @@ func (r *RMQClient) GetChannels() ([]models.ChannelResponse, error) {
 	var channels []models.ChannelResponse
 	_, err := r.restClient.Get("/channels", &channels)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("%w. %w", ErrChannelNotFound, err)
 	}
 	return channels, nil
 }
@@ -166,25 +171,35 @@ func (r *RMQClient) GetQueues() ([]models.QueueAPIResponse, error) {
 	var queues []models.QueueAPIResponse
 	_, err := r.restClient.Get("/queues", &queues)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("%w. %w", ErrQueueNotFound, err)
 	}
 	return queues, nil
 }
 
 func (r *RMQClient) GetQueue(vhost string) ([]models.QueueAPIResponse, error) {
 	var queues []models.QueueAPIResponse
-	_, err := r.restClient.Get("/queues/"+url.PathEscape(vhost), &queues)
+	status, err := r.restClient.Get("/queues/"+url.PathEscape(vhost), &queues)
 	if err != nil {
-		return nil, err
+		switch status {
+		case 404:
+			return nil, fmt.Errorf("%w. %w", ErrQueueNotFound, err)
+		default:
+			return nil, fmt.Errorf("%w. %w", ErrInternalServerError, err)
+		}
 	}
 	return queues, nil
 }
 
 func (r *RMQClient) GetQueueByName(vhost string, name string) (*models.QueueAPIResponse, error) {
 	var queues models.QueueAPIResponse
-	_, err := r.restClient.Get("/queues/"+url.PathEscape(vhost)+"/"+url.PathEscape(name), &queues)
+	status, err := r.restClient.Get("/queues/"+url.PathEscape(vhost)+"/"+url.PathEscape(name), &queues)
 	if err != nil {
-		return nil, fmt.Errorf("could not find vhost %v with queue %v. %w", vhost, name, err)
+		switch status {
+		case 404:
+			return nil, fmt.Errorf("%w. %w", ErrQueueNotFound, err)
+		default:
+			return nil, fmt.Errorf("%w. %w", ErrInternalServerError, err)
+		}
 	}
 	return &queues, nil
 }
@@ -193,7 +208,7 @@ func (r *RMQClient) GetNodes() ([]models.NodeStats, error) {
 	var nodes []models.NodeStats
 	_, err := r.restClient.Get("/nodes", &nodes)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("%w. %w", ErrNodeNotFound, err)
 	}
 	return nodes, nil
 }
@@ -202,7 +217,7 @@ func (r *RMQClient) GetMetrics(vhost string) (*models.VhostMetrics, error) {
 
 	vhostObject, err := r.GetVhost(vhost)
 	if err != nil {
-		return nil, fmt.Errorf("error fetching vhost data: %w", err)
+		return nil, fmt.Errorf("$w. %w", ErrVhostNotFound, err)
 	}
 
 	connections, err := r.GetConnections()
