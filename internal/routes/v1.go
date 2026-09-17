@@ -9,7 +9,8 @@ import (
 func SetupUnprotectedRoutes(r chi.Router, apiservice *api.APIService) {
 
 	r.Get("/swagger/*", httpSwagger.WrapHandler)
-
+	r.Get("/healthz", apiservice.HealthzHandler)
+	r.Get("/readyz", apiservice.ReadyzHandler)
 }
 
 func SetupProtectedRoutes(r chi.Router, apiservice *api.APIService) {

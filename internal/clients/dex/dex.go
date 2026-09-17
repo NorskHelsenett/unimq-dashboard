@@ -14,6 +14,7 @@ import (
 )
 
 type DexClient struct {
+	url      string
 	Config   *oauth2.Config
 	Verifier *oidc.IDTokenVerifier
 }
@@ -32,11 +33,37 @@ func NewDexClient(ctx context.Context, config *config.OIDCConfig) (*DexClient, e
 	}
 
 	return &DexClient{
+		url:    config.OIDCURL,
 		Config: &oauth2Config,
 		Verifier: provider.Verifier(&oidc.Config{
 			ClientID: config.OIDCClientID,
 		}),
 	}, nil
+}
+
+func (d *DexClient) Ping(ctx context.Context) error {
+
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, d.url+"/healthz", nil)
+	if err != nil {
+		return fmt.Errorf("failed to create request: %w", err)
+	}
+
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		return fmt.Errorf("failed to ping Dex server: %w", err)
+	}
+	defer func() {
+		err := resp.Body.Close()
+		if err != nil {
+			slog.ErrorContext(context.Background(), "error closing response body", "error", err)
+		}
+	}()
+
+	if resp.StatusCode != http.StatusOK {
+		return fmt.Errorf("Dex server returned non-200 status code: %d", resp.StatusCode)
+	}
+
+	return nil
 }
 
 func (d *DexClient) ValidateToken(ctx context.Context, token string) (*oidc.IDToken, error) {

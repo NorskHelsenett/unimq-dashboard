@@ -138,6 +138,17 @@ func (dbc *Database) Close(timeoutSecs int) error {
 	return nil
 }
 
+func (dbc *Database) Ping(ctx context.Context, timeoutSecs int) error {
+	ctx, cancel := context.WithTimeout(ctx, time.Duration(timeoutSecs)*time.Second)
+	defer cancel()
+
+	if err := dbc.client.Ping(ctx, nil); err != nil {
+		return fmt.Errorf("failed to ping database. %w", err)
+	}
+
+	return nil
+}
+
 func CreateUri(host string, port int, username, password string) string {
 
 	// Remove any existing "mongodb://" prefix from the host string

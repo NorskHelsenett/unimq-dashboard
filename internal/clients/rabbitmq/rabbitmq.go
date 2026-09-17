@@ -144,6 +144,14 @@ var (
 	ErrNodeNotFound        = fmt.Errorf("node not found")
 )
 
+func (r *RMQClient) Ping() error {
+	_, err := r.restClient.Get("/overview", nil)
+	if err != nil {
+		return fmt.Errorf("%w. %w", ErrInternalServerError, err)
+	}
+	return nil
+}
+
 func (r *RMQClient) GetVhost(name string) (*models.Vhost, error) {
 
 	var vhost models.Vhost
