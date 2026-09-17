@@ -316,55 +316,57 @@ func NotifyAlarm(ctx context.Context, urls []string, rule *models.AlarmRule, vho
 
 // nolint:gocyclo // While it is marked as complex, it only evaluates a single rule against the current metrics and returns whether it is triggered and the current value.
 func evaluate(rule *models.AlarmRule, metrics *models.VhostMetrics, queues []models.QueueDetail) (bool, *float64) {
-	var v float64
+	v := new(float64)
 	switch rule.Type {
 	case models.AlarmTypeChannels:
 		if metrics != nil {
-			v = float64(metrics.Channels)
+			v = new(float64(metrics.Channels))
 		}
 	case models.AlarmTypeConnections:
 		if metrics != nil {
-			v = float64(metrics.Connections)
+			v = new(float64(metrics.Connections))
 		}
 	case models.AlarmTypeQueues:
 		if metrics != nil {
-			v = float64(metrics.Queues)
+			v = new(float64(metrics.Queues))
 		}
 	case models.AlarmTypeUnacked:
 		for _, q := range queues {
 			if q.Name == rule.QueueName {
-				v = float64(q.Unacked)
+				v = new(float64(q.Unacked))
 				break
 			}
 		}
 	case models.AlarmTypeQueueMessages:
 		for _, q := range queues {
 			if q.Name == rule.QueueName {
-				v = float64(q.Messages)
+				v = new(float64(q.Messages))
 				break
 			}
 		}
 	case models.AlarmTypeQueueSize:
 		for _, q := range queues {
 			if q.Name == rule.QueueName {
-				v = float64(q.MessageBytes)
+				v = new(float64(q.MessageBytes))
 				break
 			}
 		}
 	case models.AlarmTypeNoConsumer:
 		for _, q := range queues {
 			if q.Name == rule.QueueName {
-				v := float64(q.Messages)
-				return q.Messages > 0 && q.Consumers == 0, &v
+				v = new(float64(q.Messages))
+				return q.Messages > 0 && q.Consumers == 0, v
 			}
 		}
 	default:
 		slog.Error("Unknown rule type", "type", rule.Type)
-		v := float64(0)
-		return false, &v
+		return false, v
+	}
+	if v == nil {
+		return false, nil
 	}
 
-	return v >= rule.Threshold, &v
+	return *v >= rule.Threshold, v
 }
 
 // checkMaintenanceRule checks for any scheduled maintenance and sends notifications if there are any new ones.
