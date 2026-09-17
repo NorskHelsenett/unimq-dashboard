@@ -151,6 +151,10 @@ func (r *RestClient) request(method string, url string, body any, out any, restc
 
 	//nolint:gosec // if this causes an exploitation there are bigger issues.
 	resp, err := r.HTTPClient.Do(req)
+	if err != nil {
+		return http.StatusInternalServerError, fmt.Errorf("unable to Do request. %w", err)
+	}
+
 	defer func() {
 		err := resp.Body.Close()
 		if err != nil {
@@ -158,9 +162,6 @@ func (r *RestClient) request(method string, url string, body any, out any, restc
 		}
 	}()
 
-	if err != nil {
-		return http.StatusInternalServerError, fmt.Errorf("unable to Do request. %w", err)
-	}
 	slog.DebugContext(r.Context, "received response", "method", method, "status_code", resp.StatusCode)
 	badStatusCodeCeiling := 399
 	if resp.StatusCode > badStatusCodeCeiling {
