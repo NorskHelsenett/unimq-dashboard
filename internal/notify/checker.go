@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/sisneve/rabbitmq-dashboard/internal/clients/rabbitmq"
+	"github.com/sisneve/rabbitmq-dashboard/internal/config"
 	"github.com/sisneve/rabbitmq-dashboard/internal/database"
 	"github.com/sisneve/rabbitmq-dashboard/internal/helpers/notificationhelper"
 	"github.com/sisneve/rabbitmq-dashboard/internal/models"
@@ -20,6 +21,7 @@ type (
 		Ctx         context.Context
 		DB          *database.Database
 		RMQClient   *rabbitmq.RMQClient
+		EmailConfig *config.EmailConfig
 		interval    time.Duration
 		mu          sync.RWMutex
 		lastChecked time.Time
@@ -139,6 +141,9 @@ func (c *Checker) runChecks() {
 		return
 	}
 
+	urls := make([]string, 0)
+	emails := make([]string, 0)
+
 	for _, vhost := range notifications {
 		if len(vhost.Rules) == 0 {
 			continue
@@ -156,16 +161,17 @@ func (c *Checker) runChecks() {
 			continue
 		}
 
-		urls := vhost.WebhookURLs()
-
-		// Check for any scheduled maintenance and send notifications if there are any new ones.
-		checkMaintenanceSchedules(c.Ctx, c.DB, urls)
+		urls = append(urls, vhost.WebhookURLs()...)
+		emails = append(emails, vhost.EmailRecipients()...)
 
 		// Evaluate each rule for the vhost and send notifications if needed.
 		for _, rule := range vhost.Rules {
 			c.checkRule(rule, vhost.Name, urls, metrics, queues)
 		}
 	}
+
+	// Check for any scheduled maintenance and send notifications if there are any new ones.
+	checkMaintenanceSchedules(c.Ctx, c.DB, urls, emails, c.EmailConfig)
 }
 
 var (
@@ -289,7 +295,7 @@ func (c *Checker) checkRule(rule *models.AlarmRule, vhostName string, urls []str
 	}
 
 	if shouldNotify {
-		err = Notify(c.Ctx, urls, rule, vhostName)
+		err = NotifyAlarm(c.Ctx, urls, rule, vhostName)
 		if err != nil {
 			slog.ErrorContext(c.Ctx, "notify: failed to send notification", "vhost", vhostName, "rule", rule.Name, "error", err)
 		}
@@ -297,7 +303,7 @@ func (c *Checker) checkRule(rule *models.AlarmRule, vhostName string, urls []str
 }
 
 // Notify sends a notification to the provided URLs with the alarm rule and vhost name.
-func Notify(ctx context.Context, urls []string, rule *models.AlarmRule, vhostName string) error {
+func NotifyAlarm(ctx context.Context, urls []string, rule *models.AlarmRule, vhostName string) error {
 	subject := fmt.Sprintf("[UniMQ] Alarm: %s — %s", rule.Name, vhostName)
 	body := rule.BuildMessage(vhostName)
 	err := notificationhelper.SendWebhooks(urls, subject, body)
@@ -362,7 +368,7 @@ func evaluate(rule *models.AlarmRule, metrics *models.VhostMetrics, queues []mod
 }
 
 // checkMaintenanceRule checks for any scheduled maintenance and sends notifications if there are any new ones.
-func checkMaintenanceSchedules(ctx context.Context, db *database.Database, urls []string) {
+func checkMaintenanceSchedules(ctx context.Context, db *database.Database, urls []string, emails []string, emailConfig *config.EmailConfig) {
 	scheduled, err := db.GetMaintenanceScheduled(ctx)
 	if err != nil {
 		slog.ErrorContext(ctx, "Failed to fetch scheduled maintenance", "error", err)
@@ -381,13 +387,24 @@ func checkMaintenanceSchedules(ctx context.Context, db *database.Database, urls 
 			m.End.Format("15:04"),
 		)
 		subject := "[UniMQ] New maintenance scheduled"
-		if err := notificationhelper.SendWebhooks(urls, subject, body); err != nil {
+		err := notificationhelper.SendWebhooks(urls, subject, body)
+		if err != nil {
 			slog.ErrorContext(ctx, "notify: maintenance webhook failed", "error", err)
 		} else {
 			slog.InfoContext(ctx, "notify: maintenance webhook sent", "id", m.ID)
 		}
+
 		if err := db.SetMaintenanceEntryNotified(ctx, m.ID, true); err != nil {
 			slog.ErrorContext(ctx, "Failed to mark maintenance as notified", "error", err)
 		}
+		for _, email := range emails {
+			err = notificationhelper.SendEmail(emailConfig, email, subject, body, "text/plain")
+			if err != nil {
+				slog.ErrorContext(ctx, "notify: maintenance email failed", "email", email, "error", err)
+			} else {
+				slog.InfoContext(ctx, "notify: maintenance email sent", "email", email)
+			}
+		}
+
 	}
 }
