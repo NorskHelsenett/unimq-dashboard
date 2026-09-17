@@ -5,6 +5,8 @@ import (
 	"log/slog"
 	"os"
 	"path"
+
+	"github.com/go-chi/chi/v5/middleware"
 )
 
 type ContextHandler struct {
@@ -14,7 +16,8 @@ type ContextHandler struct {
 // nolint:gocritic // interface implementation requires no pointer receiver.
 func (h *ContextHandler) Handle(ctx context.Context, record slog.Record) error {
 
-	if requestID, ok := ctx.Value("request_id").(string); ok {
+	requestID := middleware.GetReqID(ctx)
+	if requestID != "" {
 		record.Add("request_id", requestID)
 	}
 
