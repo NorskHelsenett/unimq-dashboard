@@ -8,6 +8,7 @@ import (
 
 	"github.com/sisneve/rabbitmq-dashboard/internal/models"
 	"go.mongodb.org/mongo-driver/v2/bson"
+	"go.mongodb.org/mongo-driver/v2/mongo/options"
 )
 
 func (dbc *Database) GetAlarmsAll(ctx context.Context) ([]models.AlarmEntry, error) {
@@ -68,7 +69,9 @@ func (dbc *Database) AddAlarm(ctx context.Context, alarm *models.AlarmEntry) err
 
 func (dbc *Database) InsertAlarmEntries(ctx context.Context, alarmID string, logEntries []models.LogEntry) error {
 	start := time.Now()
-	_, err := dbc.Collections.Alarms.UpdateOne(ctx, bson.M{id: alarmID}, bson.M{"$push": bson.M{"entries": bson.M{"$each": logEntries}}})
+	filter := bson.M{id: alarmID}
+	update := bson.M{"$push": bson.M{"entries": bson.M{"$each": logEntries}}}
+	_, err := dbc.Collections.Alarms.UpdateOne(ctx, filter, update, options.UpdateOne().SetUpsert(true))
 	if err != nil {
 		slog.ErrorContext(ctx, "failed to update alarm", "runtime", time.Since(start), id, alarmID, "error", err)
 	} else {
