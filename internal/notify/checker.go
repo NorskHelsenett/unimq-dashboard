@@ -399,9 +399,14 @@ func checkMaintenanceSchedules(ctx context.Context, db *database.Database, urls 
 		if err := db.SetMaintenanceEntryNotified(ctx, m.ID, true); err != nil {
 			slog.ErrorContext(ctx, "Failed to mark maintenance as notified", "error", err)
 		}
+
 		for _, email := range emails {
 			err = notificationhelper.SendEmail(emailConfig, email, subject, body, "text/plain")
 			if err != nil {
+				if errors.Is(err, notificationhelper.ErrEmailNotConfigured) {
+					slog.WarnContext(ctx, "notify: maintenance email not sent, SMTP server is not configured", "email", email)
+					continue
+				}
 				slog.ErrorContext(ctx, "notify: maintenance email failed", "email", email, "error", err)
 			} else {
 				slog.InfoContext(ctx, "notify: maintenance email sent", "email", email)
