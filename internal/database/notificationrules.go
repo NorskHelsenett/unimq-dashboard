@@ -120,10 +120,6 @@ func (dbc *Database) UpdateNotificationRule(ctx context.Context, vhost, ruleID s
 		setFields["rules.$.lastFired"] = time.Now()
 	}
 
-	if status == models.AlarmStatusOK {
-		setFields["rules.$.lastResolved"] = time.Now()
-	}
-
 	filter := map[string]any{id: vhost, "rules.id": ruleID}
 	update := map[string]any{set: setFields}
 
