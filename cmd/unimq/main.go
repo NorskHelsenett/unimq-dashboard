@@ -108,12 +108,10 @@ func main() {
 		Addr:         fmt.Sprintf("%v:%d", config.BaseURL, config.BasePort),
 		Handler:      routes,
 		ReadTimeout:  30 * time.Second,
-		WriteTimeout: 30 * time.Second,
+		WriteTimeout: 60 * time.Second,
 	}
 
-	wg.Add(1)
 	wg.Go(func() {
-		defer wg.Done()
 
 		err = server.ListenAndServe()
 		if err != nil {
@@ -127,7 +125,6 @@ func main() {
 		}
 	})
 
-	wg.Add(1)
 	checker.StartChecker(wg)
 
 	quit := make(chan os.Signal, 1)
