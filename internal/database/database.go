@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"net/url"
+	"strings"
 	"time"
 
 	"go.mongodb.org/mongo-driver/v2/mongo"
@@ -127,13 +128,17 @@ func NewDatabase(opts ...databaseOptions) (*Database, error) {
 }
 
 func CreateUri(host string, port int, username, password string) string {
+
+	// Remove any existing "mongodb://" prefix from the host string
+	host = strings.TrimPrefix(host, "mongodb://")
+
 	if username == "" && password == "" {
 		return fmt.Sprintf("mongodb://%s:%d", url.QueryEscape(host), port)
 	}
 	return fmt.Sprintf("mongodb://%s:%s@%s:%d",
-		url.QueryEscape(username),
-		url.QueryEscape(password),
-		url.QueryEscape(host),
+		url.PathEscape(username),
+		url.PathEscape(password),
+		url.PathEscape(host),
 		port,
 	)
 }
