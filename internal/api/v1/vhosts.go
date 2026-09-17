@@ -1,6 +1,7 @@
 package api
 
 import (
+	"fmt"
 	"net/http"
 	"net/url"
 
@@ -85,6 +86,7 @@ func (rc *APIService) VhostHandler(w http.ResponseWriter, r *http.Request) {
 			http.StatusInternalServerError,
 			httpsuite.WithError(err),
 			httpsuite.WithErrorMessage("failed to fetch vhosts data"),
+			httpsuite.WithInternalErrorMessage(fmt.Sprintf("failed to fetch vhost data for vhost '%s': %v", eVhostName, err)),
 		)
 		return
 	}
