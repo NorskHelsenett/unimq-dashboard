@@ -157,9 +157,11 @@ func CreateUri(host string, port int, username, password string) string {
 	if username == "" && password == "" {
 		return fmt.Sprintf("mongodb://%s:%d", url.QueryEscape(host), port)
 	}
-	return fmt.Sprintf("mongodb://%s:%s@%s:%d",
-		url.PathEscape(username),
-		url.PathEscape(password),
+
+	userInfo := url.UserPassword(username, password)
+
+	return fmt.Sprintf("mongodb://%s@%s:%d",
+		userInfo.String(),
 		url.PathEscape(host),
 		port,
 	)
