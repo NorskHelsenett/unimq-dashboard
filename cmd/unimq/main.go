@@ -113,7 +113,7 @@ func main() {
 
 	wg.Go(func() {
 
-		err = server.ListenAndServe()
+		err := server.ListenAndServe()
 		if err != nil {
 			if errors.Is(err, http.ErrServerClosed) {
 				slog.InfoContext(ctx, "http server closed")
