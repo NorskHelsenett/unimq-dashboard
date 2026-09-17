@@ -84,9 +84,10 @@ func ReadResponse(w http.ResponseWriter, r *http.Request, out any) error {
 		}
 	}()
 
-	http.MaxBytesReader(w, r.Body, 10*1024*1024) // Limit the size of the request body to 10MB
+	// Limit the size of the request body to 10MB
+	closer := http.MaxBytesReader(w, r.Body, 10*1024*1024)
 
-	if err := json.NewDecoder(r.Body).Decode(out); err != nil {
+	if err := json.NewDecoder(closer).Decode(out); err != nil {
 		return fmt.Errorf("error decoding response body: %w", err)
 	}
 
