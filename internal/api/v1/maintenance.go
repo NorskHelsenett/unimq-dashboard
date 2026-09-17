@@ -54,7 +54,7 @@ func (rc *APIService) GetMaintenanceHandler(w http.ResponseWriter, r *http.Reque
 			httpsuite.WithError(err),
 			httpsuite.WithErrorMessage("failed to fetch maintenance history"),
 		)
-		maintenanceHistory = []models.MaintenanceEntry{}
+		return
 	}
 
 	response := models.NewMaintenanceResponse(scheduled, maintenanceHistory)
