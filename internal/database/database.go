@@ -127,6 +127,17 @@ func NewDatabase(opts ...databaseOptions) (*Database, error) {
 	return &dbc, nil
 }
 
+func (dbc *Database) Close(timeoutSecs int) error {
+	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(timeoutSecs)*time.Second)
+	defer cancel()
+
+	if err := dbc.client.Disconnect(ctx); err != nil {
+		return fmt.Errorf("failed to disconnect from database. %w", err)
+	}
+
+	return nil
+}
+
 func CreateUri(host string, port int, username, password string) string {
 
 	// Remove any existing "mongodb://" prefix from the host string

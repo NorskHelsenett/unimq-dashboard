@@ -151,6 +151,11 @@ func main() {
 		}
 	} else {
 		wg.Wait()
+		err = db.Close(30)
+		if err != nil {
+			slog.ErrorContext(ctx, "failed to close database connection", "error", err)
+		}
+
 		slog.InfoContext(ctx, "server stopped gracefully, good bye :)")
 	}
 
