@@ -20,16 +20,20 @@ func SendWebhooks(urls []string, subject, body string) error {
 		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 		defer cancel()
 		req, err := http.NewRequestWithContext(ctx, http.MethodPost, u, bytes.NewBuffer(payload))
+		req.Header.Set("Content-Type", "application/json")
+		resp, err := http.DefaultClient.Do(req)
 		if err != nil {
 			lastErr = err
 			continue
 		}
-		req.Header.Set("Content-Type", "application/json")
-		err = req.Body.Close()
-		if err != nil {
-			lastErr = err
-		}
-		if req.Response.StatusCode >= 400 {
+		defer func() {
+			err := resp.Body.Close()
+			if err != nil {
+				lastErr = err
+			}
+		}()
+
+		if resp.StatusCode >= 400 {
 			lastErr = fmt.Errorf("webhook returned %d", req.Response.StatusCode)
 		}
 	}
