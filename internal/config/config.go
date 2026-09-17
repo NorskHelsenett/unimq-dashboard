@@ -64,14 +64,14 @@ func NewConfig() *Config {
 		MongoDBUsername:         "",
 		MongoDBPassword:         "",
 		MongoDBDatabase:         "rabbitmq-dashboard",
-		RabbitMQHost:            "http://localhost",
+		RabbitMQHost:            "https://localhost",
 		RabbitMQPort:            15672,
 		RabbitMQUsername:        "",
 		RabbitMQPassword:        "",
 		RabbitMQChannelLimit:    1000,
 		RabbitMQConnectionLimit: 300,
 		RabbitMQQueueLimit:      150,
-		PrometheusHost:          "http://localhost",
+		PrometheusHost:          "https://localhost",
 		PrometheusPort:          9090,
 
 		Email: &EmailConfig{
