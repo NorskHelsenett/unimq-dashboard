@@ -313,24 +313,28 @@ func (rc *APIService) UpdateNotificationsRuleHandler(w http.ResponseWriter, r *h
 		return
 	}
 
-	err = rc.DB.UpdateNotificationRuleThreshold(r.Context(), eVhost, id, rule.Threshold)
-	if err != nil {
-		httpsuite.WriteJSONError(w,
-			http.StatusInternalServerError,
-			httpsuite.WithError(err),
-			httpsuite.WithErrorMessage("failed to update rule threshold"),
-		)
-		return
+	if rule.Threshold != nil {
+		err = rc.DB.UpdateNotificationRuleThreshold(r.Context(), eVhost, id, *rule.Threshold)
+		if err != nil {
+			httpsuite.WriteJSONError(w,
+				http.StatusInternalServerError,
+				httpsuite.WithError(err),
+				httpsuite.WithErrorMessage("failed to update rule threshold"),
+			)
+			return
+		}
 	}
 
-	err = rc.DB.UpdateNotificationRuleMessage(r.Context(), eVhost, id, rule.Message)
-	if err != nil {
-		httpsuite.WriteJSONError(w,
-			http.StatusInternalServerError,
-			httpsuite.WithError(err),
-			httpsuite.WithErrorMessage("failed to update rule message"),
-		)
-		return
+	if rule.Message != nil {
+		err = rc.DB.UpdateNotificationRuleMessage(r.Context(), eVhost, id, *rule.Message)
+		if err != nil {
+			httpsuite.WriteJSONError(w,
+				http.StatusInternalServerError,
+				httpsuite.WithError(err),
+				httpsuite.WithErrorMessage("failed to update rule message"),
+			)
+			return
+		}
 	}
 
 	httpsuite.SendResponse(r.Context(), w, "Rule updated successfully", http.StatusOK, httpsuite.NewEmptyResponse())

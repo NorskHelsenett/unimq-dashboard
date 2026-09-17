@@ -167,8 +167,8 @@ func (r *AlarmRule) IsChanged(other *AlarmRule) bool {
 }
 
 type AlarmRuleUpdate struct {
-	Threshold float64 `json:"threshold" bson:"threshold" example:"1000"`
-	Message   string  `json:"message" bson:"message" example:"Queue size has exceeded the threshold"`
+	Threshold *float64 `json:"threshold" bson:"threshold" example:"1000"`
+	Message   *string  `json:"message" bson:"message" example:"Queue size has exceeded the threshold"`
 }
 
 type AlarmStatus string
