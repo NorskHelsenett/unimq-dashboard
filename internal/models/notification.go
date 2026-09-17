@@ -15,10 +15,10 @@ import (
 //	@Email	email address for the recipient - used for email notifications
 //	@Type	type of the recipient - "webhook", "email"
 type PostRecipient struct {
-	Name  string        `json:"name" bson:"name" example:"Slack Channel to team"`
-	URL   string        `json:"url" bson:"url" example:"https://hooks.slack.com/services"`
-	Email string        `json:"email" bson:"email" example:"ola.normann@normann.no"`
-	Type  RecipientType `json:"type" bson:"type" example:"webhook"`
+	Name  string        `json:"name" bson:"name" example:"Slack Channel to team" validate:"required"`
+	URL   string        `json:"url" bson:"url" example:"https://hooks.slack.com/services" validate:"omitempty,url"`
+	Email string        `json:"email" bson:"email" example:"ola.normann@normann.no" validate:"omitempty,email"`
+	Type  RecipientType `json:"type" bson:"type" example:"webhook" validate:"required,oneof=webhook email"`
 }
 
 func (p *PostRecipient) ToRecipient() (*Recipient, error) {

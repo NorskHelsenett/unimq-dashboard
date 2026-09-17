@@ -11,6 +11,20 @@ type ValidationErrors struct {
 	Errors map[string][]string `json:"errors,omitempty"`
 }
 
+func (ve *ValidationErrors) Error() string {
+	if ve == nil || len(ve.Errors) == 0 {
+		return ""
+	}
+
+	var errMsg string
+	for field, errs := range ve.Errors {
+		for _, err := range errs {
+			errMsg += field + ": " + err + "; "
+		}
+	}
+	return errMsg
+}
+
 // NewValidationErrors creates a new ValidationErrors instance from a given error.
 // It extracts field-specific validation errors and maps them for structured output.
 func NewValidationErrors(err error) *ValidationErrors {
