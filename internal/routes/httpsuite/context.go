@@ -54,7 +54,12 @@ func IsAGroupInClaim(ctx context.Context, groups []string) (string, error) {
 		return "", err
 	}
 
-	claimGroups := castSliceToStringSlice(aClaimGroups.([]any))
+	anyGroups, ok := aClaimGroups.([]any)
+	if !ok {
+		return "", fmt.Errorf("%w: %v", ErrInvalidGroupsType, aClaimGroups)
+	}
+
+	claimGroups := castSliceToStringSlice(anyGroups)
 
 	for _, g := range claimGroups {
 		if slices.Contains(groups, g) {
