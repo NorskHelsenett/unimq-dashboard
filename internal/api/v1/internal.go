@@ -47,8 +47,9 @@ func (rc *APIService) ensureNotificationHostExists(ctx context.Context, vhost st
 			if err != nil {
 				return nil, fmt.Errorf("%w. %w", errFailedToCreateNotificationHost, err)
 			}
+		} else {
+			return nil, fmt.Errorf("generic failure, %w. %w", errFailedToCreateNotificationHost, err)
 		}
-		return nil, fmt.Errorf("generic failure, %w. %w", errFailedToCreateNotificationHost, err)
 	}
 
 	if vhostNotification == nil {
