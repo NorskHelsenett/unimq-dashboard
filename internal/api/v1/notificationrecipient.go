@@ -125,6 +125,17 @@ func (rc *APIService) AddNotificationsRecipientHandler(w http.ResponseWriter, r 
 		)
 		return
 	}
+
+	err = httpsuite.IsRequestValid(r)
+	if err != nil {
+		httpsuite.WriteJSONError(w,
+			http.StatusBadRequest,
+			httpsuite.WithError(err),
+			httpsuite.WithErrorMessage("request validation failed"),
+		)
+		return
+	}
+
 	out, err := recipient.ToRecipient()
 	if err != nil {
 		httpsuite.WriteJSONError(w,
