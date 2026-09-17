@@ -172,7 +172,7 @@ func (c *Checker) runChecks() {
 
 		// Evaluate each rule for the vhost and send notifications if needed.
 		for _, rule := range vhost.Rules {
-			c.checkRule(rule, vhost.Name, urls, metrics, queues)
+			c.checkRule(rule, vhost.Name, vhost.WebhookURLs(), metrics, queues)
 		}
 	}
 
