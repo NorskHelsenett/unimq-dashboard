@@ -79,13 +79,17 @@ func writeJSONResponse[T any](ctx context.Context, w http.ResponseWriter, r *Res
 	}
 }
 
-func ReadResponse(r *http.Request, out any) error {
+// ReadResponse reads the body of an HTTP request and decodes it into the provided output structure.
+// It closes the request body after reading and logs any errors that occur during the process.
+func ReadResponse(w http.ResponseWriter, r *http.Request, out any) error {
 	defer func() {
 		err := r.Body.Close()
 		if err != nil {
 			slog.ErrorContext(r.Context(), "error closing response body", "error", err)
 		}
 	}()
+
+	http.MaxBytesReader(w, r.Body, 10*1024*1024) // Limit the size of the request body to 10MB
 
 	if err := json.NewDecoder(r.Body).Decode(out); err != nil {
 		return fmt.Errorf("error decoding response body: %w", err)

@@ -133,7 +133,7 @@ func (rc *APIService) AddMaintenanceHandler(w http.ResponseWriter, r *http.Reque
 	}
 
 	var entry models.PostMaintenanceEntry
-	err = httpsuite.ReadResponse(r, &entry)
+	err = httpsuite.ReadResponse(w, r, &entry)
 	if err != nil {
 		httpsuite.WriteJSONError(w,
 			http.StatusBadRequest,
@@ -200,7 +200,7 @@ func (rc *APIService) UpdateMaintenanceStatusHandler(w http.ResponseWriter, r *h
 	}
 
 	var request models.UpdateMaintenance
-	err = httpsuite.ReadResponse(r, &request)
+	err = httpsuite.ReadResponse(w, r, &request)
 	if err != nil {
 		httpsuite.WriteJSONError(w,
 			http.StatusBadRequest,
@@ -255,7 +255,7 @@ func (rc *APIService) PatchMaintenanceHandler(w http.ResponseWriter, r *http.Req
 	}
 
 	var request models.PatchMaintenanceEntry
-	if err := httpsuite.ReadResponse(r, &request); err != nil {
+	if err := httpsuite.ReadResponse(w, r, &request); err != nil {
 		httpsuite.WriteJSONError(w,
 			http.StatusBadRequest,
 			httpsuite.WithError(err),

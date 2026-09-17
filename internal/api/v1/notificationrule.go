@@ -140,7 +140,7 @@ func (rc *APIService) AddNotificationsRuleHandler(w http.ResponseWriter, r *http
 	}
 
 	var rule models.PostAlarmRule
-	err = httpsuite.ReadResponse(r, &rule)
+	err = httpsuite.ReadResponse(w, r, &rule)
 	if err != nil {
 		httpsuite.WriteJSONError(w,
 			http.StatusBadRequest,
@@ -303,7 +303,7 @@ func (rc *APIService) UpdateNotificationsRuleHandler(w http.ResponseWriter, r *h
 	}
 
 	var rule models.AlarmRuleUpdate
-	err = httpsuite.ReadResponse(r, &rule)
+	err = httpsuite.ReadResponse(w, r, &rule)
 	if err != nil {
 		httpsuite.WriteJSONError(w,
 			http.StatusBadRequest,
