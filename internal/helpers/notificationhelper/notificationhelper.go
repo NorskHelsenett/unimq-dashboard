@@ -2,9 +2,11 @@ package notificationhelper
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"time"
 
 	"github.com/sisneve/rabbitmq-dashboard/internal/config"
 	"github.com/wneessen/go-mail"
@@ -15,17 +17,20 @@ func SendWebhooks(urls []string, subject, body string) error {
 	payload, _ := json.Marshal(map[string]string{"text": text})
 	var lastErr error
 	for _, u := range urls {
-		resp, err := http.Post(u, "application/json", bytes.NewReader(payload))
+		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+		defer cancel()
+		req, err := http.NewRequestWithContext(ctx, http.MethodPost, u, bytes.NewBuffer(payload))
 		if err != nil {
 			lastErr = err
 			continue
 		}
-		err = resp.Body.Close()
+		req.Header.Set("Content-Type", "application/json")
+		err = req.Body.Close()
 		if err != nil {
 			lastErr = err
 		}
-		if resp.StatusCode >= 400 {
-			lastErr = fmt.Errorf("webhook returned %d", resp.StatusCode)
+		if req.Response.StatusCode >= 400 {
+			lastErr = fmt.Errorf("webhook returned %d", req.Response.StatusCode)
 		}
 	}
 	return lastErr
