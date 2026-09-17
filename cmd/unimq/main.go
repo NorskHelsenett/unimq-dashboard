@@ -92,6 +92,7 @@ func main() {
 		notify.WithRMQClient(rmq),
 		notify.WithInterval(60*time.Second),
 		notify.WithContext(ctx),
+		notify.WithEmailConfig(config.Email),
 	)
 
 	routes, err := routes.SetupRoutes(ctx, config, db, rmq, checker)

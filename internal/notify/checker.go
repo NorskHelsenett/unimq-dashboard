@@ -62,6 +62,12 @@ func WithContext(ctx context.Context) CheckerOptions {
 	}
 }
 
+func WithEmailConfig(emailConfig *config.EmailConfig) CheckerOptions {
+	return func(c *Checker) {
+		c.EmailConfig = emailConfig
+	}
+}
+
 func NewChecker(opts ...CheckerOptions) *Checker {
 	c := &Checker{
 		interval: 60 * time.Second,
