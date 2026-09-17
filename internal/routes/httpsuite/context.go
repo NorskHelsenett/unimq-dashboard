@@ -3,6 +3,7 @@ package httpsuite
 import (
 	"context"
 	"fmt"
+	"log/slog"
 	"slices"
 )
 
@@ -43,20 +44,7 @@ func IsParameterInClaim(ctx context.Context, key string) (any, error) {
 
 // IsGroupInClaim checks if a specific group exists in the claims.
 func IsGroupInClaim(ctx context.Context, group string) (string, error) {
-	aClaimpGroups, err := IsParameterInClaim(ctx, "groups")
-	if err != nil {
-		return "", err
-	}
-
-	claimGroups := castSliceToStringSlice(aClaimpGroups.([]any))
-
-	for _, g := range claimGroups {
-		if g == group {
-			return g, nil
-		}
-	}
-
-	return "", ErrNoMatchingGroup
+	return IsAGroupInClaim(ctx, []string{group})
 }
 
 // isAGroupinClaim checks if any of the specified groups exist in the claims.
@@ -74,7 +62,8 @@ func IsAGroupInClaim(ctx context.Context, groups []string) (string, error) {
 		}
 	}
 
-	return "", ErrNoMatchingGroup
+	slog.InfoContext(ctx, "no matching group found in claims", "expected_groups", groups, "retrieved_groups", claimGroups)
+	return "", fmt.Errorf("%w. %v", ErrNoMatchingGroup, claimGroups)
 }
 
 func castSliceToStringSlice[T any](input []T) []string {

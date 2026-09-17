@@ -1,10 +1,12 @@
 package api
 
 import (
+	"errors"
 	"net/http"
 	"net/url"
 
 	"github.com/go-chi/chi/v5"
+	"github.com/sisneve/rabbitmq-dashboard/internal/clients/rabbitmq"
 	"github.com/sisneve/rabbitmq-dashboard/internal/routes/httpsuite"
 )
 
@@ -127,8 +129,16 @@ func (rc *APIService) GetQueuesByNameHandler(w http.ResponseWriter, r *http.Requ
 
 	queues, err := rc.RMQClient.GetQueueByName(eVhost, eQueue)
 	if err != nil {
+		if errors.Is(err, rabbitmq.ErrQueueNotFound) {
+			httpsuite.WriteJSONError(w,
+				http.StatusNotFound,
+				httpsuite.WithError(err),
+				httpsuite.WithErrorMessage("queue not found for vhost"),
+			)
+			return
+		}
 		httpsuite.WriteJSONError(w,
-			http.StatusNotFound,
+			http.StatusInternalServerError,
 			httpsuite.WithError(err),
 			httpsuite.WithErrorMessage("failed to fetch queue details for vhost"),
 		)

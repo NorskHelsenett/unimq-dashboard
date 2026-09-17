@@ -181,6 +181,7 @@ func (c *Config) loadEnvironmentVariables() {
 	_ = viper.BindEnv("LOG_LEVEL")
 	_ = viper.BindEnv("MONGODB_HOST")
 	_ = viper.BindEnv("MONGODB_PORT")
+	_ = viper.BindEnv("MONGODB_DATABASE")
 	_ = viper.BindEnv("RABBITMQ_HOST")
 	_ = viper.BindEnv("RABBITMQ_PORT")
 	_ = viper.BindEnv("PROMETHEUS_PORT")
