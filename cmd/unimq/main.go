@@ -108,7 +108,7 @@ func main() {
 		Addr:         fmt.Sprintf("%v:%d", config.BaseURL, config.BasePort),
 		Handler:      routes,
 		ReadTimeout:  30 * time.Second,
-		WriteTimeout: 60 * time.Second,
+		WriteTimeout: 90 * time.Second,
 	}
 
 	wg.Go(func() {
