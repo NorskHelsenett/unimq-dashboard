@@ -71,11 +71,6 @@ func writeJSONResponse[T any](ctx context.Context, w http.ResponseWriter, r *Res
 	_, err = w.Write(jsonResponse)
 	if err != nil {
 		slog.ErrorContext(ctx, "error writing response", "error", err)
-		writeJSONResponse(ctx, w, &Response[emptyResponse]{
-			Code:    http.StatusInternalServerError,
-			Message: "Internal Server Error",
-			Body:    *NewEmptyResponse(),
-		})
 	}
 }
 
