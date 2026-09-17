@@ -36,7 +36,14 @@ func SendWebhooks(urls []string, subject, body string) error {
 	return lastErr
 }
 
+var ErrEmailNotConfigured = fmt.Errorf("SMTP server is not configured")
+
 func SendEmail(config *config.EmailConfig, to, subject, body string, typ mail.ContentType) error {
+
+	if config == nil {
+		return ErrEmailNotConfigured
+	}
+
 	if config.EmailFromAddress == "" {
 		return fmt.Errorf("SMTP server is not configured")
 	}
