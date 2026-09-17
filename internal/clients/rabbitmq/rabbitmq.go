@@ -117,7 +117,13 @@ func NewRMQClient(opts ...rmqClientOptions) (*RMQClient, error) {
 	if err != nil {
 		return nil, err
 	}
-	return &RMQClient{restClient: restclient}, nil
+
+	client := &RMQClient{
+		restClient: restclient,
+		Limits:     config.Limits,
+	}
+
+	return client, nil
 }
 
 func (r *RMQClient) GetVhosts() ([]models.Vhost, error) {
