@@ -66,7 +66,7 @@ func (dbc *Database) AddAlarm(ctx context.Context, alarm *models.AlarmEntry) err
 	return err
 }
 
-func (dbc *Database) InsertAlarmEntries(ctx context.Context, alarmID string, logEntries []*models.LogEntry) error {
+func (dbc *Database) InsertAlarmEntries(ctx context.Context, alarmID string, logEntries []models.LogEntry) error {
 	start := time.Now()
 	_, err := dbc.Collections.Alarms.UpdateOne(ctx, bson.M{id: alarmID}, bson.M{"$push": bson.M{"entries": bson.M{"$each": logEntries}}})
 	if err != nil {

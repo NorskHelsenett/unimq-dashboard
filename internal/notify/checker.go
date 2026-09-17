@@ -282,9 +282,10 @@ func (c *Checker) checkRule(rule *models.AlarmRule, vhostName string, urls []str
 		}
 		return
 	}
-	err = c.DB.AddAlarm(c.Ctx, alarm)
+
+	err = c.DB.InsertAlarmEntries(c.Ctx, alarm.AlarmID, alarm.Entries)
 	if err != nil {
-		slog.ErrorContext(c.Ctx, "notify: failed to add alarm entry", "error", err)
+		slog.ErrorContext(c.Ctx, "notify: failed to insert alarm entry", "error", err)
 	}
 
 	if shouldNotify {
