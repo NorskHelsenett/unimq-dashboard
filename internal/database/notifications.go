@@ -37,7 +37,6 @@ func (dbc *Database) GetNotificationsAll(ctx context.Context) ([]models.VhostNot
 	return notifications, nil
 }
 
-// Probably unnecessary as vhost functions already cover this.
 func (dbc *Database) GetNotification(ctx context.Context, vhost string) (*models.VhostNotification, error) {
 	start := time.Now()
 
