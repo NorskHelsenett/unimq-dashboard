@@ -27,6 +27,14 @@ type VhostHandler interface {
 	Store[models.Vhost]
 }
 
+// MaintenanceHandler defines the interface for managing maintenance entries in the database.
+//
+// Maintenance entries are parented to an ID and can have multiple log entries.
+type MaintenaceHandler interface {
+	Advance(ctx context.Context) error
+	Store[models.MaintenanceEntry]
+}
+
 type NotificationHandler interface {
 	Store[models.VhostNotification]
 	Toggle(ctx context.Context, id string) error
