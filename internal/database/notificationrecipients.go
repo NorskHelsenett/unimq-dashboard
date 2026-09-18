@@ -61,7 +61,7 @@ func (dbc *Database) AddNotificationRecipient(ctx context.Context, vhost string,
 		return fmt.Errorf("failed to add notification recipient %v. %w", vhost, err)
 	}
 
-	if result.ModifiedCount == 0 {
+	if result.MatchedCount == 0 {
 		slog.DebugContext(ctx, "no notification found to add recipient",
 			"runtime", time.Since(start),
 			id, vhost,
@@ -102,7 +102,7 @@ func (dbc *Database) DeleteNotificationRecipient(ctx context.Context, vhost stri
 		return err
 	}
 
-	if result.ModifiedCount == 0 {
+	if result.MatchedCount == 0 {
 		slog.ErrorContext(ctx, "no notification recipient found to delete",
 			"runtime", time.Since(start),
 			id, vhost,

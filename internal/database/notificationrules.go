@@ -71,7 +71,7 @@ func (dbc *Database) AddNotificationRule(ctx context.Context, vhost string, rule
 		return err
 	}
 
-	if result.ModifiedCount == 0 {
+	if result.MatchedCount == 0 {
 		slog.ErrorContext(ctx, "no notification found to add rule",
 			"runtime", time.Since(start),
 			"vhost", vhost,
@@ -111,7 +111,7 @@ func (dbc *Database) DeleteNotificationRule(ctx context.Context, vhost string, r
 		return fmt.Errorf("failed to delete notification rule. %w", err)
 	}
 
-	if result.ModifiedCount == 0 {
+	if result.MatchedCount == 0 {
 		slog.ErrorContext(ctx, "no notification found to delete rule",
 			"runtime", time.Since(start),
 			"vhost", vhost,
@@ -153,7 +153,7 @@ func (dbc *Database) UpdateNotificationRule(ctx context.Context, vhost, ruleID s
 		)
 		return err
 	}
-	if result.ModifiedCount == 0 {
+	if result.MatchedCount == 0 {
 		slog.ErrorContext(ctx, "no notification rule found to update",
 			"runtime", time.Since(start),
 			id, vhost,
@@ -194,7 +194,7 @@ func (dbc *Database) ToggleNotificationRule(ctx context.Context, vhost, ruleID s
 		return err
 	}
 
-	if result.ModifiedCount == 0 {
+	if result.MatchedCount == 0 {
 		slog.ErrorContext(ctx, "no notification rule found to toggle",
 			"runtime", time.Since(start),
 			id, vhost,
@@ -231,7 +231,7 @@ func (dbc *Database) UpdateNotificationRuleThreshold(ctx context.Context, vhost,
 		)
 	}
 
-	if result.ModifiedCount == 0 {
+	if result.MatchedCount == 0 {
 		slog.ErrorContext(ctx, "no notification rule found to update",
 			"runtime", time.Since(start),
 			"vhost", vhost,
@@ -269,7 +269,7 @@ func (dbc *Database) UpdateNotificationRuleMessage(ctx context.Context, vhost, r
 		)
 	}
 
-	if result.ModifiedCount == 0 {
+	if result.MatchedCount == 0 {
 		slog.ErrorContext(ctx, "no notification rule found to update message",
 			"runtime", time.Since(start),
 			id, vhost,

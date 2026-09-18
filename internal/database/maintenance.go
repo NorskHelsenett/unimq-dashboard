@@ -96,7 +96,7 @@ func (dbc *Database) AdvanceMaintenanceStatuses(ctx context.Context) (int64, err
 		)
 		return 0, err
 	}
-	if result.ModifiedCount > 0 {
+	if result.MatchedCount > 0 {
 		slog.InfoContext(ctx, "advanced maintenance statuses to in_progress",
 			"runtime", time.Since(start),
 			"count", result.ModifiedCount,
@@ -122,13 +122,13 @@ func (dbc *Database) AdvanceMaintenanceStatuses(ctx context.Context) (int64, err
 		)
 		return total, err
 	}
-	if result.ModifiedCount > 0 {
+	if result.MatchedCount > 0 {
 		slog.InfoContext(ctx, "advanced maintenance statuses to done",
 			"runtime", time.Since(start),
-			"count", result.ModifiedCount,
+			"count", result.MatchedCount,
 		)
 	}
-	total += result.ModifiedCount
+	total += result.MatchedCount
 
 	return total, nil
 }
@@ -152,7 +152,7 @@ func (dbc *Database) SetMaintenanceEntryStatus(ctx context.Context, entryID stri
 		)
 	}
 
-	if result.ModifiedCount == 0 {
+	if result.MatchedCount == 0 {
 		slog.ErrorContext(ctx, "no maintenance entry found to update",
 			"runtime", time.Since(start),
 			id, entryID,
@@ -189,7 +189,7 @@ func (dbc *Database) SetMaintenanceEntryNotified(ctx context.Context, entryID st
 		)
 	}
 
-	if result.ModifiedCount == 0 {
+	if result.MatchedCount == 0 {
 		slog.ErrorContext(ctx, "no maintenance entry found to update",
 			"runtime", time.Since(start),
 			id, entryID,
@@ -274,7 +274,7 @@ func (dbc *Database) UpdateMaintenanceEntry(ctx context.Context, entryID string,
 		return err
 	}
 
-	if result.ModifiedCount == 0 {
+	if result.MatchedCount == 0 {
 		slog.ErrorContext(ctx, "no maintenance entry found to update",
 			"runtime", time.Since(start),
 			id, entryID,
@@ -316,7 +316,7 @@ func (dbc *Database) PatchMaintenanceEntry(ctx context.Context, entryID string, 
 		return err
 	}
 
-	if result.ModifiedCount == 0 {
+	if result.MatchedCount == 0 {
 		return ErrMaintenanceNotFound
 	}
 
