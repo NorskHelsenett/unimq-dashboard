@@ -147,9 +147,9 @@ func (rc *APIService) AddMaintenanceHandler(w http.ResponseWriter, r *http.Reque
 	if err != nil {
 		slog.Error("error converting to maintenance entry", "error", err)
 		httpsuite.WriteJSONError(w,
-			http.StatusInternalServerError,
+			http.StatusBadRequest,
 			httpsuite.WithError(err),
-			httpsuite.WithErrorMessage("failed to convert to maintenance entry"),
+			httpsuite.WithErrorMessage(fmt.Sprintf("bad time format, %w", err)),
 		)
 		return
 	}

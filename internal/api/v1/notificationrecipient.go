@@ -42,7 +42,7 @@ func (rc *APIService) GetNotificationsRecipientHandler(w http.ResponseWriter, r 
 	eVhost, err := url.QueryUnescape(vhost)
 	if err != nil {
 		httpsuite.WriteJSONError(w,
-			http.StatusInternalServerError,
+			http.StatusBadRequest,
 			httpsuite.WithError(err),
 			httpsuite.WithExternalErrorMessage("failed to decode vhost name"),
 			httpsuite.WithInternalErrorMessage("error decoding vhost name: "+vhost),
@@ -213,7 +213,6 @@ func (rc *APIService) DeleteNotificationsRecipientHandler(w http.ResponseWriter,
 	if id == "" {
 		httpsuite.WriteJSONError(w,
 			http.StatusBadRequest,
-			httpsuite.WithError(err),
 			httpsuite.WithErrorMessage("missing required recipient id parameter"),
 		)
 		return

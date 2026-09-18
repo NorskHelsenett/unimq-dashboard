@@ -467,7 +467,6 @@ func (rc *APIService) TestNotificationsRuleHandler(w http.ResponseWriter, r *htt
 	if id == "" {
 		httpsuite.WriteJSONError(w,
 			http.StatusBadRequest,
-			httpsuite.WithError(err),
 			httpsuite.WithErrorMessage("missing required rule parameter"),
 		)
 		return
@@ -524,7 +523,6 @@ func (rc *APIService) TestNotificationsRuleHandler(w http.ResponseWriter, r *htt
 	if len(urls) == 0 {
 		httpsuite.WriteJSONError(w,
 			http.StatusBadRequest,
-			httpsuite.WithError(err),
 			httpsuite.WithErrorMessage("no webhook URLs configured for vhost "+eVhost),
 		)
 		return

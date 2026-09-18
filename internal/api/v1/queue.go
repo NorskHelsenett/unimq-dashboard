@@ -110,7 +110,6 @@ func (rc *APIService) GetQueuesByNameHandler(w http.ResponseWriter, r *http.Requ
 	if queue == "" {
 		httpsuite.WriteJSONError(w,
 			http.StatusBadRequest,
-			httpsuite.WithError(err),
 			httpsuite.WithErrorMessage("missing queue name"),
 		)
 		return

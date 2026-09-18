@@ -73,7 +73,7 @@ func (rc *APIService) VhostHandler(w http.ResponseWriter, r *http.Request) {
 	eVhostName, err := url.QueryUnescape(vhostName)
 	if err != nil {
 		httpsuite.WriteJSONError(w,
-			http.StatusInternalServerError,
+			http.StatusBadRequest,
 			httpsuite.WithError(err),
 			httpsuite.WithErrorMessage("failed to decode vhost name"),
 		)
