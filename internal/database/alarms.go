@@ -11,6 +11,10 @@ import (
 	"go.mongodb.org/mongo-driver/v2/mongo/options"
 )
 
+var (
+	ErrAlarmNotFound = fmt.Errorf("alarm not found")
+)
+
 func (dbc *Database) GetAlarmsAll(ctx context.Context) ([]models.AlarmEntry, error) {
 
 	start := time.Now()
@@ -44,26 +48,53 @@ func (dbc *Database) GetAlarm(ctx context.Context, alarmID string) (*models.Alar
 	var alarm models.AlarmEntry
 
 	filter := bson.M{id: alarmID}
+
 	err := dbc.Collections.Alarms.FindOne(ctx, filter).Decode(&alarm)
 	if err != nil {
-		slog.ErrorContext(ctx, "failed to find alarm", "runtime", time.Since(start), "_id", alarmID, "error", err)
-		return nil, fmt.Errorf("failed to find alarm. %w", err)
+		slog.ErrorContext(ctx, "failed to find alarm",
+			"runtime", time.Since(start),
+			"_id", alarmID,
+			"error", err,
+		)
+		return nil, fmt.Errorf("%w. %w", ErrAlarmNotFound, err)
 	}
 
-	slog.DebugContext(ctx, "retrieved alarm", "runtime", time.Since(start), "_id", alarmID)
+	slog.DebugContext(ctx, "retrieved alarm",
+		"runtime", time.Since(start),
+		"_id", alarmID,
+	)
 
 	return &alarm, nil
 }
 
 func (dbc *Database) AddAlarm(ctx context.Context, alarm *models.AlarmEntry) error {
 	start := time.Now()
-	_, err := dbc.Collections.Alarms.InsertOne(ctx, alarm)
+
+	result, err := dbc.Collections.Alarms.InsertOne(ctx, alarm)
 	if err != nil {
-		slog.ErrorContext(ctx, "failed to create alarm", "runtime", time.Since(start), id, alarm.AlarmID, "error", err)
-	} else {
-		slog.DebugContext(ctx, "created alarm", "runtime", time.Since(start), id, alarm.AlarmID)
+		slog.ErrorContext(ctx, "failed to create alarm",
+			"runtime", time.Since(start),
+			id, alarm.AlarmID,
+			"error", err,
+		)
+		return fmt.Errorf("failed to create alarm. %w", err)
+	}
+
+	if !result.Acknowledged {
+		slog.ErrorContext(ctx, "failed to create alarm",
+			"runtime", time.Since(start),
+			id, alarm.AlarmID,
+			"error", "insert not acknowledged",
+		)
+		return fmt.Errorf("failed to create alarm. insert not acknowledged")
 
 	}
+
+	slog.DebugContext(ctx, "created alarm",
+		"runtime", time.Since(start),
+		id, alarm.AlarmID,
+	)
+
 	return err
 }
 
@@ -71,22 +102,49 @@ func (dbc *Database) InsertAlarmEntries(ctx context.Context, alarmID string, log
 	start := time.Now()
 	filter := bson.M{id: alarmID}
 	update := bson.M{"$push": bson.M{"entries": bson.M{"$each": logEntries}}}
-	_, err := dbc.Collections.Alarms.UpdateOne(ctx, filter, update, options.UpdateOne().SetUpsert(true))
+	results, err := dbc.Collections.Alarms.UpdateOne(ctx, filter, update, options.UpdateOne().SetUpsert(true))
 	if err != nil {
-		slog.ErrorContext(ctx, "failed to update alarm", "runtime", time.Since(start), id, alarmID, "error", err)
-	} else {
-		slog.DebugContext(ctx, "updated alarm", "runtime", time.Since(start), id, alarmID)
+		slog.ErrorContext(ctx, "failed to update alarm",
+			"runtime", time.Since(start),
+			id, alarmID,
+			"error", err,
+		)
+		return fmt.Errorf("failed to update alarm. %w", err)
 	}
-	return err
+
+	if results.UpsertedCount == 0 {
+		slog.ErrorContext(ctx, "failed to update alarm",
+			"runtime", time.Since(start),
+			id, alarmID,
+			"error", "no documents updated",
+		)
+		return fmt.Errorf("failed to update alarm. no documents updated. %w", ErrAlarmNotFound)
+	}
+
+	slog.DebugContext(ctx, "updated alarm", "runtime", time.Since(start), id, alarmID)
+	return nil
 }
 
 func (dbc *Database) DeleteAlarm(ctx context.Context, alarmID string) error {
 	start := time.Now()
-	_, err := dbc.Collections.Alarms.DeleteOne(ctx, bson.M{id: alarmID})
+	result, err := dbc.Collections.Alarms.DeleteOne(ctx, bson.M{id: alarmID})
 	if err != nil {
-		slog.ErrorContext(ctx, "failed to delete alarm", "runtime", time.Since(start), id, alarmID, "error", err)
-	} else {
-		slog.DebugContext(ctx, "deleted alarm", "runtime", time.Since(start), id, alarmID)
+		slog.ErrorContext(ctx, "failed to delete alarm",
+			"runtime", time.Since(start),
+			id, alarmID,
+			"error", err,
+		)
+		return fmt.Errorf("failed to delete alarm. %w", err)
 	}
+	if result.DeletedCount == 0 {
+		slog.ErrorContext(ctx, "failed to delete alarm",
+			"runtime", time.Since(start),
+			id, alarmID,
+			"error", "no documents deleted",
+		)
+		return fmt.Errorf("failed to delete alarm. no documents deleted. %w", ErrAlarmNotFound)
+	}
+
+	slog.DebugContext(ctx, "deleted alarm", "runtime", time.Since(start), id, alarmID)
 	return err
 }

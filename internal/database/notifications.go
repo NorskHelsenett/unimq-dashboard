@@ -76,12 +76,18 @@ func (dbc *Database) UpdateNotification(ctx context.Context, name string, notifi
 		set: notification,
 	}
 
-	_, err := dbc.Collections.Notifications.UpdateOne(ctx, filter, update)
+	result, err := dbc.Collections.Notifications.UpdateOne(ctx, filter, update)
 	if err != nil {
 		slog.ErrorContext(ctx, "failed to update notification", "runtime", time.Since(start), id, name, "error", err)
-	} else {
-		slog.DebugContext(ctx, "updated notification", "runtime", time.Since(start), id, notification.Name)
+		return err
 	}
+
+	if result.MatchedCount == 0 {
+		slog.ErrorContext(ctx, "no notification found to update", "runtime", time.Since(start), id, name)
+		return fmt.Errorf("notification not found for vhost %s. %w", name, mongo.ErrNoDocuments)
+	}
+
+	slog.DebugContext(ctx, "updated notification", "runtime", time.Since(start), id, notification.Name)
 
 	return err
 }
@@ -89,13 +95,13 @@ func (dbc *Database) UpdateNotification(ctx context.Context, name string, notifi
 func (dbc *Database) DeleteNotification(ctx context.Context, notificationID string) error {
 	start := time.Now()
 
-	status, err := dbc.Collections.Notifications.DeleteOne(ctx, bson.M{id: notificationID})
+	result, err := dbc.Collections.Notifications.DeleteOne(ctx, bson.M{id: notificationID})
 	if err != nil {
 		slog.ErrorContext(ctx, "failed to delete notification", "runtime", time.Since(start), "id", notificationID, "error", err)
 		return err
 	}
 
-	if status.DeletedCount == 0 {
+	if result.DeletedCount == 0 {
 		slog.ErrorContext(ctx, "no notification found to delete", "runtime", time.Since(start), "id", notificationID)
 		return fmt.Errorf("notification not found for vhost %s. %w", id, mongo.ErrNoDocuments)
 	}

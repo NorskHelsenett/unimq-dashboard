@@ -3,6 +3,7 @@ package database
 import (
 	"context"
 	"errors"
+	"fmt"
 	"log/slog"
 	"time"
 
@@ -75,12 +76,25 @@ func (dbc *Database) AddVhost(ctx context.Context, name string) error {
 	start := time.Now()
 
 	notification := models.NewVhostNotification(name)
-	_, err := dbc.Collections.Notifications.InsertOne(ctx, notification)
+	result, err := dbc.Collections.Notifications.InsertOne(ctx, notification)
 	if err != nil {
-		slog.ErrorContext(ctx, "failed to add vhost", "runtime", time.Since(start), id, name, "error", err)
-	} else {
-		slog.DebugContext(ctx, "added vhost", "runtime", time.Since(start), id, notification.Name)
+		slog.ErrorContext(ctx, "failed to add vhost",
+			"runtime", time.Since(start),
+			id, name,
+			"error", err,
+		)
+		return fmt.Errorf("failed to add vhost %s. %w", name, err)
 	}
 
-	return err
+	if !result.Acknowledged {
+		slog.ErrorContext(ctx, "failed to add vhost",
+			"runtime", time.Since(start),
+			id, name,
+		)
+		return fmt.Errorf("failed to add vhost %s. operation not acknowledged", name)
+	}
+
+	slog.DebugContext(ctx, "added vhost", "runtime", time.Since(start), id, notification.Name)
+
+	return nil
 }

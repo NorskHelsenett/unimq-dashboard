@@ -49,7 +49,7 @@ func (dbc *Database) AddNotificationRecipient(ctx context.Context, vhost string,
 		},
 	}
 
-	_, err := dbc.Collections.Notifications.UpdateOne(ctx, filter, update)
+	result, err := dbc.Collections.Notifications.UpdateOne(ctx, filter, update)
 	if err != nil {
 		slog.DebugContext(ctx, "failed to add notification recipient",
 			"runtime", time.Since(start),
@@ -58,14 +58,25 @@ func (dbc *Database) AddNotificationRecipient(ctx context.Context, vhost string,
 			"id", recipient.ID,
 			"error", err,
 		)
-	} else {
-		slog.DebugContext(ctx, "added notification recipient",
+		return fmt.Errorf("failed to add notification recipient %v. %w", vhost, err)
+	}
+
+	if result.ModifiedCount == 0 {
+		slog.DebugContext(ctx, "no notification found to add recipient",
 			"runtime", time.Since(start),
 			id, vhost,
 			"recipient", recipient.Name,
 			"id", recipient.ID,
 		)
+		return fmt.Errorf("notification not found for vhost %s. %w", vhost, ErrRecipientNotFound)
 	}
+
+	slog.DebugContext(ctx, "added notification recipient",
+		"runtime", time.Since(start),
+		id, vhost,
+		"recipient", recipient.Name,
+		"id", recipient.ID,
+	)
 
 	return err
 }

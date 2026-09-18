@@ -59,7 +59,7 @@ func (dbc *Database) AddNotificationRule(ctx context.Context, vhost string, rule
 		},
 	}
 
-	_, err := dbc.Collections.Notifications.UpdateOne(ctx, filter, update)
+	result, err := dbc.Collections.Notifications.UpdateOne(ctx, filter, update)
 	if err != nil {
 		slog.ErrorContext(ctx, "failed to add notification rule",
 			"runtime", time.Since(start),
@@ -68,13 +68,24 @@ func (dbc *Database) AddNotificationRule(ctx context.Context, vhost string, rule
 			"id", rule.ID,
 			"error", err,
 		)
-	} else {
-		slog.DebugContext(ctx, "added notification rule",
+		return err
+	}
+
+	if result.ModifiedCount == 0 {
+		slog.ErrorContext(ctx, "no notification found to add rule",
 			"runtime", time.Since(start),
 			"vhost", vhost,
 			"rule", rule.Name,
+			"id", rule.ID,
 		)
+		return fmt.Errorf("notification not found for vhost %s. %w", vhost, ErrVhostNotFound)
 	}
+
+	slog.DebugContext(ctx, "added notification rule",
+		"runtime", time.Since(start),
+		"vhost", vhost,
+		"rule", rule.Name,
+	)
 
 	return err
 }
@@ -89,7 +100,7 @@ func (dbc *Database) DeleteNotificationRule(ctx context.Context, vhost string, r
 		},
 	}
 
-	_, err := dbc.Collections.Notifications.UpdateOne(ctx, filter, update)
+	result, err := dbc.Collections.Notifications.UpdateOne(ctx, filter, update)
 	if err != nil {
 		slog.ErrorContext(ctx, "failed to delete notification rule",
 			"runtime", time.Since(start),
@@ -98,6 +109,15 @@ func (dbc *Database) DeleteNotificationRule(ctx context.Context, vhost string, r
 			"error", err,
 		)
 		return fmt.Errorf("failed to delete notification rule. %w", err)
+	}
+
+	if result.ModifiedCount == 0 {
+		slog.ErrorContext(ctx, "no notification found to delete rule",
+			"runtime", time.Since(start),
+			"vhost", vhost,
+			id, ruleID,
+		)
+		return fmt.Errorf("notification not found for vhost %s. %w", vhost, ErrVhostNotFound)
 	}
 
 	slog.DebugContext(ctx, "deleted notification rule",
@@ -123,17 +143,36 @@ func (dbc *Database) UpdateNotificationRule(ctx context.Context, vhost, ruleID s
 	filter := map[string]any{id: vhost, "rules.id": ruleID}
 	update := map[string]any{set: setFields}
 
-	_, err := dbc.Collections.Notifications.UpdateOne(ctx, filter, update)
+	result, err := dbc.Collections.Notifications.UpdateOne(ctx, filter, update)
 	if err != nil {
-		slog.ErrorContext(ctx, "failed to update notification rule status", "runtime", time.Since(start), id, vhost, "rule", ruleID, "error", err)
+		slog.ErrorContext(ctx, "failed to update notification rule status",
+			"runtime", time.Since(start),
+			id, vhost,
+			"rule", ruleID,
+			"error", err,
+		)
 		return err
-	} else {
-		slog.DebugContext(ctx, "updated notification rule status", "runtime", time.Since(start), id, vhost, "ruleID", ruleID, "notified", notified)
 	}
+	if result.ModifiedCount == 0 {
+		slog.ErrorContext(ctx, "no notification rule found to update",
+			"runtime", time.Since(start),
+			id, vhost,
+			"rule", ruleID,
+		)
+		return fmt.Errorf("notification rule not found for vhost %s and rule %s. %w", vhost, ruleID, ErrNotificationRuleNotFound)
+	}
+
+	slog.DebugContext(ctx, "updated notification rule status",
+		"runtime", time.Since(start),
+		id, vhost,
+		"ruleID", ruleID,
+		"notified", notified,
+	)
 
 	return err
 }
 
+// TODO: Should just be a wrapper function for UpdateNotificationRule, but with a different name for clarity. Consider refactoring.
 func (dbc *Database) ToggleNotificationRule(ctx context.Context, vhost, ruleID string, enabled bool) error {
 	start := time.Now()
 
@@ -143,16 +182,37 @@ func (dbc *Database) ToggleNotificationRule(ctx context.Context, vhost, ruleID s
 			"rules.$.enabled": enabled,
 		},
 	}
-	_, err := dbc.Collections.Notifications.UpdateOne(ctx, filter, update)
+	result, err := dbc.Collections.Notifications.UpdateOne(ctx, filter, update)
 	if err != nil {
-		slog.ErrorContext(ctx, "failed to toggle notification rule", "runtime", time.Since(start), id, vhost, "ruleID", ruleID, "enabled", enabled, "error", err)
+		slog.ErrorContext(ctx, "failed to toggle notification rule",
+			"runtime", time.Since(start),
+			id, vhost,
+			"ruleID", ruleID,
+			"enabled", enabled,
+			"error", err,
+		)
 		return err
 	}
 
-	slog.DebugContext(ctx, "toggled notification rule", "runtime", time.Since(start), id, vhost, "ruleID", ruleID, "enabled", enabled)
-	return err
+	if result.ModifiedCount == 0 {
+		slog.ErrorContext(ctx, "no notification rule found to toggle",
+			"runtime", time.Since(start),
+			id, vhost,
+			"ruleID", ruleID,
+			"enabled", enabled,
+		)
+		return fmt.Errorf("notification rule not found for vhost %s and rule %s. %w", vhost, ruleID, ErrNotificationRuleNotFound)
+	}
+
+	slog.DebugContext(ctx, "toggled notification rule",
+		"runtime", time.Since(start),
+		id, vhost, "ruleID",
+		ruleID, "enabled", enabled,
+	)
+	return nil
 }
 
+// TODO: Consider refactoring into a put function.
 func (dbc *Database) UpdateNotificationRuleThreshold(ctx context.Context, vhost, ruleID string, threshold float64) error {
 	start := time.Now()
 
@@ -162,16 +222,33 @@ func (dbc *Database) UpdateNotificationRuleThreshold(ctx context.Context, vhost,
 			"rules.$.threshold": threshold,
 		},
 	}
-	_, err := dbc.Collections.Notifications.UpdateOne(ctx, filter, update)
+	result, err := dbc.Collections.Notifications.UpdateOne(ctx, filter, update)
 	if err != nil {
-		slog.ErrorContext(ctx, "failed to update notification rule", "runtime", time.Since(start), "vhost", vhost, "ruleID", ruleID, "error", err)
-	} else {
-		slog.DebugContext(ctx, "updated notification rule", "runtime", time.Since(start), "vhost", vhost, "ruleID", ruleID)
+		slog.ErrorContext(ctx, "failed to update notification rule",
+			"runtime", time.Since(start),
+			"vhost", vhost, "ruleID",
+			ruleID, "error", err,
+		)
 	}
+
+	if result.ModifiedCount == 0 {
+		slog.ErrorContext(ctx, "no notification rule found to update",
+			"runtime", time.Since(start),
+			"vhost", vhost,
+			"ruleID", ruleID,
+		)
+		return fmt.Errorf("notification rule not found for vhost %s and rule %s. %w", vhost, ruleID, ErrNotificationRuleNotFound)
+	}
+	slog.DebugContext(ctx, "updated notification rule",
+		"runtime", time.Since(start),
+		"vhost", vhost,
+		"ruleID", ruleID,
+	)
 
 	return err
 }
 
+// TODO: Consider refactoring into a put function.
 func (dbc *Database) UpdateNotificationRuleMessage(ctx context.Context, vhost, ruleID string, message string) error {
 	start := time.Now()
 
@@ -182,12 +259,30 @@ func (dbc *Database) UpdateNotificationRuleMessage(ctx context.Context, vhost, r
 		},
 	}
 
-	_, err := dbc.Collections.Notifications.UpdateOne(ctx, filter, update)
+	result, err := dbc.Collections.Notifications.UpdateOne(ctx, filter, update)
 	if err != nil {
-		slog.ErrorContext(ctx, "failed to update notification rule message", "runtime", time.Since(start), id, vhost, "ruleID", ruleID, "error", err)
-	} else {
-		slog.DebugContext(ctx, "updated notification rule message", "runtime", time.Since(start), id, vhost, "ruleID", ruleID)
+		slog.ErrorContext(ctx, "failed to update notification rule message",
+			"runtime", time.Since(start),
+			id, vhost,
+			"ruleID", ruleID,
+			"error", err,
+		)
 	}
+
+	if result.ModifiedCount == 0 {
+		slog.ErrorContext(ctx, "no notification rule found to update message",
+			"runtime", time.Since(start),
+			id, vhost,
+			"ruleID", ruleID,
+		)
+		return fmt.Errorf("notification rule not found for vhost %s and rule %s. %w", vhost, ruleID, ErrNotificationRuleNotFound)
+	}
+
+	slog.DebugContext(ctx, "updated notification rule message",
+		"runtime", time.Since(start),
+		id, vhost,
+		"ruleID", ruleID,
+	)
 
 	return err
 }
