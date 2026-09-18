@@ -350,7 +350,7 @@ func NotifyAlarm(ctx context.Context, vhost *models.VhostNotification, rule *mod
 
 // nolint:gocyclo // While it is marked as complex, it only evaluates a single rule against the current metrics and returns whether it is triggered and the current value.
 func evaluate(rule *models.AlarmRule, metrics *models.VhostMetrics, queues []models.QueueDetail) (bool, *float64, error) {
-	v := new(float64)
+	var v *float64
 	switch rule.Type {
 	case models.AlarmTypeChannels:
 		if metrics != nil {
