@@ -42,11 +42,11 @@ func (p *PostRecipient) ToRecipient() (*Recipient, error) {
 // @Type	type of the recipient - "webhook", "webhook"
 // @Email	email address for the recipient - used for email notifications
 type Recipient struct {
-	ID    string        `json:"id" validation:"required" bson:"id"`
-	Name  string        `json:"name" validation:"required" bson:"name"`
-	URL   string        `json:"url,omitempty" validation:"omitempty,url" bson:"url,omitempty"`
-	Email string        `json:"email,omitempty" validation:"omitempty,email" bson:"email,omitempty"`
-	Type  RecipientType `json:"type" validation:"required,oneof=webhook email" bson:"type"`
+	ID    string        `json:"id" validate:"required" bson:"id"`
+	Name  string        `json:"name" validate:"required" bson:"name"`
+	URL   string        `json:"url,omitempty" validate:"omitempty,url" bson:"url,omitempty"`
+	Email string        `json:"email,omitempty" validate:"omitempty,email" bson:"email,omitempty"`
+	Type  RecipientType `json:"type" validate:"required,oneof=webhook email" bson:"type"`
 }
 
 type RecipientType string
