@@ -65,14 +65,6 @@ func NewAPIError(statusCode int, opts ...JSONErrorOption) *apiError {
 }
 
 func newErrorResponse(err error, statusCode int, message string) *ErrorResponse {
-	if err != nil {
-		return &ErrorResponse{
-			Error:      err.Error(),
-			StatusCode: statusCode,
-			Message:    message,
-		}
-	}
-
 	return &ErrorResponse{
 		StatusCode: statusCode,
 		Message:    message,
