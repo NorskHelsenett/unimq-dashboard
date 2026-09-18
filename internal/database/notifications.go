@@ -103,7 +103,7 @@ func (dbc *Database) DeleteNotification(ctx context.Context, notificationID stri
 
 	if result.DeletedCount == 0 {
 		slog.ErrorContext(ctx, "no notification found to delete", "runtime", time.Since(start), "id", notificationID)
-		return fmt.Errorf("notification not found for vhost %s. %w", id, mongo.ErrNoDocuments)
+		return fmt.Errorf("notification not found for vhost %s. %w", notificationID, mongo.ErrNoDocuments)
 	}
 
 	slog.DebugContext(ctx, "deleted notification", "runtime", time.Since(start), "id", notificationID)
