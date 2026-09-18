@@ -45,7 +45,7 @@ func TestIsRequestValid(t *testing.T) {
 				assert.Nil(t, errs)
 			} else {
 				assert.NotNil(t, errs)
-				assert.Equal(t, tt.expectedErrors.Errors, errs.Errors)
+				assert.Equal(t, tt.expectedErrors.Errors, errs)
 			}
 		})
 	}

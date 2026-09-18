@@ -44,7 +44,7 @@ func NewValidationErrors(err error) *ValidationErrors {
 
 // IsRequestValid validates the provided request struct using the go-playground/validator package.
 // It returns a ValidationErrors instance if validation fails, or nil if the request is valid.
-func IsRequestValid(request any) *ValidationErrors {
+func IsRequestValid(request any) error {
 	validate := validator.New(validator.WithRequiredStructEnabled())
 	err := validate.Struct(request)
 	if err != nil {
