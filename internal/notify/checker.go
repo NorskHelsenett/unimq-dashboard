@@ -193,7 +193,11 @@ func EvaluateMetrics(rule *models.AlarmRule, metrics *models.VhostMetrics, queue
 	if rule.Type == models.AlarmTypeMaintenance {
 		return nil, ErrNotificationRuleInMaintenance
 	}
-	triggered, value := evaluate(rule, metrics, queues)
+	triggered, value, err := evaluate(rule, metrics, queues)
+	if err != nil {
+		return nil, fmt.Errorf("failed to evaluate rule %s: %w", rule.Name, err)
+	}
+
 	newStatus := models.AlarmStatusOK
 	if triggered {
 		newStatus = models.AlarmStatusFiring
@@ -345,7 +349,7 @@ func NotifyAlarm(ctx context.Context, vhost *models.VhostNotification, rule *mod
 }
 
 // nolint:gocyclo // While it is marked as complex, it only evaluates a single rule against the current metrics and returns whether it is triggered and the current value.
-func evaluate(rule *models.AlarmRule, metrics *models.VhostMetrics, queues []models.QueueDetail) (bool, *float64) {
+func evaluate(rule *models.AlarmRule, metrics *models.VhostMetrics, queues []models.QueueDetail) (bool, *float64, error) {
 	v := new(float64)
 	switch rule.Type {
 	case models.AlarmTypeChannels:
@@ -385,18 +389,18 @@ func evaluate(rule *models.AlarmRule, metrics *models.VhostMetrics, queues []mod
 		for _, q := range queues {
 			if q.Name == rule.QueueName {
 				v = new(float64(q.Messages))
-				return q.Messages > 0 && q.Consumers == 0, v
+				return q.Messages > 0 && q.Consumers == 0, v, nil
 			}
 		}
 	default:
 		slog.Error("Unknown rule type", "type", rule.Type)
-		return false, v
+		return false, nil, fmt.Errorf("unknown rule type: %s", rule.Type)
 	}
 	if v == nil {
-		return false, nil
+		return false, nil, fmt.Errorf("queue %s not found for rule type %s", rule.QueueName, rule.Type)
 	}
 
-	return *v >= rule.Threshold, v
+	return *v >= rule.Threshold, v, nil
 }
 
 // checkMaintenanceRule checks for any scheduled maintenance and sends notifications if there are any new ones.
