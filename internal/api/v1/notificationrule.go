@@ -12,7 +12,6 @@ import (
 	"github.com/sisneve/rabbitmq-dashboard/internal/helpers/notificationhelper"
 	"github.com/sisneve/rabbitmq-dashboard/internal/models"
 	"github.com/sisneve/rabbitmq-dashboard/internal/routes/httpsuite"
-	"github.com/wneessen/go-mail"
 	"go.mongodb.org/mongo-driver/v2/mongo"
 )
 
@@ -539,22 +538,15 @@ func (rc *APIService) TestNotificationsRuleHandler(w http.ResponseWriter, r *htt
 		return
 	}
 
-	if rc.EmailClient != nil {
-		emails := vhostobject.EmailRecipients()
-		for _, email := range emails {
-			err = notificationhelper.SendEmail(rc.EmailConfig, email, subject, body, mail.TypeTextPlain)
-			if err != nil {
-				slog.ErrorContext(r.Context(), "error sending test email", "error", err)
-				httpsuite.WriteJSONError(w,
-					http.StatusBadRequest,
-					httpsuite.WithError(err),
-					httpsuite.WithErrorMessage("failed to send test email"),
-				)
-				return
-			}
+	err = notificationhelper.EmailSenderInstance.SendEmails(r.Context(), vhostobject.EmailRecipients(), subject, body, "text/plain")
+	if err != nil {
+		if errors.Is(err, notificationhelper.ErrEmailNotConfigured) {
+			slog.WarnContext(r.Context(), "test email not sent, SMTP server is not configured", "emails", vhostobject.EmailRecipients())
+		} else {
+			slog.ErrorContext(r.Context(), "test email failed on some", "error", err)
 		}
 	} else {
-		slog.WarnContext(r.Context(), "email client not configured, skipping email test notification")
+		slog.InfoContext(r.Context(), "test email sent", "emails", vhostobject.EmailRecipients())
 	}
 
 	response := models.TestNotificationResponse{

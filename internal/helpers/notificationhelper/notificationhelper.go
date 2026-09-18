@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"log/slog"
 	"net/http"
@@ -49,16 +50,79 @@ func SendWebhooks(urls []string, subject, body string) error {
 	return lastErr
 }
 
-var ErrEmailNotConfigured = fmt.Errorf("SMTP server is not configured")
+var (
+	ErrEmailNotConfigured = fmt.Errorf("SMTP server is not configured")
+	ErrEmailSendFailed    = fmt.Errorf("failed to send email")
+)
 
-func SendEmail(config *config.EmailConfig, to, subject, body string, typ mail.ContentType) error {
+type emailSenderError struct {
+	destinations []emailDestinationError
+}
+
+type emailDestinationError struct {
+	destination string
+	err         error
+}
+
+func (e *emailSenderError) Error() string {
+	var buffer bytes.Buffer
+	buffer.WriteString("failed to send email to the following destinations:\n")
+	for _, destErr := range e.destinations {
+		buffer.WriteString(fmt.Sprintf("- %s: %v\n", destErr.destination, destErr.err))
+	}
+	return buffer.String()
+}
+
+type EmailSender struct {
+	Config *config.EmailConfig
+}
+
+var EmailSenderInstance *EmailSender
+
+func InitEmailSender(config *config.EmailConfig) {
+	EmailSenderInstance = &EmailSender{
+		Config: config,
+	}
+}
+
+func (es *EmailSender) SendEmail(to, subject, body string, typ mail.ContentType) error {
+	return sendEmail(es.Config, to, subject, body, typ)
+}
+
+func (es *EmailSender) SendEmails(ctx context.Context, to []string, subject, body string, typ mail.ContentType) error {
+	sendErr := emailSenderError{
+		destinations: make([]emailDestinationError, 0),
+	}
+	for _, email := range to {
+		err := EmailSenderInstance.SendEmail(email, subject, body, "text/plain")
+		if err != nil {
+			if errors.Is(err, ErrEmailNotConfigured) {
+				return ErrEmailNotConfigured
+			}
+			sendErr.destinations = append(sendErr.destinations, emailDestinationError{
+				destination: email,
+				err:         err,
+			})
+			continue
+		}
+
+	}
+
+	if len(sendErr.destinations) > 0 {
+		return &sendErr
+	}
+
+	return nil
+}
+
+func sendEmail(config *config.EmailConfig, to, subject, body string, typ mail.ContentType) error {
 
 	if config == nil {
 		return ErrEmailNotConfigured
 	}
 
 	if config.EmailFromAddress == "" {
-		return fmt.Errorf("SMTP server is not configured")
+		return ErrEmailNotConfigured
 	}
 	message := mail.NewMsg()
 	if err := message.From(config.EmailFromAddress); err != nil {

@@ -15,6 +15,7 @@ import (
 	"github.com/sisneve/rabbitmq-dashboard/internal/clients/rabbitmq"
 	"github.com/sisneve/rabbitmq-dashboard/internal/config"
 	"github.com/sisneve/rabbitmq-dashboard/internal/database"
+	"github.com/sisneve/rabbitmq-dashboard/internal/helpers/notificationhelper"
 	"github.com/sisneve/rabbitmq-dashboard/internal/logger"
 	"github.com/sisneve/rabbitmq-dashboard/internal/models"
 	"github.com/sisneve/rabbitmq-dashboard/internal/notify"
@@ -87,12 +88,14 @@ func main() {
 		return
 	}
 
+	// Sets up the global email sender instance for the notification helper package
+	notificationhelper.InitEmailSender(config.Email)
+
 	checker := notify.NewChecker(
 		notify.WithDB(db),
 		notify.WithRMQClient(rmq),
 		notify.WithInterval(60*time.Second),
 		notify.WithContext(ctx),
-		notify.WithEmailConfig(config.Email),
 	)
 
 	routes, err := routes.SetupRoutes(ctx, config, db, rmq, checker)

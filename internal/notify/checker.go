@@ -9,7 +9,6 @@ import (
 	"time"
 
 	"github.com/sisneve/rabbitmq-dashboard/internal/clients/rabbitmq"
-	"github.com/sisneve/rabbitmq-dashboard/internal/config"
 	"github.com/sisneve/rabbitmq-dashboard/internal/database"
 	"github.com/sisneve/rabbitmq-dashboard/internal/helpers/notificationhelper"
 	"github.com/sisneve/rabbitmq-dashboard/internal/models"
@@ -21,7 +20,6 @@ type (
 		Ctx         context.Context
 		DB          *database.Database
 		RMQClient   *rabbitmq.RMQClient
-		EmailConfig *config.EmailConfig
 		interval    time.Duration
 		mu          sync.RWMutex
 		lastChecked time.Time
@@ -59,12 +57,6 @@ func WithInterval(d time.Duration) CheckerOptions {
 func WithContext(ctx context.Context) CheckerOptions {
 	return func(c *Checker) {
 		c.Ctx = ctx
-	}
-}
-
-func WithEmailConfig(emailConfig *config.EmailConfig) CheckerOptions {
-	return func(c *Checker) {
-		c.EmailConfig = emailConfig
 	}
 }
 
@@ -172,12 +164,12 @@ func (c *Checker) runChecks() {
 
 		// Evaluate each rule for the vhost and send notifications if needed.
 		for _, rule := range vhost.Rules {
-			c.checkRule(rule, vhost.Name, vhost.WebhookURLs(), metrics, queues)
+			c.checkRule(rule, &vhost, metrics, queues)
 		}
 	}
 
 	// Check for any scheduled maintenance and send notifications if there are any new ones.
-	checkMaintenanceSchedules(c.Ctx, c.DB, urls, emails, c.EmailConfig)
+	checkMaintenanceSchedules(c.Ctx, c.DB, urls, emails)
 }
 
 var (
@@ -246,51 +238,62 @@ func EvaluateRule(rule *models.AlarmRule, newStatus models.AlarmStatus, newValue
 
 // checkRule evaluates a single alarm rule against the current metrics and sends notifications if needed.
 // TODO: Check that the rules are evaluated
-func (c *Checker) checkRule(rule *models.AlarmRule, vhostName string, urls []string, metrics *models.VhostMetrics, queues []models.QueueDetail) {
+func (c *Checker) checkRule(rule *models.AlarmRule,
+	vhost *models.VhostNotification,
+	metrics *models.VhostMetrics,
+	queues []models.QueueDetail,
+) {
 
 	evalResult, err := EvaluateMetrics(rule, metrics, queues)
 	if err != nil {
 		switch {
 		case errors.Is(err, ErrNotificationRuleDisabled):
-			slog.DebugContext(c.Ctx, "Skipping disabled rule", "vhost", vhostName, "rule", rule.Name)
+			slog.DebugContext(c.Ctx, "Skipping disabled rule", "vhost", vhost.Name, "rule", rule.Name)
 			return
 		case errors.Is(err, ErrNotificationRuleInMaintenance):
-			slog.DebugContext(c.Ctx, "Skipping maintenance rule evaluation", "vhost", vhostName, "rule", rule.Name)
+			slog.DebugContext(c.Ctx, "Skipping maintenance rule evaluation", "vhost", vhost.Name, "rule", rule.Name)
 			return
 		default:
-			slog.ErrorContext(c.Ctx, "Failed to evaluate rule", "vhost", vhostName, "rule", rule.Name, "error", err)
+			slog.ErrorContext(c.Ctx, "Failed to evaluate rule", "vhost", vhost.Name, "rule", rule.Name, "error", err)
 			return
 		}
 	}
 
-	shouldNotify := evalResult.Triggered && rule.Status != models.AlarmStatusFiring && len(urls) > 0
+	shouldNotify := evalResult.Triggered && rule.Status != models.AlarmStatusFiring && len(vhost.WebhookURLs()) > 0
 	slog.DebugContext(c.Ctx, "Evaluating rule",
-		"vhost", vhostName,
+		"vhost", vhost.Name,
 		"rule", rule.Name,
 		"type", rule.Type,
 		"value", *evalResult.Value,
 		"threshold", rule.Threshold,
 		"triggered", evalResult.Triggered,
-		// "urls", len(urls),
 	)
 
 	// If the status is changing to firing, it will update the LastFired timestamp.
 	err = c.DB.UpdateNotificationRule(
 		c.Ctx,
-		vhostName,
+		vhost.Name,
 		rule.ID,
 		evalResult.NewStatus,
 		*evalResult.Value,
 		shouldNotify,
 	)
 	if err != nil {
-		slog.ErrorContext(c.Ctx, "Failed to update notification rule status", "vhost", vhostName, "rule", rule.Name, "error", err)
+		slog.ErrorContext(c.Ctx, "Failed to update notification rule status",
+			"vhost", vhost.Name,
+			"rule", rule.Name,
+			"error", err,
+		)
 	}
 
 	alarm, err := EvaluateRule(rule, evalResult.NewStatus, *evalResult.Value)
 	if err != nil {
 		if !errors.Is(err, ErrNotificationRuleNoChange) {
-			slog.ErrorContext(c.Ctx, "Failed to evaluate rule for alarm entry", "vhost", vhostName, "rule", rule.Name, "error", err)
+			slog.ErrorContext(c.Ctx, "Failed to evaluate rule for alarm entry",
+				"vhost", vhost.Name,
+				"rule", rule.Name,
+				"error", err,
+			)
 		}
 		return
 	}
@@ -301,20 +304,41 @@ func (c *Checker) checkRule(rule *models.AlarmRule, vhostName string, urls []str
 	}
 
 	if shouldNotify {
-		err = NotifyAlarm(c.Ctx, urls, rule, vhostName)
+		err = NotifyAlarm(c.Ctx, vhost, rule)
 		if err != nil {
-			slog.ErrorContext(c.Ctx, "notify: failed to send notification", "vhost", vhostName, "rule", rule.Name, "error", err)
+			slog.ErrorContext(c.Ctx, "notify: failed to send notification", "vhost", vhost.Name, "rule", rule.Name, "error", err)
 		}
 	}
 }
 
-// Notify sends a notification to the provided URLs with the alarm rule and vhost name.
-func NotifyAlarm(ctx context.Context, urls []string, rule *models.AlarmRule, vhostName string) error {
-	subject := fmt.Sprintf("[UniMQ] Alarm: %s — %s", rule.Name, vhostName)
-	body := rule.BuildMessage(vhostName)
-	err := notificationhelper.SendWebhooks(urls, subject, body)
-	if err != nil {
-		return err
+// Notify sends a notification to the provided URLs and emails with the alarm rule and vhost name.
+func NotifyAlarm(ctx context.Context, vhost *models.VhostNotification, rule *models.AlarmRule) error {
+	subject := fmt.Sprintf("[UniMQ] Alarm: %s — %s", rule.Name, vhost.Name)
+	body := rule.BuildMessage(vhost.Name)
+	if len(vhost.WebhookURLs()) != 0 {
+		err := notificationhelper.SendWebhooks(vhost.WebhookURLs(), subject, body)
+		if err != nil {
+			return err
+		}
+	}
+
+	if len(vhost.EmailRecipients()) != 0 {
+		for _, email := range vhost.EmailRecipients() {
+			err := notificationhelper.EmailSenderInstance.SendEmail(
+				email,
+				subject,
+				body,
+				"text/plain",
+			)
+			if err != nil {
+				if errors.Is(err, notificationhelper.ErrEmailNotConfigured) {
+					slog.WarnContext(ctx, "notify: email not sent, SMTP server is not configured", "email", email)
+					return err
+				}
+				slog.ErrorContext(ctx, "notify: failed to send email", "email", email, "error", err)
+				continue
+			}
+		}
 	}
 
 	return nil
@@ -376,7 +400,7 @@ func evaluate(rule *models.AlarmRule, metrics *models.VhostMetrics, queues []mod
 }
 
 // checkMaintenanceRule checks for any scheduled maintenance and sends notifications if there are any new ones.
-func checkMaintenanceSchedules(ctx context.Context, db *database.Database, urls []string, emails []string, emailConfig *config.EmailConfig) {
+func checkMaintenanceSchedules(ctx context.Context, db *database.Database, urls []string, emails []string) {
 	scheduled, err := db.GetMaintenanceScheduled(ctx)
 	if err != nil {
 		slog.ErrorContext(ctx, "Failed to fetch scheduled maintenance", "error", err)
@@ -406,18 +430,16 @@ func checkMaintenanceSchedules(ctx context.Context, db *database.Database, urls 
 			slog.ErrorContext(ctx, "Failed to mark maintenance as notified", "error", err)
 		}
 
-		for _, email := range emails {
-			err = notificationhelper.SendEmail(emailConfig, email, subject, body, "text/plain")
-			if err != nil {
-				if errors.Is(err, notificationhelper.ErrEmailNotConfigured) {
-					slog.WarnContext(ctx, "notify: maintenance email not sent, SMTP server is not configured", "email", email)
-					continue
-				}
-				slog.ErrorContext(ctx, "notify: maintenance email failed", "email", email, "error", err)
-			} else {
-				slog.InfoContext(ctx, "notify: maintenance email sent", "email", email)
+		err = notificationhelper.EmailSenderInstance.SendEmails(ctx, emails, subject, body, "text/plain")
+		if err != nil {
+			if errors.Is(err, notificationhelper.ErrEmailNotConfigured) {
+				slog.WarnContext(ctx, "maintenance email not sent, SMTP server is not configured", "emails", emails)
+				return
 			}
+			slog.ErrorContext(ctx, "maintenance email failed on some", "error", err)
+
 		}
 
+		slog.InfoContext(ctx, "notify: maintenance email sent", "emails", emails)
 	}
 }

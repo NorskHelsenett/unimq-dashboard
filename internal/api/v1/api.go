@@ -7,11 +7,9 @@ import (
 	"github.com/sisneve/rabbitmq-dashboard/internal/clients/dex"
 	"github.com/sisneve/rabbitmq-dashboard/internal/clients/prometheus"
 	"github.com/sisneve/rabbitmq-dashboard/internal/clients/rabbitmq"
-	"github.com/sisneve/rabbitmq-dashboard/internal/config"
 	"github.com/sisneve/rabbitmq-dashboard/internal/database"
 	"github.com/sisneve/rabbitmq-dashboard/internal/models"
 	"github.com/sisneve/rabbitmq-dashboard/internal/notify"
-	"github.com/wneessen/go-mail"
 )
 
 type APIService struct {
@@ -20,8 +18,6 @@ type APIService struct {
 	PromClient  *prometheus.PromClient
 	DexClient   *dex.DexClient
 	DB          *database.Database
-	EmailClient *mail.Client
-	EmailConfig *config.EmailConfig
 	RMQLimits   *models.Limits
 	AdminGroups []string
 	Checker     *notify.Checker
@@ -64,13 +60,6 @@ func WithDatabase(db *database.Database) APIServiceOption {
 	}
 }
 
-func WithEmailConfig(emailConfig *config.EmailConfig) APIServiceOption {
-	return func(rc *APIService) error {
-		rc.EmailConfig = emailConfig
-		return nil
-	}
-}
-
 func WithChecker(checker *notify.Checker) APIServiceOption {
 	return func(rc *APIService) error {
 		rc.Checker = checker
@@ -92,8 +81,6 @@ func newAPIServiceConfig() *APIService {
 		PromClient:  nil,
 		DexClient:   nil,
 		DB:          nil,
-		EmailConfig: nil,
-		EmailClient: nil,
 		RMQLimits:   nil,
 		AdminGroups: []string{},
 		Checker:     nil,
@@ -108,26 +95,5 @@ func NewAPIService(opts ...APIServiceOption) (*APIService, error) {
 		}
 	}
 
-	if rc.EmailConfig != nil && rc.EmailConfig.EmailSMTPHost != "" {
-
-		opts := make([]mail.Option, 0)
-		if rc.EmailConfig.EmailSMTPUsername != "" {
-			opts = append(opts, mail.WithUsername(rc.EmailConfig.EmailSMTPUsername))
-		}
-		if rc.EmailConfig.EmailSMTPPassword != "" {
-			opts = append(opts, mail.WithPassword(rc.EmailConfig.EmailSMTPPassword))
-		}
-		if rc.EmailConfig.EmailSMTPPort != 0 {
-			opts = append(opts, mail.WithPort(rc.EmailConfig.EmailSMTPPort))
-		}
-		emailClient, err := mail.NewClient(
-			rc.EmailConfig.EmailSMTPHost,
-			opts...,
-		)
-		if err != nil {
-			return nil, fmt.Errorf("failed to create email client: %w", err)
-		}
-		rc.EmailClient = emailClient
-	}
 	return rc, nil
 }

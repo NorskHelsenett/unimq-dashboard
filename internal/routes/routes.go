@@ -37,7 +37,6 @@ func SetupRoutes(ctx context.Context, config *config.Config, db *database.Databa
 		api.WithPromClient(prom),
 		api.WithDexClient(dex),
 		api.WithDatabase(db),
-		api.WithEmailConfig(config.Email),
 		api.WithChecker(checker),
 		api.WithAdminGroups(config.AdminGroups),
 	)
