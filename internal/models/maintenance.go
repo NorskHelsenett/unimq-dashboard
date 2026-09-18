@@ -165,11 +165,10 @@ func NewMaintenanceEntry(description string, start time.Time, end time.Time) *Ma
 }
 
 type PatchMaintenanceEntry struct {
-	Description string `json:"description"`
-	Start       string `json:"start"`
-	End         string `json:"end"`
-	Reason      string `json:"reason"`
-	UpdatedBy   string `json:"updated_by"`
+	Description string `json:"description" example:"maintenance for server upgrade"`
+	Start       string `json:"start" example:"2024-06-01 10:00:00"`
+	End         string `json:"end" example:"2024-06-01 12:00:00"`
+	Reason      string `json:"reason" example:"updated maintenance time"`
 }
 
 func (p *PatchMaintenanceEntry) Validate() error {
@@ -179,10 +178,6 @@ func (p *PatchMaintenanceEntry) Validate() error {
 
 	if p.Reason == "" {
 		return fmt.Errorf("reason is required")
-	}
-
-	if p.UpdatedBy == "" {
-		return fmt.Errorf("updated_by is required")
 	}
 
 	start, err := timehelper.ParseTimeInUTC(p.Start)

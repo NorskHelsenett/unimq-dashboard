@@ -71,6 +71,20 @@ func IsAGroupInClaim(ctx context.Context, groups []string) (string, error) {
 	return "", fmt.Errorf("%w. %v", ErrNoMatchingGroup, claimGroups)
 }
 
+// GetEmailFromContext retrieves the email from the claims in the context.
+func GetEmailFromContext(ctx context.Context) (string, error) {
+	claims, err := GetClaimsFromContext(ctx)
+	if err != nil {
+		return "", err
+	}
+
+	email, ok := claims["email"].(string)
+	if !ok {
+		return "", fmt.Errorf("%w: email", ErrParameterNotFound)
+	}
+	return email, nil
+}
+
 func castSliceToStringSlice[T any](input []T) []string {
 	result := make([]string, len(input))
 	for i, v := range input {

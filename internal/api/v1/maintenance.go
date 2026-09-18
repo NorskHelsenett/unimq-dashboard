@@ -277,7 +277,17 @@ func (rc *APIService) PatchMaintenanceHandler(w http.ResponseWriter, r *http.Req
 	start, _ := timehelper.ParseTimeInUTC(request.Start)
 	end, _ := timehelper.ParseTimeInUTC(request.End)
 
-	err = rc.DB.PatchMaintenanceEntry(r.Context(), id, request.Description, start, end, request.Reason, request.UpdatedBy)
+	// TODO: Should use dex user info from the request context to determine the user making the update
+	email, err := httpsuite.GetEmailFromContext(r.Context())
+	if err != nil {
+		httpsuite.WriteJSONError(w,
+			http.StatusInternalServerError,
+			httpsuite.WithError(err),
+			httpsuite.WithErrorMessage("failed to get user email from context"),
+		)
+		return
+	}
+	err = rc.DB.PatchMaintenanceEntry(r.Context(), id, request.Description, start, end, request.Reason, email)
 	if err != nil {
 		if errors.Is(err, database.ErrMaintenanceNotFound) {
 			httpsuite.WriteJSONError(w,
@@ -302,7 +312,7 @@ func (rc *APIService) PatchMaintenanceHandler(w http.ResponseWriter, r *http.Req
 		Start:         start,
 		End:           end,
 		Reason:        request.Reason,
-		UpdatedBy:     request.UpdatedBy,
+		UpdatedBy:     email,
 		UpdatedAt:     time.Now().UTC(),
 	}
 	if logErr := rc.DB.AddMaintenanceEditLog(r.Context(), logEntry); logErr != nil {
