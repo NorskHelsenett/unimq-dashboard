@@ -28,5 +28,5 @@ func TestNewValidationErrors(t *testing.T) {
 		"Age":  {"Age required"},
 	}
 
-	assert.Equal(t, expectedErrors, validationErrors.Errors)
+	assert.Equal(t, expectedErrors, validationErrors)
 }

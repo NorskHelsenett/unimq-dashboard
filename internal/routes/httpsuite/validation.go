@@ -27,7 +27,7 @@ func (ve *ValidationErrors) Error() string {
 
 // NewValidationErrors creates a new ValidationErrors instance from a given error.
 // It extracts field-specific validation errors and maps them for structured output.
-func NewValidationErrors(err error) *ValidationErrors {
+func NewValidationErrors(err error) error {
 	var validationErrors validator.ValidationErrors
 	errors.As(err, &validationErrors)
 
