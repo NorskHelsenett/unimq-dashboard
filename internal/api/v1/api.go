@@ -12,6 +12,7 @@ import (
 	"github.com/sisneve/rabbitmq-dashboard/internal/notify"
 )
 
+// TODO: This has become a singleton, and should be refactored to be a proper service with a constructor and options.
 type APIService struct {
 	Ctx         context.Context
 	RMQClient   *rabbitmq.RMQClient
