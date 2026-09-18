@@ -112,7 +112,7 @@ func (dbc *Database) InsertAlarmEntries(ctx context.Context, alarmID string, log
 		return fmt.Errorf("failed to update alarm. %w", err)
 	}
 
-	if results.UpsertedCount == 0 {
+	if results.UpsertedCount == 0 && results.MatchedCount == 0 {
 		slog.ErrorContext(ctx, "failed to update alarm",
 			"runtime", time.Since(start),
 			id, alarmID,
