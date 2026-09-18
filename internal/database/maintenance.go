@@ -291,9 +291,8 @@ func (dbc *Database) UpdateMaintenanceEntry(ctx context.Context, entryID string,
 }
 
 func (dbc *Database) PatchMaintenanceEntry(ctx context.Context, entryID string, description string, start time.Time, end time.Time, reason string, updatedBy string) error {
-	tstart := time.Now()
+	now := time.Now().UTC()
 
-	updatedAt := tstart.Format("2006-01-02 15:04:05")
 	filter := map[string]any{id: entryID}
 	update := map[string]any{
 		set: map[string]any{
@@ -302,14 +301,14 @@ func (dbc *Database) PatchMaintenanceEntry(ctx context.Context, entryID string, 
 			"end":           end,
 			"update_reason": reason,
 			"updated_by":    updatedBy,
-			"updated_at":    updatedAt,
+			"updated_at":    now,
 		},
 	}
 
 	result, err := dbc.Collections.Maintenance.UpdateOne(ctx, filter, update)
 	if err != nil {
 		slog.ErrorContext(ctx, "failed to patch maintenance",
-			"runtime", time.Since(tstart),
+			"runtime", time.Since(now),
 			id, entryID,
 			"error", err,
 		)
@@ -321,7 +320,7 @@ func (dbc *Database) PatchMaintenanceEntry(ctx context.Context, entryID string, 
 	}
 
 	slog.DebugContext(ctx, "patched maintenance",
-		"runtime", time.Since(tstart),
+		"runtime", time.Since(now),
 		id, entryID,
 	)
 

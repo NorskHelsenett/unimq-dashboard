@@ -101,7 +101,7 @@ type MaintenanceEntry struct {
 	Status       MaintenanceStatus `json:"status" bson:"status" example:"-"`
 	Notified     bool              `json:"notified" bson:"notified"`
 	UpdatedBy    string            `json:"updated_by,omitempty" bson:"updated_by,omitempty"`
-	UpdatedAt    string            `json:"updated_at,omitempty" bson:"updated_at,omitempty"`
+	UpdatedAt    time.Time         `json:"updated_at,omitempty" bson:"updated_at,omitempty"`
 	UpdateReason string            `json:"update_reason,omitempty" bson:"update_reason,omitempty"`
 }
 
@@ -138,10 +138,15 @@ func (e *MaintenanceEntry) UnmarshalJSON(data []byte) error {
 	if !ok {
 		return fmt.Errorf("invalid maintenance status: %s, expected any of %v", aux.Status, GetMaintenanceStatusAllString())
 	}
+	time, err := timehelper.ParseTimeInUTC(aux.UpdatedAt)
+	if err != nil {
+		return fmt.Errorf("invalid updated_at time format: %w", err)
+	}
+
 	e.Notified = false
 	e.ID = aux.ID
 	e.UpdatedBy = aux.UpdatedBy
-	e.UpdatedAt = aux.UpdatedAt
+	e.UpdatedAt = time
 	e.UpdateReason = aux.UpdateReason
 	e.Status = ParseMaintenanceStatus(aux.Status)
 	e.Notified = aux.Notified
