@@ -39,7 +39,7 @@ func (p *PostRecipient) ToRecipient() (*Recipient, error) {
 // @ID		unique identifier for the recipient
 // @Name	human-readable name for the recipient
 // @URL	webhook URL for the recipient - Slack, Teams
-// @Type	type of the recipient - "slack", "teams", "webhook"
+// @Type	type of the recipient - "webhook", "webhook"
 // @Email	email address for the recipient - used for email notifications
 type Recipient struct {
 	ID    string        `json:"id" validation:"required" bson:"id"`
