@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/sisneve/rabbitmq-dashboard/internal/helpers/timehelper"
 )
 
 type MaintenanceStatus string
@@ -68,12 +69,12 @@ type PostMaintenanceEntry struct {
 
 func (p *PostMaintenanceEntry) ToMaintenanceEntry() (*MaintenanceEntry, error) {
 
-	start, err := time.ParseInLocation(timeStampLayout, p.Start, time.Local)
+	start, err := timehelper.ParseTimeInUTC(p.Start)
 	if err != nil {
 		return nil, fmt.Errorf("invalid start time format: %w", err)
 	}
 
-	end, err := time.ParseInLocation(timeStampLayout, p.End, time.Local)
+	end, err := timehelper.ParseTimeInUTC(p.End)
 	if err != nil {
 		return nil, fmt.Errorf("invalid end time format: %w", err)
 	}
@@ -104,8 +105,6 @@ type MaintenanceEntry struct {
 	UpdateReason string            `json:"update_reason,omitempty" bson:"update_reason,omitempty"`
 }
 
-const timeStampLayout = "2006-01-02 15:04:05"
-
 func (e *MaintenanceEntry) UnmarshalJSON(data []byte) error {
 	var aux struct {
 		ID           string `json:"id"`
@@ -124,12 +123,12 @@ func (e *MaintenanceEntry) UnmarshalJSON(data []byte) error {
 	}
 
 	var err error
-	e.Start, err = time.Parse(timeStampLayout, aux.Start)
+	e.Start, err = timehelper.ParseTimeInUTC(aux.Start)
 	if err != nil {
 		return fmt.Errorf("invalid start time format: %w", err)
 	}
 
-	e.End, err = time.Parse(timeStampLayout, aux.End)
+	e.End, err = timehelper.ParseTimeInUTC(aux.End)
 	if err != nil {
 		return fmt.Errorf("invalid end time format: %w", err)
 	}
@@ -181,12 +180,12 @@ func (p *PatchMaintenanceEntry) Validate() error {
 		return fmt.Errorf("updated_by is required")
 	}
 
-	start, err := time.Parse(timeStampLayout, p.Start)
+	start, err := timehelper.ParseTimeInUTC(p.Start)
 	if err != nil {
 		return fmt.Errorf("invalid start time format: %w", err)
 	}
 
-	end, err := time.Parse(timeStampLayout, p.End)
+	end, err := timehelper.ParseTimeInUTC(p.End)
 	if err != nil {
 		return fmt.Errorf("invalid end time format: %w", err)
 	}

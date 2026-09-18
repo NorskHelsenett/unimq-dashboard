@@ -10,6 +10,7 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/google/uuid"
 	"github.com/sisneve/rabbitmq-dashboard/internal/database"
+	"github.com/sisneve/rabbitmq-dashboard/internal/helpers/timehelper"
 	"github.com/sisneve/rabbitmq-dashboard/internal/models"
 	"github.com/sisneve/rabbitmq-dashboard/internal/routes/httpsuite"
 )
@@ -273,8 +274,8 @@ func (rc *APIService) PatchMaintenanceHandler(w http.ResponseWriter, r *http.Req
 		return
 	}
 
-	start, _ := time.Parse("2006-01-02 15:04:05", request.Start)
-	end, _ := time.Parse("2006-01-02 15:04:05", request.End)
+	start, _ := timehelper.ParseTimeInUTC(request.Start)
+	end, _ := timehelper.ParseTimeInUTC(request.End)
 
 	err = rc.DB.PatchMaintenanceEntry(r.Context(), id, request.Description, start, end, request.Reason, request.UpdatedBy)
 	if err != nil {
