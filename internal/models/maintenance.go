@@ -78,6 +78,10 @@ func (p *PostMaintenanceEntry) ToMaintenanceEntry() (*MaintenanceEntry, error) {
 		return nil, fmt.Errorf("invalid end time format: %w", err)
 	}
 
+	if end.Before(start) {
+		return nil, fmt.Errorf("end time must be after start time")
+	}
+
 	return &MaintenanceEntry{
 		ID:          uuid.New().String(),
 		Description: p.Description,
@@ -140,6 +144,8 @@ func (e *MaintenanceEntry) UnmarshalJSON(data []byte) error {
 	e.UpdatedBy = aux.UpdatedBy
 	e.UpdatedAt = aux.UpdatedAt
 	e.UpdateReason = aux.UpdateReason
+	e.Status = ParseMaintenanceStatus(aux.Status)
+	e.Notified = aux.Notified
 
 	return nil
 }
