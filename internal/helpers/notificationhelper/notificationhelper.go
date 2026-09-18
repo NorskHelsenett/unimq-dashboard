@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"log/slog"
 	"net/http"
 	"time"
 
@@ -20,20 +21,28 @@ func SendWebhooks(urls []string, subject, body string) error {
 		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 		defer cancel()
 		req, err := http.NewRequestWithContext(ctx, http.MethodPost, u, bytes.NewBuffer(payload))
+		if err != nil {
+			slog.ErrorContext(ctx, "failed to create request for webhook", "url", u, "error", err)
+			lastErr = fmt.Errorf("failed to create request for webhook %s: %w", u, err)
+			continue
+		}
 		req.Header.Set("Content-Type", "application/json")
 		resp, err := http.DefaultClient.Do(req)
 		if err != nil {
+			slog.ErrorContext(ctx, "failed to send request to webhook", "url", u, "error", err)
 			lastErr = err
 			continue
 		}
 		defer func() {
 			err := resp.Body.Close()
 			if err != nil {
+				slog.ErrorContext(ctx, "failed to close response body for webhook", "url", u, "error", err)
 				lastErr = err
 			}
 		}()
 
 		if resp.StatusCode >= 400 {
+			slog.ErrorContext(ctx, "webhook returned error status code", "url", u, "status_code", resp.StatusCode)
 			lastErr = fmt.Errorf("webhook returned %d", resp.StatusCode)
 		}
 	}
