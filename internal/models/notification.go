@@ -42,11 +42,11 @@ func (p *PostRecipient) ToRecipient() (*Recipient, error) {
 // @Type	type of the recipient - "slack", "teams", "webhook"
 // @Email	email address for the recipient - used for email notifications
 type Recipient struct {
-	ID    string        `json:"id"`
-	Name  string        `json:"name"`
-	URL   string        `json:"url,omitempty"`
-	Email string        `json:"email,omitempty"`
-	Type  RecipientType `json:"type"`
+	ID    string        `json:"id" validation:"required" bson:"id"`
+	Name  string        `json:"name" validation:"required" bson:"name"`
+	URL   string        `json:"url,omitempty" validation:"omitempty,url" bson:"url,omitempty"`
+	Email string        `json:"email,omitempty" validation:"omitempty,email" bson:"email,omitempty"`
+	Type  RecipientType `json:"type" validation:"required,oneof=webhook email" bson:"type"`
 }
 
 type RecipientType string
