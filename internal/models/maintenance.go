@@ -172,18 +172,29 @@ func (p *PatchMaintenanceEntry) Validate() error {
 	if p.Description == "" {
 		return fmt.Errorf("description is required")
 	}
+
 	if p.Reason == "" {
 		return fmt.Errorf("reason is required")
 	}
+
 	if p.UpdatedBy == "" {
 		return fmt.Errorf("updated_by is required")
 	}
-	if _, err := time.Parse(timeStampLayout, p.Start); err != nil {
+
+	start, err := time.Parse(timeStampLayout, p.Start)
+	if err != nil {
 		return fmt.Errorf("invalid start time format: %w", err)
 	}
-	if _, err := time.Parse(timeStampLayout, p.End); err != nil {
+
+	end, err := time.Parse(timeStampLayout, p.End)
+	if err != nil {
 		return fmt.Errorf("invalid end time format: %w", err)
 	}
+
+	if end.Before(start) {
+		return fmt.Errorf("end time must be after start time")
+	}
+
 	return nil
 }
 
