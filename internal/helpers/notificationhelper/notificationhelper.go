@@ -34,7 +34,7 @@ func SendWebhooks(urls []string, subject, body string) error {
 		}()
 
 		if resp.StatusCode >= 400 {
-			lastErr = fmt.Errorf("webhook returned %d", req.Response.StatusCode)
+			lastErr = fmt.Errorf("webhook returned %d", resp.StatusCode)
 		}
 	}
 	return lastErr
