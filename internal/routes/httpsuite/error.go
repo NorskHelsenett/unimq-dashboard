@@ -64,7 +64,7 @@ func NewAPIError(statusCode int, opts ...JSONErrorOption) *apiError {
 	return apiErr
 }
 
-func newErrorResponse(err error, statusCode int, message string) *ErrorResponse {
+func newErrorResponse(statusCode int, message string) *ErrorResponse {
 	return &ErrorResponse{
 		StatusCode: statusCode,
 		Message:    message,
@@ -87,7 +87,7 @@ func WriteJSONError(w http.ResponseWriter, status int, opts ...JSONErrorOption) 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(apiErr.statusCode)
 
-	errResponse := newErrorResponse(apiErr.error, apiErr.statusCode, apiErr.externalErrorMessage)
+	errResponse := newErrorResponse(apiErr.statusCode, apiErr.externalErrorMessage)
 
 	err := json.NewEncoder(w).Encode(errResponse)
 	if err != nil {
@@ -113,7 +113,7 @@ func WriteJSONErrorForbidden(w http.ResponseWriter, opts ...JSONErrorOption) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(apiErr.statusCode)
 
-	errResponse := newErrorResponse(apiErr.error, apiErr.statusCode, apiErr.externalErrorMessage)
+	errResponse := newErrorResponse(apiErr.statusCode, apiErr.externalErrorMessage)
 
 	err := json.NewEncoder(w).Encode(errResponse)
 	if err != nil {
