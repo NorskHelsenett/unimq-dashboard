@@ -39,72 +39,90 @@ func TestEvaluateMetrics_MetricBasedTypes(t *testing.T) {
 		ruleType       models.AlarmType
 		threshold      float64
 		metrics        *models.VhostMetrics
-		expectedValue  float64
+		expectedValue  *float64
 		expectedFiring bool
+		expectedError  error
 	}{
 		{
 			name:           "channels below threshold",
 			ruleType:       models.AlarmTypeChannels,
 			threshold:      10,
 			metrics:        &models.VhostMetrics{Channels: 5},
-			expectedValue:  5,
+			expectedValue:  new(5.0),
 			expectedFiring: false,
+			expectedError:  nil,
 		},
 		{
 			name:           "channels at threshold triggers",
 			ruleType:       models.AlarmTypeChannels,
 			threshold:      10,
 			metrics:        &models.VhostMetrics{Channels: 10},
-			expectedValue:  10,
+			expectedValue:  new(10.0),
 			expectedFiring: true,
+			expectedError:  nil,
 		},
 		{
 			name:           "channels above threshold triggers",
 			ruleType:       models.AlarmTypeChannels,
 			threshold:      10,
 			metrics:        &models.VhostMetrics{Channels: 15},
-			expectedValue:  15,
+			expectedValue:  new(15.0),
 			expectedFiring: true,
+			expectedError:  nil,
 		},
 		{
 			name:           "connections below threshold",
 			ruleType:       models.AlarmTypeConnections,
 			threshold:      10,
 			metrics:        &models.VhostMetrics{Connections: 3},
-			expectedValue:  3,
+			expectedValue:  new(3.0),
 			expectedFiring: false,
+			expectedError:  nil,
 		},
 		{
 			name:           "connections above threshold triggers",
 			ruleType:       models.AlarmTypeConnections,
 			threshold:      10,
 			metrics:        &models.VhostMetrics{Connections: 42},
-			expectedValue:  42,
+			expectedValue:  new(42.0),
 			expectedFiring: true,
+			expectedError:  nil,
 		},
 		{
 			name:           "queues below threshold",
 			ruleType:       models.AlarmTypeQueues,
 			threshold:      10,
 			metrics:        &models.VhostMetrics{Queues: 2},
-			expectedValue:  2,
+			expectedValue:  new(2.0),
 			expectedFiring: false,
+			expectedError:  nil,
 		},
 		{
 			name:           "queues above threshold triggers",
 			ruleType:       models.AlarmTypeQueues,
 			threshold:      10,
 			metrics:        &models.VhostMetrics{Queues: 11},
-			expectedValue:  11,
+			expectedValue:  new(11.0),
 			expectedFiring: true,
+			expectedError:  nil,
 		},
 		{
 			name:           "nil metrics does not panic and evaluates to zero value",
 			ruleType:       models.AlarmTypeChannels,
 			threshold:      1,
 			metrics:        nil,
-			expectedValue:  0,
+			expectedValue:  nil,
 			expectedFiring: false,
+			expectedError:  notify.ErrNotificationRuleQueueNotFound,
+		},
+		{
+			name:           "unknown rule type returns error",
+			ruleType:       models.AlarmType("bogus"),
+			threshold:      1,
+			metrics:        &models.VhostMetrics{Channels: 5},
+			expectedValue:  new(0.0),
+			expectedFiring: false,
+			expectedError:  notify.ErrNotificationRuleUnknownType,
 		},
 	}
 
@@ -114,7 +132,7 @@ func TestEvaluateMetrics_MetricBasedTypes(t *testing.T) {
 
 			result, err := notify.EvaluateMetrics(rule, tc.metrics, nil)
 
-			require.NoError(t, err)
+			assert.ErrorAs(t, err, &tc.expectedError)
 			require.NotNil(t, result)
 			require.NotNil(t, result.Value)
 			assert.Equal(t, tc.expectedValue, *result.Value)
@@ -253,17 +271,6 @@ func TestEvaluateMetrics_NoConsumer(t *testing.T) {
 			assert.Equal(t, tc.expectedFiring, result.Triggered)
 		})
 	}
-}
-
-func TestEvaluateMetrics_UnknownType(t *testing.T) {
-	rule := newRule(models.AlarmType("bogus"), "", 0, true)
-
-	result, err := notify.EvaluateMetrics(rule, &models.VhostMetrics{}, nil)
-
-	require.NoError(t, err)
-	require.NotNil(t, result.Value)
-	assert.Equal(t, float64(0), *result.Value)
-	assert.False(t, result.Triggered)
 }
 
 func TestEvaluateRule_DisabledRule(t *testing.T) {
