@@ -1,8 +1,6 @@
 package httpsuite
 
 import (
-	"errors"
-
 	"github.com/go-playground/validator/v10"
 )
 
@@ -25,30 +23,13 @@ func (ve *ValidationErrors) Error() string {
 	return errMsg
 }
 
-// NewValidationErrors creates a new ValidationErrors instance from a given error.
-// It extracts field-specific validation errors and maps them for structured output.
-func NewValidationErrors(err error) error {
-	var validationErrors validator.ValidationErrors
-	errors.As(err, &validationErrors)
-
-	fieldErrors := make(map[string][]string)
-	for _, vErr := range validationErrors {
-		fieldName := vErr.Field()
-		fieldError := fieldName + " " + vErr.Tag()
-
-		fieldErrors[fieldName] = append(fieldErrors[fieldName], fieldError)
-	}
-
-	return &ValidationErrors{Errors: fieldErrors}
-}
-
 // IsRequestValid validates the provided request struct using the go-playground/validator package.
 // It returns a ValidationErrors instance if validation fails, or nil if the request is valid.
 func IsRequestValid(request any) error {
 	validate := validator.New(validator.WithRequiredStructEnabled())
 	err := validate.Struct(request)
 	if err != nil {
-		return NewValidationErrors(err)
+		return err
 	}
 	return nil
 }

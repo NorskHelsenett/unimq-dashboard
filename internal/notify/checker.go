@@ -173,75 +173,17 @@ func (c *Checker) runChecks() {
 }
 
 var (
-	ErrNotificationRuleDisabled      = fmt.Errorf("notification rule is disabled")
-	ErrNotificationRuleInMaintenance = fmt.Errorf("notification rule is in maintenance mode")
-	ErrNotificationRuleNoChange      = fmt.Errorf("notification rule status has not changed")
+	ErrNotificationRuleDisabled         = fmt.Errorf("notification rule is disabled")
+	ErrNotificationRuleInMaintenance    = fmt.Errorf("notification rule is in maintenance mode")
+	ErrNotificationRuleNoChange         = fmt.Errorf("notification rule status has not changed")
+	ErrNotificationRuleUnknownType      = fmt.Errorf("notification rule has unknown type")
+	ErrNotificationRuleQueueNotFound    = fmt.Errorf("queue not found")
+	ErrNotificationRuleNoMetrics        = fmt.Errorf("no metrics available for evaluation")
+	ErrNotificationRuleNoqueueMetrics   = fmt.Errorf("no queue metrics available for evaluation")
+	ErrNotificationRuleEvaluationFailed = fmt.Errorf("notification rule evaluation failed")
 )
 
-type evaluationResult struct {
-	Triggered bool
-	Value     *float64
-	NewStatus models.AlarmStatus
-}
-
-// EvaluateMetrics evaluates a single alarm rule against the current metrics and returns whether it is triggered, the current value, and the new status.
-func EvaluateMetrics(rule *models.AlarmRule, metrics *models.VhostMetrics, queues []models.QueueDetail) (*evaluationResult, error) {
-
-	if !rule.Enabled {
-		return nil, ErrNotificationRuleDisabled
-	}
-	if rule.Type == models.AlarmTypeMaintenance {
-		return nil, ErrNotificationRuleInMaintenance
-	}
-	triggered, value, err := evaluate(rule, metrics, queues)
-	if err != nil {
-		return nil, fmt.Errorf("failed to evaluate rule %s: %w", rule.Name, err)
-	}
-
-	newStatus := models.AlarmStatusOK
-	if triggered {
-		newStatus = models.AlarmStatusFiring
-	}
-
-	output := &evaluationResult{
-		Triggered: triggered,
-		Value:     value,
-		NewStatus: newStatus,
-	}
-
-	return output, nil
-}
-
-// EvaluateRule checks if the status of the rule has changed and returns an AlarmEntry if it has.
-func EvaluateRule(rule *models.AlarmRule, newStatus models.AlarmStatus, newValue float64) (*models.AlarmEntry, error) {
-
-	if !rule.Enabled {
-		return nil, ErrNotificationRuleDisabled
-	}
-
-	if rule.Status != models.AlarmStatusFiring && newStatus == models.AlarmStatusFiring {
-		entry := models.NewLogEntry(models.LogEventFired, &newValue, rule.Threshold, rule.Type)
-		alarm := models.AlarmEntry{
-			AlarmID: rule.ID,
-			Entries: []models.LogEntry{entry},
-		}
-
-		return &alarm, nil
-
-	} else if rule.Status == models.AlarmStatusFiring && newStatus == models.AlarmStatusOK {
-		entry := models.NewLogEntry(models.LogEventResolved, &newValue, rule.Threshold, rule.Type)
-		alarm := models.AlarmEntry{
-			AlarmID: rule.ID,
-			Entries: []models.LogEntry{entry},
-		}
-		return &alarm, nil
-	}
-
-	return nil, ErrNotificationRuleNoChange
-}
-
 // checkRule evaluates a single alarm rule against the current metrics and sends notifications if needed.
-// TODO: Check that the rules are evaluated
 func (c *Checker) checkRule(rule *models.AlarmRule,
 	vhost *models.VhostNotification,
 	metrics *models.VhostMetrics,
@@ -256,6 +198,22 @@ func (c *Checker) checkRule(rule *models.AlarmRule,
 			return
 		case errors.Is(err, ErrNotificationRuleInMaintenance):
 			slog.DebugContext(c.Ctx, "Skipping maintenance rule evaluation", "vhost", vhost.Name, "rule", rule.Name)
+			return
+		case errors.Is(err, ErrNotificationRuleNoMetrics):
+			slog.ErrorContext(c.Ctx, "Skipping rule evaluation due to missing metrics", "vhost", vhost.Name, "rule", rule.Name)
+			errEntry := models.NewLogEntry(models.LogEventError, nil, rule.Threshold, rule.Type)
+			err = c.DB.InsertAlarmEntries(c.Ctx, rule.ID, []models.LogEntry{errEntry})
+			if err != nil {
+				slog.ErrorContext(c.Ctx, "notify: failed to insert alarm entry", "error", err)
+			}
+			return
+		case errors.Is(err, ErrNotificationRuleNoqueueMetrics):
+			errEntry := models.NewLogEntry(models.LogEventError, nil, rule.Threshold, rule.Type)
+			err = c.DB.InsertAlarmEntries(c.Ctx, rule.ID, []models.LogEntry{errEntry})
+			if err != nil {
+				slog.ErrorContext(c.Ctx, "notify: failed to insert alarm entry", "error", err)
+			}
+			slog.ErrorContext(c.Ctx, "Skipping rule evaluation due to missing queue metrics", "vhost", vhost.Name, "rule", rule.Name)
 			return
 		default:
 			slog.ErrorContext(c.Ctx, "Failed to evaluate rule", "vhost", vhost.Name, "rule", rule.Name, "error", err)
@@ -346,61 +304,6 @@ func NotifyAlarm(ctx context.Context, vhost *models.VhostNotification, rule *mod
 	}
 
 	return nil
-}
-
-// nolint:gocyclo // While it is marked as complex, it only evaluates a single rule against the current metrics and returns whether it is triggered and the current value.
-func evaluate(rule *models.AlarmRule, metrics *models.VhostMetrics, queues []models.QueueDetail) (bool, *float64, error) {
-	var v *float64
-	switch rule.Type {
-	case models.AlarmTypeChannels:
-		if metrics != nil {
-			v = new(float64(metrics.Channels))
-		}
-	case models.AlarmTypeConnections:
-		if metrics != nil {
-			v = new(float64(metrics.Connections))
-		}
-	case models.AlarmTypeQueues:
-		if metrics != nil {
-			v = new(float64(metrics.Queues))
-		}
-	case models.AlarmTypeUnacked:
-		for _, q := range queues {
-			if q.Name == rule.QueueName {
-				v = new(float64(q.Unacked))
-				break
-			}
-		}
-	case models.AlarmTypeQueueMessages:
-		for _, q := range queues {
-			if q.Name == rule.QueueName {
-				v = new(float64(q.Messages))
-				break
-			}
-		}
-	case models.AlarmTypeQueueSize:
-		for _, q := range queues {
-			if q.Name == rule.QueueName {
-				v = new(float64(q.MessageBytes))
-				break
-			}
-		}
-	case models.AlarmTypeNoConsumer:
-		for _, q := range queues {
-			if q.Name == rule.QueueName {
-				v = new(float64(q.Messages))
-				return q.Messages > 0 && q.Consumers == 0, v, nil
-			}
-		}
-	default:
-		slog.Error("Unknown rule type", "type", rule.Type)
-		return false, nil, fmt.Errorf("unknown rule type: %s", rule.Type)
-	}
-	if v == nil {
-		return false, nil, fmt.Errorf("queue %s not found for rule type %s", rule.QueueName, rule.Type)
-	}
-
-	return *v >= rule.Threshold, v, nil
 }
 
 // checkMaintenanceRule checks for any scheduled maintenance and sends notifications if there are any new ones.

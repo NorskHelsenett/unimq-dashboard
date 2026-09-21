@@ -16,6 +16,7 @@ type LogEvent string
 const (
 	LogEventFired    LogEvent = "fired"
 	LogEventResolved LogEvent = "resolved"
+	LogEventError    LogEvent = "error"
 )
 
 type LogEntry struct {

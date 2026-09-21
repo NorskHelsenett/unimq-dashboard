@@ -185,14 +185,14 @@ const (
 type AlarmType string
 
 const (
-	AlarmTypeChannels      AlarmType = "channels"       //	@name	Channels
-	AlarmTypeConnections   AlarmType = "connections"    //	@name	Connections
-	AlarmTypeQueues        AlarmType = "queues"         //	@name	Queues
-	AlarmTypeUnacked       AlarmType = "unacked"        //	@name	Unacked_Messages
-	AlarmTypeQueueMessages AlarmType = "queue_messages" //	@name	Queue_Messages
-	AlarmTypeQueueSize     AlarmType = "queue_size"     //	@name	Queue_Size
-	AlarmTypeNoConsumer    AlarmType = "no_consumer"    //	@name	No_Consumer
-	AlarmTypeMaintenance   AlarmType = "maintenance"    //	@name	Maintenance
+	AlarmTypeChannels      AlarmType = "channels"       //	@name	channels
+	AlarmTypeConnections   AlarmType = "connections"    //	@name	connections
+	AlarmTypeQueues        AlarmType = "queues"         //	@name	queues
+	AlarmTypeUnacked       AlarmType = "unacked"        //	@name	unacked_messages
+	AlarmTypeQueueMessages AlarmType = "queue_messages" //	@name	queue_messages
+	AlarmTypeQueueSize     AlarmType = "queue_size"     //	@name	queue_size
+	AlarmTypeNoConsumer    AlarmType = "no_consumer"    //	@name	no_consumer
+	AlarmTypeMaintenance   AlarmType = "maintenance"    //	@name	maintenance
 )
 
 func GetAlarmTypes() []AlarmType {
@@ -205,6 +205,23 @@ func GetAlarmTypes() []AlarmType {
 		AlarmTypeQueueSize,
 		AlarmTypeNoConsumer,
 		AlarmTypeMaintenance,
+	}
+}
+
+func GetQueueAlarmTypes() []AlarmType {
+	return []AlarmType{
+		AlarmTypeQueueMessages,
+		AlarmTypeQueueSize,
+		AlarmTypeNoConsumer,
+		AlarmTypeUnacked,
+	}
+}
+
+func GetVhostAlarmTypes() []AlarmType {
+	return []AlarmType{
+		AlarmTypeChannels,
+		AlarmTypeConnections,
+		AlarmTypeQueues,
 	}
 }
 

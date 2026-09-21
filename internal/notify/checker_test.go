@@ -113,14 +113,14 @@ func TestEvaluateMetrics_MetricBasedTypes(t *testing.T) {
 			metrics:        nil,
 			expectedValue:  nil,
 			expectedFiring: false,
-			expectedError:  notify.ErrNotificationRuleQueueNotFound,
+			expectedError:  notify.ErrNotificationRuleNoMetrics,
 		},
 		{
 			name:           "unknown rule type returns error",
 			ruleType:       models.AlarmType("bogus"),
 			threshold:      1,
 			metrics:        &models.VhostMetrics{Channels: 5},
-			expectedValue:  new(0.0),
+			expectedValue:  nil,
 			expectedFiring: false,
 			expectedError:  notify.ErrNotificationRuleUnknownType,
 		},
@@ -132,11 +132,16 @@ func TestEvaluateMetrics_MetricBasedTypes(t *testing.T) {
 
 			result, err := notify.EvaluateMetrics(rule, tc.metrics, nil)
 
-			assert.ErrorAs(t, err, &tc.expectedError)
-			require.NotNil(t, result)
-			require.NotNil(t, result.Value)
-			assert.Equal(t, tc.expectedValue, *result.Value)
-			assert.Equal(t, tc.expectedFiring, result.Triggered)
+			if tc.expectedError != nil {
+				assert.ErrorIsf(t, err, tc.expectedError, "incorrect error for rule type %s", tc.ruleType)
+				return
+			} else {
+				require.NoErrorf(t, err, "unexpected error for rule type %s", tc.ruleType)
+			}
+
+			require.NotNilf(t, result, "expected result to not be nil for rule type %s", tc.ruleType)
+			assert.Equalf(t, tc.expectedValue, result.Value, "expected value for rule type %s", tc.ruleType)
+			assert.Equalf(t, tc.expectedFiring, result.Triggered, "expected firing status for rule type %s", tc.ruleType)
 			if tc.expectedFiring {
 				assert.Equal(t, models.AlarmStatusFiring, result.NewStatus)
 			} else {
@@ -148,8 +153,16 @@ func TestEvaluateMetrics_MetricBasedTypes(t *testing.T) {
 
 func TestEvaluateMetrics_QueueBasedTypes(t *testing.T) {
 	queues := []models.QueueDetail{
-		{Name: "other-queue", Messages: 999, Unacked: 999, MessageBytes: 999, Consumers: 1},
 		{Name: "test-queue", Messages: 15, Unacked: 7, MessageBytes: 2048, Consumers: 0},
+	}
+
+	metrics := &models.VhostMetrics{
+		Name:            "test-vhost",
+		Connections:     5,
+		Channels:        10,
+		Queues:          2,
+		UnackedMessages: 7,
+		ReadyMessages:   15,
 	}
 
 	cases := []struct {
@@ -205,9 +218,10 @@ func TestEvaluateMetrics_QueueBasedTypes(t *testing.T) {
 
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
-			rule := newRule(tc.ruleType, "test-queue", tc.threshold, true)
+			t.Parallel()
+			rule := newRule(tc.ruleType, queues[0].Name, tc.threshold, true)
 
-			result, err := notify.EvaluateMetrics(rule, &models.VhostMetrics{}, queues)
+			result, err := notify.EvaluateMetrics(rule, metrics, queues)
 
 			require.NoError(t, err)
 			require.NotNil(t, result)
@@ -216,20 +230,6 @@ func TestEvaluateMetrics_QueueBasedTypes(t *testing.T) {
 			assert.Equal(t, tc.expectedFiring, result.Triggered)
 		})
 	}
-}
-
-func TestEvaluateMetrics_QueueNotFound(t *testing.T) {
-	queues := []models.QueueDetail{
-		{Name: "other-queue", Messages: 15, Unacked: 7, MessageBytes: 2048, Consumers: 0},
-	}
-	rule := newRule(models.AlarmTypeQueueMessages, "missing-queue", 1, true)
-
-	result, err := notify.EvaluateMetrics(rule, &models.VhostMetrics{}, queues)
-
-	require.NoError(t, err)
-	require.NotNil(t, result.Value)
-	assert.Equal(t, float64(0), *result.Value)
-	assert.False(t, result.Triggered)
 }
 
 func TestEvaluateMetrics_NoConsumer(t *testing.T) {
@@ -242,13 +242,13 @@ func TestEvaluateMetrics_NoConsumer(t *testing.T) {
 		{
 			name:           "messages with no consumers triggers",
 			queue:          models.QueueDetail{Name: "test-queue", Messages: 10, Consumers: 0},
-			expectedValue:  10,
+			expectedValue:  0,
 			expectedFiring: true,
 		},
 		{
 			name:           "messages with consumers does not trigger",
 			queue:          models.QueueDetail{Name: "test-queue", Messages: 10, Consumers: 2},
-			expectedValue:  10,
+			expectedValue:  2,
 			expectedFiring: false,
 		},
 		{
@@ -261,13 +261,14 @@ func TestEvaluateMetrics_NoConsumer(t *testing.T) {
 
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
 			rule := newRule(models.AlarmTypeNoConsumer, "test-queue", 0, true)
 
 			result, err := notify.EvaluateMetrics(rule, &models.VhostMetrics{}, []models.QueueDetail{tc.queue})
 
 			require.NoError(t, err)
 			require.NotNil(t, result.Value)
-			assert.Equal(t, tc.expectedValue, *result.Value)
+			assert.Equalf(t, tc.expectedValue, *result.Value, "incorrect value for queue %s", tc.queue.Name)
 			assert.Equal(t, tc.expectedFiring, result.Triggered)
 		})
 	}

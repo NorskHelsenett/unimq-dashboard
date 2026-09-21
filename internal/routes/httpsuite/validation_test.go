@@ -1,32 +1,60 @@
-package httpsuite
+package httpsuite_test
 
 import (
 	"testing"
 
-	"github.com/go-playground/assert/v2"
-	"github.com/go-playground/validator/v10"
+	"github.com/sisneve/rabbitmq-dashboard/internal/routes/httpsuite"
+	"github.com/stretchr/testify/require"
 )
 
-type TestValidationRequest struct {
+type testCase struct {
+	name        string
+	request     testValidationRequest
+	expectError bool
+}
+
+type testValidationRequest struct {
 	Name string `validate:"required"`
 	Age  int    `validate:"required,min=18"`
 }
 
-func TestNewValidationErrors(t *testing.T) {
-	validate := validator.New()
-	request := TestValidationRequest{} // Missing required fields to trigger validation errors
-
-	err := validate.Struct(request)
-	if err == nil {
-		t.Fatal("Expected validation errors, but got none")
+func TestValidateRequest(t *testing.T) {
+	tests := []testCase{
+		{
+			name: "valid request",
+			request: testValidationRequest{
+				Name: "John Doe",
+				Age:  25,
+			},
+			expectError: false,
+		},
+		{
+			name: "missing name",
+			request: testValidationRequest{
+				Name: "",
+				Age:  25,
+			},
+			expectError: true,
+		},
+		{
+			name: "age below minimum",
+			request: testValidationRequest{
+				Name: "John Doe",
+				Age:  17,
+			},
+			expectError: true,
+		},
 	}
 
-	validationErrors := NewValidationErrors(err)
-
-	expectedErrors := map[string][]string{
-		"Name": {"Name required"},
-		"Age":  {"Age required"},
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+			err := httpsuite.IsRequestValid(tt.request)
+			if tt.expectError {
+				require.Error(t, err)
+			} else {
+				require.NoError(t, err)
+			}
+		})
 	}
-
-	assert.Equal(t, expectedErrors, validationErrors)
 }
