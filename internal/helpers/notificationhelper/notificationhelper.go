@@ -94,7 +94,7 @@ func (es *EmailSender) SendEmails(ctx context.Context, to []string, subject, bod
 		destinations: make([]emailDestinationError, 0),
 	}
 	for _, email := range to {
-		err := EmailSenderInstance.SendEmail(email, subject, body, "text/plain")
+		err := es.SendEmail(email, subject, body, typ)
 		if err != nil {
 			if errors.Is(err, ErrEmailNotConfigured) {
 				return ErrEmailNotConfigured
