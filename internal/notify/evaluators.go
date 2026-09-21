@@ -95,7 +95,7 @@ func evaluateQueueMetrics(rule *models.AlarmRule, queues []models.QueueDetail) (
 				v = new(float64(q.MessageBytes))
 			case models.AlarmTypeNoConsumer:
 				v = new(float64(q.Messages))
-				return q.Messages > 0 && q.Consumers == 0, new(float64(q.Consumers)), nil
+				return q.Messages > 0 && q.Consumers == 0, v, nil
 			default:
 				return false, nil, fmt.Errorf("unknown rule type: %s, %w", rule.Type, ErrNotificationRuleUnknownType)
 			}
