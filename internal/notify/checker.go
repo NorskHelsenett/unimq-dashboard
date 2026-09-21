@@ -183,13 +183,15 @@ var (
 	ErrNotificationRuleEvaluationFailed = fmt.Errorf("notification rule evaluation failed")
 )
 
-// checkRule evaluates a single alarm rule against the current metrics and sends notifications if needed.
+// checkRule evaluates a single alarm rule against the current vhost or queue metrics and sends notifications as needed.
+// If there's an error during evaluation, it logs the error and continues to the next rule.
 func (c *Checker) checkRule(rule *models.AlarmRule,
 	vhost *models.VhostNotification,
 	metrics *models.VhostMetrics,
 	queues []models.QueueDetail,
 ) {
 
+	metricFailure := false
 	evalResult, err := EvaluateMetrics(rule, metrics, queues)
 	if err != nil {
 		switch {
@@ -200,25 +202,23 @@ func (c *Checker) checkRule(rule *models.AlarmRule,
 			slog.DebugContext(c.Ctx, "Skipping maintenance rule evaluation", "vhost", vhost.Name, "rule", rule.Name)
 			return
 		case errors.Is(err, ErrNotificationRuleNoMetrics):
-			slog.ErrorContext(c.Ctx, "Skipping rule evaluation due to missing metrics", "vhost", vhost.Name, "rule", rule.Name)
-			errEntry := models.NewLogEntry(models.LogEventError, nil, rule.Threshold, rule.Type)
-			err = c.DB.InsertAlarmEntries(c.Ctx, rule.ID, []models.LogEntry{errEntry})
-			if err != nil {
-				slog.ErrorContext(c.Ctx, "notify: failed to insert alarm entry", "error", err)
-			}
-			return
+			metricFailure = true
 		case errors.Is(err, ErrNotificationRuleNoqueueMetrics):
-			errEntry := models.NewLogEntry(models.LogEventError, nil, rule.Threshold, rule.Type)
-			err = c.DB.InsertAlarmEntries(c.Ctx, rule.ID, []models.LogEntry{errEntry})
-			if err != nil {
-				slog.ErrorContext(c.Ctx, "notify: failed to insert alarm entry", "error", err)
-			}
-			slog.ErrorContext(c.Ctx, "Skipping rule evaluation due to missing queue metrics", "vhost", vhost.Name, "rule", rule.Name)
-			return
+			metricFailure = true
 		default:
 			slog.ErrorContext(c.Ctx, "Failed to evaluate rule", "vhost", vhost.Name, "rule", rule.Name, "error", err)
 			return
 		}
+	}
+
+	if metricFailure {
+		errEntry := models.NewLogEntry(models.LogEventError, nil, rule.Threshold, rule.Type)
+		err = c.DB.InsertAlarmEntries(c.Ctx, rule.ID, []models.LogEntry{errEntry})
+		if err != nil {
+			slog.ErrorContext(c.Ctx, "notify: failed to insert alarm entry", "error", err)
+		}
+		slog.ErrorContext(c.Ctx, "Skipping rule evaluation due to missing metrics", "vhost", vhost.Name, "rule", rule.Name)
+		return
 	}
 
 	shouldNotify := evalResult.Triggered && rule.Status != models.AlarmStatusFiring && len(vhost.WebhookURLs()) > 0
