@@ -526,8 +526,9 @@ func (rc *APIService) TestNotificationsRuleHandler(w http.ResponseWriter, r *htt
 		)
 		return
 	}
+	notificationStatus := notificationhelper.NewNotifyStatus(urls, vhostobject.EmailRecipients())
 
-	err = notificationhelper.SendWebhooks(urls, subject, body)
+	notificationStatus.WebhookStatuses = notificationhelper.SendWebhooks(urls, subject, body)
 	if err != nil {
 		slog.ErrorContext(r.Context(), "error sending test notification", "error", err)
 		httpsuite.WriteJSONError(w,
@@ -538,7 +539,7 @@ func (rc *APIService) TestNotificationsRuleHandler(w http.ResponseWriter, r *htt
 		return
 	}
 
-	err = notificationhelper.EmailSenderInstance.SendEmails(r.Context(), vhostobject.EmailRecipients(), subject, body, "text/plain")
+	notificationStatus.EmailStatuses = notificationhelper.EmailSenderInstance.SendEmails(r.Context(), vhostobject.EmailRecipients(), subject, body, "text/plain")
 	if err != nil {
 		if errors.Is(err, notificationhelper.ErrEmailNotConfigured) {
 			slog.WarnContext(r.Context(), "test email not sent, SMTP server is not configured", "emails", vhostobject.EmailRecipients())
@@ -549,10 +550,35 @@ func (rc *APIService) TestNotificationsRuleHandler(w http.ResponseWriter, r *htt
 		slog.InfoContext(r.Context(), "test email sent", "emails", vhostobject.EmailRecipients())
 	}
 
-	response := models.TestNotificationResponse{
-		Success: true,
-		Message: "Test notification sent!",
+	switch {
+	case notificationStatus.IsTotalSuccess():
+		response := models.TestNotificationResponse{
+			Success:            true,
+			Message:            "Test notification sent!",
+			FailedDestinations: []string{},
+		}
+		httpsuite.SendResponse(r.Context(), w, "Testing notification...", http.StatusOK, &response)
+	case notificationStatus.IsPartialFailure():
+		response := models.TestNotificationResponse{
+			Success:            false,
+			Message:            "Test notification sent with some failures.",
+			FailedDestinations: notificationStatus.FailedDestinations(),
+		}
+		httpsuite.SendResponse(r.Context(), w, "Testing notification...", http.StatusOK, &response)
+	case notificationStatus.IsTotalFailure():
+		response := models.TestNotificationResponse{
+			Success:            false,
+			Message:            "Test notification failed to send.",
+			FailedDestinations: notificationStatus.FailedDestinations(),
+		}
+		httpsuite.SendResponse(r.Context(), w, "Testing notification...", http.StatusOK, &response)
+	default:
+		response := models.TestNotificationResponse{
+			Success:            false,
+			Message:            "Test notification status unknown.",
+			FailedDestinations: []string{},
+		}
+		httpsuite.SendResponse(r.Context(), w, "Testing notification...", http.StatusOK, &response)
 	}
 
-	httpsuite.SendResponse(r.Context(), w, "Testing notification...", http.StatusOK, &response)
 }

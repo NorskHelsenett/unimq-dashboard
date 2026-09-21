@@ -271,8 +271,9 @@ func (r *AlarmRule) BuildMessage(vhost string) string {
 }
 
 type TestNotificationResponse struct {
-	Success bool   `json:"success"`
-	Message string `json:"message"`
+	Success            bool     `json:"success"`
+	Message            string   `json:"message"`
+	FailedDestinations []string `json:"failed_destinations,omitempty"`
 }
 
 type VhostNotification struct {

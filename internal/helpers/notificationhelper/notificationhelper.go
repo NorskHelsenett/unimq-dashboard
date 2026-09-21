@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"log/slog"
 	"net/http"
@@ -14,40 +13,136 @@ import (
 	"github.com/wneessen/go-mail"
 )
 
-func SendWebhooks(urls []string, subject, body string) error {
-	text := subject + "\n\n" + body
-	payload, _ := json.Marshal(map[string]string{"text": text})
-	var lastErr error
-	for _, u := range urls {
-		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-		defer cancel()
-		req, err := http.NewRequestWithContext(ctx, http.MethodPost, u, bytes.NewBuffer(payload))
-		if err != nil {
-			slog.ErrorContext(ctx, "failed to create request for webhook", "url", u, "error", err)
-			lastErr = fmt.Errorf("failed to create request for webhook %s: %w", u, err)
-			continue
-		}
-		req.Header.Set("Content-Type", "application/json")
-		resp, err := http.DefaultClient.Do(req)
-		if err != nil {
-			slog.ErrorContext(ctx, "failed to send request to webhook", "url", u, "error", err)
-			lastErr = err
-			continue
-		}
-		defer func() {
-			err := resp.Body.Close()
-			if err != nil {
-				slog.ErrorContext(ctx, "failed to close response body for webhook", "url", u, "error", err)
-				lastErr = err
-			}
-		}()
+type NotifyStatus struct {
+	WebhookURLs     []string        `json:"webhook_urls"`
+	WebhookStatuses []WebhookStatus `json:"webhook_statuses"`
+	EmailRecipients []string        `json:"email_recipients"`
+	EmailStatuses   []EmailStatus   `json:"email_statuses"`
+}
 
-		if resp.StatusCode >= 400 {
-			slog.ErrorContext(ctx, "webhook returned error status code", "url", u, "status_code", resp.StatusCode)
-			lastErr = fmt.Errorf("webhook returned %d", resp.StatusCode)
+func NewNotifyStatus(webhookURLs []string, emailRecipients []string) *NotifyStatus {
+	return &NotifyStatus{
+		WebhookURLs:     webhookURLs,
+		WebhookStatuses: make([]WebhookStatus, len(webhookURLs)),
+		EmailRecipients: emailRecipients,
+		EmailStatuses:   make([]EmailStatus, len(emailRecipients)),
+	}
+}
+
+func (nh *NotifyStatus) HasErrors() bool {
+	for _, ws := range nh.WebhookStatuses {
+		if !ws.OK {
+			return true
 		}
 	}
-	return lastErr
+	for _, es := range nh.EmailStatuses {
+		if !es.OK {
+			return true
+		}
+	}
+	return false
+}
+
+func (nh *NotifyStatus) IsTotalFailure() bool {
+	for _, ws := range nh.WebhookStatuses {
+		if ws.OK {
+			return false
+		}
+	}
+	for _, es := range nh.EmailStatuses {
+		if es.OK {
+			return false
+		}
+	}
+	return true
+}
+
+func (nh *NotifyStatus) IsPartialFailure() bool {
+	return nh.HasErrors() && !nh.IsTotalFailure()
+}
+
+func (nh *NotifyStatus) IsTotalSuccess() bool {
+	for _, ws := range nh.WebhookStatuses {
+		if !ws.OK {
+			return false
+		}
+	}
+	for _, es := range nh.EmailStatuses {
+		if !es.OK {
+			return false
+		}
+	}
+	return true
+}
+
+func (nh *NotifyStatus) FailedDestinations() []string {
+	failed := make([]string, 0)
+	for _, ws := range nh.WebhookStatuses {
+		if !ws.OK {
+			failed = append(failed, ws.URL)
+		}
+	}
+	for _, es := range nh.EmailStatuses {
+		if !es.OK {
+			failed = append(failed, es.Recipient)
+		}
+	}
+	return failed
+}
+
+type WebhookStatus struct {
+	URL   string `json:"url"`
+	OK    bool   `json:"ok"`
+	Error error  `json:"error"`
+}
+
+func SendWebhook(ctx context.Context, url string, subject, body string) *WebhookStatus {
+	status := &WebhookStatus{
+		URL:   url,
+		OK:    false,
+		Error: nil,
+	}
+	text := subject + "\n\n" + body
+	payload, _ := json.Marshal(map[string]string{"text": text})
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, url, bytes.NewBuffer(payload))
+	if err != nil {
+		status.Error = fmt.Errorf("failed to create request for webhook %s: %w", url, err)
+		slog.ErrorContext(ctx, "failed to create request for webhook", "url", url, "error", err)
+		return status
+	}
+	req.Header.Set("Content-Type", "application/json")
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		status.Error = fmt.Errorf("failed to send request to webhook %s: %w", url, err)
+		slog.ErrorContext(ctx, "failed to send request to webhook", "url", url, "error", err)
+		return status
+	}
+	defer func() {
+		err := resp.Body.Close()
+		if err != nil {
+			slog.ErrorContext(ctx, "failed to close response body for webhook", "url", url, "error", err)
+		}
+	}()
+
+	if resp.StatusCode >= 400 {
+		status.Error = fmt.Errorf("webhook returned %d", resp.StatusCode)
+		slog.ErrorContext(ctx, "webhook returned error status code", "url", url, "status_code", resp.StatusCode)
+		return status
+	}
+	status.OK = true
+	return status
+}
+
+func SendWebhooks(urls []string, subject, body string) []WebhookStatus {
+	var statuses []WebhookStatus
+	for _, url := range urls {
+		status := SendWebhook(context.Background(), url, subject, body)
+		statuses = append(statuses, *status)
+	}
+
+	return statuses
 }
 
 var (
@@ -55,26 +150,53 @@ var (
 	ErrEmailSendFailed    = fmt.Errorf("failed to send email")
 )
 
-type emailSenderError struct {
-	destinations []emailDestinationError
+type EmailStatus struct {
+	Recipient string `json:"recipient"`
+	OK        bool   `json:"ok"`
+	Error     error  `json:"error"`
 }
 
-type emailDestinationError struct {
-	destination string
-	err         error
-}
-
-func (e *emailSenderError) Error() string {
-	var buffer bytes.Buffer
-	buffer.WriteString("failed to send email to the following destinations:\n")
-	for _, destErr := range e.destinations {
-		_, err := fmt.Fprintf(&buffer, "- %s: %v\n", destErr.destination, destErr.err)
-		if err != nil {
-			slog.Error("failed to write to buffer", "error", err)
-		}
-
+func sendEmail(config *config.EmailConfig, to, subject, body string, typ mail.ContentType) *EmailStatus {
+	status := &EmailStatus{
+		Recipient: to,
+		OK:        false,
+		Error:     nil,
 	}
-	return buffer.String()
+
+	if config == nil {
+		status.Error = ErrEmailNotConfigured
+		return status
+	}
+
+	if config.EmailFromAddress == "" {
+		status.Error = ErrEmailNotConfigured
+		return status
+	}
+	message := mail.NewMsg()
+	if err := message.From(config.EmailFromAddress); err != nil {
+		status.Error = fmt.Errorf("failed to set From address: %w", err)
+		return status
+	}
+	if err := message.To(to); err != nil {
+		status.Error = fmt.Errorf("failed to set To address: %w", err)
+		return status
+	}
+
+	message.Subject(subject)
+	message.SetBodyString(typ, body)
+
+	client, err := mail.NewClient(config.EmailSMTPHost)
+	if err != nil {
+		status.Error = fmt.Errorf("failed to create mail client: %w", err)
+	}
+
+	if err := client.DialAndSend(message); err != nil {
+		status.Error = fmt.Errorf("failed to send mail: %w", err)
+		return status
+	}
+
+	status.OK = true
+	return status
 }
 
 type EmailSender struct {
@@ -89,64 +211,16 @@ func InitEmailSender(config *config.EmailConfig) {
 	}
 }
 
-func (es *EmailSender) SendEmail(to, subject, body string, typ mail.ContentType) error {
+func (es *EmailSender) SendEmail(to, subject, body string, typ mail.ContentType) *EmailStatus {
 	return sendEmail(es.Config, to, subject, body, typ)
 }
 
-func (es *EmailSender) SendEmails(ctx context.Context, to []string, subject, body string, typ mail.ContentType) error {
-	sendErr := emailSenderError{
-		destinations: make([]emailDestinationError, 0),
-	}
+func (es *EmailSender) SendEmails(ctx context.Context, to []string, subject, body string, typ mail.ContentType) []EmailStatus {
+	var statuses []EmailStatus
 	for _, email := range to {
-		err := es.SendEmail(email, subject, body, typ)
-		if err != nil {
-			if errors.Is(err, ErrEmailNotConfigured) {
-				return ErrEmailNotConfigured
-			}
-			sendErr.destinations = append(sendErr.destinations, emailDestinationError{
-				destination: email,
-				err:         err,
-			})
-			continue
-		}
-
+		status := es.SendEmail(email, subject, body, typ)
+		statuses = append(statuses, *status)
 	}
 
-	if len(sendErr.destinations) > 0 {
-		return &sendErr
-	}
-
-	return nil
-}
-
-func sendEmail(config *config.EmailConfig, to, subject, body string, typ mail.ContentType) error {
-
-	if config == nil {
-		return ErrEmailNotConfigured
-	}
-
-	if config.EmailFromAddress == "" {
-		return ErrEmailNotConfigured
-	}
-	message := mail.NewMsg()
-	if err := message.From(config.EmailFromAddress); err != nil {
-		return fmt.Errorf("failed to set From address: %w", err)
-	}
-	if err := message.To(to); err != nil {
-		return fmt.Errorf("failed to set To address: %w", err)
-	}
-
-	message.Subject(subject)
-	message.SetBodyString(typ, body)
-
-	client, err := mail.NewClient(config.EmailSMTPHost)
-	if err != nil {
-		return fmt.Errorf("failed to create mail client: %w", err)
-	}
-
-	if err := client.DialAndSend(message); err != nil {
-		return fmt.Errorf("failed to send mail: %w", err)
-	}
-
-	return nil
+	return statuses
 }

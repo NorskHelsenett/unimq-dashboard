@@ -266,48 +266,34 @@ func (c *Checker) checkRule(rule *models.AlarmRule,
 	}
 
 	if shouldNotify {
-		err = NotifyAlarm(c.Ctx, vhost, rule)
-		if err != nil {
-			slog.ErrorContext(c.Ctx, "notify: failed to send notification",
+		status := NotifyAlarm(c.Ctx, vhost, rule)
+		if status.HasErrors() {
+			slog.ErrorContext(c.Ctx, "Failed to send notification",
 				"vhost", vhost.Name,
 				"rule", rule.Name,
-				"error", err,
+				"webhook_statuses", status.WebhookStatuses,
+				"email_statuses", status.EmailStatuses,
 			)
 		}
 	}
 }
 
 // Notify sends a notification to the provided URLs and emails with the alarm rule and vhost name.
-func NotifyAlarm(ctx context.Context, vhost *models.VhostNotification, rule *models.AlarmRule) error {
+func NotifyAlarm(ctx context.Context, vhost *models.VhostNotification, rule *models.AlarmRule) *notificationhelper.NotifyStatus {
+
+	status := notificationhelper.NewNotifyStatus(vhost.WebhookURLs(), vhost.EmailRecipients())
+
 	subject := fmt.Sprintf("[UniMQ] Alarm: %s — %s", rule.Name, vhost.Name)
 	body := rule.BuildMessage(vhost.Name)
-	if len(vhost.WebhookURLs()) != 0 {
-		err := notificationhelper.SendWebhooks(vhost.WebhookURLs(), subject, body)
-		if err != nil {
-			return err
-		}
+	if len(status.WebhookURLs) != 0 {
+		status.WebhookStatuses = notificationhelper.SendWebhooks(status.WebhookURLs, subject, body)
 	}
 
-	if len(vhost.EmailRecipients()) != 0 {
-		for _, email := range vhost.EmailRecipients() {
-			err := notificationhelper.EmailSenderInstance.SendEmail(
-				email,
-				subject,
-				body,
-				"text/plain",
-			)
-			if err != nil {
-				if errors.Is(err, notificationhelper.ErrEmailNotConfigured) {
-					slog.WarnContext(ctx, "notify: email not sent, SMTP server is not configured", "email", email)
-					return err
-				}
-				slog.ErrorContext(ctx, "notify: failed to send email", "email", email, "error", err)
-				continue
-			}
-		}
+	if len(status.EmailRecipients) != 0 {
+		status.EmailStatuses = notificationhelper.EmailSenderInstance.SendEmails(ctx, status.EmailRecipients, subject, body, "text/plain")
 	}
 
-	return nil
+	return status
 }
 
 // checkMaintenanceRule checks for any scheduled maintenance and sends notifications if there are any new ones.
@@ -341,14 +327,18 @@ func checkMaintenanceSchedules(ctx context.Context, db *database.Database, urls 
 			slog.ErrorContext(ctx, "Failed to mark maintenance as notified", "error", err)
 		}
 
-		err = notificationhelper.EmailSenderInstance.SendEmails(ctx, emails, subject, body, "text/plain")
-		if err != nil {
-			if errors.Is(err, notificationhelper.ErrEmailNotConfigured) {
-				slog.WarnContext(ctx, "maintenance email not sent, SMTP server is not configured", "emails", emails)
+		status := notificationhelper.EmailSenderInstance.SendEmails(ctx, emails, subject, body, "text/plain")
+
+		for _, s := range status {
+			if errors.Is(s.Error, notificationhelper.ErrEmailNotConfigured) {
+				slog.WarnContext(ctx, "maintenance email not sent, smtp server is not configured", "emails", emails)
 				return
 			}
-			slog.ErrorContext(ctx, "maintenance email failed on some", "error", err)
-
+			if !s.OK {
+				slog.ErrorContext(ctx, "maintenance email failed", "recipient", s.Recipient, "error", s.Error)
+			} else {
+				slog.InfoContext(ctx, "maintenance email sent", "recipient", s.Recipient)
+			}
 		}
 
 		slog.InfoContext(ctx, "notify: maintenance email sent", "emails", emails)
