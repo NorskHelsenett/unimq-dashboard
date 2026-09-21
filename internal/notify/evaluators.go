@@ -73,10 +73,6 @@ func evaluateVhostMetrics(rule *models.AlarmRule, metrics *models.VhostMetrics) 
 		return false, nil, fmt.Errorf("unknown rule type: %s, %w", rule.Type, ErrNotificationRuleUnknownType)
 	}
 
-	if v == nil {
-		return false, nil, fmt.Errorf("metric is nil, %w", ErrNotificationRuleEvaluationFailed)
-	}
-
 	return *v >= rule.Threshold, v, nil
 }
 
@@ -109,10 +105,6 @@ func evaluateQueueMetrics(rule *models.AlarmRule, queues []models.QueueDetail) (
 
 	if !queueFound {
 		return false, nil, fmt.Errorf("%w: %s", ErrNotificationRuleQueueNotFound, rule.QueueName)
-	}
-
-	if v == nil {
-		return false, nil, fmt.Errorf("metric is nil, %w", ErrNotificationRuleEvaluationFailed)
 	}
 
 	return *v >= rule.Threshold, v, nil
