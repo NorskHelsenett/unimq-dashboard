@@ -26,17 +26,19 @@ func EvaluateMetrics(rule *models.AlarmRule, metrics *models.VhostMetrics, queue
 	triggered := false
 	var val *float64
 	var err error
-	if slices.Contains(models.GetQueueAlarmTypes(), rule.Type) {
+
+	switch {
+	case slices.Contains(models.GetQueueAlarmTypes(), rule.Type):
 		triggered, val, err = evaluateQueueMetrics(rule, queues)
 		if err != nil {
 			return nil, err
 		}
-	} else if slices.Contains(models.GetVhostAlarmTypes(), rule.Type) {
+	case slices.Contains(models.GetVhostAlarmTypes(), rule.Type):
 		triggered, val, err = evaluateVhostMetrics(rule, metrics)
 		if err != nil {
 			return nil, err
 		}
-	} else {
+	default:
 		return nil, fmt.Errorf("unknown rule type: %s, %w", rule.Type, ErrNotificationRuleUnknownType)
 	}
 
