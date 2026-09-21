@@ -122,6 +122,18 @@ func (e *MaintenanceEntry) UnmarshalJSON(data []byte) error {
 		return err
 	}
 
+	if aux.Start == "" {
+		return fmt.Errorf("start is required")
+	}
+
+	if aux.End == "" {
+		return fmt.Errorf("end is required")
+	}
+
+	if aux.UpdatedAt == "" {
+		return fmt.Errorf("updated_at is required")
+	}
+
 	var err error
 	e.Start, err = timehelper.ParseTimeInUTC(aux.Start)
 	if err != nil {
