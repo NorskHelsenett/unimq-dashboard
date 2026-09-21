@@ -268,7 +268,11 @@ func (c *Checker) checkRule(rule *models.AlarmRule,
 	if shouldNotify {
 		err = NotifyAlarm(c.Ctx, vhost, rule)
 		if err != nil {
-			slog.ErrorContext(c.Ctx, "notify: failed to send notification", "vhost", vhost.Name, "rule", rule.Name, "error", err)
+			slog.ErrorContext(c.Ctx, "notify: failed to send notification",
+				"vhost", vhost.Name,
+				"rule", rule.Name,
+				"error", err,
+			)
 		}
 	}
 }
