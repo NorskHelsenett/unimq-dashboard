@@ -60,7 +60,7 @@ func (d *DexClient) Ping(ctx context.Context) error {
 	}()
 
 	if resp.StatusCode != http.StatusOK {
-		return fmt.Errorf("Dex server returned non-200 status code: %d", resp.StatusCode)
+		return fmt.Errorf("dex server returned non-200 status code: %d", resp.StatusCode)
 	}
 
 	return nil
@@ -98,7 +98,7 @@ func (d *DexClient) Authorization() func(http.Handler) http.Handler {
 				httpsuite.WriteJSONError(w,
 					http.StatusUnauthorized,
 					httpsuite.WithExternalErrorMessage("unauthorized"),
-					httpsuite.WithInternalErrorMessage("Authorization header does not start with 'Bearer '"),
+					httpsuite.WithInternalErrorMessage("authorization header does not start with 'Bearer '"),
 				)
 				return
 			}
@@ -131,7 +131,7 @@ func (d *DexClient) Authorization() func(http.Handler) http.Handler {
 					http.StatusInternalServerError,
 					httpsuite.WithError(err),
 					httpsuite.WithExternalErrorMessage("unauthorized"),
-					httpsuite.WithInternalErrorMessage("Failed to parse claims"),
+					httpsuite.WithInternalErrorMessage("failed to parse claims"),
 				)
 				return
 			}
