@@ -68,7 +68,11 @@ func (e *emailSenderError) Error() string {
 	var buffer bytes.Buffer
 	buffer.WriteString("failed to send email to the following destinations:\n")
 	for _, destErr := range e.destinations {
-		buffer.WriteString(fmt.Sprintf("- %s: %v\n", destErr.destination, destErr.err))
+		_, err := fmt.Fprintf(&buffer, "- %s: %v\n", destErr.destination, destErr.err)
+		if err != nil {
+			slog.Error("failed to write to buffer", "error", err)
+		}
+
 	}
 	return buffer.String()
 }
