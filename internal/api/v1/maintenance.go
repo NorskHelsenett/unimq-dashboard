@@ -150,7 +150,7 @@ func (rc *APIService) AddMaintenanceHandler(w http.ResponseWriter, r *http.Reque
 		httpsuite.WriteJSONError(w,
 			http.StatusBadRequest,
 			httpsuite.WithError(err),
-			httpsuite.WithErrorMessage(fmt.Sprintf("bad time format")),
+			httpsuite.WithErrorMessage("bad time format"),
 		)
 		return
 	}
