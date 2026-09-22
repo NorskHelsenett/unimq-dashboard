@@ -9,10 +9,10 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	"github.com/google/uuid"
+	"github.com/sisneve/rabbitmq-dashboard/internal/api/httpsuite"
 	"github.com/sisneve/rabbitmq-dashboard/internal/database"
 	"github.com/sisneve/rabbitmq-dashboard/internal/helpers/timehelper"
 	"github.com/sisneve/rabbitmq-dashboard/internal/models"
-	"github.com/sisneve/rabbitmq-dashboard/internal/routes/httpsuite"
 )
 
 // @Summary		Get scheduled  maintenance information and history

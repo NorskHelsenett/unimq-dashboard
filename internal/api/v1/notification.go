@@ -6,8 +6,8 @@ import (
 	"net/url"
 
 	"github.com/go-chi/chi/v5"
+	"github.com/sisneve/rabbitmq-dashboard/internal/api/httpsuite"
 	"github.com/sisneve/rabbitmq-dashboard/internal/models"
-	"github.com/sisneve/rabbitmq-dashboard/internal/routes/httpsuite"
 	"go.mongodb.org/mongo-driver/v2/mongo"
 )
 

@@ -3,7 +3,7 @@ package httpsuite_test
 import (
 	"testing"
 
-	"github.com/sisneve/rabbitmq-dashboard/internal/routes/httpsuite"
+	"github.com/sisneve/rabbitmq-dashboard/internal/api/httpsuite"
 	"github.com/stretchr/testify/require"
 )
 

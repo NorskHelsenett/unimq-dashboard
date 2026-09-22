@@ -3,7 +3,7 @@ package api
 import (
 	"net/http"
 
-	"github.com/sisneve/rabbitmq-dashboard/internal/routes/httpsuite"
+	"github.com/sisneve/rabbitmq-dashboard/internal/api/httpsuite"
 )
 
 // @Summary		Get Cluster Stats

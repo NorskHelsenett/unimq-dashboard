@@ -6,8 +6,8 @@ import (
 	"net/url"
 
 	"github.com/go-chi/chi/v5"
+	"github.com/sisneve/rabbitmq-dashboard/internal/api/httpsuite"
 	"github.com/sisneve/rabbitmq-dashboard/internal/clients/rabbitmq"
-	"github.com/sisneve/rabbitmq-dashboard/internal/routes/httpsuite"
 )
 
 // @Summary		Get Queues for a specific vhost

@@ -6,7 +6,7 @@ import (
 	"net/url"
 
 	"github.com/go-chi/chi/v5"
-	"github.com/sisneve/rabbitmq-dashboard/internal/routes/httpsuite"
+	"github.com/sisneve/rabbitmq-dashboard/internal/api/httpsuite"
 )
 
 // @Summary		Get all vhosts
