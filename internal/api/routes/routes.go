@@ -10,8 +10,8 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	api "github.com/sisneve/rabbitmq-dashboard/internal/api/v1"
+	"github.com/sisneve/rabbitmq-dashboard/internal/api/v1/rmq"
 	"github.com/sisneve/rabbitmq-dashboard/internal/clients/dex"
-	"github.com/sisneve/rabbitmq-dashboard/internal/clients/prometheus"
 	"github.com/sisneve/rabbitmq-dashboard/internal/clients/rabbitmq"
 	"github.com/sisneve/rabbitmq-dashboard/internal/config"
 	"github.com/sisneve/rabbitmq-dashboard/internal/database"
@@ -19,12 +19,7 @@ import (
 	"github.com/sisneve/rabbitmq-dashboard/internal/notify"
 )
 
-func SetupRoutes(ctx context.Context, config *config.Config, db *database.Database, rmq *rabbitmq.RMQClient, checker *notify.Checker) (chi.Router, error) {
-
-	prom, err := prometheus.NewPromClient(config.PrometheusHost, "v1", "", "", config.PrometheusPort)
-	if err != nil {
-		return nil, fmt.Errorf("failed to create Prometheus client: %w", err)
-	}
+func SetupRoutes(ctx context.Context, config *config.Config, db *database.Database, rmqclient *rabbitmq.RMQClient, checker *notify.Checker) (chi.Router, error) {
 
 	dex, err := dex.NewDexClient(ctx, config.OIDC)
 	if err != nil {
@@ -33,9 +28,6 @@ func SetupRoutes(ctx context.Context, config *config.Config, db *database.Databa
 
 	apiservice, err := api.NewAPIService(
 		api.WithContext(ctx),
-		api.WithRabbitMQClient(rmq),
-		api.WithPromClient(prom),
-		// api.WithDexClient(dex),
 		api.WithDatabase(db),
 		api.WithChecker(checker),
 		api.WithAdminGroups(config.AdminGroups),
@@ -43,6 +35,8 @@ func SetupRoutes(ctx context.Context, config *config.Config, db *database.Databa
 	if err != nil {
 		return nil, fmt.Errorf("failed to create API service: %w", err)
 	}
+
+	rmqHandler := rmq.NewRMQHandler(rmqclient, config.AdminGroups)
 
 	r := chi.NewRouter()
 
@@ -54,10 +48,11 @@ func SetupRoutes(ctx context.Context, config *config.Config, db *database.Databa
 	r.Group(func(r chi.Router) {
 		r.Route("/api", func(r chi.Router) {
 			SetupUnprotectedRoutes(r, apiservice, dex)
+			SetupAuthenticationRoutes(r, dex)
 
 			r.Group(func(r chi.Router) {
 				r.Use(dex.Authorization())
-				SetupProtectedRoutes(r, apiservice, dex)
+				SetupProtectedRoutes(r, apiservice, rmqHandler)
 			})
 		})
 	})

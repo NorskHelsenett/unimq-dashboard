@@ -31,9 +31,6 @@ type Config struct {
 	RabbitMQConnectionLimit int    `mapstructure:"RABBITMQ_CONNECTION_LIMIT"`
 	RabbitMQQueueLimit      int    `mapstructure:"RABBITMQ_QUEUE_LIMIT"`
 
-	PrometheusHost string `mapstructure:"PROMETHEUS_HOST"`
-	PrometheusPort int    `mapstructure:"PROMETHEUS_PORT"`
-
 	Email *EmailConfig `mapstructure:",squash"`
 
 	OIDC *OIDCConfig `mapstructure:",squash"`
@@ -73,8 +70,6 @@ func NewConfig() *Config {
 		RabbitMQChannelLimit:    1000,
 		RabbitMQConnectionLimit: 300,
 		RabbitMQQueueLimit:      150,
-		PrometheusHost:          "https://localhost",
-		PrometheusPort:          9090,
 
 		Email: &EmailConfig{
 			EmailSMTPHost:     "",
@@ -122,14 +117,6 @@ func (c *Config) CheckURLs() error {
 		return fmt.Errorf("failed to connect to RabbitMQ URL: %w", err)
 	}
 	slog.Info("successfully connected to RabbitMQ URL", "host", c.RabbitMQHost, "port", c.RabbitMQPort)
-
-	prom := strings.TrimPrefix(c.PrometheusHost, "http://")
-	prom = strings.TrimPrefix(prom, "https://")
-	_, err = net.DialTimeout("tcp", fmt.Sprintf("%s:%d", prom, c.PrometheusPort), 5*time.Second)
-	if err != nil {
-		return fmt.Errorf("failed to connect to Prometheus URL: %w", err)
-	}
-	slog.Info("successfully connected to Prometheus URL", "host", c.PrometheusHost, "port", c.PrometheusPort)
 
 	mdb := strings.TrimPrefix(c.MongoDBHost, "mongodb://")
 	_, err = net.DialTimeout("tcp", fmt.Sprintf("%s:%d", mdb, c.MongoDBPort), 5*time.Second)
@@ -188,8 +175,6 @@ func (c *Config) loadEnvironmentVariables() {
 	_ = viper.BindEnv("MONGODB_DATABASE")
 	_ = viper.BindEnv("RABBITMQ_HOST")
 	_ = viper.BindEnv("RABBITMQ_PORT")
-	_ = viper.BindEnv("PROMETHEUS_PORT")
-	_ = viper.BindEnv("PROMETHEUS_HOST")
 	_ = viper.BindEnv("RABBITMQ_CHANNEL_LIMIT")
 	_ = viper.BindEnv("RABBITMQ_CONNECTION_LIMIT")
 	_ = viper.BindEnv("RABBITMQ_QUEUE_LIMIT")
@@ -228,8 +213,6 @@ func (c *Config) validateConfiguration() error {
 	parameterChecks["RABBITMQ_CHANNEL_LIMIT"] = isPresent(c.RabbitMQChannelLimit)
 	parameterChecks["RABBITMQ_CONNECTION_LIMIT"] = isPresent(c.RabbitMQConnectionLimit)
 	parameterChecks["RABBITMQ_QUEUE_LIMIT"] = isPresent(c.RabbitMQQueueLimit)
-	parameterChecks["PROMETHEUS_HOST"] = isPresent(c.PrometheusHost)
-	parameterChecks["PROMETHEUS_PORT"] = isPresent(c.PrometheusPort)
 
 	parameterChecks["OIDC_CLIENT_ID"] = isPresent(c.OIDC.OIDCClientID)
 	parameterChecks["OIDC_CLIENT_SECRET"] = isPresent(c.OIDC.OIDCClientSecret)
