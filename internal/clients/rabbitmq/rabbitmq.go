@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"net/url"
-	"sort"
 	"sync"
 
 	"github.com/sisneve/rabbitmq-dashboard/internal/clients/rest"
@@ -142,6 +141,7 @@ var (
 	ErrConnectionNotFound  = fmt.Errorf("connection not found")
 	ErrChannelNotFound     = fmt.Errorf("channel not found")
 	ErrNodeNotFound        = fmt.Errorf("node not found")
+	ErrLimitsNotFound      = fmt.Errorf("limits not found")
 )
 
 func (r *RMQClient) Ping() error {
@@ -223,8 +223,8 @@ func (r *RMQClient) GetQueueByName(vhost string, name string) (*models.QueueAPIR
 	return &queues, nil
 }
 
-func (r *RMQClient) GetNodes() ([]models.NodeStats, error) {
-	var nodes []models.NodeStats
+func (r *RMQClient) GetNodes() ([]models.RMQNode, error) {
+	var nodes []models.RMQNode
 	status, err := r.restClient.Get("/nodes", &nodes)
 	if err != nil {
 		switch status {
@@ -281,6 +281,8 @@ func (r *RMQClient) GetMetrics(vhost string) (*models.VhostMetrics, error) {
 	}, nil
 }
 
+// TODO: Replace use of this with GetQueue(vhost)
+// They serve the same purpose.
 func (r *RMQClient) GetQueueDetails(vhost string) ([]models.QueueDetail, error) {
 
 	queues, err := r.GetQueue(vhost)
@@ -306,43 +308,41 @@ func (r *RMQClient) GetQueueDetails(vhost string) ([]models.QueueDetail, error) 
 	return details, nil
 }
 
-func (r *RMQClient) GetClusterStats() (*models.ClusterStats, error) {
-	nodes, err := r.GetNodes()
+func (r *RMQClient) GetVhostUsage(vhost string) (*models.VhostUsage, error) {
+
+	queues, err := r.GetQueue(vhost)
 	if err != nil {
 		return nil, err
 	}
 
-	stats := models.NewClusterStats()
-	for _, n := range nodes {
-		stats.Nodes = append(stats.Nodes, n)
-		stats.TotalMemUsed += n.MemUsed
-		stats.TotalMemLimit += n.MemLimit
-		stats.TotalDiskFree += n.DiskFree
-		if stats.MinDiskLimit == 0 || n.DiskFreeLimit < stats.MinDiskLimit {
-			stats.MinDiskLimit = n.DiskFreeLimit
-		}
+	usage := &models.VhostUsage{
+		Name:         vhost,
+		MessageBytes: 0,
+		DiskBytes:    0,
 	}
 
-	queues, err := r.GetQueues()
-	if err != nil {
-		return nil, err
-	}
-
-	vhostMap := make(map[string]*models.VhostResources)
 	for _, q := range queues {
-		if _, ok := vhostMap[q.Vhost]; !ok {
-			vhostMap[q.Vhost] = &models.VhostResources{Name: q.Vhost}
-		}
-		vhostMap[q.Vhost].MessageBytes += q.MessageBytes
-		vhostMap[q.Vhost].DiskBytes += q.MessageBytesPersistent
+		usage.MessageBytes += q.MessageBytes
+		usage.DiskBytes += q.MessageBytesPersistent
 	}
 
-	for _, v := range vhostMap {
-		stats.VhostResources = append(stats.VhostResources, *v)
-	}
-	sort.Slice(stats.VhostResources, func(i, j int) bool {
-		return stats.VhostResources[i].MessageBytes > stats.VhostResources[j].MessageBytes
-	})
+	return usage, nil
 
-	return stats, nil
+}
+func (r *RMQClient) GetLimits() ([]*models.RMQLimits, error) {
+	var limits []*models.RMQLimits
+	_, err := r.restClient.Get("/vhost-limits", &limits)
+	if err != nil {
+		return nil, fmt.Errorf("%w. %w", ErrLimitsNotFound, err)
+	}
+	return limits, nil
+}
+
+func (r *RMQClient) GetLimit(vhost string) (*models.RMQLimits, error) {
+	var limit *models.RMQLimits
+	_, err := r.restClient.Get("/vhost-limits/"+url.PathEscape(vhost), &limit)
+	if err != nil {
+		return nil, fmt.Errorf("%w. %w", ErrLimitsNotFound, err)
+	}
+	return limit, nil
 }

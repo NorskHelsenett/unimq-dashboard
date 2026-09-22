@@ -43,6 +43,12 @@ type VhostMetrics struct {
 	ReadyMessages   int    `json:"ready_messages"`
 }
 
+type VhostUsage struct {
+	Name         string `json:"name"`
+	MessageBytes int64  `json:"message_bytes"`
+	DiskBytes    int64  `json:"disk_bytes"`
+}
+
 type QueueDetail struct {
 	Name         string  `json:"name"`
 	Messages     int     `json:"messages"`
@@ -61,7 +67,7 @@ type Limits struct {
 	MaxQueues      int
 }
 
-type NodeStats struct {
+type RMQNode struct {
 	Name          string `json:"name"`
 	MemUsed       int64  `json:"mem_used"`
 	MemLimit      int64  `json:"mem_limit"`
@@ -69,30 +75,21 @@ type NodeStats struct {
 	DiskFreeLimit int64  `json:"disk_free_limit"`
 }
 
-type VhostResources struct {
-	Name         string `json:"name"`
-	MessageBytes int64  `json:"message_bytes"`
-	DiskBytes    int64  `json:"disk_bytes"`
-}
-
-type ClusterStats struct {
-	Nodes          []NodeStats      `json:"nodes"`
-	TotalMemUsed   int64            `json:"total_mem_used"`
-	TotalMemLimit  int64            `json:"total_mem_limit"`
-	TotalDiskFree  int64            `json:"total_disk_free"`
-	MinDiskLimit   int64            `json:"min_disk_limit"`
-	VhostResources []VhostResources `json:"vhost_resources"`
-}
-
-func NewClusterStats() *ClusterStats {
-	return &ClusterStats{
-		Nodes:          []NodeStats{},
-		TotalMemUsed:   0,
-		TotalMemLimit:  0,
-		TotalDiskFree:  0,
-		MinDiskLimit:   0,
-		VhostResources: []VhostResources{},
+func NewRMQNode(name string, memUsed, memLimit, diskFree, diskFreeLimit int64) *RMQNode {
+	return &RMQNode{
+		Name:          name,
+		MemUsed:       memUsed,
+		MemLimit:      memLimit,
+		DiskFree:      diskFree,
+		DiskFreeLimit: diskFreeLimit,
 	}
+}
+
+type RMQLimits struct {
+	Vhost          string `json:"vhost"`
+	MaxChannels    int    `json:"max_channels"`
+	MaxConnections int    `json:"max_connections"`
+	MaxQueues      int    `json:"max_queues"`
 }
 
 type ConnectionResponse struct {
