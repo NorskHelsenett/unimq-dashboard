@@ -277,7 +277,6 @@ func (rc *APIService) PatchMaintenanceHandler(w http.ResponseWriter, r *http.Req
 	start, _ := timehelper.ParseTimeInUTC(request.Start)
 	end, _ := timehelper.ParseTimeInUTC(request.End)
 
-	// TODO: Should use dex user info from the request context to determine the user making the update
 	email, err := httpsuite.GetEmailFromContext(r.Context())
 	if err != nil {
 		httpsuite.WriteJSONError(w,
