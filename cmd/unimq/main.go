@@ -12,6 +12,7 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/sisneve/rabbitmq-dashboard/internal/api/routes"
 	"github.com/sisneve/rabbitmq-dashboard/internal/clients/rabbitmq"
 	"github.com/sisneve/rabbitmq-dashboard/internal/config"
 	"github.com/sisneve/rabbitmq-dashboard/internal/database"
@@ -19,7 +20,6 @@ import (
 	"github.com/sisneve/rabbitmq-dashboard/internal/logger"
 	"github.com/sisneve/rabbitmq-dashboard/internal/models"
 	"github.com/sisneve/rabbitmq-dashboard/internal/notify"
-	"github.com/sisneve/rabbitmq-dashboard/internal/routes"
 )
 
 //	@title			RabbitMQ Dashboard API
