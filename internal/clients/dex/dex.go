@@ -8,8 +8,8 @@ import (
 	"strings"
 
 	"github.com/coreos/go-oidc/v3/oidc"
+	"github.com/sisneve/rabbitmq-dashboard/internal/api/httpsuite"
 	"github.com/sisneve/rabbitmq-dashboard/internal/config"
-	"github.com/sisneve/rabbitmq-dashboard/internal/routes/httpsuite"
 	"golang.org/x/oauth2"
 )
 
@@ -27,9 +27,10 @@ func NewDexClient(ctx context.Context, config *config.OIDCConfig) (*DexClient, e
 	}
 
 	oauth2Config := oauth2.Config{
-		ClientID: config.OIDCClientID,
-		Endpoint: provider.Endpoint(),
-		Scopes:   []string{oidc.ScopeOpenID, "profile", "email", "groups"},
+		ClientID:    config.OIDCClientID,
+		Endpoint:    provider.Endpoint(),
+		Scopes:      []string{oidc.ScopeOpenID, "profile", "email", "groups"},
+		RedirectURL: config.OIDCRedirectURL,
 	}
 
 	return &DexClient{
@@ -147,4 +148,50 @@ func (d *DexClient) Authorization() func(http.Handler) http.Handler {
 			next.ServeHTTP(w, r)
 		})
 	}
+}
+
+func (d *DexClient) RedirectHandler(w http.ResponseWriter, r *http.Request) {
+	// Generate the URL to redirect the user to Dex for authentication
+	authURL := d.Config.AuthCodeURL("state", oauth2.AccessTypeOffline)
+
+	http.Redirect(w, r, authURL, http.StatusFound)
+}
+
+func (d *DexClient) OauthCallbackHandler(w http.ResponseWriter, r *http.Request) {
+	// Get the code from the query parameters
+	code := r.URL.Query().Get("code")
+	if code == "" {
+		httpsuite.WriteJSONError(w,
+			http.StatusBadRequest,
+			httpsuite.WithExternalErrorMessage("bad request"),
+			httpsuite.WithInternalErrorMessage("code query parameter missing"),
+		)
+		return
+	}
+
+	// Exchange the code for a token
+	token, err := d.Config.Exchange(r.Context(), code)
+	if err != nil {
+		httpsuite.WriteJSONError(w,
+			http.StatusInternalServerError,
+			httpsuite.WithError(err),
+			httpsuite.WithExternalErrorMessage("internal server error"),
+			httpsuite.WithInternalErrorMessage("failed to exchange code for token"),
+		)
+		return
+	}
+
+	idToken, ok := token.Extra("id_token").(string)
+	if !ok {
+		httpsuite.WriteJSONError(w,
+			http.StatusInternalServerError,
+			httpsuite.WithExternalErrorMessage("internal server error"),
+			httpsuite.WithInternalErrorMessage("id_token not found in token response"),
+		)
+		return
+	}
+
+	// Redirect to the frontend with the token as a query parameter
+	redirectURL := fmt.Sprintf("/?token=%s", idToken)
+	http.Redirect(w, r, redirectURL, http.StatusFound)
 }

@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/sisneve/rabbitmq-dashboard/internal/clients/dex"
 	"github.com/sisneve/rabbitmq-dashboard/internal/clients/prometheus"
 	"github.com/sisneve/rabbitmq-dashboard/internal/clients/rabbitmq"
 	"github.com/sisneve/rabbitmq-dashboard/internal/database"
@@ -14,10 +13,10 @@ import (
 
 // TODO: This has become a singleton, and should be refactored to be a proper service with a constructor and options.
 type APIService struct {
-	Ctx         context.Context
-	RMQClient   *rabbitmq.RMQClient
-	PromClient  *prometheus.PromClient
-	DexClient   *dex.DexClient
+	Ctx        context.Context
+	RMQClient  *rabbitmq.RMQClient
+	PromClient *prometheus.PromClient
+	// DexClient   *dex.DexClient
 	DB          *database.Database
 	RMQLimits   *models.Limits
 	AdminGroups []string
@@ -47,12 +46,12 @@ func WithPromClient(prom *prometheus.PromClient) APIServiceOption {
 	}
 }
 
-func WithDexClient(dex *dex.DexClient) APIServiceOption {
-	return func(rc *APIService) error {
-		rc.DexClient = dex
-		return nil
-	}
-}
+// func WithDexClient(dex *dex.DexClient) APIServiceOption {
+// 	return func(rc *APIService) error {
+// 		rc.DexClient = dex
+// 		return nil
+// 	}
+// }
 
 func WithDatabase(db *database.Database) APIServiceOption {
 	return func(rc *APIService) error {
@@ -77,10 +76,10 @@ func WithAdminGroups(groups []string) APIServiceOption {
 
 func newAPIServiceConfig() *APIService {
 	return &APIService{
-		Ctx:         context.Background(),
-		RMQClient:   nil,
-		PromClient:  nil,
-		DexClient:   nil,
+		Ctx:        context.Background(),
+		RMQClient:  nil,
+		PromClient: nil,
+		// DexClient:   nil,
 		DB:          nil,
 		RMQLimits:   nil,
 		AdminGroups: []string{},

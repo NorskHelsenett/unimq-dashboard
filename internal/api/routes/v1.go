@@ -3,19 +3,24 @@ package routes
 import (
 	"github.com/go-chi/chi/v5"
 	api "github.com/sisneve/rabbitmq-dashboard/internal/api/v1"
+	"github.com/sisneve/rabbitmq-dashboard/internal/clients/dex"
 	httpSwagger "github.com/swaggo/http-swagger/v2"
 )
 
-func SetupUnprotectedRoutes(r chi.Router, apiservice *api.APIService) {
+func SetupUnprotectedRoutes(r chi.Router, apiservice *api.APIService, dex *dex.DexClient) {
 
 	r.Get("/swagger/*", httpSwagger.WrapHandler)
 	r.Get("/healthz", apiservice.HealthzHandler)
-	r.Get("/readyz", apiservice.ReadyzHandler)
+	r.Get("/readyz", apiservice.ReadyzHandler(dex))
 }
 
-func SetupProtectedRoutes(r chi.Router, apiservice *api.APIService) {
+func SetupProtectedRoutes(r chi.Router, apiservice *api.APIService, dex *dex.DexClient) {
 
 	r.Route("/v1", func(r chi.Router) {
+		r.Route("/login", func(r chi.Router) {
+			r.Get("/", dex.RedirectHandler)
+			r.Get("/callback", dex.OauthCallbackHandler)
+		})
 		r.Route("/vhosts", func(r chi.Router) {
 			r.Get("/", apiservice.VhostsHandler)
 			r.Get("/{vhost}", apiservice.VhostHandler)

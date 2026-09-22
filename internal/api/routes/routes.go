@@ -35,7 +35,7 @@ func SetupRoutes(ctx context.Context, config *config.Config, db *database.Databa
 		api.WithContext(ctx),
 		api.WithRabbitMQClient(rmq),
 		api.WithPromClient(prom),
-		api.WithDexClient(dex),
+		// api.WithDexClient(dex),
 		api.WithDatabase(db),
 		api.WithChecker(checker),
 		api.WithAdminGroups(config.AdminGroups),
@@ -53,11 +53,11 @@ func SetupRoutes(ctx context.Context, config *config.Config, db *database.Databa
 
 	r.Group(func(r chi.Router) {
 		r.Route("/api", func(r chi.Router) {
-			SetupUnprotectedRoutes(r, apiservice)
+			SetupUnprotectedRoutes(r, apiservice, dex)
 
 			r.Group(func(r chi.Router) {
 				r.Use(dex.Authorization())
-				SetupProtectedRoutes(r, apiservice)
+				SetupProtectedRoutes(r, apiservice, dex)
 			})
 		})
 	})
