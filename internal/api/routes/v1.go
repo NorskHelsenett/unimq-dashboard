@@ -3,6 +3,7 @@ package routes
 import (
 	"github.com/go-chi/chi/v5"
 	api "github.com/sisneve/rabbitmq-dashboard/internal/api/v1"
+	"github.com/sisneve/rabbitmq-dashboard/internal/api/v1/rmq"
 	"github.com/sisneve/rabbitmq-dashboard/internal/clients/dex"
 	httpSwagger "github.com/swaggo/http-swagger/v2"
 )
@@ -14,17 +15,13 @@ func SetupUnprotectedRoutes(r chi.Router, apiservice *api.APIService, dex *dex.D
 	r.Get("/readyz", apiservice.ReadyzHandler(dex))
 }
 
-func SetupProtectedRoutes(r chi.Router, apiservice *api.APIService, dex *dex.DexClient) {
+func SetupProtectedRoutes(r chi.Router, apiservice *api.APIService, rmqhandler *rmq.RMQHandler) {
 
 	r.Route("/v1", func(r chi.Router) {
-		r.Route("/login", func(r chi.Router) {
-			r.Get("/", dex.RedirectHandler)
-			r.Get("/callback", dex.OauthCallbackHandler)
-		})
 		r.Route("/vhosts", func(r chi.Router) {
 			r.Get("/", apiservice.VhostsHandler)
 			r.Get("/{vhost}", apiservice.VhostHandler)
-			r.Get("/{vhost}/metrics", apiservice.MetricHandler)
+			r.Get("/{vhost}/metrics", rmqhandler.MetricHandler)
 
 			r.Route("/{vhost}/queues", func(r chi.Router) {
 				r.Get("/", apiservice.GetQueuesHandler)
@@ -47,7 +44,10 @@ func SetupProtectedRoutes(r chi.Router, apiservice *api.APIService, dex *dex.Dex
 			r.Get("/{rule-id}", apiservice.GetAlarmHistoryHandler)
 		})
 
-		r.Get("/cluster", apiservice.GetClusterHandler)
+		r.Route("/rabbitmq", func(r chi.Router) {
+			r.Get("/nodes", rmqhandler.GetRMQNodesHandler)
+			r.Get("/vhostusage", rmqhandler.GetRMQVhostUsageHandler)
+		})
 		r.Get("/status", apiservice.GetCheckerStatusHandler)
 		r.Route("/notifications", func(r chi.Router) {
 			r.Get("/", apiservice.GetNotificationsHandler)

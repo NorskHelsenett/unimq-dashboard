@@ -1,4 +1,4 @@
-package api
+package rmq
 
 import (
 	"net/http"
@@ -20,7 +20,7 @@ import (
 // @Failure		502			{object}	httpsuite.ErrorResponse
 // @Router			/v1/vhosts/{vhost-name}/metrics [get]
 // @security		bearer
-func (rc *APIService) MetricHandler(w http.ResponseWriter, r *http.Request) {
+func (rc *RMQHandler) MetricHandler(w http.ResponseWriter, r *http.Request) {
 
 	_, err := httpsuite.IsAGroupInClaim(r.Context(), rc.AdminGroups)
 	if err != nil {
