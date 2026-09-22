@@ -30,6 +30,8 @@ linters:
     funlen:
       lines: 200
       statements: 100
+    dupl:
+      threshold: 200
     revive:
       rules:
         - name: comment-spacings
