@@ -16,12 +16,17 @@ type WebhookStatus struct {
 	Error error  `json:"error"`
 }
 
-func SendWebhook(ctx context.Context, url string, subject, body string) *WebhookStatus {
-	status := &WebhookStatus{
+func NewWebhookStatus(url string) *WebhookStatus {
+	return &WebhookStatus{
 		URL:   url,
 		OK:    false,
 		Error: nil,
 	}
+}
+
+func SendWebhook(ctx context.Context, url string, subject, body string) *WebhookStatus {
+	status := NewWebhookStatus(url)
+
 	text := subject + "\n\n" + body
 	payload, _ := json.Marshal(map[string]string{"text": text})
 	tctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)

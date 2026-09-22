@@ -19,12 +19,16 @@ type EmailStatus struct {
 	Error     error  `json:"error"`
 }
 
-func sendEmail(config *config.EmailConfig, to, subject, body string, typ mail.ContentType) *EmailStatus {
-	status := &EmailStatus{
-		Recipient: to,
+func NewEmailStatus(recipient string) *EmailStatus {
+	return &EmailStatus{
+		Recipient: recipient,
 		OK:        false,
 		Error:     nil,
 	}
+}
+
+func sendEmail(config *config.EmailConfig, to, subject, body string, typ mail.ContentType) *EmailStatus {
+	status := NewEmailStatus(to)
 
 	if config == nil {
 		status.Error = ErrEmailNotConfigured
