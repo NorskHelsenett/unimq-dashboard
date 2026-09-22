@@ -56,7 +56,7 @@ func SendWebhook(ctx context.Context, url string, subject, body string) *Webhook
 }
 
 func SendWebhooks(urls []string, subject, body string) []WebhookStatus {
-	var statuses []WebhookStatus
+	statuses := make([]WebhookStatus, 0, len(urls))
 	for _, url := range urls {
 		status := SendWebhook(context.Background(), url, subject, body)
 		statuses = append(statuses, *status)

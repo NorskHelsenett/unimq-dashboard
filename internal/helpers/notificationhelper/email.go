@@ -79,7 +79,7 @@ func (es *EmailSender) SendEmail(to, subject, body string, typ mail.ContentType)
 }
 
 func (es *EmailSender) SendEmails(ctx context.Context, to []string, subject, body string, typ mail.ContentType) []EmailStatus {
-	var statuses []EmailStatus
+	statuses := make([]EmailStatus, 0, len(to))
 	for _, email := range to {
 		status := es.SendEmail(email, subject, body, typ)
 		statuses = append(statuses, *status)
