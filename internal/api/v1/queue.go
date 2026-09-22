@@ -15,7 +15,7 @@ import (
 // @Tags			Queues
 // @Produce		json
 // @Param			vhost-name	path		string						true	"Virtual Host"
-// @Success		200			{object}	[]models.QueueAPIResponse	"HTML page with queue metrics"
+// @Success		200			{object}	[]models.RMQQueue	"HTML page with queue metrics"
 // @Failure		400			{object}	httpsuite.ErrorResponse		"Bad Request"
 // @Failure		401			{object}	httpsuite.ErrorResponse
 // @Failure		403			{object}	httpsuite.ErrorResponse
