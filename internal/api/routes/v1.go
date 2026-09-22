@@ -24,8 +24,8 @@ func SetupProtectedRoutes(r chi.Router, apiservice *api.APIService, rmqhandler *
 			r.Get("/{vhost}/metrics", rmqhandler.MetricHandler)
 
 			r.Route("/{vhost}/queues", func(r chi.Router) {
-				r.Get("/", apiservice.GetQueuesHandler)
-				r.Get("/{queue}", apiservice.GetQueuesByNameHandler)
+				r.Get("/", rmqhandler.GetQueuesHandler)
+				r.Get("/{queue}", rmqhandler.GetQueuesByNameHandler)
 			})
 
 		})

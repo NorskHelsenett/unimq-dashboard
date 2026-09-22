@@ -1,4 +1,4 @@
-package api
+package rmq
 
 import (
 	"errors"
@@ -23,7 +23,7 @@ import (
 // @Failure		500			{object}	httpsuite.ErrorResponse	"Internal Server Error"
 // @Router			/v1/vhosts/{vhost-name}/queues [get]
 // @security		bearer
-func (rc *APIService) GetQueuesHandler(w http.ResponseWriter, r *http.Request) {
+func (rc *RMQHandler) GetQueuesHandler(w http.ResponseWriter, r *http.Request) {
 
 	_, err := httpsuite.IsAGroupInClaim(r.Context(), rc.AdminGroups)
 	if err != nil {
@@ -78,7 +78,7 @@ func (rc *APIService) GetQueuesHandler(w http.ResponseWriter, r *http.Request) {
 // @Failure		500			{object}	httpsuite.ErrorResponse	"Internal Server Error"
 // @Router			/v1/vhosts/{vhost-name}/queues/{queue-id} [get]
 // @security		bearer
-func (rc *APIService) GetQueuesByNameHandler(w http.ResponseWriter, r *http.Request) {
+func (rc *RMQHandler) GetQueuesByNameHandler(w http.ResponseWriter, r *http.Request) {
 
 	_, err := httpsuite.IsAGroupInClaim(r.Context(), rc.AdminGroups)
 	if err != nil {
