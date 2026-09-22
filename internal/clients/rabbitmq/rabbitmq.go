@@ -13,7 +13,6 @@ import (
 
 type RMQClient struct {
 	restClient *rest.RestClient
-	Limits     *models.Limits
 }
 
 // TODO: Figure out if the history is necessary.
