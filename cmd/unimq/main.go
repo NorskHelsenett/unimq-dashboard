@@ -18,7 +18,6 @@ import (
 	"github.com/sisneve/rabbitmq-dashboard/internal/database"
 	"github.com/sisneve/rabbitmq-dashboard/internal/helpers/notificationhelper"
 	"github.com/sisneve/rabbitmq-dashboard/internal/logger"
-	"github.com/sisneve/rabbitmq-dashboard/internal/models"
 	"github.com/sisneve/rabbitmq-dashboard/internal/notify"
 )
 
@@ -69,19 +68,12 @@ func main() {
 		return
 	}
 
-	limits := &models.Limits{
-		MaxChannels:    config.RabbitMQChannelLimit,
-		MaxConnections: config.RabbitMQConnectionLimit,
-		MaxQueues:      config.RabbitMQQueueLimit,
-	}
-
 	rmq, err := rabbitmq.NewRMQClient(
 		rabbitmq.WithRMQHost(config.RabbitMQHost),
 		rabbitmq.WithRMQPort(config.RabbitMQPort),
 		rabbitmq.WithRMQUsername(config.RabbitMQUsername),
 		rabbitmq.WithRMQPassword(config.RabbitMQPassword),
 		rabbitmq.WithRMQContext(ctx),
-		rabbitmq.WithRMQLimits(limits),
 	)
 	if err != nil {
 		slog.ErrorContext(ctx, "failed to create RabbitMQ client", "error", err)
