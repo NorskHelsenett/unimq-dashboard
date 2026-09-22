@@ -42,6 +42,20 @@ func IsParameterInClaim(ctx context.Context, key string) (any, error) {
 	return val, nil
 }
 
+// GetEmailFromContext retrieves the email from the claims in the context.
+func GetEmailFromContext(ctx context.Context) (string, error) {
+	claims, err := GetClaimsFromContext(ctx)
+	if err != nil {
+		return "", err
+	}
+
+	email, ok := claims["email"].(string)
+	if !ok {
+		return "", fmt.Errorf("%w: email", ErrParameterNotFound)
+	}
+	return email, nil
+}
+
 // IsGroupInClaim checks if a specific group exists in the claims.
 func IsGroupInClaim(ctx context.Context, group string) (string, error) {
 	return IsAGroupInClaim(ctx, []string{group})
@@ -69,20 +83,6 @@ func IsAGroupInClaim(ctx context.Context, groups []string) (string, error) {
 
 	slog.InfoContext(ctx, "no matching group found in claims", "expected_groups", groups, "retrieved_groups", claimGroups)
 	return "", fmt.Errorf("%w. %v", ErrNoMatchingGroup, claimGroups)
-}
-
-// GetEmailFromContext retrieves the email from the claims in the context.
-func GetEmailFromContext(ctx context.Context) (string, error) {
-	claims, err := GetClaimsFromContext(ctx)
-	if err != nil {
-		return "", err
-	}
-
-	email, ok := claims["email"].(string)
-	if !ok {
-		return "", fmt.Errorf("%w: email", ErrParameterNotFound)
-	}
-	return email, nil
 }
 
 func castSliceToStringSlice[T any](input []T) []string {
