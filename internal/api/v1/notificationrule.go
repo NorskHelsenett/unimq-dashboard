@@ -578,7 +578,7 @@ func (rc *APIService) TestNotificationsRuleHandler(w http.ResponseWriter, r *htt
 			Message:            "Test notification status unknown.",
 			FailedDestinations: []string{},
 		}
-		httpsuite.SendResponse(r.Context(), w, "Testing notification...", http.StatusOK, &response)
+		httpsuite.SendResponse(r.Context(), w, "Testing notification...", http.StatusInternalServerError, &response)
 	}
 
 }
