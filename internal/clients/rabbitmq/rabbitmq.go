@@ -46,7 +46,6 @@ type (
 		Username string
 		Password string
 		Ctx      context.Context
-		Limits   *models.Limits
 	}
 
 	rmqClientOptions func(*rmqClientConfig)
@@ -59,11 +58,6 @@ func newRMQClientConfig() *rmqClientConfig {
 		Username: "",
 		Password: "",
 		Ctx:      context.Background(),
-		Limits: &models.Limits{
-			MaxChannels:    1000,
-			MaxConnections: 1000,
-			MaxQueues:      1000,
-		},
 	}
 }
 
@@ -97,12 +91,6 @@ func WithRMQContext(ctx context.Context) rmqClientOptions {
 	}
 }
 
-func WithRMQLimits(limits *models.Limits) rmqClientOptions {
-	return func(rc *rmqClientConfig) {
-		rc.Limits = limits
-	}
-}
-
 func NewRMQClient(opts ...rmqClientOptions) (*RMQClient, error) {
 	config := newRMQClientConfig()
 	for _, opt := range opts {
@@ -119,7 +107,6 @@ func NewRMQClient(opts ...rmqClientOptions) (*RMQClient, error) {
 
 	client := &RMQClient{
 		restClient: restclient,
-		Limits:     config.Limits,
 	}
 
 	return client, nil
@@ -186,8 +173,8 @@ func (r *RMQClient) GetChannels() ([]models.ChannelResponse, error) {
 	return channels, nil
 }
 
-func (r *RMQClient) GetQueues() ([]models.QueueAPIResponse, error) {
-	var queues []models.QueueAPIResponse
+func (r *RMQClient) GetQueues() ([]models.RMQQueue, error) {
+	var queues []models.RMQQueue
 	_, err := r.restClient.Get("/queues", &queues)
 	if err != nil {
 		return nil, fmt.Errorf("%w. %w", ErrQueueNotFound, err)
@@ -195,8 +182,8 @@ func (r *RMQClient) GetQueues() ([]models.QueueAPIResponse, error) {
 	return queues, nil
 }
 
-func (r *RMQClient) GetQueue(vhost string) ([]models.QueueAPIResponse, error) {
-	var queues []models.QueueAPIResponse
+func (r *RMQClient) GetQueue(vhost string) ([]models.RMQQueue, error) {
+	var queues []models.RMQQueue
 	status, err := r.restClient.Get("/queues/"+url.PathEscape(vhost), &queues)
 	if err != nil {
 		switch status {
@@ -209,8 +196,8 @@ func (r *RMQClient) GetQueue(vhost string) ([]models.QueueAPIResponse, error) {
 	return queues, nil
 }
 
-func (r *RMQClient) GetQueueByName(vhost string, name string) (*models.QueueAPIResponse, error) {
-	var queues models.QueueAPIResponse
+func (r *RMQClient) GetQueueByName(vhost string, name string) (*models.RMQQueue, error) {
+	var queues models.RMQQueue
 	status, err := r.restClient.Get("/queues/"+url.PathEscape(vhost)+"/"+url.PathEscape(name), &queues)
 	if err != nil {
 		switch status {

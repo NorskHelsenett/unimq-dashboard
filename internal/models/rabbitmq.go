@@ -61,12 +61,6 @@ type QueueDetail struct {
 	Unacked      int     `json:"messages_unacknowledged"`
 }
 
-type Limits struct {
-	MaxChannels    int
-	MaxConnections int
-	MaxQueues      int
-}
-
 type RMQNode struct {
 	Name          string `json:"name"`
 	MemUsed       int64  `json:"mem_used"`
@@ -110,7 +104,7 @@ type MessageStats struct {
 	RedelivDetails RateDetail `json:"redeliver_details"`
 }
 
-type QueueAPIResponse struct {
+type RMQQueue struct {
 	Name                   string       `json:"name"`
 	Vhost                  string       `json:"vhost"`
 	Messages               int          `json:"messages"`

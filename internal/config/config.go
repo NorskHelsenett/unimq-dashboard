@@ -23,13 +23,10 @@ type Config struct {
 	MongoDBPassword string `mapstructure:"MONGODB_PASSWORD"`
 	MongoDBDatabase string `mapstructure:"MONGODB_DATABASE"`
 
-	RabbitMQHost            string `mapstructure:"RABBITMQ_HOST"`
-	RabbitMQPort            int    `mapstructure:"RABBITMQ_PORT"`
-	RabbitMQUsername        string `mapstructure:"RABBITMQ_USERNAME"`
-	RabbitMQPassword        string `mapstructure:"RABBITMQ_PASSWORD"`
-	RabbitMQChannelLimit    int    `mapstructure:"RABBITMQ_CHANNEL_LIMIT"`
-	RabbitMQConnectionLimit int    `mapstructure:"RABBITMQ_CONNECTION_LIMIT"`
-	RabbitMQQueueLimit      int    `mapstructure:"RABBITMQ_QUEUE_LIMIT"`
+	RabbitMQHost     string `mapstructure:"RABBITMQ_HOST"`
+	RabbitMQPort     int    `mapstructure:"RABBITMQ_PORT"`
+	RabbitMQUsername string `mapstructure:"RABBITMQ_USERNAME"`
+	RabbitMQPassword string `mapstructure:"RABBITMQ_PASSWORD"`
 
 	Email *EmailConfig `mapstructure:",squash"`
 
@@ -55,21 +52,18 @@ type OIDCConfig struct {
 
 func NewConfig() *Config {
 	c := &Config{
-		BaseURL:                 "localhost",
-		BasePort:                8080,
-		LogLevel:                0,
-		MongoDBHost:             "mongodb://localhost",
-		MongoDBPort:             27017,
-		MongoDBUsername:         "",
-		MongoDBPassword:         "",
-		MongoDBDatabase:         "rabbitmq-dashboard",
-		RabbitMQHost:            "https://localhost",
-		RabbitMQPort:            15672,
-		RabbitMQUsername:        "",
-		RabbitMQPassword:        "",
-		RabbitMQChannelLimit:    1000,
-		RabbitMQConnectionLimit: 300,
-		RabbitMQQueueLimit:      150,
+		BaseURL:          "localhost",
+		BasePort:         8080,
+		LogLevel:         0,
+		MongoDBHost:      "mongodb://localhost",
+		MongoDBPort:      27017,
+		MongoDBUsername:  "",
+		MongoDBPassword:  "",
+		MongoDBDatabase:  "rabbitmq-dashboard",
+		RabbitMQHost:     "https://localhost",
+		RabbitMQPort:     15672,
+		RabbitMQUsername: "",
+		RabbitMQPassword: "",
 
 		Email: &EmailConfig{
 			EmailSMTPHost:     "",
@@ -175,9 +169,6 @@ func (c *Config) loadEnvironmentVariables() {
 	_ = viper.BindEnv("MONGODB_DATABASE")
 	_ = viper.BindEnv("RABBITMQ_HOST")
 	_ = viper.BindEnv("RABBITMQ_PORT")
-	_ = viper.BindEnv("RABBITMQ_CHANNEL_LIMIT")
-	_ = viper.BindEnv("RABBITMQ_CONNECTION_LIMIT")
-	_ = viper.BindEnv("RABBITMQ_QUEUE_LIMIT")
 
 	_ = viper.BindEnv("EMAIL_SMTP_HOST")
 	_ = viper.BindEnv("EMAIL_SMTP_PORT")
@@ -210,9 +201,6 @@ func (c *Config) validateConfiguration() error {
 	parameterChecks["RABBITMQ_PORT"] = isPresent(c.RabbitMQPort)
 	parameterChecks["RABBITMQ_USERNAME"] = isPresent(c.RabbitMQUsername)
 	parameterChecks["RABBITMQ_PASSWORD"] = isPresent(c.RabbitMQPassword)
-	parameterChecks["RABBITMQ_CHANNEL_LIMIT"] = isPresent(c.RabbitMQChannelLimit)
-	parameterChecks["RABBITMQ_CONNECTION_LIMIT"] = isPresent(c.RabbitMQConnectionLimit)
-	parameterChecks["RABBITMQ_QUEUE_LIMIT"] = isPresent(c.RabbitMQQueueLimit)
 
 	parameterChecks["OIDC_CLIENT_ID"] = isPresent(c.OIDC.OIDCClientID)
 	parameterChecks["OIDC_CLIENT_SECRET"] = isPresent(c.OIDC.OIDCClientSecret)
