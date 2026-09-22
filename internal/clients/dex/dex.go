@@ -150,13 +150,27 @@ func (d *DexClient) Authorization() func(http.Handler) http.Handler {
 	}
 }
 
+// @Summary		Redirect to Dex for authentication
+// @Description	Redirects the user to the Dex server for authentication
+// @Tags			Authentication
+// @Produce		json
+// @Success		302	{string}	string	"redirect"
+// @Router			/api/login [get]
 func (d *DexClient) RedirectHandler(w http.ResponseWriter, r *http.Request) {
-	// Generate the URL to redirect the user to Dex for authentication
 	authURL := d.Config.AuthCodeURL("state", oauth2.AccessTypeOffline)
 
 	http.Redirect(w, r, authURL, http.StatusFound)
 }
 
+// @Summary		Handle Dex OAuth callback
+// @Description	Handles the OAuth callback from Dex and exchanges the code for a token
+// @Tags			Authentication
+// @Produce		json
+// @Param			code	query		string	true	"Authorization code"
+// @Success		302		{string}	string	"redirect"
+// @Failure		400		{object}	httpsuite.ErrorResponse
+// @Failure		500		{object}	httpsuite.ErrorResponse
+// @Router			/api/login/callback [get]
 func (d *DexClient) OauthCallbackHandler(w http.ResponseWriter, r *http.Request) {
 	// Get the code from the query parameters
 	code := r.URL.Query().Get("code")
