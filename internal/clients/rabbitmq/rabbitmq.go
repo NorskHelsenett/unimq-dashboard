@@ -315,20 +315,32 @@ func (r *RMQClient) GetVhostUsage(vhost string) (*models.RMQVhostUsage, error) {
 	return usage, nil
 
 }
-func (r *RMQClient) GetLimits() ([]*models.RMQLimits, error) {
-	var limits []*models.RMQLimits
-	_, err := r.restClient.Get("/vhost-limits", &limits)
+func (r *RMQClient) GetVhostLimits() ([]*models.RMQVhostLimits, error) {
+	var limits []*models.RMQVhostLimits
+	status, err := r.restClient.Get("/vhost-limits", &limits)
 	if err != nil {
-		return nil, fmt.Errorf("%w. %w", ErrLimitsNotFound, err)
+		switch {
+		case status == 404:
+			return nil, fmt.Errorf("%w. %w", ErrLimitsNotFound, err)
+
+		default:
+			return nil, fmt.Errorf("%w. %w", ErrInternalServerError, err)
+		}
 	}
 	return limits, nil
 }
 
-func (r *RMQClient) GetLimit(vhost string) (*models.RMQLimits, error) {
-	var limit *models.RMQLimits
-	_, err := r.restClient.Get("/vhost-limits/"+url.PathEscape(vhost), &limit)
+func (r *RMQClient) GetVhostLimit(vhost string) (*models.RMQVhostLimits, error) {
+	var limit *models.RMQVhostLimits
+	status, err := r.restClient.Get("/vhost-limits/"+url.PathEscape(vhost), &limit)
 	if err != nil {
-		return nil, fmt.Errorf("%w. %w", ErrLimitsNotFound, err)
+		switch {
+		case status == 404:
+			return nil, fmt.Errorf("%w. %w", ErrLimitsNotFound, err)
+
+		default:
+			return nil, fmt.Errorf("%w. %w", ErrInternalServerError, err)
+		}
 	}
 	return limit, nil
 }
