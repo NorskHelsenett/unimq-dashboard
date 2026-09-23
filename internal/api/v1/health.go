@@ -32,36 +32,24 @@ func (rc *APIService) ReadyzHandler(rmq *rmq.RMQHandler, dex *dex.DexClient) fun
 
 		err := rmq.RMQClient.Ping()
 		if err != nil {
-			httpsuite.WriteJSONError(w,
-				http.StatusInternalServerError,
-				httpsuite.WithError(err),
-				httpsuite.WithErrorMessage("failed to ping RabbitMQ"),
-			)
-			return
+			status.RabbitMQ = models.StatusUnhealthy
+		} else {
+			status.RabbitMQ = models.StatusHealthy
 		}
-		status.RabbitMQ = models.StatusHealthy
 
 		err = rc.DB.Ping(r.Context(), 5)
 		if err != nil {
-			httpsuite.WriteJSONError(w,
-				http.StatusInternalServerError,
-				httpsuite.WithError(err),
-				httpsuite.WithErrorMessage("failed to ping MongoDB"),
-			)
-			return
+			status.Database = models.StatusUnhealthy
+		} else {
+			status.Database = models.StatusHealthy
 		}
-		status.Database = models.StatusHealthy
 
 		err = dex.Ping(r.Context())
 		if err != nil {
-			httpsuite.WriteJSONError(w,
-				http.StatusInternalServerError,
-				httpsuite.WithError(err),
-				httpsuite.WithErrorMessage("failed to ping Dex"),
-			)
-			return
+			status.Dex = models.StatusUnhealthy
+		} else {
+			status.Dex = models.StatusHealthy
 		}
-		status.Dex = models.StatusHealthy
 
 		if !status.IsHealthy() {
 			httpsuite.SendResponse(r.Context(), w, "not ready", http.StatusServiceUnavailable, &status)
