@@ -1,5 +1,27 @@
 basePath: /api
 definitions:
+  dex.LoginRequest:
+    properties:
+      password:
+        example: password
+        type: string
+      username:
+        example: olanordmann@test.com
+        type: string
+    type: object
+  dex.TokenResponse:
+    properties:
+      access_token:
+        type: string
+      expires_in:
+        type: integer
+      id_token:
+        type: string
+      refresh_token:
+        type: string
+      token_type:
+        type: string
+    type: object
   httpsuite.ErrorResponse:
     properties:
       error:
@@ -661,16 +683,37 @@ paths:
       tags:
       - Notifications
   /v1/login:
-    get:
-      description: Redirects the user to the Dex server for authentication
+    post:
+      consumes:
+      - application/json
+      description: Login with Dex using username and password
+      parameters:
+      - description: Login Request
+        in: body
+        name: loginRequest
+        required: true
+        schema:
+          $ref: '#/definitions/dex.LoginRequest'
       produces:
       - application/json
       responses:
-        "302":
-          description: redirect
+        "200":
+          description: OK
           schema:
-            type: string
-      summary: Redirect to Dex for authentication
+            $ref: '#/definitions/dex.TokenResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/httpsuite.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/httpsuite.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/httpsuite.ErrorResponse'
+      summary: Login with Dex
       tags:
       - Authentication
   /v1/login/callback:
@@ -699,6 +742,19 @@ paths:
           schema:
             $ref: '#/definitions/httpsuite.ErrorResponse'
       summary: Handle Dex OAuth callback
+      tags:
+      - Authentication
+  /v1/login/redirect:
+    get:
+      description: Redirects the user to the Dex server for authentication
+      produces:
+      - application/json
+      responses:
+        "302":
+          description: redirect
+          schema:
+            type: string
+      summary: Redirect to Dex for authentication
       tags:
       - Authentication
   /v1/maintenance:

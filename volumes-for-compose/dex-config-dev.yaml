@@ -1,7 +1,8 @@
 # The base path of dex and the external name of the OpenID Connect service.
 # This is the canonical URL that all clients MUST use to refer to dex. If a
 # path is provided, dex's HTTP service will listen at a non-root URL.
-issuer: https://auth.sky.nhn.no/dex
+# issuer: https://auth.sky.nhn.no/dex
+issuer: http://localhost:5556/dex
 
 storage:
   type: memory
@@ -15,6 +16,7 @@ web:
 
 oauth2:
   skipApprovalScreen: true
+  passwordConnector: local
 
 enablePasswordDB: true
 
@@ -29,9 +31,8 @@ staticClients:
     name: Unimq Dashboard
     secret: O8jad9kl1PD1er
     redirectURIs:
-      - http://localhost:8080/callback
-      - http://localhost:5173/callback
-      - https://unimq.test.nhn.no/callback
+      - http://localhost:8080/api/v1/callback
+      - https://unimq.test.nhn.no/api/v1/callback
     scopes:
       - email
       - profile
