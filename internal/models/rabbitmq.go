@@ -51,6 +51,8 @@ type RMQVhostUsage struct {
 	DiskBytes    int64  `json:"disk_bytes"`
 }
 
+// TODO: what is the difference between this and RMQQueue? This is just a flattend version.
+// Resolve this and remove one of them.
 type QueueDetail struct {
 	Name         string  `json:"name"`
 	Messages     int     `json:"messages"`
