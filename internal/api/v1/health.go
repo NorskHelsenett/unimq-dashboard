@@ -4,6 +4,7 @@ import (
 	"net/http"
 
 	"github.com/sisneve/rabbitmq-dashboard/internal/api/httpsuite"
+	"github.com/sisneve/rabbitmq-dashboard/internal/api/v1/rmq"
 	"github.com/sisneve/rabbitmq-dashboard/internal/clients/dex"
 )
 
@@ -24,9 +25,9 @@ func (rc *APIService) HealthzHandler(w http.ResponseWriter, r *http.Request) {
 // @Success		200	{string}	string	"ready"
 // @Failure		502	{object}	httpsuite.ErrorResponse
 // @Router			/api/readyz [get]
-func (rc *APIService) ReadyzHandler(dex *dex.DexClient) func(w http.ResponseWriter, r *http.Request) {
+func (rc *APIService) ReadyzHandler(rmq *rmq.RMQHandler, dex *dex.DexClient) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
-		err := rc.RMQClient.Ping()
+		err := rmq.RMQClient.Ping()
 		if err != nil {
 			httpsuite.WriteJSONError(w,
 				http.StatusInternalServerError,

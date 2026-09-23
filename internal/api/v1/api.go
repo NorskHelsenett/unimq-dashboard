@@ -4,14 +4,12 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/sisneve/rabbitmq-dashboard/internal/clients/rabbitmq"
 	"github.com/sisneve/rabbitmq-dashboard/internal/database"
 	"github.com/sisneve/rabbitmq-dashboard/internal/notify"
 )
 
 type APIService struct {
 	Ctx         context.Context
-	RMQClient   *rabbitmq.RMQClient
 	DB          *database.Database
 	AdminGroups []string
 	Checker     *notify.Checker
@@ -22,13 +20,6 @@ type APIServiceOption func(*APIService) error
 func WithContext(ctx context.Context) APIServiceOption {
 	return func(rc *APIService) error {
 		rc.Ctx = ctx
-		return nil
-	}
-}
-
-func WithRabbitMQClient(rmq *rabbitmq.RMQClient) APIServiceOption {
-	return func(rc *APIService) error {
-		rc.RMQClient = rmq
 		return nil
 	}
 }
@@ -57,7 +48,6 @@ func WithAdminGroups(groups []string) APIServiceOption {
 func newAPIServiceConfig() *APIService {
 	return &APIService{
 		Ctx:         context.Background(),
-		RMQClient:   nil,
 		DB:          nil,
 		AdminGroups: []string{},
 		Checker:     nil,

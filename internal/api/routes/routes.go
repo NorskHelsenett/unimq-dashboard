@@ -49,7 +49,7 @@ func SetupRoutes(ctx context.Context, config *config.Config, db *database.Databa
 	r.Group(func(r chi.Router) {
 		r.Route("/api", func(r chi.Router) {
 			r.Route("/v1", func(r chi.Router) {
-				v1routes.SetupUtilityRoutes(r, apiservice, dex)
+				v1routes.SetupUtilityRoutes(r, apiservice, dex, rmqHandler)
 				v1routes.SetupAuthenticationRoutes(r, dex)
 				r.Group(func(r chi.Router) {
 					r.Use(dex.Authorization())

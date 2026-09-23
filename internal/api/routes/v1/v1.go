@@ -3,15 +3,16 @@ package v1
 import (
 	"github.com/go-chi/chi/v5"
 	api "github.com/sisneve/rabbitmq-dashboard/internal/api/v1"
+	"github.com/sisneve/rabbitmq-dashboard/internal/api/v1/rmq"
 	"github.com/sisneve/rabbitmq-dashboard/internal/clients/dex"
 	httpSwagger "github.com/swaggo/http-swagger/v2"
 )
 
-func SetupUtilityRoutes(r chi.Router, apiservice *api.APIService, dex *dex.DexClient) {
+func SetupUtilityRoutes(r chi.Router, apiservice *api.APIService, dex *dex.DexClient, rmqHandler *rmq.RMQHandler) {
 
 	r.Get("/swagger/*", httpSwagger.WrapHandler)
 	r.Get("/healthz", apiservice.HealthzHandler)
-	r.Get("/readyz", apiservice.ReadyzHandler(dex))
+	r.Get("/readyz", apiservice.ReadyzHandler(rmqHandler, dex))
 }
 
 func SetupInternalRoutes(r chi.Router, apiservice *api.APIService) {
