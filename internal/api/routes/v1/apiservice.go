@@ -19,12 +19,12 @@ func SetupInternalRoutes(r chi.Router, apiservice *api.APIService) {
 
 	r.Route("/maintenance", func(r chi.Router) {
 		r.Get("/", apiservice.GetMaintenanceHandler)
-		r.Get("/{maintenance}", apiservice.GetMaintenanceEntryHandler)
+		r.Get("/{maintenance-id}", apiservice.GetMaintenanceEntryHandler)
 		r.Post("/", apiservice.AddMaintenanceHandler)
-		r.Patch("/{maintenance}", apiservice.PatchMaintenanceHandler)
-		r.Put("/{maintenance}", apiservice.UpdateMaintenanceStatusHandler)
-		r.Delete("/{maintenance}", apiservice.DeleteMaintenanceHandler)
-		r.Get("/{maintenance}/logs", apiservice.GetMaintenanceEditLogsHandler)
+		r.Patch("/{maintenance-id}", apiservice.PatchMaintenanceHandler)
+		r.Put("/{maintenance-id}", apiservice.UpdateMaintenanceStatusHandler)
+		r.Delete("/{maintenance-id}", apiservice.DeleteMaintenanceHandler)
+		r.Get("/{maintenance-id}/logs", apiservice.GetMaintenanceEditLogsHandler)
 	})
 
 	r.Route("/alarms", func(r chi.Router) {
@@ -35,19 +35,19 @@ func SetupInternalRoutes(r chi.Router, apiservice *api.APIService) {
 	r.Get("/status", apiservice.GetCheckerStatusHandler)
 	r.Route("/notifications", func(r chi.Router) {
 		r.Get("/", apiservice.GetNotificationsHandler)
-		r.Route("/{vhost}", func(r chi.Router) {
+		r.Route("/{vhost-name}", func(r chi.Router) {
 			r.Get("/", apiservice.GetNotificationsVhostHandler)
 			r.Delete("/", apiservice.DeleteNotificationsHandler)
 			r.Post("/recipients", apiservice.AddNotificationsRecipientHandler)
-			r.Get("/recipients/{recipient}", apiservice.GetNotificationsRecipientHandler)
-			r.Delete("/recipients/{recipient}", apiservice.DeleteNotificationsRecipientHandler)
+			r.Get("/recipients/{recipient-id}", apiservice.GetNotificationsRecipientHandler)
+			r.Delete("/recipients/{recipient-id}", apiservice.DeleteNotificationsRecipientHandler)
 
 			r.Post("/rules", apiservice.AddNotificationsRuleHandler)
-			r.Get("/rules/{rule}", apiservice.GetNotificationRuleHandler)
-			r.Post("/rules/{rule}", apiservice.UpdateNotificationsRuleHandler)
-			r.Post("/rules/{rule}/toggle", apiservice.ToggleNotificationsRuleHandler)
-			r.Post("/rules/{rule}/test", apiservice.TestNotificationsRuleHandler)
-			r.Delete("/rules/{rule}", apiservice.DeleteNotificationsRuleHandler)
+			r.Get("/rules/{rule-id}", apiservice.GetNotificationRuleHandler)
+			r.Post("/rules/{rule-id}", apiservice.UpdateNotificationsRuleHandler)
+			r.Post("/rules/{rule-id}/toggle", apiservice.ToggleNotificationsRuleHandler)
+			r.Post("/rules/{rule-id}/test", apiservice.TestNotificationsRuleHandler)
+			r.Delete("/rules/{rule-id}", apiservice.DeleteNotificationsRuleHandler)
 		})
 	})
 

@@ -12,6 +12,10 @@ import (
 type ProfileHandler struct {
 }
 
+func NewProfileHandler() *ProfileHandler {
+	return &ProfileHandler{}
+}
+
 // TODO: Implement the profile service to return user profile information.
 
 // @Summary		Get user profile
