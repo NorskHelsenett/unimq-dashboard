@@ -24,17 +24,6 @@ services:
     networks:
       - unimq-dashboard-network
 
-  prometheus:
-    image: ${DOCKER_MIRROR}prom/prometheus:v3
-    restart: unless-stopped
-    container_name: unimq-dashboard-prometheus
-    ports:
-      - "9090:9090"
-    volumes:
-      - ./volumes-for-compose/prometheus-config.yaml:/etc/prometheus/prometheus.yml
-    networks:
-      - unimq-dashboard-network
-
   mongodb:
     image: ${DOCKER_MIRROR}mongo:7.0.40-jammy
     volumes:
