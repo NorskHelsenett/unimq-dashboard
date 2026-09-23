@@ -81,44 +81,41 @@ func (c *Checker) GetStatus() CheckerStatus {
 	return CheckerStatus{LastChecked: &t, RuntimeMs: &ms, IntervalS: int64(c.interval.Seconds())}
 }
 
-func (c *Checker) StartChecker(wg *sync.WaitGroup) {
-	go func() {
-		defer wg.Done()
+func (c *Checker) StartChecker() {
 
-		// Initial delay to allow other components to start and populate the store before checks run.
-		initTicker := time.NewTicker(15 * time.Second)
-		defer initTicker.Stop()
+	// Initial delay to allow other components to start and populate the store before checks run.
+	initTicker := time.NewTicker(15 * time.Second)
+	defer initTicker.Stop()
+
+	select {
+	case <-initTicker.C:
+		slog.InfoContext(c.Ctx, "Checker started")
+	case <-c.Ctx.Done():
+		slog.InfoContext(c.Ctx, "Checker stopped before first run")
+		return
+	}
+
+	ticker := time.NewTicker(c.interval)
+	defer ticker.Stop()
+	for {
 
 		select {
-		case <-initTicker.C:
-			slog.InfoContext(c.Ctx, "Checker started")
+		case <-ticker.C:
+			timer := time.Now()
+			c.runChecks()
+			elapsed := time.Since(timer)
+			slog.InfoContext(c.Ctx, "finished checking maintenance statuses, notifications and metrics values", "runtime", elapsed)
+			c.mu.Lock()
+			c.lastChecked = time.Now()
+			c.runtimeMs = elapsed.Milliseconds()
+			c.hasRun = true
+			c.mu.Unlock()
 		case <-c.Ctx.Done():
-			slog.InfoContext(c.Ctx, "Checker stopped before first run")
+			slog.InfoContext(c.Ctx, "Checker stopped")
 			return
 		}
 
-		ticker := time.NewTicker(c.interval)
-		defer ticker.Stop()
-		for {
-
-			select {
-			case <-ticker.C:
-				timer := time.Now()
-				c.runChecks()
-				elapsed := time.Since(timer)
-				slog.InfoContext(c.Ctx, "finished checking maintenance statuses, notifications and metrics values", "runtime", elapsed)
-				c.mu.Lock()
-				c.lastChecked = time.Now()
-				c.runtimeMs = elapsed.Milliseconds()
-				c.hasRun = true
-				c.mu.Unlock()
-			case <-c.Ctx.Done():
-				slog.InfoContext(c.Ctx, "Checker stopped")
-				return
-			}
-
-		}
-	}()
+	}
 }
 
 // runChecks fetches notifications and metrics, evaluates rules, updates statuses, and sends notifications as needed.

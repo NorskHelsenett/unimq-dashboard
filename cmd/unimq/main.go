@@ -121,7 +121,7 @@ func main() {
 		}
 	})
 
-	checker.StartChecker(wg)
+	wg.Go(checker.StartChecker)
 
 	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
@@ -142,14 +142,15 @@ func main() {
 		if err != nil {
 			slog.Error("forced shutdown of server", "error", err)
 		}
-	} else {
-		wg.Wait()
-		err = db.Close(30)
-		if err != nil {
-			slog.ErrorContext(ctx, "failed to close database connection", "error", err)
-		}
-
-		slog.InfoContext(ctx, "server stopped gracefully, good bye :)")
+		return
 	}
+
+	wg.Wait()
+	err = db.Close(30)
+	if err != nil {
+		slog.ErrorContext(ctx, "failed to close database connection", "error", err)
+	}
+
+	slog.InfoContext(ctx, "server stopped gracefully, good bye :)")
 
 }
