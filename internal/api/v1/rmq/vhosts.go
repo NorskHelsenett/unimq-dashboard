@@ -157,7 +157,7 @@ func (rc *RMQHandler) GetVhostLimitsHandler(w http.ResponseWriter, r *http.Reque
 
 // @Summary		Get Vhost usage
 // @Description	Get usage statistics for a specific vhost in the RabbitMQ cluster
-// @Tags			RabbitMQ
+// @Tags			Vhosts
 // @Produce		json
 // @Param			vhost-name	path		string	true	"Vhost Name"
 // @Success		200			{object}	[]models.RMQVhostUsage

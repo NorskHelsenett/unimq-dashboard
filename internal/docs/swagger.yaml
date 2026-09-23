@@ -86,6 +86,15 @@ definitions:
     - queue_size
     - no_consumer
     - maintenance
+  models.HealthStatus:
+    properties:
+      database:
+        $ref: '#/definitions/models.Status'
+      dex:
+        $ref: '#/definitions/models.Status'
+      rabbitMQ:
+        $ref: '#/definitions/models.Status'
+    type: object
   models.LogEntry:
     properties:
       alarm_type:
@@ -398,6 +407,14 @@ definitions:
     - Webhook
     - Email
     - RecipientTypeUnknown
+  models.Status:
+    enum:
+    - healthy
+    - unhealthy
+    type: string
+    x-enum-varnames:
+    - StatusHealthy
+    - StatusUnhealthy
   models.TestNotificationResponse:
     properties:
       failed_destinations:
@@ -524,11 +541,11 @@ paths:
         "200":
           description: ready
           schema:
-            type: string
+            $ref: '#/definitions/models.HealthStatus'
         "502":
-          description: Bad Gateway
+          description: not ready
           schema:
-            $ref: '#/definitions/httpsuite.ErrorResponse'
+            $ref: '#/definitions/models.HealthStatus'
       summary: Readiness check
       tags:
       - Health
@@ -1539,7 +1556,7 @@ paths:
       - bearer: []
       summary: Get Vhost usage
       tags:
-      - RabbitMQ
+      - Vhosts
   /v1/vhosts:
     get:
       description: Get a list of all vhosts in the RabbitMQ cluster

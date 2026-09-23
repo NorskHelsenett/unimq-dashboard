@@ -52,13 +52,13 @@ const docTemplate = `{
                     "200": {
                         "description": "ready",
                         "schema": {
-                            "type": "string"
+                            "$ref": "#/definitions/models.HealthStatus"
                         }
                     },
                     "502": {
-                        "description": "Bad Gateway",
+                        "description": "not ready",
                         "schema": {
-                            "$ref": "#/definitions/httpsuite.ErrorResponse"
+                            "$ref": "#/definitions/models.HealthStatus"
                         }
                     }
                 }
@@ -1578,7 +1578,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "RabbitMQ"
+                    "Vhosts"
                 ],
                 "summary": "Get Vhost usage",
                 "parameters": [
@@ -2111,6 +2111,20 @@ const docTemplate = `{
                 "maintenance"
             ]
         },
+        "models.HealthStatus": {
+            "type": "object",
+            "properties": {
+                "database": {
+                    "$ref": "#/definitions/models.Status"
+                },
+                "dex": {
+                    "$ref": "#/definitions/models.Status"
+                },
+                "rabbitMQ": {
+                    "$ref": "#/definitions/models.Status"
+                }
+            }
+        },
         "models.LogEntry": {
             "type": "object",
             "properties": {
@@ -2575,6 +2589,17 @@ const docTemplate = `{
                 "Webhook",
                 "Email",
                 "RecipientTypeUnknown"
+            ]
+        },
+        "models.Status": {
+            "type": "string",
+            "enum": [
+                "healthy",
+                "unhealthy"
+            ],
+            "x-enum-varnames": [
+                "StatusHealthy",
+                "StatusUnhealthy"
             ]
         },
         "models.TestNotificationResponse": {
