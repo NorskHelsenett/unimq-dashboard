@@ -1,7 +1,9 @@
 # The base path of dex and the external name of the OpenID Connect service.
 # This is the canonical URL that all clients MUST use to refer to dex. If a
 # path is provided, dex's HTTP service will listen at a non-root URL.
-issuer: https://auth.sky.nhn.no/dex
+
+# issuer: https://auth.sky.nhn.no/dex
+issuer: http://localhost:5556/dex
 
 storage:
   type: memory
@@ -45,3 +47,11 @@ staticPasswords:
     hash: "$2a$10$2b2cU8CPhOTaGrs1HRQuAueS7JTT5ZHsHSzYiFPm1leZck7Mc8T4W"
     groups:
       - group.name1@local
+  - email: acluser@test.com
+    username: ACL User
+    userID: "124"
+    hash: "$2a$10$2b2cU8CPhOTaGrs1HRQuAueS7JTT5ZHsHSzYiFPm1leZck7Mc8T4W"
+    groups:
+      - acl-testers
+
+  

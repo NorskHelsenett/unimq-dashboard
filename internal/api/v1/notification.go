@@ -55,13 +55,6 @@ func (rc *APIService) GetNotificationsHandler(w http.ResponseWriter, r *http.Req
 // @Router			/v1/notifications/{vhost-name} [get]
 // @security		bearer
 func (rc *APIService) GetNotificationsVhostHandler(w http.ResponseWriter, r *http.Request) {
-
-	_, err := httpsuite.IsAGroupInClaim(r.Context(), rc.AdminGroups)
-	if err != nil {
-		httpsuite.WriteJSONErrorForbidden(w, httpsuite.WithInternalErrorMessage(err.Error()))
-		return
-	}
-
 	vhost := chi.URLParam(r, "vhost")
 	if vhost == "" {
 		httpsuite.WriteJSONError(w,
@@ -113,13 +106,6 @@ func (rc *APIService) GetNotificationsVhostHandler(w http.ResponseWriter, r *htt
 // @Router			/v1/notifications/{vhost-name} [delete]
 // @security		bearer
 func (rc *APIService) DeleteNotificationsHandler(w http.ResponseWriter, r *http.Request) {
-
-	_, err := httpsuite.IsAGroupInClaim(r.Context(), rc.AdminGroups)
-	if err != nil {
-		httpsuite.WriteJSONErrorForbidden(w, httpsuite.WithInternalErrorMessage(err.Error()))
-		return
-	}
-
 	vhost := chi.URLParam(r, "vhost")
 	if vhost == "" {
 		httpsuite.WriteJSONError(w,

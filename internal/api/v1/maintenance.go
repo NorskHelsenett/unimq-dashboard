@@ -26,12 +26,6 @@ import (
 // @security		bearer
 func (rc *APIService) GetMaintenanceHandler(w http.ResponseWriter, r *http.Request) {
 
-	_, err := httpsuite.IsAGroupInClaim(r.Context(), rc.AdminGroups)
-	if err != nil {
-		httpsuite.WriteJSONErrorForbidden(w, httpsuite.WithInternalErrorMessage(err.Error()))
-		return
-	}
-
 	// Advance stale entries before returning so callers always see current statuses
 	if _, err := rc.DB.AdvanceMaintenanceStatuses(r.Context()); err != nil {
 		slog.WarnContext(r.Context(), "failed to advance maintenance statuses", "error", err)
@@ -75,13 +69,6 @@ func (rc *APIService) GetMaintenanceHandler(w http.ResponseWriter, r *http.Reque
 // @Router			/v1/maintenance/{maintenance-id} [get]
 // @security		bearer
 func (rc *APIService) GetMaintenanceEntryHandler(w http.ResponseWriter, r *http.Request) {
-
-	_, err := httpsuite.IsAGroupInClaim(r.Context(), rc.AdminGroups)
-	if err != nil {
-		httpsuite.WriteJSONErrorForbidden(w, httpsuite.WithInternalErrorMessage(err.Error()))
-		return
-	}
-
 	id := chi.URLParam(r, "maintenance")
 	if id == "" {
 		httpsuite.WriteJSONError(w,
