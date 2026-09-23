@@ -294,14 +294,14 @@ func (r *RMQClient) GetQueueDetails(vhost string) ([]models.QueueDetail, error) 
 	return details, nil
 }
 
-func (r *RMQClient) GetVhostUsage(vhost string) (*models.VhostUsage, error) {
+func (r *RMQClient) GetVhostUsage(vhost string) (*models.RMQVhostUsage, error) {
 
 	queues, err := r.GetQueue(vhost)
 	if err != nil {
 		return nil, err
 	}
 
-	usage := &models.VhostUsage{
+	usage := &models.RMQVhostUsage{
 		Name:         vhost,
 		MessageBytes: 0,
 		DiskBytes:    0,

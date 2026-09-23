@@ -43,7 +43,7 @@ type VhostMetrics struct {
 	ReadyMessages   int    `json:"ready_messages"`
 }
 
-type VhostUsage struct {
+type RMQVhostUsage struct {
 	Name         string `json:"name"`
 	MessageBytes int64  `json:"message_bytes"`
 	DiskBytes    int64  `json:"disk_bytes"`
