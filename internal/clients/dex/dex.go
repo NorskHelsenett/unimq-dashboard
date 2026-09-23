@@ -155,7 +155,7 @@ func (d *DexClient) Authorization() func(http.Handler) http.Handler {
 // @Tags			Authentication
 // @Produce		json
 // @Success		302	{string}	string	"redirect"
-// @Router			/api/login [get]
+// @Router			/v1/login [get]
 func (d *DexClient) RedirectHandler(w http.ResponseWriter, r *http.Request) {
 	authURL := d.Config.AuthCodeURL("state", oauth2.AccessTypeOffline)
 
@@ -170,7 +170,7 @@ func (d *DexClient) RedirectHandler(w http.ResponseWriter, r *http.Request) {
 // @Success		302		{string}	string	"redirect"
 // @Failure		400		{object}	httpsuite.ErrorResponse
 // @Failure		500		{object}	httpsuite.ErrorResponse
-// @Router			/api/login/callback [get]
+// @Router			/v1/login/callback [get]
 func (d *DexClient) OauthCallbackHandler(w http.ResponseWriter, r *http.Request) {
 	// Get the code from the query parameters
 	code := r.URL.Query().Get("code")

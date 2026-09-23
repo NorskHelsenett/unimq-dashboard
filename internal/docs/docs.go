@@ -18,7 +18,7 @@ const docTemplate = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
-        "/api/healthz": {
+        "/healthz": {
             "get": {
                 "description": "Returns a simple health check response to indicate that the service is running",
                 "produces": [
@@ -38,68 +38,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/login": {
-            "get": {
-                "description": "Redirects the user to the Dex server for authentication",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Authentication"
-                ],
-                "summary": "Redirect to Dex for authentication",
-                "responses": {
-                    "302": {
-                        "description": "redirect",
-                        "schema": {
-                            "type": "string"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/login/callback": {
-            "get": {
-                "description": "Handles the OAuth callback from Dex and exchanges the code for a token",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Authentication"
-                ],
-                "summary": "Handle Dex OAuth callback",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "Authorization code",
-                        "name": "code",
-                        "in": "query",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "302": {
-                        "description": "redirect",
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/httpsuite.ErrorResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/httpsuite.ErrorResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/readyz": {
+        "/readyz": {
             "get": {
                 "description": "Checks the readiness of the service by verifying connectivity to RabbitMQ, MongoDB, and Dex",
                 "produces": [
@@ -292,6 +231,67 @@ const docTemplate = `{
                     },
                     "503": {
                         "description": "Service Unavailable",
+                        "schema": {
+                            "$ref": "#/definitions/httpsuite.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/v1/login": {
+            "get": {
+                "description": "Redirects the user to the Dex server for authentication",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Authentication"
+                ],
+                "summary": "Redirect to Dex for authentication",
+                "responses": {
+                    "302": {
+                        "description": "redirect",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/v1/login/callback": {
+            "get": {
+                "description": "Handles the OAuth callback from Dex and exchanges the code for a token",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Authentication"
+                ],
+                "summary": "Handle Dex OAuth callback",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Authorization code",
+                        "name": "code",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "302": {
+                        "description": "redirect",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/httpsuite.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
                         "schema": {
                             "$ref": "#/definitions/httpsuite.ErrorResponse"
                         }

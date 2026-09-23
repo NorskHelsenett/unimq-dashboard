@@ -13,7 +13,7 @@ import (
 // @Tags			Health
 // @Produce		json
 // @Success		200	{string}	string	"healthy"
-// @Router			/api/healthz [get]
+// @Router			/healthz [get]
 func (rc *APIService) HealthzHandler(w http.ResponseWriter, r *http.Request) {
 	httpsuite.SendEmptyResponse(r.Context(), w, "healthy", http.StatusOK)
 }
@@ -24,7 +24,7 @@ func (rc *APIService) HealthzHandler(w http.ResponseWriter, r *http.Request) {
 // @Produce		json
 // @Success		200	{string}	string	"ready"
 // @Failure		502	{object}	httpsuite.ErrorResponse
-// @Router			/api/readyz [get]
+// @Router			/readyz [get]
 func (rc *APIService) ReadyzHandler(rmq *rmq.RMQHandler, dex *dex.DexClient) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		err := rmq.RMQClient.Ping()
