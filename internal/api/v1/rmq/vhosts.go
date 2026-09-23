@@ -160,10 +160,10 @@ func (rc *RMQHandler) GetVhostLimitsHandler(w http.ResponseWriter, r *http.Reque
 // @Tags			RabbitMQ
 // @Produce		json
 // @Param			vhost-name	path		string	true	"Vhost Name"
-// @Success		200	{object}	[]models.RMQVhostUsage
-// @Failure		401	{object}	httpsuite.ErrorResponse
-// @Failure		403	{object}	httpsuite.ErrorResponse
-// @Failure		500	{object}	httpsuite.ErrorResponse
+// @Success		200			{object}	[]models.RMQVhostUsage
+// @Failure		401			{object}	httpsuite.ErrorResponse
+// @Failure		403			{object}	httpsuite.ErrorResponse
+// @Failure		500			{object}	httpsuite.ErrorResponse
 // @Router			/v1/vhost/{vhost-name}/usage [get]
 // @security		bearer
 func (rc *RMQHandler) GetRMQVhostUsageHandler(w http.ResponseWriter, r *http.Request) {
