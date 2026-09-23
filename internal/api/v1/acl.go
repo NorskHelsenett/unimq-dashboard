@@ -94,6 +94,16 @@ func (rc *APIService) requireAdmin(w http.ResponseWriter, r *http.Request) bool 
 	return true
 }
 
+// @Summary		Get ACLs
+// @Description	Get all vhost access control lists. Requires membership in an admin group.
+// @Tags			ACLs
+// @Produce		json
+// @Success		200	{array}		models.ACL
+// @Failure		401	{object}	httpsuite.ErrorResponse
+// @Failure		403	{object}	httpsuite.ErrorResponse
+// @Failure		500	{object}	httpsuite.ErrorResponse
+// @Router			/v1/acls [get]
+// @security		bearer
 func (rc *APIService) GetACLsHandler(w http.ResponseWriter, r *http.Request) {
 	if !rc.requireAdmin(w, r) {
 		return
@@ -107,6 +117,19 @@ func (rc *APIService) GetACLsHandler(w http.ResponseWriter, r *http.Request) {
 	httpsuite.SendResponse(r.Context(), w, "Fetched ACLs", http.StatusOK, &acls)
 }
 
+// @Summary		Get an ACL
+// @Description	Get the access control list for a group. Requires membership in an admin group.
+// @Tags			ACLs
+// @Produce		json
+// @Param			group	path	string	true	"Group name"
+// @Success		200	{object}	models.ACL
+// @Failure		400	{object}	httpsuite.ErrorResponse
+// @Failure		401	{object}	httpsuite.ErrorResponse
+// @Failure		403	{object}	httpsuite.ErrorResponse
+// @Failure		404	{object}	httpsuite.ErrorResponse
+// @Failure		500	{object}	httpsuite.ErrorResponse
+// @Router			/v1/acls/{group} [get]
+// @security		bearer
 func (rc *APIService) GetACLHandler(w http.ResponseWriter, r *http.Request) {
 	if !rc.requireAdmin(w, r) {
 		return
@@ -129,6 +152,19 @@ func (rc *APIService) GetACLHandler(w http.ResponseWriter, r *http.Request) {
 	httpsuite.SendResponse(r.Context(), w, "Fetched ACL", http.StatusOK, acl)
 }
 
+// @Summary		Create or update an ACL
+// @Description	Create or replace a group's vhost access control list. Requires membership in an admin group.
+// @Tags			ACLs
+// @Accept			json
+// @Produce		json
+// @Param			acl	body	models.ACL	true	"ACL definition"
+// @Success		200	{object}	models.ACL
+// @Failure		400	{object}	httpsuite.ErrorResponse
+// @Failure		401	{object}	httpsuite.ErrorResponse
+// @Failure		403	{object}	httpsuite.ErrorResponse
+// @Failure		500	{object}	httpsuite.ErrorResponse
+// @Router			/v1/acls [put]
+// @security		bearer
 func (rc *APIService) UpsertACLHandler(w http.ResponseWriter, r *http.Request) {
 	if !rc.requireAdmin(w, r) {
 		return
@@ -150,6 +186,19 @@ func (rc *APIService) UpsertACLHandler(w http.ResponseWriter, r *http.Request) {
 	httpsuite.SendResponse(r.Context(), w, "ACL saved", http.StatusOK, &acl)
 }
 
+// @Summary		Delete an ACL
+// @Description	Delete a group's vhost access control list. Requires membership in an admin group.
+// @Tags			ACLs
+// @Produce		json
+// @Param			group	path	string	true	"Group name"
+// @Success		200	{string}	string	"ACL deleted successfully"
+// @Failure		400	{object}	httpsuite.ErrorResponse
+// @Failure		401	{object}	httpsuite.ErrorResponse
+// @Failure		403	{object}	httpsuite.ErrorResponse
+// @Failure		404	{object}	httpsuite.ErrorResponse
+// @Failure		500	{object}	httpsuite.ErrorResponse
+// @Router			/v1/acls/{group} [delete]
+// @security		bearer
 func (rc *APIService) DeleteACLHandler(w http.ResponseWriter, r *http.Request) {
 	if !rc.requireAdmin(w, r) {
 		return
