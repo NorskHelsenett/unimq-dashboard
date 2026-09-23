@@ -39,7 +39,7 @@ func SetupRoutes(ctx context.Context, config *config.Config, db *database.Databa
 	}
 
 	rmqHandler := rmq.NewRMQHandler(rmqclient, config.AdminGroups)
-	profileHandler := profile.NewProfileHandler()
+	profileHandler := profile.NewProfileHandler(config.AdminGroups)
 
 	r := chi.NewRouter()
 

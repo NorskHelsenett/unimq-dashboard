@@ -56,6 +56,37 @@ func GetEmailFromContext(ctx context.Context) (string, error) {
 	return email, nil
 }
 
+func GetUsernameFromContext(ctx context.Context) (string, error) {
+	claims, err := GetClaimsFromContext(ctx)
+	if err != nil {
+		return "", err
+	}
+
+	username, ok := claims["name"].(string)
+	if !ok {
+		return "", fmt.Errorf("%w: name", ErrParameterNotFound)
+	}
+	return username, nil
+}
+
+func GetGroupsFromContext(ctx context.Context) ([]string, error) {
+	claims, err := GetClaimsFromContext(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	groups, ok := claims["groups"].([]any)
+	if !ok {
+		return nil, fmt.Errorf("%w: groups", ErrGroupsNotFound)
+	}
+
+	stringGroups := make([]string, len(groups))
+	for i, g := range groups {
+		stringGroups[i] = fmt.Sprintf("%v", g)
+	}
+	return stringGroups, nil
+}
+
 // IsGroupInClaim checks if a specific group exists in the claims.
 func IsGroupInClaim(ctx context.Context, group string) (string, error) {
 	return IsAGroupInClaim(ctx, []string{group})
@@ -63,26 +94,19 @@ func IsGroupInClaim(ctx context.Context, group string) (string, error) {
 
 // isAGroupinClaim checks if any of the specified groups exist in the claims.
 func IsAGroupInClaim(ctx context.Context, groups []string) (string, error) {
-	aClaimGroups, err := IsParameterInClaim(ctx, "groups")
+	allGroups, err := GetGroupsFromContext(ctx)
 	if err != nil {
 		return "", err
 	}
 
-	anyGroups, ok := aClaimGroups.([]any)
-	if !ok {
-		return "", fmt.Errorf("%w: %v", ErrInvalidGroupsType, aClaimGroups)
-	}
-
-	claimGroups := castSliceToStringSlice(anyGroups)
-
-	for _, g := range claimGroups {
+	for _, g := range allGroups {
 		if slices.Contains(groups, g) {
 			return g, nil
 		}
 	}
 
-	slog.InfoContext(ctx, "no matching group found in claims", "expected_groups", groups, "retrieved_groups", claimGroups)
-	return "", fmt.Errorf("%w. %v", ErrNoMatchingGroup, claimGroups)
+	slog.InfoContext(ctx, "no matching group found in claims", "expected_groups", groups, "retrieved_groups", allGroups)
+	return "", fmt.Errorf("%w. %v", ErrNoMatchingGroup, allGroups)
 }
 
 func castSliceToStringSlice[T any](input []T) []string {
