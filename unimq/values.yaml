@@ -70,10 +70,6 @@ unimq:
     rabbitmq_connection_limit: 300
     rabbitmq_queue_limit: 150
 
-    # prometheus connection settings
-    prometheus_host: "http://localhost"
-    prometheus_port: "9090"
-
     # email/smtp settings, notifications are disabled when smtp_host is empty
     email_smtp_host: ""
     email_smtp_port: "587"
@@ -84,7 +80,6 @@ unimq:
 
     # OIDC authentication settings
     oidc_client_id: "unimq-dashboard"
-    # Remember to update this with a real value; it is base64 encoded automatically.
     oidc_client_secret: "placeholder"
     oidc_url: "http://localhost:5556/dex"
     oidc_redirect_url: "http://localhost:8080/api/callback"
