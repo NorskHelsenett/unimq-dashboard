@@ -97,7 +97,7 @@ func main() {
 	}
 
 	slog.InfoContext(ctx, "starting RabbitMQ Dashboard", "URL", config.BaseURL, "port", config.BasePort)
-	slog.InfoContext(ctx, "Swagger documentation available at", "URL", fmt.Sprintf("http://%v:%d/api/swagger/index.html", config.BaseURL, config.BasePort))
+	slog.InfoContext(ctx, "Swagger documentation available at", "URL", fmt.Sprintf("%v:%d/api/swagger/index.html", config.BaseURL, config.BasePort))
 	wg := &sync.WaitGroup{}
 
 	server := &http.Server{
