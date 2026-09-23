@@ -78,33 +78,14 @@ definitions:
     - maintenance
     type: string
     x-enum-varnames:
-    - Channels
-    - Connections
-    - Queues
-    - Unacked_Messages
-    - Queue_Messages
-    - Queue_Size
-    - No_Consumer
-    - Maintenance
-  models.ClusterStats:
-    properties:
-      min_disk_limit:
-        type: integer
-      nodes:
-        items:
-          $ref: '#/definitions/models.NodeStats'
-        type: array
-      total_disk_free:
-        type: integer
-      total_mem_limit:
-        type: integer
-      total_mem_used:
-        type: integer
-      vhost_resources:
-        items:
-          $ref: '#/definitions/models.VhostResources'
-        type: array
-    type: object
+    - channels
+    - connections
+    - queues
+    - unacked_messages
+    - queue_messages
+    - queue_size
+    - no_consumer
+    - maintenance
   models.LogEntry:
     properties:
       alarm_type:
@@ -124,10 +105,12 @@ definitions:
     enum:
     - fired
     - resolved
+    - error
     type: string
     x-enum-varnames:
     - LogEventFired
     - LogEventResolved
+    - LogEventError
   models.MaintenanceEditLog:
     properties:
       description:
@@ -224,30 +207,19 @@ definitions:
           type: string
         type: array
     type: object
-  models.NodeStats:
-    properties:
-      disk_free:
-        type: integer
-      disk_free_limit:
-        type: integer
-      mem_limit:
-        type: integer
-      mem_used:
-        type: integer
-      name:
-        type: string
-    type: object
   models.PatchMaintenanceEntry:
     properties:
       description:
+        example: maintenance for server upgrade
         type: string
       end:
+        example: "2024-06-01 12:00:00"
         type: string
       reason:
+        example: updated maintenance time
         type: string
       start:
-        type: string
-      updated_by:
+        example: "2024-06-01 10:00:00"
         type: string
     type: object
   models.PostAlarmRule:
@@ -295,28 +267,26 @@ definitions:
       type:
         allOf:
         - $ref: '#/definitions/models.RecipientType'
+        enum:
+        - webhook
+        - email
         example: webhook
       url:
         example: https://hooks.slack.com/services
         type: string
+    required:
+    - name
+    - type
     type: object
-  models.QueueAPIResponse:
+  models.Profile:
     properties:
-      consumers:
-        type: integer
-      message_bytes:
-        type: integer
-      message_bytes_persistent:
-        type: integer
-      message_stats:
-        $ref: '#/definitions/models.MessageStats'
-      messages:
-        type: integer
-      messages_unacknowledged:
-        type: integer
-      name:
+      email:
         type: string
-      vhost:
+      groups:
+        items:
+          type: string
+        type: array
+      username:
         type: string
     type: object
   models.QueueDetail:
@@ -342,6 +312,56 @@ definitions:
       redeliver_rate:
         type: number
     type: object
+  models.RMQNode:
+    properties:
+      disk_free:
+        type: integer
+      disk_free_limit:
+        type: integer
+      mem_limit:
+        type: integer
+      mem_used:
+        type: integer
+      name:
+        type: string
+    type: object
+  models.RMQQueue:
+    properties:
+      consumers:
+        type: integer
+      message_bytes:
+        type: integer
+      message_bytes_persistent:
+        type: integer
+      message_stats:
+        $ref: '#/definitions/models.MessageStats'
+      messages:
+        type: integer
+      messages_unacknowledged:
+        type: integer
+      name:
+        type: string
+      vhost:
+        type: string
+    type: object
+  models.RMQVhostLimits:
+    properties:
+      max_connections:
+        type: integer
+      max_queues:
+        type: integer
+      vhost:
+        type: string
+    type: object
+  models.RMQVhostUsage:
+    properties:
+      disk_bytes:
+        type: integer
+      message_bytes:
+        type: integer
+      name:
+        type: string
+    type: object
   models.RateDetail:
     properties:
       rate:
@@ -356,9 +376,17 @@ definitions:
       name:
         type: string
       type:
-        $ref: '#/definitions/models.RecipientType'
+        allOf:
+        - $ref: '#/definitions/models.RecipientType'
+        enum:
+        - webhook
+        - email
       url:
         type: string
+    required:
+    - id
+    - name
+    - type
     type: object
   models.RecipientType:
     enum:
@@ -372,6 +400,10 @@ definitions:
     - RecipientTypeUnknown
   models.TestNotificationResponse:
     properties:
+      failed_destinations:
+        items:
+          type: string
+        type: array
       message:
         type: string
       success:
@@ -450,15 +482,6 @@ definitions:
           $ref: '#/definitions/models.AlarmRule'
         type: array
     type: object
-  models.VhostResources:
-    properties:
-      disk_bytes:
-        type: integer
-      message_bytes:
-        type: integer
-      name:
-        type: string
-    type: object
   notify.CheckerStatus:
     properties:
       interval_s:
@@ -477,6 +500,79 @@ info:
   title: RabbitMQ Dashboard API
   version: "1.0"
 paths:
+  /api/healthz:
+    get:
+      description: Returns a simple health check response to indicate that the service
+        is running
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: healthy
+          schema:
+            type: string
+      summary: Health check
+      tags:
+      - Health
+  /api/login:
+    get:
+      description: Redirects the user to the Dex server for authentication
+      produces:
+      - application/json
+      responses:
+        "302":
+          description: redirect
+          schema:
+            type: string
+      summary: Redirect to Dex for authentication
+      tags:
+      - Authentication
+  /api/login/callback:
+    get:
+      description: Handles the OAuth callback from Dex and exchanges the code for
+        a token
+      parameters:
+      - description: Authorization code
+        in: query
+        name: code
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "302":
+          description: redirect
+          schema:
+            type: string
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/httpsuite.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/httpsuite.ErrorResponse'
+      summary: Handle Dex OAuth callback
+      tags:
+      - Authentication
+  /api/readyz:
+    get:
+      description: Checks the readiness of the service by verifying connectivity to
+        RabbitMQ, MongoDB, and Dex
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: ready
+          schema:
+            type: string
+        "502":
+          description: Bad Gateway
+          schema:
+            $ref: '#/definitions/httpsuite.ErrorResponse'
+      summary: Readiness check
+      tags:
+      - Health
   /v1/alarms:
     get:
       description: Get alarm history for all rules
@@ -588,33 +684,6 @@ paths:
       summary: Get checker status
       tags:
       - Notifications
-  /v1/cluster:
-    get:
-      description: Get overall cluster statistics and health information
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/models.ClusterStats'
-        "401":
-          description: Unauthorized
-          schema:
-            $ref: '#/definitions/httpsuite.ErrorResponse'
-        "403":
-          description: Forbidden
-          schema:
-            $ref: '#/definitions/httpsuite.ErrorResponse'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/httpsuite.ErrorResponse'
-      security:
-      - bearer: []
-      summary: Get Cluster Stats
-      tags:
-      - Cluster
   /v1/maintenance:
     get:
       description: Get scheduled  maintenance information and history
@@ -1384,6 +1453,93 @@ paths:
       summary: Toggle a notification rule
       tags:
       - Notifications
+  /v1/profile:
+    get:
+      description: Get the profile information of the authenticated user
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.Profile'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/httpsuite.ErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/httpsuite.ErrorResponse'
+      security:
+      - bearer: []
+      summary: Get user profile
+      tags:
+      - Profile
+  /v1/rabbitmq:
+    get:
+      description: Get statistics for all nodes in the RabbitMQ cluster
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/models.RMQNode'
+            type: array
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/httpsuite.ErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/httpsuite.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/httpsuite.ErrorResponse'
+      security:
+      - bearer: []
+      summary: Get node statistics
+      tags:
+      - RabbitMQ
+  /v1/vhost/{vhost-name}/usage:
+    get:
+      description: Get usage statistics for a specific vhost in the RabbitMQ cluster
+      parameters:
+      - description: Vhost Name
+        in: path
+        name: vhost-name
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/models.RMQVhostUsage'
+            type: array
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/httpsuite.ErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/httpsuite.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/httpsuite.ErrorResponse'
+      security:
+      - bearer: []
+      summary: Get Vhost usage
+      tags:
+      - RabbitMQ
   /v1/vhosts:
     get:
       description: Get a list of all vhosts in the RabbitMQ cluster
@@ -1456,6 +1612,43 @@ paths:
       summary: Get vhost details
       tags:
       - Vhosts
+  /v1/vhosts/{vhost-name}/limits:
+    get:
+      description: Get limits of a specific vhost by name
+      parameters:
+      - description: Vhost Name
+        in: path
+        name: vhost-name
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.RMQVhostLimits'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/httpsuite.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/httpsuite.ErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/httpsuite.ErrorResponse'
+        "502":
+          description: Bad Gateway
+          schema:
+            $ref: '#/definitions/httpsuite.ErrorResponse'
+      security:
+      - bearer: []
+      summary: Get vhost limits
+      tags:
+      - Vhosts
   /v1/vhosts/{vhost-name}/metrics:
     get:
       description: Get real-time metrics for a specific vhost, including queue lengths,
@@ -1510,7 +1703,7 @@ paths:
           description: HTML page with queue metrics
           schema:
             items:
-              $ref: '#/definitions/models.QueueAPIResponse'
+              $ref: '#/definitions/models.RMQQueue'
             type: array
         "400":
           description: Bad Request

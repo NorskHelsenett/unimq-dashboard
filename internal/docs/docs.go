@@ -18,6 +18,113 @@ const docTemplate = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
+        "/api/healthz": {
+            "get": {
+                "description": "Returns a simple health check response to indicate that the service is running",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Health"
+                ],
+                "summary": "Health check",
+                "responses": {
+                    "200": {
+                        "description": "healthy",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/login": {
+            "get": {
+                "description": "Redirects the user to the Dex server for authentication",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Authentication"
+                ],
+                "summary": "Redirect to Dex for authentication",
+                "responses": {
+                    "302": {
+                        "description": "redirect",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/login/callback": {
+            "get": {
+                "description": "Handles the OAuth callback from Dex and exchanges the code for a token",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Authentication"
+                ],
+                "summary": "Handle Dex OAuth callback",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Authorization code",
+                        "name": "code",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "302": {
+                        "description": "redirect",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/httpsuite.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/httpsuite.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/readyz": {
+            "get": {
+                "description": "Checks the readiness of the service by verifying connectivity to RabbitMQ, MongoDB, and Dex",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Health"
+                ],
+                "summary": "Readiness check",
+                "responses": {
+                    "200": {
+                        "description": "ready",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "502": {
+                        "description": "Bad Gateway",
+                        "schema": {
+                            "$ref": "#/definitions/httpsuite.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/v1/alarms": {
             "get": {
                 "security": [
@@ -185,49 +292,6 @@ const docTemplate = `{
                     },
                     "503": {
                         "description": "Service Unavailable",
-                        "schema": {
-                            "$ref": "#/definitions/httpsuite.ErrorResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/v1/cluster": {
-            "get": {
-                "security": [
-                    {
-                        "bearer": []
-                    }
-                ],
-                "description": "Get overall cluster statistics and health information",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Cluster"
-                ],
-                "summary": "Get Cluster Stats",
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/models.ClusterStats"
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized",
-                        "schema": {
-                            "$ref": "#/definitions/httpsuite.ErrorResponse"
-                        }
-                    },
-                    "403": {
-                        "description": "Forbidden",
-                        "schema": {
-                            "$ref": "#/definitions/httpsuite.ErrorResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
                         "schema": {
                             "$ref": "#/definitions/httpsuite.ErrorResponse"
                         }
@@ -1419,6 +1483,144 @@ const docTemplate = `{
                 }
             }
         },
+        "/v1/profile": {
+            "get": {
+                "security": [
+                    {
+                        "bearer": []
+                    }
+                ],
+                "description": "Get the profile information of the authenticated user",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Profile"
+                ],
+                "summary": "Get user profile",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/models.Profile"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/httpsuite.ErrorResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/httpsuite.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/v1/rabbitmq": {
+            "get": {
+                "security": [
+                    {
+                        "bearer": []
+                    }
+                ],
+                "description": "Get statistics for all nodes in the RabbitMQ cluster",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "RabbitMQ"
+                ],
+                "summary": "Get node statistics",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/models.RMQNode"
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/httpsuite.ErrorResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/httpsuite.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/httpsuite.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/v1/vhost/{vhost-name}/usage": {
+            "get": {
+                "security": [
+                    {
+                        "bearer": []
+                    }
+                ],
+                "description": "Get usage statistics for a specific vhost in the RabbitMQ cluster",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "RabbitMQ"
+                ],
+                "summary": "Get Vhost usage",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Vhost Name",
+                        "name": "vhost-name",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/models.RMQVhostUsage"
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/httpsuite.ErrorResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/httpsuite.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/httpsuite.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/v1/vhosts": {
             "get": {
                 "security": [
@@ -1503,6 +1705,64 @@ const docTemplate = `{
                         "description": "OK",
                         "schema": {
                             "$ref": "#/definitions/models.Vhost"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/httpsuite.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/httpsuite.ErrorResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/httpsuite.ErrorResponse"
+                        }
+                    },
+                    "502": {
+                        "description": "Bad Gateway",
+                        "schema": {
+                            "$ref": "#/definitions/httpsuite.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/v1/vhosts/{vhost-name}/limits": {
+            "get": {
+                "security": [
+                    {
+                        "bearer": []
+                    }
+                ],
+                "description": "Get limits of a specific vhost by name",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Vhosts"
+                ],
+                "summary": "Get vhost limits",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Vhost Name",
+                        "name": "vhost-name",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/models.RMQVhostLimits"
                         }
                     },
                     "400": {
@@ -1620,7 +1880,7 @@ const docTemplate = `{
                         "schema": {
                             "type": "array",
                             "items": {
-                                "$ref": "#/definitions/models.QueueAPIResponse"
+                                "$ref": "#/definitions/models.RMQQueue"
                             }
                         }
                     },
@@ -1841,44 +2101,15 @@ const docTemplate = `{
                 "maintenance"
             ],
             "x-enum-varnames": [
-                "Channels",
-                "Connections",
-                "Queues",
-                "Unacked_Messages",
-                "Queue_Messages",
-                "Queue_Size",
-                "No_Consumer",
-                "Maintenance"
+                "channels",
+                "connections",
+                "queues",
+                "unacked_messages",
+                "queue_messages",
+                "queue_size",
+                "no_consumer",
+                "maintenance"
             ]
-        },
-        "models.ClusterStats": {
-            "type": "object",
-            "properties": {
-                "min_disk_limit": {
-                    "type": "integer"
-                },
-                "nodes": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/models.NodeStats"
-                    }
-                },
-                "total_disk_free": {
-                    "type": "integer"
-                },
-                "total_mem_limit": {
-                    "type": "integer"
-                },
-                "total_mem_used": {
-                    "type": "integer"
-                },
-                "vhost_resources": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/models.VhostResources"
-                    }
-                }
-            }
         },
         "models.LogEntry": {
             "type": "object",
@@ -1907,11 +2138,13 @@ const docTemplate = `{
             "type": "string",
             "enum": [
                 "fired",
-                "resolved"
+                "resolved",
+                "error"
             ],
             "x-enum-varnames": [
                 "LogEventFired",
-                "LogEventResolved"
+                "LogEventResolved",
+                "LogEventError"
             ]
         },
         "models.MaintenanceEditLog": {
@@ -2057,43 +2290,24 @@ const docTemplate = `{
                 }
             }
         },
-        "models.NodeStats": {
-            "type": "object",
-            "properties": {
-                "disk_free": {
-                    "type": "integer"
-                },
-                "disk_free_limit": {
-                    "type": "integer"
-                },
-                "mem_limit": {
-                    "type": "integer"
-                },
-                "mem_used": {
-                    "type": "integer"
-                },
-                "name": {
-                    "type": "string"
-                }
-            }
-        },
         "models.PatchMaintenanceEntry": {
             "type": "object",
             "properties": {
                 "description": {
-                    "type": "string"
+                    "type": "string",
+                    "example": "maintenance for server upgrade"
                 },
                 "end": {
-                    "type": "string"
+                    "type": "string",
+                    "example": "2024-06-01 12:00:00"
                 },
                 "reason": {
-                    "type": "string"
+                    "type": "string",
+                    "example": "updated maintenance time"
                 },
                 "start": {
-                    "type": "string"
-                },
-                "updated_by": {
-                    "type": "string"
+                    "type": "string",
+                    "example": "2024-06-01 10:00:00"
                 }
             }
         },
@@ -2149,6 +2363,10 @@ const docTemplate = `{
         },
         "models.PostRecipient": {
             "type": "object",
+            "required": [
+                "name",
+                "type"
+            ],
             "properties": {
                 "email": {
                     "type": "string",
@@ -2159,6 +2377,10 @@ const docTemplate = `{
                     "example": "Slack Channel to team"
                 },
                 "type": {
+                    "enum": [
+                        "webhook",
+                        "email"
+                    ],
                     "allOf": [
                         {
                             "$ref": "#/definitions/models.RecipientType"
@@ -2172,31 +2394,19 @@ const docTemplate = `{
                 }
             }
         },
-        "models.QueueAPIResponse": {
+        "models.Profile": {
             "type": "object",
             "properties": {
-                "consumers": {
-                    "type": "integer"
-                },
-                "message_bytes": {
-                    "type": "integer"
-                },
-                "message_bytes_persistent": {
-                    "type": "integer"
-                },
-                "message_stats": {
-                    "$ref": "#/definitions/models.MessageStats"
-                },
-                "messages": {
-                    "type": "integer"
-                },
-                "messages_unacknowledged": {
-                    "type": "integer"
-                },
-                "name": {
+                "email": {
                     "type": "string"
                 },
-                "vhost": {
+                "groups": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "username": {
                     "type": "string"
                 }
             }
@@ -2236,6 +2446,83 @@ const docTemplate = `{
                 }
             }
         },
+        "models.RMQNode": {
+            "type": "object",
+            "properties": {
+                "disk_free": {
+                    "type": "integer"
+                },
+                "disk_free_limit": {
+                    "type": "integer"
+                },
+                "mem_limit": {
+                    "type": "integer"
+                },
+                "mem_used": {
+                    "type": "integer"
+                },
+                "name": {
+                    "type": "string"
+                }
+            }
+        },
+        "models.RMQQueue": {
+            "type": "object",
+            "properties": {
+                "consumers": {
+                    "type": "integer"
+                },
+                "message_bytes": {
+                    "type": "integer"
+                },
+                "message_bytes_persistent": {
+                    "type": "integer"
+                },
+                "message_stats": {
+                    "$ref": "#/definitions/models.MessageStats"
+                },
+                "messages": {
+                    "type": "integer"
+                },
+                "messages_unacknowledged": {
+                    "type": "integer"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "vhost": {
+                    "type": "string"
+                }
+            }
+        },
+        "models.RMQVhostLimits": {
+            "type": "object",
+            "properties": {
+                "max_connections": {
+                    "type": "integer"
+                },
+                "max_queues": {
+                    "type": "integer"
+                },
+                "vhost": {
+                    "type": "string"
+                }
+            }
+        },
+        "models.RMQVhostUsage": {
+            "type": "object",
+            "properties": {
+                "disk_bytes": {
+                    "type": "integer"
+                },
+                "message_bytes": {
+                    "type": "integer"
+                },
+                "name": {
+                    "type": "string"
+                }
+            }
+        },
         "models.RateDetail": {
             "type": "object",
             "properties": {
@@ -2246,6 +2533,11 @@ const docTemplate = `{
         },
         "models.Recipient": {
             "type": "object",
+            "required": [
+                "id",
+                "name",
+                "type"
+            ],
             "properties": {
                 "email": {
                     "type": "string"
@@ -2257,7 +2549,15 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "type": {
-                    "$ref": "#/definitions/models.RecipientType"
+                    "enum": [
+                        "webhook",
+                        "email"
+                    ],
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/models.RecipientType"
+                        }
+                    ]
                 },
                 "url": {
                     "type": "string"
@@ -2280,6 +2580,12 @@ const docTemplate = `{
         "models.TestNotificationResponse": {
             "type": "object",
             "properties": {
+                "failed_destinations": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
                 "message": {
                     "type": "string"
                 },
@@ -2398,20 +2704,6 @@ const docTemplate = `{
                     "items": {
                         "$ref": "#/definitions/models.AlarmRule"
                     }
-                }
-            }
-        },
-        "models.VhostResources": {
-            "type": "object",
-            "properties": {
-                "disk_bytes": {
-                    "type": "integer"
-                },
-                "message_bytes": {
-                    "type": "integer"
-                },
-                "name": {
-                    "type": "string"
                 }
             }
         },
