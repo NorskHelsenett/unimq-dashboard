@@ -8,9 +8,11 @@ import (
 func SetupRMQRoutes(r chi.Router, rmqhandler *rmq.RMQHandler) {
 
 	r.Route("/vhosts", func(r chi.Router) {
-		r.Get("/", rmqhandler.VhostsHandler)
-		r.Get("/{vhost}", rmqhandler.VhostHandler)
+		r.Get("/", rmqhandler.GetVhostsHandler)
+		r.Get("/{vhost}", rmqhandler.GetVhostHandler)
 		r.Get("/{vhost}/metrics", rmqhandler.MetricHandler)
+		r.Get("/{vhost}/limits", rmqhandler.GetVhostLimitsHandler)
+		r.Get("/{vhost}/usage", rmqhandler.GetRMQVhostUsageHandler)
 
 		r.Route("/{vhost}/queues", func(r chi.Router) {
 			r.Get("/", rmqhandler.GetQueuesHandler)
@@ -20,7 +22,7 @@ func SetupRMQRoutes(r chi.Router, rmqhandler *rmq.RMQHandler) {
 	})
 
 	r.Route("/rabbitmq", func(r chi.Router) {
-		r.Get("/nodes", rmqhandler.GetRMQNodesHandler)
-		r.Get("/vhostusage", rmqhandler.GetRMQVhostUsageHandler)
+		r.Get("/", rmqhandler.GetRMQNodesHandler)
+		r.Get("/usage", rmqhandler.GetRMQVhostUsageHandler)
 	})
 }
