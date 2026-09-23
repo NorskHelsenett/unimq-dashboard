@@ -79,11 +79,18 @@ func NewRMQNode(name string, memUsed, memLimit, diskFree, diskFreeLimit int64) *
 	}
 }
 
-type RMQLimits struct {
+type RMQVhostLimits struct {
 	Vhost          string `json:"vhost"`
-	MaxChannels    int    `json:"max_channels"`
 	MaxConnections int    `json:"max_connections"`
 	MaxQueues      int    `json:"max_queues"`
+}
+
+func NewRMQVhostLimits(vhost string) *RMQVhostLimits {
+	return &RMQVhostLimits{
+		Vhost:          vhost,
+		MaxConnections: 0,
+		MaxQueues:      0,
+	}
 }
 
 type ConnectionResponse struct {
