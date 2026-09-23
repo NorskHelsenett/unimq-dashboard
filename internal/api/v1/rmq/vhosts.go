@@ -1,4 +1,4 @@
-package api
+package rmq
 
 import (
 	"fmt"
@@ -20,7 +20,7 @@ import (
 // @Failure		502	{object}	httpsuite.ErrorResponse
 // @Router			/v1/vhosts [get]
 // @security		bearer
-func (rc *APIService) VhostsHandler(w http.ResponseWriter, r *http.Request) {
+func (rc *RMQHandler) VhostsHandler(w http.ResponseWriter, r *http.Request) {
 
 	_, err := httpsuite.IsAGroupInClaim(r.Context(), rc.AdminGroups)
 	if err != nil {
@@ -53,7 +53,7 @@ func (rc *APIService) VhostsHandler(w http.ResponseWriter, r *http.Request) {
 // @Failure		502			{object}	httpsuite.ErrorResponse
 // @Router			/v1/vhosts/{vhost-name} [get]
 // @security		bearer
-func (rc *APIService) VhostHandler(w http.ResponseWriter, r *http.Request) {
+func (rc *RMQHandler) VhostHandler(w http.ResponseWriter, r *http.Request) {
 
 	_, err := httpsuite.IsAGroupInClaim(r.Context(), rc.AdminGroups)
 	if err != nil {

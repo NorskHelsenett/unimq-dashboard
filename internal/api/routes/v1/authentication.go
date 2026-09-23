@@ -1,4 +1,4 @@
-package routes
+package v1
 
 import (
 	"github.com/go-chi/chi/v5"

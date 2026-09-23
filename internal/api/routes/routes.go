@@ -9,6 +9,7 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
+	v1routes "github.com/sisneve/rabbitmq-dashboard/internal/api/routes/v1"
 	api "github.com/sisneve/rabbitmq-dashboard/internal/api/v1"
 	"github.com/sisneve/rabbitmq-dashboard/internal/api/v1/rmq"
 	"github.com/sisneve/rabbitmq-dashboard/internal/clients/dex"
@@ -47,12 +48,14 @@ func SetupRoutes(ctx context.Context, config *config.Config, db *database.Databa
 
 	r.Group(func(r chi.Router) {
 		r.Route("/api", func(r chi.Router) {
-			SetupUnprotectedRoutes(r, apiservice, dex)
-			SetupAuthenticationRoutes(r, dex)
-
-			r.Group(func(r chi.Router) {
-				r.Use(dex.Authorization())
-				SetupProtectedRoutes(r, apiservice, rmqHandler)
+			r.Route("/v1", func(r chi.Router) {
+				v1routes.SetupUtilityRoutes(r, apiservice, dex)
+				v1routes.SetupAuthenticationRoutes(r, dex)
+				r.Group(func(r chi.Router) {
+					r.Use(dex.Authorization())
+					v1routes.SetupInternalRoutes(r, apiservice)
+					v1routes.SetupRMQRoutes(r, rmqHandler)
+				})
 			})
 		})
 	})
