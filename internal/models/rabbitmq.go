@@ -1,5 +1,7 @@
 package models
 
+import "encoding/json"
+
 type Vhost struct {
 	Messages                      int               `json:"messages"`
 	Name                          string            `json:"name"`
@@ -91,6 +93,35 @@ func NewRMQVhostLimits(vhost string) *RMQVhostLimits {
 		MaxConnections: 0,
 		MaxQueues:      0,
 	}
+}
+
+func (l *RMQVhostLimits) UnmarshalJSON(data []byte) error {
+	type Alias RMQVhostLimits
+	aux := &struct {
+		Vhost  string `json:"vhost"`
+		Values struct {
+			MaxConnections *int `json:"max_connections"`
+			MaxQueues      *int `json:"max_queues"`
+		} `json:"values"`
+	}{}
+
+	if err := json.Unmarshal(data, &aux); err != nil {
+		return err
+	}
+
+	if aux.Values.MaxConnections != nil {
+		l.MaxConnections = *aux.Values.MaxConnections
+	} else {
+		l.MaxConnections = 0
+	}
+
+	if aux.Values.MaxQueues != nil {
+		l.MaxQueues = *aux.Values.MaxQueues
+	} else {
+		l.MaxQueues = 0
+	}
+
+	return nil
 }
 
 type ConnectionResponse struct {
