@@ -6,6 +6,7 @@ import (
 	"github.com/sisneve/rabbitmq-dashboard/internal/api/httpsuite"
 	"github.com/sisneve/rabbitmq-dashboard/internal/api/v1/rmq"
 	"github.com/sisneve/rabbitmq-dashboard/internal/clients/dex"
+	"github.com/sisneve/rabbitmq-dashboard/internal/models"
 )
 
 // @Summary		Health check
@@ -22,11 +23,13 @@ func (rc *APIService) HealthzHandler(w http.ResponseWriter, r *http.Request) {
 // @Description	Checks the readiness of the service by verifying connectivity to RabbitMQ, MongoDB, and Dex
 // @Tags			Health
 // @Produce		json
-// @Success		200	{string}	string	"ready"
-// @Failure		502	{object}	httpsuite.ErrorResponse
+// @Success		200	{object}	models.HealthStatus	"ready"
+// @Failure		502	{object}	models.HealthStatus	"not ready"
 // @Router			/readyz [get]
 func (rc *APIService) ReadyzHandler(rmq *rmq.RMQHandler, dex *dex.DexClient) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
+		status := models.NewHealthStatus()
+
 		err := rmq.RMQClient.Ping()
 		if err != nil {
 			httpsuite.WriteJSONError(w,
@@ -36,6 +39,7 @@ func (rc *APIService) ReadyzHandler(rmq *rmq.RMQHandler, dex *dex.DexClient) fun
 			)
 			return
 		}
+		status.RabbitMQ = models.StatusHealthy
 
 		err = rc.DB.Ping(r.Context(), 5)
 		if err != nil {
@@ -46,6 +50,7 @@ func (rc *APIService) ReadyzHandler(rmq *rmq.RMQHandler, dex *dex.DexClient) fun
 			)
 			return
 		}
+		status.Database = models.StatusHealthy
 
 		err = dex.Ping(r.Context())
 		if err != nil {
@@ -56,7 +61,12 @@ func (rc *APIService) ReadyzHandler(rmq *rmq.RMQHandler, dex *dex.DexClient) fun
 			)
 			return
 		}
+		status.Dex = models.StatusHealthy
 
-		httpsuite.SendEmptyResponse(r.Context(), w, "ready", http.StatusOK)
+		if !status.IsHealthy() {
+			httpsuite.SendResponse(r.Context(), w, "not ready", http.StatusServiceUnavailable, &status)
+		}
+
+		httpsuite.SendResponse(r.Context(), w, "ready", http.StatusOK, &status)
 	}
 }
