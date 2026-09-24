@@ -36,7 +36,7 @@ func sendEmail(config *config.EmailConfig, to, subject, body string, typ mail.Co
 		return status
 	}
 
-	if config.IsValid() {
+	if !config.IsValid() {
 		status.Error = ErrEmailNotConfigured
 		return status
 	}
