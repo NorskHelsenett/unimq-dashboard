@@ -688,6 +688,11 @@ paths:
         name: code
         required: true
         type: string
+      - description: CSRF state issued by /v1/login/redirect
+        in: query
+        name: state
+        required: true
+        type: string
       produces:
       - application/json
       responses:
@@ -716,6 +721,10 @@ paths:
           description: redirect
           schema:
             type: string
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/httpsuite.ErrorResponse'
       summary: Redirect to Dex for authentication
       tags:
       - Authentication
