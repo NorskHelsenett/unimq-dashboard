@@ -188,8 +188,8 @@ func NewMaintenanceEntry(description string, start time.Time, end time.Time) *Ma
 
 type PatchMaintenanceEntry struct {
 	Description string `json:"description" example:"maintenance for server upgrade"`
-	Start       string `json:"start" example:"2024-06-01 10:00:00"`
-	End         string `json:"end" example:"2024-06-01 12:00:00"`
+	Start       string `json:"start" example:"2024-06-01T10:00:00Z"`
+	End         string `json:"end" example:"2024-06-01T12:00:00Z"`
 	Reason      string `json:"reason" example:"updated maintenance time"`
 }
 

@@ -2574,7 +2574,7 @@ const docTemplate = `{
                 },
                 "end": {
                     "type": "string",
-                    "example": "2024-06-01 12:00:00"
+                    "example": "2024-06-01T12:00:00Z"
                 },
                 "reason": {
                     "type": "string",
@@ -2582,7 +2582,7 @@ const docTemplate = `{
                 },
                 "start": {
                     "type": "string",
-                    "example": "2024-06-01 10:00:00"
+                    "example": "2024-06-01T10:00:00Z"
                 }
             }
         },
