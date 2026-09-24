@@ -313,20 +313,22 @@ func checkMaintenanceSchedules(ctx context.Context, db *database.Database, urls 
 			m.End.Format("15:04"),
 		)
 		subject := "[UniMQ] New maintenance scheduled"
-		err := notificationhelper.SendWebhooks(urls, subject, body)
-		if err != nil {
-			slog.ErrorContext(ctx, "notify: maintenance webhook failed", "error", err)
-		} else {
-			slog.InfoContext(ctx, "notify: maintenance webhook sent", "id", m.ID)
+		webhookStatus := notificationhelper.SendWebhooks(urls, subject, body)
+		for _, s := range webhookStatus {
+			if !s.OK {
+				slog.ErrorContext(ctx, "maintenance webhook failed", "url", s.URL, "error", s.Error)
+			} else {
+				slog.InfoContext(ctx, "maintenance webhook sent", "url", s.URL)
+			}
 		}
 
 		if err := db.SetMaintenanceEntryNotified(ctx, m.ID, true); err != nil {
 			slog.ErrorContext(ctx, "Failed to mark maintenance as notified", "error", err)
 		}
 
-		status := notificationhelper.EmailSenderInstance.SendEmails(ctx, emails, subject, body, "text/plain")
+		emailStatus := notificationhelper.EmailSenderInstance.SendEmails(ctx, emails, subject, body, "text/plain")
 
-		for _, s := range status {
+		for _, s := range emailStatus {
 			if errors.Is(s.Error, notificationhelper.ErrEmailNotConfigured) {
 				slog.WarnContext(ctx, "maintenance email not sent, smtp server is not configured", "emails", emails)
 				return
