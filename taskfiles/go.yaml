@@ -13,6 +13,12 @@ vars:
   GOLANGCI_LINT: golangci-lint
   GOLANGCI_LINT_VERSION: latest
 
+  # Pinned to the version in go.mod so local runs and CI generate byte-identical
+  # output. An unpinned swag makes the swag-verify check fail on version skew
+  # rather than on real drift.
+  SWAG_VERSION:
+    sh: go list -m github.com/swaggo/swag | awk '{print $2}'
+
   LOCALBIN: $(shell pwd)/bin
 
 tasks:
@@ -86,17 +92,31 @@ tasks:
     silent: true
 
   swag-check:
-    desc: Generate Swagger documentation
+    desc: Install the swag CLI at the version pinned in go.mod
     cmds:
-      - go install github.com/swaggo/swag/cmd/swag@latest
+      - go install github.com/swaggo/swag/cmd/swag@{{.SWAG_VERSION}}
     silent: true
 
   swag:
     desc: Generate and format Swagger documentation
-    deps:
-      - swag-check
-      - swag-format
-      - swag-generate
+    cmds:
+      - task: swag-check
+      - task: swag-format
+      - task: swag-generate
+    silent: true
+
+  swag-verify:
+    desc: Fail if the committed Swagger documentation is out of date
+    cmds:
+      - task: swag-check
+      - task: swag-generate
+      - bash -c '
+          if [ -n "$(git status --porcelain -- internal/docs)" ]; then
+            echo "Swagger documentation is out of date. Run '\''task go:swag'\'' and commit the result." >&2;
+            git --no-pager diff --stat -- internal/docs >&2;
+            exit 1;
+          fi;
+          echo "Swagger documentation is up to date."'
     silent: true
 
   swag-generate:
