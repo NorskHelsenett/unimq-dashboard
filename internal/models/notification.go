@@ -277,10 +277,10 @@ type TestNotificationResponse struct {
 }
 
 type VhostNotification struct {
-	Name       string       `bson:"_id"`
-	Recipients []*Recipient `bson:"recipients"`
-	Rules      []*AlarmRule `bson:"rules"`
-	Notified   bool         `bson:"notified"`
+	Name       string       `bson:"_id" json:"name"`
+	Recipients []*Recipient `bson:"recipients" json:"recipients"`
+	Rules      []*AlarmRule `bson:"rules" json:"rules"`
+	Notified   bool         `bson:"notified" json:"notified"`
 }
 
 func NewVhostNotification(name string) *VhostNotification {

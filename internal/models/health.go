@@ -8,9 +8,9 @@ const (
 )
 
 type HealthStatus struct {
-	Database Status
-	Dex      Status
-	RabbitMQ Status
+	Database Status `json:"database"`
+	Dex      Status `json:"dex"`
+	RabbitMQ Status `json:"rabbitMQ"`
 }
 
 func NewHealthStatus() *HealthStatus {

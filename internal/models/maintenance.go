@@ -243,19 +243,9 @@ func NewMaintenaceEditLog(maintenanceID string, description string, start time.T
 	}
 }
 
-type MaintenanceAdminResponse struct {
-	Entries []MaintenanceEntry
-}
-
-func NewMaintenanceAdminResponse(entries []MaintenanceEntry) *MaintenanceAdminResponse {
-	return &MaintenanceAdminResponse{
-		Entries: entries,
-	}
-}
-
 type MaintenanceResponse struct {
-	Scheduled []MaintenanceEntry
-	History   []MaintenanceEntry
+	Scheduled []MaintenanceEntry `json:"scheduled"`
+	History   []MaintenanceEntry `json:"history"`
 }
 
 func NewMaintenanceResponse(scheduled []MaintenanceEntry, history []MaintenanceEntry) *MaintenanceResponse {
