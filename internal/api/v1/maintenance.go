@@ -147,7 +147,7 @@ func (rc *APIService) AddMaintenanceHandler(w http.ResponseWriter, r *http.Reque
 		return
 	}
 
-	dbentry, err := entry.ToMaintenanceEntry()
+	dbentry, err := entry.ToMaintenanceEntry(r.Context())
 	if err != nil {
 		slog.Error("error converting to maintenance entry", "error", err)
 		httpsuite.WriteJSONError(w,
