@@ -80,6 +80,18 @@ func InitEmailSender(config *config.EmailConfig) {
 	}
 }
 
+func (es *EmailSender) IsConfigured() bool {
+	if es.Config == nil {
+		return false
+	}
+
+	if !es.Config.IsValid() {
+		return false
+	}
+
+	return true
+}
+
 func (es *EmailSender) SendEmail(to, subject, body string, typ mail.ContentType) *EmailStatus {
 	return sendEmail(es.Config, to, subject, body, typ)
 }

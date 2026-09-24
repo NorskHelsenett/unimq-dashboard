@@ -322,17 +322,21 @@ func checkMaintenanceSchedules(ctx context.Context, db *database.Database, urls 
 			}
 		}
 
-		emailStatus := notificationhelper.EmailSenderInstance.SendEmails(ctx, emails, subject, body, "text/plain")
+		if notificationhelper.EmailSenderInstance == nil || !notificationhelper.EmailSenderInstance.IsConfigured() {
+			slog.WarnContext(ctx, "maintenance email not sent, smtp server is not configured", "emails", emails)
+		} else {
+			emailStatus := notificationhelper.EmailSenderInstance.SendEmails(ctx, emails, subject, body, "text/plain")
 
-		for _, s := range emailStatus {
-			if errors.Is(s.Error, notificationhelper.ErrEmailNotConfigured) {
-				slog.WarnContext(ctx, "maintenance email not sent, smtp server is not configured", "emails", emails)
-				break
-			}
-			if !s.OK {
-				slog.ErrorContext(ctx, "maintenance email failed", "recipient", s.Recipient, "error", s.Error)
-			} else {
-				slog.InfoContext(ctx, "maintenance email sent", "recipient", s.Recipient)
+			for _, s := range emailStatus {
+				if errors.Is(s.Error, notificationhelper.ErrEmailNotConfigured) {
+					slog.WarnContext(ctx, "maintenance email not sent, smtp server is not configured")
+					break
+				}
+				if !s.OK {
+					slog.ErrorContext(ctx, "maintenance email failed", "recipient", s.Recipient, "error", s.Error)
+				} else {
+					slog.InfoContext(ctx, "maintenance email sent", "recipient", s.Recipient)
+				}
 			}
 		}
 
