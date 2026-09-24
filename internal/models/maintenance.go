@@ -69,12 +69,12 @@ type PostMaintenanceEntry struct {
 
 func (p *PostMaintenanceEntry) ToMaintenanceEntry() (*MaintenanceEntry, error) {
 
-	start, err := timehelper.ParseTimeInUTC(p.Start)
+	start, err := timehelper.ParseTimeInRFC3339(p.Start)
 	if err != nil {
 		return nil, fmt.Errorf("invalid start time format: %w", err)
 	}
 
-	end, err := timehelper.ParseTimeInUTC(p.End)
+	end, err := timehelper.ParseTimeInRFC3339(p.End)
 	if err != nil {
 		return nil, fmt.Errorf("invalid end time format: %w", err)
 	}
@@ -135,12 +135,12 @@ func (e *MaintenanceEntry) UnmarshalJSON(data []byte) error {
 	}
 
 	var err error
-	e.Start, err = timehelper.ParseTimeInUTC(aux.Start)
+	e.Start, err = timehelper.ParseTimeInRFC3339(aux.Start)
 	if err != nil {
 		return fmt.Errorf("invalid start time format: %w", err)
 	}
 
-	e.End, err = timehelper.ParseTimeInUTC(aux.End)
+	e.End, err = timehelper.ParseTimeInRFC3339(aux.End)
 	if err != nil {
 		return fmt.Errorf("invalid end time format: %w", err)
 	}
@@ -150,7 +150,7 @@ func (e *MaintenanceEntry) UnmarshalJSON(data []byte) error {
 	if !ok {
 		return fmt.Errorf("invalid maintenance status: %s, expected any of %v", aux.Status, GetMaintenanceStatusAllString())
 	}
-	time, err := timehelper.ParseTimeInUTC(aux.UpdatedAt)
+	time, err := timehelper.ParseTimeInRFC3339(aux.UpdatedAt)
 	if err != nil {
 		return fmt.Errorf("invalid updated_at time format: %w", err)
 	}
@@ -192,12 +192,12 @@ func (p *PatchMaintenanceEntry) Validate() error {
 		return fmt.Errorf("reason is required")
 	}
 
-	start, err := timehelper.ParseTimeInUTC(p.Start)
+	start, err := timehelper.ParseTimeInRFC3339(p.Start)
 	if err != nil {
 		return fmt.Errorf("invalid start time format: %w", err)
 	}
 
-	end, err := timehelper.ParseTimeInUTC(p.End)
+	end, err := timehelper.ParseTimeInRFC3339(p.End)
 	if err != nil {
 		return fmt.Errorf("invalid end time format: %w", err)
 	}

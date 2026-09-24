@@ -278,8 +278,8 @@ func (rc *APIService) PatchMaintenanceHandler(w http.ResponseWriter, r *http.Req
 		return
 	}
 
-	start, _ := timehelper.ParseTimeInUTC(request.Start)
-	end, _ := timehelper.ParseTimeInUTC(request.End)
+	start, _ := timehelper.ParseTimeInRFC3339(request.Start)
+	end, _ := timehelper.ParseTimeInRFC3339(request.End)
 
 	email, err := httpsuite.GetEmailFromContext(r.Context())
 	if err != nil {
