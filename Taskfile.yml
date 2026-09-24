@@ -20,5 +20,5 @@ tasks:
   default:
     desc: Print a greeting message
     cmds:
-      - echo "{{.GREETING}}"
+      - echo "cheese"
     silent: true
