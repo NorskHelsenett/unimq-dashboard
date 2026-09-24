@@ -28,6 +28,7 @@ func NewEmailStatus(recipient string) *EmailStatus {
 }
 
 func sendEmail(config *config.EmailConfig, to, subject, body string, typ mail.ContentType) *EmailStatus {
+
 	status := NewEmailStatus(to)
 
 	if config == nil {
@@ -35,10 +36,11 @@ func sendEmail(config *config.EmailConfig, to, subject, body string, typ mail.Co
 		return status
 	}
 
-	if config.EmailFromAddress == "" {
+	if config.IsValid() {
 		status.Error = ErrEmailNotConfigured
 		return status
 	}
+
 	message := mail.NewMsg()
 	if err := message.From(config.EmailFromAddress); err != nil {
 		status.Error = fmt.Errorf("failed to set From address: %w", err)
