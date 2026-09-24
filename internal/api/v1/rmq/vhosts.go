@@ -167,7 +167,7 @@ func (rc *RMQHandler) GetVhostLimitsHandler(w http.ResponseWriter, r *http.Reque
 // @Failure		401			{object}	httpsuite.ErrorResponse
 // @Failure		403			{object}	httpsuite.ErrorResponse
 // @Failure		500			{object}	httpsuite.ErrorResponse
-// @Router			/v1/vhost/{vhost-name}/usage [get]
+// @Router			/v1/vhosts/{vhost-name}/usage [get]
 // @security		bearer
 // @security		OAuth2[openid, profile, email, groups, audience:server:client_id:unimq-dashboard]
 func (rc *RMQHandler) GetRMQVhostUsageHandler(w http.ResponseWriter, r *http.Request) {

@@ -1654,47 +1654,6 @@ paths:
       summary: Get node statistics
       tags:
       - RabbitMQ
-  /v1/vhost/{vhost-name}/usage:
-    get:
-      description: Get usage statistics for a specific vhost in the RabbitMQ cluster
-      parameters:
-      - description: Vhost Name
-        in: path
-        name: vhost-name
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            items:
-              $ref: '#/definitions/models.RMQVhostUsage'
-            type: array
-        "401":
-          description: Unauthorized
-          schema:
-            $ref: '#/definitions/httpsuite.ErrorResponse'
-        "403":
-          description: Forbidden
-          schema:
-            $ref: '#/definitions/httpsuite.ErrorResponse'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/httpsuite.ErrorResponse'
-      security:
-      - bearer: []
-      - OAuth2:
-        - openid
-        - profile
-        - email
-        - groups
-        - audience:server:client_id:unimq-dashboard
-      summary: Get Vhost usage
-      tags:
-      - Vhosts
   /v1/vhosts:
     get:
       description: Get a list of all vhosts in the RabbitMQ cluster
@@ -1969,6 +1928,47 @@ paths:
       summary: Get a specific queue to a specified virtual host
       tags:
       - Queues
+  /v1/vhosts/{vhost-name}/usage:
+    get:
+      description: Get usage statistics for a specific vhost in the RabbitMQ cluster
+      parameters:
+      - description: Vhost Name
+        in: path
+        name: vhost-name
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/models.RMQVhostUsage'
+            type: array
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/httpsuite.ErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/httpsuite.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/httpsuite.ErrorResponse'
+      security:
+      - bearer: []
+      - OAuth2:
+        - openid
+        - profile
+        - email
+        - groups
+        - audience:server:client_id:unimq-dashboard
+      summary: Get Vhost usage
+      tags:
+      - Vhosts
 securityDefinitions:
   OAuth2:
     authorizationUrl: http://localhost:5556/dex/auth

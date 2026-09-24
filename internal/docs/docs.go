@@ -1764,70 +1764,6 @@ const docTemplate = `{
                 }
             }
         },
-        "/v1/vhost/{vhost-name}/usage": {
-            "get": {
-                "security": [
-                    {
-                        "bearer": []
-                    },
-                    {
-                        "OAuth2": [
-                            "openid",
-                            "profile",
-                            "email",
-                            "groups",
-                            "audience:server:client_id:unimq-dashboard"
-                        ]
-                    }
-                ],
-                "description": "Get usage statistics for a specific vhost in the RabbitMQ cluster",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Vhosts"
-                ],
-                "summary": "Get Vhost usage",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "Vhost Name",
-                        "name": "vhost-name",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "type": "array",
-                            "items": {
-                                "$ref": "#/definitions/models.RMQVhostUsage"
-                            }
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized",
-                        "schema": {
-                            "$ref": "#/definitions/httpsuite.ErrorResponse"
-                        }
-                    },
-                    "403": {
-                        "description": "Forbidden",
-                        "schema": {
-                            "$ref": "#/definitions/httpsuite.ErrorResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/httpsuite.ErrorResponse"
-                        }
-                    }
-                }
-            }
-        },
         "/v1/vhosts": {
             "get": {
                 "security": [
@@ -2239,6 +2175,70 @@ const docTemplate = `{
                     },
                     "404": {
                         "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/httpsuite.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/httpsuite.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/v1/vhosts/{vhost-name}/usage": {
+            "get": {
+                "security": [
+                    {
+                        "bearer": []
+                    },
+                    {
+                        "OAuth2": [
+                            "openid",
+                            "profile",
+                            "email",
+                            "groups",
+                            "audience:server:client_id:unimq-dashboard"
+                        ]
+                    }
+                ],
+                "description": "Get usage statistics for a specific vhost in the RabbitMQ cluster",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Vhosts"
+                ],
+                "summary": "Get Vhost usage",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Vhost Name",
+                        "name": "vhost-name",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/models.RMQVhostUsage"
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/httpsuite.ErrorResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
                         "schema": {
                             "$ref": "#/definitions/httpsuite.ErrorResponse"
                         }
