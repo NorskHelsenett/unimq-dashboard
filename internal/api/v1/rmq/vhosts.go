@@ -66,8 +66,8 @@ func (rc *RMQHandler) GetVhostHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	vhostName := chi.URLParam(r, "vhost-name")
-	if vhostName == "" {
+	vhost := chi.URLParam(r, "vhost-name")
+	if vhost == "" {
 		httpsuite.WriteJSONError(w,
 			http.StatusBadRequest,
 			httpsuite.WithErrorMessage("vhost name is required"),
@@ -75,23 +75,13 @@ func (rc *RMQHandler) GetVhostHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	eVhostName, err := url.QueryUnescape(vhostName)
-	if err != nil {
-		httpsuite.WriteJSONError(w,
-			http.StatusBadRequest,
-			httpsuite.WithError(err),
-			httpsuite.WithErrorMessage("failed to decode vhost name"),
-		)
-		return
-	}
-
-	vhostData, err := rc.RMQClient.GetVhost(eVhostName)
+	vhostData, err := rc.RMQClient.GetVhost(vhost)
 	if err != nil {
 		httpsuite.WriteJSONError(w,
 			http.StatusInternalServerError,
 			httpsuite.WithError(err),
 			httpsuite.WithErrorMessage("failed to fetch vhosts data"),
-			httpsuite.WithInternalErrorMessage(fmt.Sprintf("failed to fetch vhost data for vhost '%s': %v", eVhostName, err)),
+			httpsuite.WithInternalErrorMessage(fmt.Sprintf("failed to fetch vhost data for vhost '%s': %v", vhost, err)),
 		)
 		return
 	}
@@ -185,17 +175,8 @@ func (rc *RMQHandler) GetRMQVhostUsageHandler(w http.ResponseWriter, r *http.Req
 		)
 		return
 	}
-	evhost, err := url.QueryUnescape(vhost)
-	if err != nil {
-		httpsuite.WriteJSONError(w,
-			http.StatusBadRequest,
-			httpsuite.WithError(err),
-			httpsuite.WithErrorMessage("failed to decode vhost name"),
-		)
-		return
-	}
 
-	usage, err := rc.RMQClient.GetVhostUsage(evhost)
+	usage, err := rc.RMQClient.GetVhostUsage(vhost)
 	if err != nil {
 		httpsuite.WriteJSONError(w,
 			http.StatusInternalServerError,

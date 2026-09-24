@@ -2,7 +2,6 @@ package rmq
 
 import (
 	"net/http"
-	"net/url"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/sisneve/rabbitmq-dashboard/internal/api/httpsuite"
@@ -38,18 +37,7 @@ func (rc *RMQHandler) MetricHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	eVhost, err := url.QueryUnescape(vhost)
-	if err != nil {
-		httpsuite.WriteJSONError(w,
-			http.StatusBadRequest,
-			httpsuite.WithError(err),
-			httpsuite.WithExternalErrorMessage("failed to decode vhost name"),
-			httpsuite.WithInternalErrorMessage("error decoding vhost name: "+vhost),
-		)
-		return
-	}
-
-	metrics, err := rc.RMQClient.GetMetrics(eVhost)
+	metrics, err := rc.RMQClient.GetMetrics(vhost)
 	if err != nil {
 		httpsuite.WriteJSONError(w,
 			http.StatusInternalServerError,

@@ -4,7 +4,6 @@ import (
 	"errors"
 	"log/slog"
 	"net/http"
-	"net/url"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/sisneve/rabbitmq-dashboard/internal/api/httpsuite"
@@ -47,17 +46,6 @@ func (rc *APIService) GetNotificationRuleHandler(w http.ResponseWriter, r *http.
 		return
 	}
 
-	eVhost, err := url.QueryUnescape(vhost)
-	if err != nil {
-		httpsuite.WriteJSONError(w,
-			http.StatusBadRequest,
-			httpsuite.WithError(err),
-			httpsuite.WithExternalErrorMessage("failed to decode vhost name"),
-			httpsuite.WithInternalErrorMessage("error decoding vhost name: "+vhost),
-		)
-		return
-	}
-
 	id := chi.URLParam(r, "rule")
 	if id == "" {
 		httpsuite.WriteJSONError(w,
@@ -67,7 +55,7 @@ func (rc *APIService) GetNotificationRuleHandler(w http.ResponseWriter, r *http.
 		return
 	}
 
-	rule, err := rc.DB.GetNotificationRule(r.Context(), eVhost, id)
+	rule, err := rc.DB.GetNotificationRule(r.Context(), vhost, id)
 	if err != nil {
 		if errors.Is(err, database.ErrNotificationRuleNotFound) {
 			httpsuite.WriteJSONError(w,
@@ -129,17 +117,6 @@ func (rc *APIService) AddNotificationsRuleHandler(w http.ResponseWriter, r *http
 		return
 	}
 
-	eVhost, err := url.QueryUnescape(vhost)
-	if err != nil {
-		httpsuite.WriteJSONError(w,
-			http.StatusBadRequest,
-			httpsuite.WithError(err),
-			httpsuite.WithExternalErrorMessage("failed to decode vhost name"),
-			httpsuite.WithInternalErrorMessage("error decoding vhost name: "+vhost),
-		)
-		return
-	}
-
 	var rule models.PostAlarmRule
 	err = httpsuite.ReadResponse(w, r, &rule)
 	if err != nil {
@@ -151,7 +128,7 @@ func (rc *APIService) AddNotificationsRuleHandler(w http.ResponseWriter, r *http
 		return
 	}
 
-	_, err = rc.ensureNotificationHostExists(r.Context(), eVhost)
+	_, err = rc.ensureNotificationHostExists(r.Context(), vhost)
 	if err != nil {
 		if errors.Is(err, rabbitmq.ErrVhostNotFound) {
 			httpsuite.WriteJSONError(w,
@@ -179,7 +156,7 @@ func (rc *APIService) AddNotificationsRuleHandler(w http.ResponseWriter, r *http
 		return
 	}
 
-	err = rc.DB.AddNotificationRule(r.Context(), eVhost, out)
+	err = rc.DB.AddNotificationRule(r.Context(), vhost, out)
 	if err != nil {
 		httpsuite.WriteJSONError(w,
 			http.StatusInternalServerError,
@@ -222,17 +199,6 @@ func (rc *APIService) DeleteNotificationsRuleHandler(w http.ResponseWriter, r *h
 		return
 	}
 
-	eVhost, err := url.QueryUnescape(vhost)
-	if err != nil {
-		httpsuite.WriteJSONError(w,
-			http.StatusBadRequest,
-			httpsuite.WithError(err),
-			httpsuite.WithExternalErrorMessage("failed to decode vhost name"),
-			httpsuite.WithInternalErrorMessage("error decoding vhost name: "+vhost),
-		)
-		return
-	}
-
 	id := chi.URLParam(r, "rule")
 	if id == "" {
 		httpsuite.WriteJSONError(w,
@@ -241,7 +207,7 @@ func (rc *APIService) DeleteNotificationsRuleHandler(w http.ResponseWriter, r *h
 		)
 		return
 	}
-	err = rc.DB.DeleteNotificationRule(r.Context(), eVhost, id)
+	err = rc.DB.DeleteNotificationRule(r.Context(), vhost, id)
 	if err != nil {
 		httpsuite.WriteJSONError(w,
 			http.StatusInternalServerError,
@@ -285,17 +251,6 @@ func (rc *APIService) UpdateNotificationsRuleHandler(w http.ResponseWriter, r *h
 		return
 	}
 
-	eVhost, err := url.QueryUnescape(vhost)
-	if err != nil {
-		httpsuite.WriteJSONError(w,
-			http.StatusBadRequest,
-			httpsuite.WithError(err),
-			httpsuite.WithExternalErrorMessage("failed to decode vhost name"),
-			httpsuite.WithInternalErrorMessage("error decoding vhost name: "+vhost),
-		)
-		return
-	}
-
 	id := chi.URLParam(r, "rule")
 	if id == "" {
 		httpsuite.WriteJSONError(w,
@@ -317,7 +272,7 @@ func (rc *APIService) UpdateNotificationsRuleHandler(w http.ResponseWriter, r *h
 	}
 
 	if rule.Threshold != nil {
-		err = rc.DB.UpdateNotificationRuleThreshold(r.Context(), eVhost, id, *rule.Threshold)
+		err = rc.DB.UpdateNotificationRuleThreshold(r.Context(), vhost, id, *rule.Threshold)
 		if err != nil {
 			httpsuite.WriteJSONError(w,
 				http.StatusInternalServerError,
@@ -329,7 +284,7 @@ func (rc *APIService) UpdateNotificationsRuleHandler(w http.ResponseWriter, r *h
 	}
 
 	if rule.Message != nil {
-		err = rc.DB.UpdateNotificationRuleMessage(r.Context(), eVhost, id, *rule.Message)
+		err = rc.DB.UpdateNotificationRuleMessage(r.Context(), vhost, id, *rule.Message)
 		if err != nil {
 			httpsuite.WriteJSONError(w,
 				http.StatusInternalServerError,
@@ -373,17 +328,6 @@ func (rc *APIService) ToggleNotificationsRuleHandler(w http.ResponseWriter, r *h
 		return
 	}
 
-	eVhost, err := url.QueryUnescape(vhost)
-	if err != nil {
-		httpsuite.WriteJSONError(w,
-			http.StatusBadRequest,
-			httpsuite.WithError(err),
-			httpsuite.WithExternalErrorMessage("failed to decode vhost name"),
-			httpsuite.WithInternalErrorMessage("error decoding vhost name: "+vhost),
-		)
-		return
-	}
-
 	id := chi.URLParam(r, "rule")
 	if id == "" {
 		httpsuite.WriteJSONError(w,
@@ -393,7 +337,7 @@ func (rc *APIService) ToggleNotificationsRuleHandler(w http.ResponseWriter, r *h
 		return
 	}
 
-	rule, err := rc.DB.GetNotificationRule(r.Context(), eVhost, id)
+	rule, err := rc.DB.GetNotificationRule(r.Context(), vhost, id)
 	if err != nil {
 		httpsuite.WriteJSONError(w,
 			http.StatusInternalServerError,
@@ -412,7 +356,7 @@ func (rc *APIService) ToggleNotificationsRuleHandler(w http.ResponseWriter, r *h
 		return
 	}
 
-	err = rc.DB.ToggleNotificationRule(r.Context(), eVhost, id, !rule.Enabled)
+	err = rc.DB.ToggleNotificationRule(r.Context(), vhost, id, !rule.Enabled)
 	if err != nil {
 		httpsuite.WriteJSONError(w,
 			http.StatusInternalServerError,
@@ -457,17 +401,6 @@ func (rc *APIService) TestNotificationsRuleHandler(w http.ResponseWriter, r *htt
 		return
 	}
 
-	eVhost, err := url.QueryUnescape(vhost)
-	if err != nil {
-		httpsuite.WriteJSONError(w,
-			http.StatusBadRequest,
-			httpsuite.WithError(err),
-			httpsuite.WithExternalErrorMessage("failed to decode vhost name"),
-			httpsuite.WithInternalErrorMessage("error decoding vhost name: "+vhost),
-		)
-		return
-	}
-
 	id := chi.URLParam(r, "rule-id")
 	if id == "" {
 		httpsuite.WriteJSONError(w,
@@ -477,7 +410,7 @@ func (rc *APIService) TestNotificationsRuleHandler(w http.ResponseWriter, r *htt
 		return
 	}
 
-	rule, err := rc.DB.GetNotificationRule(r.Context(), eVhost, id)
+	rule, err := rc.DB.GetNotificationRule(r.Context(), vhost, id)
 	if err != nil {
 		if errors.Is(err, database.ErrVhostNotFound) {
 			httpsuite.WriteJSONError(w,
@@ -503,7 +436,7 @@ func (rc *APIService) TestNotificationsRuleHandler(w http.ResponseWriter, r *htt
 		return
 	}
 
-	vhostobject, err := rc.DB.GetVhost(r.Context(), eVhost)
+	vhostobject, err := rc.DB.GetVhost(r.Context(), vhost)
 	if err != nil {
 		if errors.Is(err, mongo.ErrNoDocuments) {
 			httpsuite.WriteJSONError(w,
@@ -521,14 +454,14 @@ func (rc *APIService) TestNotificationsRuleHandler(w http.ResponseWriter, r *htt
 		return
 	}
 
-	subject := "[UniMQ TEST] " + rule.Name + " — " + eVhost
-	body := "This is a test message from UniMQ.\n\n" + rule.BuildMessage(eVhost)
+	subject := "[UniMQ TEST] " + rule.Name + " — " + vhost
+	body := "This is a test message from UniMQ.\n\n" + rule.BuildMessage(vhost)
 
 	urls := vhostobject.WebhookURLs()
 	if len(urls) == 0 {
 		httpsuite.WriteJSONError(w,
 			http.StatusBadRequest,
-			httpsuite.WithErrorMessage("no webhook URLs configured for vhost "+eVhost),
+			httpsuite.WithErrorMessage("no webhook URLs configured for vhost "+vhost),
 		)
 		return
 	}

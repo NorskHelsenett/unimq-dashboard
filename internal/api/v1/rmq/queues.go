@@ -41,18 +41,7 @@ func (rc *RMQHandler) GetQueuesHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	eVhost, err := url.QueryUnescape(vhost)
-	if err != nil {
-		httpsuite.WriteJSONError(w,
-			http.StatusInternalServerError,
-			httpsuite.WithError(err),
-			httpsuite.WithExternalErrorMessage("failed to decode vhost name"),
-			httpsuite.WithInternalErrorMessage("failed to decode vhost name: "+vhost),
-		)
-		return
-	}
-
-	queues, err := rc.RMQClient.GetQueue(eVhost)
+	queues, err := rc.RMQClient.GetQueue(vhost)
 	if err != nil {
 		httpsuite.WriteJSONError(w,
 			http.StatusNotFound,
@@ -97,17 +86,6 @@ func (rc *RMQHandler) GetQueuesByNameHandler(w http.ResponseWriter, r *http.Requ
 		return
 	}
 
-	eVhost, err := url.QueryUnescape(vhost)
-	if err != nil {
-		httpsuite.WriteJSONError(w,
-			http.StatusInternalServerError,
-			httpsuite.WithError(err),
-			httpsuite.WithExternalErrorMessage("failed to decode vhost name"),
-			httpsuite.WithInternalErrorMessage("error decoding vhost name: "+vhost),
-		)
-		return
-	}
-
 	queue := chi.URLParam(r, "queue-id")
 	if queue == "" {
 		httpsuite.WriteJSONError(w,
@@ -128,7 +106,7 @@ func (rc *RMQHandler) GetQueuesByNameHandler(w http.ResponseWriter, r *http.Requ
 		return
 	}
 
-	queues, err := rc.RMQClient.GetQueueByName(eVhost, eQueue)
+	queues, err := rc.RMQClient.GetQueueByName(vhost, eQueue)
 	if err != nil {
 		if errors.Is(err, rabbitmq.ErrQueueNotFound) {
 			httpsuite.WriteJSONError(w,
