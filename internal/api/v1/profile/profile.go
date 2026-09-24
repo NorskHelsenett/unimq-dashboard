@@ -32,6 +32,7 @@ func NewProfileHandler(groups []string) *ProfileHandler {
 // @Failure		403	{object}	httpsuite.ErrorResponse
 // @Router			/v1/profile [get]
 // @security		bearer
+// @security		OAuth2[openid, profile, email, groups, audience:server:client_id:unimq-dashboard]
 func (ps *ProfileHandler) GetProfileHandler(w http.ResponseWriter, r *http.Request) {
 
 	_, err := httpsuite.IsAGroupInClaim(r.Context(), ps.adminGroups)

@@ -23,6 +23,7 @@ import (
 // @Failure		502	{object}	httpsuite.ErrorResponse
 // @Router			/v1/vhosts [get]
 // @security		bearer
+// @security		OAuth2[openid, profile, email, groups, audience:server:client_id:unimq-dashboard]
 func (rc *RMQHandler) GetVhostsHandler(w http.ResponseWriter, r *http.Request) {
 
 	_, err := httpsuite.IsAGroupInClaim(r.Context(), rc.AdminGroups)
@@ -56,6 +57,7 @@ func (rc *RMQHandler) GetVhostsHandler(w http.ResponseWriter, r *http.Request) {
 // @Failure		502			{object}	httpsuite.ErrorResponse
 // @Router			/v1/vhosts/{vhost-name} [get]
 // @security		bearer
+// @security		OAuth2[openid, profile, email, groups, audience:server:client_id:unimq-dashboard]
 func (rc *RMQHandler) GetVhostHandler(w http.ResponseWriter, r *http.Request) {
 
 	_, err := httpsuite.IsAGroupInClaim(r.Context(), rc.AdminGroups)
@@ -109,6 +111,7 @@ func (rc *RMQHandler) GetVhostHandler(w http.ResponseWriter, r *http.Request) {
 // @Failure		502			{object}	httpsuite.ErrorResponse
 // @Router			/v1/vhosts/{vhost-name}/limits [get]
 // @security		bearer
+// @security		OAuth2[openid, profile, email, groups, audience:server:client_id:unimq-dashboard]
 func (rc *RMQHandler) GetVhostLimitsHandler(w http.ResponseWriter, r *http.Request) {
 
 	_, err := httpsuite.IsAGroupInClaim(r.Context(), rc.AdminGroups)
@@ -166,6 +169,7 @@ func (rc *RMQHandler) GetVhostLimitsHandler(w http.ResponseWriter, r *http.Reque
 // @Failure		500			{object}	httpsuite.ErrorResponse
 // @Router			/v1/vhost/{vhost-name}/usage [get]
 // @security		bearer
+// @security		OAuth2[openid, profile, email, groups, audience:server:client_id:unimq-dashboard]
 func (rc *RMQHandler) GetRMQVhostUsageHandler(w http.ResponseWriter, r *http.Request) {
 	_, err := httpsuite.IsAGroupInClaim(r.Context(), rc.AdminGroups)
 	if err != nil {

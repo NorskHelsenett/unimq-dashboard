@@ -44,10 +44,11 @@ type EmailConfig struct {
 }
 
 type OIDCConfig struct {
-	OIDCClientID     string `mapstructure:"OIDC_CLIENT_ID"`
-	OIDCClientSecret string `mapstructure:"OIDC_CLIENT_SECRET"`
-	OIDCURL          string `mapstructure:"OIDC_URL"`
-	OIDCRedirectURL  string `mapstructure:"OIDC_REDIRECT_URL"`
+	OIDCClientID        string `mapstructure:"OIDC_CLIENT_ID"`
+	OIDCClientSecret    string `mapstructure:"OIDC_CLIENT_SECRET"`
+	OIDCURL             string `mapstructure:"OIDC_URL"`
+	OIDCRedirectURL     string `mapstructure:"OIDC_REDIRECT_URL"`
+	OIDCSwaggerClientID string `mapstructure:"OIDC_SWAGGER_CLIENT_ID"`
 }
 
 func NewConfig() *Config {
@@ -73,10 +74,11 @@ func NewConfig() *Config {
 			EmailFromAddress:  "unimq@example.com",
 		},
 		OIDC: &OIDCConfig{
-			OIDCClientID:     "",
-			OIDCClientSecret: "",
-			OIDCURL:          "",
-			OIDCRedirectURL:  "",
+			OIDCClientID:        "",
+			OIDCClientSecret:    "",
+			OIDCURL:             "",
+			OIDCRedirectURL:     "",
+			OIDCSwaggerClientID: "unimq-swagger",
 		},
 
 		AdminGroups: []string{},
@@ -180,6 +182,7 @@ func (c *Config) loadEnvironmentVariables() {
 	_ = viper.BindEnv("OIDC_CLIENT_SECRET")
 	_ = viper.BindEnv("OIDC_URL")
 	_ = viper.BindEnv("OIDC_REDIRECT_URL")
+	_ = viper.BindEnv("OIDC_SWAGGER_CLIENT_ID")
 
 	_ = viper.BindEnv("ADMIN_GROUPS")
 }
@@ -206,6 +209,7 @@ func (c *Config) validateConfiguration() error {
 	parameterChecks["OIDC_CLIENT_SECRET"] = isPresent(c.OIDC.OIDCClientSecret)
 	parameterChecks["OIDC_URL"] = isPresent(c.OIDC.OIDCURL)
 	parameterChecks["OIDC_REDIRECT_URL"] = isPresent(c.OIDC.OIDCRedirectURL)
+	parameterChecks["OIDC_SWAGGER_CLIENT_ID"] = isPresent(c.OIDC.OIDCSwaggerClientID)
 
 	errString := checkParameters(parameterChecks)
 	if len(errString) > 0 {

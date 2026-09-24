@@ -10,13 +10,17 @@ storage:
 web:
   http: 0.0.0.0:5556
   allowedOrigins:
+    - https://127.0.0.1:8080
     - http://localhost:8080
     - http://localhost:5173
     - https://unimq.test.nhn.no
+  allowedHeaders:
+    - Content-Type
+    - Authorization
+    - X-Requested-With
 
 oauth2:
   skipApprovalScreen: true
-  passwordConnector: local
 
 enablePasswordDB: true
 
@@ -31,12 +35,21 @@ staticClients:
     name: Unimq Dashboard
     secret: O8jad9kl1PD1er
     redirectURIs:
-      - http://localhost:8080/api/v1/callback
-      - https://unimq.test.nhn.no/api/v1/callback
+      - http://localhost:8080/api/v1/login/callback
+      - https://unimq.test.nhn.no/api/v1/login/callback
     scopes:
       - email
       - profile
       - groups
+    trustedPeers:
+      - unimq-swagger
+
+  - id: unimq-swagger
+    name: Unimq Swagger UI
+    public: true
+    redirectURIs:
+      - http://localhost:8080/api/swagger/oauth2-redirect.html
+      - https://unimq.test.nhn.no/api/swagger/oauth2-redirect.html
 
 staticPasswords:
   - email: olanordmann@test.com

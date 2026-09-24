@@ -29,6 +29,7 @@ func NewRMQHandler(rmqClient *rabbitmq.RMQClient, adminGroups []string) *RMQHand
 // @Failure		500	{object}	httpsuite.ErrorResponse
 // @Router			/v1/rabbitmq [get]
 // @security		bearer
+// @security		OAuth2[openid, profile, email, groups, audience:server:client_id:unimq-dashboard]
 func (rc *RMQHandler) GetRMQNodesHandler(w http.ResponseWriter, r *http.Request) {
 
 	_, err := httpsuite.IsAGroupInClaim(r.Context(), rc.AdminGroups)

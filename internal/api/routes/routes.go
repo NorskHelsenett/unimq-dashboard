@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log/slog"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/go-chi/chi/v5"
@@ -17,9 +18,23 @@ import (
 	"github.com/sisneve/rabbitmq-dashboard/internal/clients/rabbitmq"
 	"github.com/sisneve/rabbitmq-dashboard/internal/config"
 	"github.com/sisneve/rabbitmq-dashboard/internal/database"
-	_ "github.com/sisneve/rabbitmq-dashboard/internal/docs"
+	"github.com/sisneve/rabbitmq-dashboard/internal/docs"
 	"github.com/sisneve/rabbitmq-dashboard/internal/notify"
 )
+
+// defaultSwaggerOIDCIssuer is the issuer baked into the generated Swagger spec
+// by the annotations in cmd/unimq/main.go. It is rewritten at startup so the
+// OAuth2 endpoints in the spec follow OIDC_URL instead of being pinned to dev.
+const defaultSwaggerOIDCIssuer = "http://localhost:5556/dex"
+
+func applySwaggerOIDCIssuer(issuer string) {
+	if issuer == "" || issuer == defaultSwaggerOIDCIssuer {
+		return
+	}
+	docs.SwaggerInfo.SwaggerTemplate = strings.ReplaceAll(
+		docs.SwaggerInfo.SwaggerTemplate, defaultSwaggerOIDCIssuer, strings.TrimRight(issuer, "/"),
+	)
+}
 
 func SetupRoutes(ctx context.Context, config *config.Config, db *database.Database, rmqclient *rabbitmq.RMQClient, checker *notify.Checker) (chi.Router, error) {
 
@@ -41,6 +56,8 @@ func SetupRoutes(ctx context.Context, config *config.Config, db *database.Databa
 	rmqHandler := rmq.NewRMQHandler(rmqclient, config.AdminGroups)
 	profileHandler := profile.NewProfileHandler(config.AdminGroups)
 
+	applySwaggerOIDCIssuer(config.OIDC.OIDCURL)
+
 	r := chi.NewRouter()
 
 	r.Use(middleware.RequestID)
@@ -50,7 +67,7 @@ func SetupRoutes(ctx context.Context, config *config.Config, db *database.Databa
 
 	r.Group(func(r chi.Router) {
 		r.Route("/api", func(r chi.Router) {
-			v1routes.SetupUtilityRoutes(r, apiservice, dex, rmqHandler)
+			v1routes.SetupUtilityRoutes(r, apiservice, dex, rmqHandler, config.OIDC)
 			r.Route("/v1", func(r chi.Router) {
 				v1routes.SetupAuthenticationRoutes(r, dex)
 				r.Group(func(r chi.Router) {

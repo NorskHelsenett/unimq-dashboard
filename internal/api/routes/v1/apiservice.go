@@ -1,16 +1,45 @@
 package v1
 
 import (
+	"encoding/json"
+	"fmt"
+	"strings"
+
 	"github.com/go-chi/chi/v5"
 	api "github.com/sisneve/rabbitmq-dashboard/internal/api/v1"
 	"github.com/sisneve/rabbitmq-dashboard/internal/api/v1/rmq"
 	"github.com/sisneve/rabbitmq-dashboard/internal/clients/dex"
+	"github.com/sisneve/rabbitmq-dashboard/internal/config"
 	httpSwagger "github.com/swaggo/http-swagger/v2"
 )
 
-func SetupUtilityRoutes(r chi.Router, apiservice *api.APIService, dex *dex.DexClient, rmqHandler *rmq.RMQHandler) {
+// swaggerOAuthScopes are requested by Swagger UI when the user authorizes.
+// The audience scope makes Dex mint a token whose audience the dashboard API
+// accepts, so no change to the token verifier is needed.
+var swaggerOAuthScopes = []string{"openid", "profile", "email", "groups"}
 
-	r.Get("/swagger/*", httpSwagger.WrapHandler)
+func swaggerInitOAuth(oidc *config.OIDCConfig) string {
+	scopes := append(append([]string{}, swaggerOAuthScopes...),
+		fmt.Sprintf("audience:server:client_id:%s", oidc.OIDCClientID))
+
+	clientID, _ := json.Marshal(oidc.OIDCSwaggerClientID)
+	scope, _ := json.Marshal(strings.Join(scopes, " "))
+
+	// Inline Javascript to initialize Swagger UI's OAuth2 client with the correct client ID and scopes.
+	// A bit hacky, but the httpSwagger package doesn't provide a way to set these values directly.
+	return fmt.Sprintf(`ui.initOAuth({
+		clientId: %s,
+		scopes: %s,
+		usePkceWithAuthorizationCodeGrant: true
+	})`, clientID, scope)
+}
+
+func SetupUtilityRoutes(r chi.Router, apiservice *api.APIService, dex *dex.DexClient, rmqHandler *rmq.RMQHandler, oidc *config.OIDCConfig) {
+
+	r.Get("/swagger/*", httpSwagger.Handler(
+		httpSwagger.PersistAuthorization(true),
+		httpSwagger.AfterScript(swaggerInitOAuth(oidc)),
+	))
 	r.Get("/healthz", apiservice.HealthzHandler)
 	r.Get("/readyz", apiservice.ReadyzHandler(rmqHandler, dex))
 }

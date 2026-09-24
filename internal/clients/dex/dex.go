@@ -2,12 +2,10 @@ package dex
 
 import (
 	"context"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"log/slog"
 	"net/http"
-	"net/url"
 	"strings"
 	"time"
 
@@ -213,125 +211,6 @@ func (d *DexClient) OauthCallbackHandler(w http.ResponseWriter, r *http.Request)
 	// Redirect to the frontend with the token as a query parameter
 	redirectURL := fmt.Sprintf("/?token=%s", idToken)
 	http.Redirect(w, r, redirectURL, http.StatusFound)
-}
-
-type LoginRequest struct {
-	Username string `json:"username" example:"olanordmann@test.com"`
-	Password string `json:"password" example:"password"`
-}
-
-type TokenResponse struct {
-	AccessToken  string `json:"access_token"`
-	TokenType    string `json:"token_type"`
-	IDToken      string `json:"id_token"`
-	RefreshToken string `json:"refresh_token"`
-	ExpiresIn    int    `json:"expires_in"`
-}
-
-func (lr *LoginRequest) Validate() error {
-	if lr.Username == "" {
-		return fmt.Errorf("username is required")
-	}
-	if lr.Password == "" {
-		return fmt.Errorf("password is required")
-	}
-	return nil
-}
-
-// @Summary		Login with Dex
-// @Description	Login with Dex using username and password
-// @Tags			Authentication
-// @Accept			json
-// @Produce		json
-// @Param			loginRequest	body		LoginRequest	true	"Login Request"
-// @Success		200				{object}	TokenResponse
-// @Failure		400				{object}	httpsuite.ErrorResponse
-// @Failure		401				{object}	httpsuite.ErrorResponse
-// @Failure		500				{object}	httpsuite.ErrorResponse
-// @Router			/v1/login [post]
-func (d *DexClient) LoginHandler(w http.ResponseWriter, r *http.Request) {
-
-	loginReq := &LoginRequest{}
-	err := httpsuite.ReadResponse(w, r, loginReq)
-	if err != nil {
-		httpsuite.WriteJSONError(w,
-			http.StatusBadRequest,
-			httpsuite.WithError(err),
-			httpsuite.WithExternalErrorMessage("bad request"),
-			httpsuite.WithInternalErrorMessage("failed to read login request"),
-		)
-		return
-	}
-
-	err = loginReq.Validate()
-	if err != nil {
-		httpsuite.WriteJSONError(w,
-			http.StatusBadRequest,
-			httpsuite.WithError(err),
-			httpsuite.WithExternalErrorMessage("bad request"),
-			httpsuite.WithInternalErrorMessage("invalid login request"),
-		)
-		return
-	}
-
-	form := url.Values{}
-	form.Add("username", loginReq.Username)
-	form.Add("password", loginReq.Password)
-	form.Add("client_id", d.Config.ClientID)
-	form.Add("client_secret", d.Config.ClientSecret)
-	form.Add("grant_type", "password")
-	form.Add("scope", strings.Join(d.Config.Scopes, " "))
-	request, err := http.NewRequestWithContext(r.Context(), http.MethodPost, d.url+"/token", strings.NewReader(form.Encode()))
-	if err != nil {
-		httpsuite.WriteJSONError(w,
-			http.StatusInternalServerError,
-			httpsuite.WithError(err),
-			httpsuite.WithExternalErrorMessage("internal server error"),
-			httpsuite.WithInternalErrorMessage("failed to create request to Dex"),
-		)
-		return
-	}
-	request.Header.Set("Content-Type", "application/x-www-form-urlencoded")
-
-	resp, err := http.DefaultClient.Do(request)
-	if err != nil {
-		httpsuite.WriteJSONError(w,
-			http.StatusInternalServerError,
-			httpsuite.WithError(err),
-			httpsuite.WithExternalErrorMessage("internal server error"),
-			httpsuite.WithInternalErrorMessage("failed to send request to Dex"),
-		)
-		return
-	}
-	defer func() {
-		err := resp.Body.Close()
-		if err != nil {
-			slog.ErrorContext(r.Context(), "error closing response body", "error", err)
-		}
-	}()
-
-	if resp.StatusCode != http.StatusOK {
-		httpsuite.WriteJSONError(w,
-			http.StatusUnauthorized,
-			httpsuite.WithExternalErrorMessage("unauthorized"),
-			httpsuite.WithInternalErrorMessage(fmt.Sprintf("Dex returned status code %d", resp.StatusCode)),
-		)
-		return
-	}
-
-	var tokenResponse TokenResponse
-	err = json.NewDecoder(resp.Body).Decode(&tokenResponse)
-	if err != nil {
-		httpsuite.WriteJSONError(w,
-			http.StatusInternalServerError,
-			httpsuite.WithError(err),
-			httpsuite.WithExternalErrorMessage("internal server error"),
-			httpsuite.WithInternalErrorMessage("failed to decode Dex response"),
-		)
-		return
-	}
-
-	httpsuite.SendResponse(r.Context(), w, "login successful", http.StatusOK, &tokenResponse)
 }
 
 var (

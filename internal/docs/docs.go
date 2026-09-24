@@ -69,6 +69,15 @@ const docTemplate = `{
                 "security": [
                     {
                         "bearer": []
+                    },
+                    {
+                        "OAuth2": [
+                            "openid",
+                            "profile",
+                            "email",
+                            "groups",
+                            "audience:server:client_id:unimq-dashboard"
+                        ]
                     }
                 ],
                 "description": "Get alarm history for all rules",
@@ -124,6 +133,15 @@ const docTemplate = `{
                 "security": [
                     {
                         "bearer": []
+                    },
+                    {
+                        "OAuth2": [
+                            "openid",
+                            "profile",
+                            "email",
+                            "groups",
+                            "audience:server:client_id:unimq-dashboard"
+                        ]
                     }
                 ],
                 "description": "Get alarm history for a specific rule",
@@ -194,6 +212,15 @@ const docTemplate = `{
                 "security": [
                     {
                         "bearer": []
+                    },
+                    {
+                        "OAuth2": [
+                            "openid",
+                            "profile",
+                            "email",
+                            "groups",
+                            "audience:server:client_id:unimq-dashboard"
+                        ]
                     }
                 ],
                 "description": "Get the current status of the notification checker",
@@ -231,58 +258,6 @@ const docTemplate = `{
                     },
                     "503": {
                         "description": "Service Unavailable",
-                        "schema": {
-                            "$ref": "#/definitions/httpsuite.ErrorResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/v1/login": {
-            "post": {
-                "description": "Login with Dex using username and password",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Authentication"
-                ],
-                "summary": "Login with Dex",
-                "parameters": [
-                    {
-                        "description": "Login Request",
-                        "name": "loginRequest",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/dex.LoginRequest"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/dex.TokenResponse"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/httpsuite.ErrorResponse"
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized",
-                        "schema": {
-                            "$ref": "#/definitions/httpsuite.ErrorResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
                         "schema": {
                             "$ref": "#/definitions/httpsuite.ErrorResponse"
                         }
@@ -356,6 +331,15 @@ const docTemplate = `{
                 "security": [
                     {
                         "bearer": []
+                    },
+                    {
+                        "OAuth2": [
+                            "openid",
+                            "profile",
+                            "email",
+                            "groups",
+                            "audience:server:client_id:unimq-dashboard"
+                        ]
                     }
                 ],
                 "description": "Get scheduled  maintenance information and history",
@@ -397,6 +381,15 @@ const docTemplate = `{
                 "security": [
                     {
                         "bearer": []
+                    },
+                    {
+                        "OAuth2": [
+                            "openid",
+                            "profile",
+                            "email",
+                            "groups",
+                            "audience:server:client_id:unimq-dashboard"
+                        ]
                     }
                 ],
                 "description": "Add new maintenance entry with description, start time, and end time that will have the status Scheduled",
@@ -457,6 +450,15 @@ const docTemplate = `{
                 "security": [
                     {
                         "bearer": []
+                    },
+                    {
+                        "OAuth2": [
+                            "openid",
+                            "profile",
+                            "email",
+                            "groups",
+                            "audience:server:client_id:unimq-dashboard"
+                        ]
                     }
                 ],
                 "description": "Get a specific maintenance entry by ID",
@@ -519,6 +521,15 @@ const docTemplate = `{
                 "security": [
                     {
                         "bearer": []
+                    },
+                    {
+                        "OAuth2": [
+                            "openid",
+                            "profile",
+                            "email",
+                            "groups",
+                            "audience:server:client_id:unimq-dashboard"
+                        ]
                     }
                 ],
                 "description": "Update the status of a maintenance entry (e.g., scheduled, in-progress, completed)",
@@ -593,6 +604,15 @@ const docTemplate = `{
                 "security": [
                     {
                         "bearer": []
+                    },
+                    {
+                        "OAuth2": [
+                            "openid",
+                            "profile",
+                            "email",
+                            "groups",
+                            "audience:server:client_id:unimq-dashboard"
+                        ]
                     }
                 ],
                 "description": "Delete a specific maintenance entry by ID",
@@ -782,6 +802,15 @@ const docTemplate = `{
                 "security": [
                     {
                         "bearer": []
+                    },
+                    {
+                        "OAuth2": [
+                            "openid",
+                            "profile",
+                            "email",
+                            "groups",
+                            "audience:server:client_id:unimq-dashboard"
+                        ]
                     }
                 ],
                 "description": "Get all notification vhosts and settings",
@@ -828,6 +857,15 @@ const docTemplate = `{
                 "security": [
                     {
                         "bearer": []
+                    },
+                    {
+                        "OAuth2": [
+                            "openid",
+                            "profile",
+                            "email",
+                            "groups",
+                            "audience:server:client_id:unimq-dashboard"
+                        ]
                     }
                 ],
                 "description": "Get notification rules and settings for a specific vhost",
@@ -884,6 +922,15 @@ const docTemplate = `{
                 "security": [
                     {
                         "bearer": []
+                    },
+                    {
+                        "OAuth2": [
+                            "openid",
+                            "profile",
+                            "email",
+                            "groups",
+                            "audience:server:client_id:unimq-dashboard"
+                        ]
                     }
                 ],
                 "description": "Deletes the notification configuration for a specific vhost",
@@ -942,6 +989,15 @@ const docTemplate = `{
                 "security": [
                     {
                         "bearer": []
+                    },
+                    {
+                        "OAuth2": [
+                            "openid",
+                            "profile",
+                            "email",
+                            "groups",
+                            "audience:server:client_id:unimq-dashboard"
+                        ]
                     }
                 ],
                 "description": "Add a new notification recipient for a specific vhost",
@@ -1012,6 +1068,15 @@ const docTemplate = `{
                 "security": [
                     {
                         "bearer": []
+                    },
+                    {
+                        "OAuth2": [
+                            "openid",
+                            "profile",
+                            "email",
+                            "groups",
+                            "audience:server:client_id:unimq-dashboard"
+                        ]
                     }
                 ],
                 "description": "Get a specific notification recipient for a vhost",
@@ -1075,6 +1140,15 @@ const docTemplate = `{
                 "security": [
                     {
                         "bearer": []
+                    },
+                    {
+                        "OAuth2": [
+                            "openid",
+                            "profile",
+                            "email",
+                            "groups",
+                            "audience:server:client_id:unimq-dashboard"
+                        ]
                     }
                 ],
                 "description": "Delete a specific notification recipient for a vhost",
@@ -1137,6 +1211,15 @@ const docTemplate = `{
                 "security": [
                     {
                         "bearer": []
+                    },
+                    {
+                        "OAuth2": [
+                            "openid",
+                            "profile",
+                            "email",
+                            "groups",
+                            "audience:server:client_id:unimq-dashboard"
+                        ]
                     }
                 ],
                 "description": "Add a new notification rule for a specific vhost",
@@ -1213,6 +1296,15 @@ const docTemplate = `{
                 "security": [
                     {
                         "bearer": []
+                    },
+                    {
+                        "OAuth2": [
+                            "openid",
+                            "profile",
+                            "email",
+                            "groups",
+                            "audience:server:client_id:unimq-dashboard"
+                        ]
                     }
                 ],
                 "description": "Retrieve a specific notification rule for a vhost",
@@ -1282,6 +1374,15 @@ const docTemplate = `{
                 "security": [
                     {
                         "bearer": []
+                    },
+                    {
+                        "OAuth2": [
+                            "openid",
+                            "profile",
+                            "email",
+                            "groups",
+                            "audience:server:client_id:unimq-dashboard"
+                        ]
                     }
                 ],
                 "description": "Delete a specific notification rule for a vhost",
@@ -1351,6 +1452,15 @@ const docTemplate = `{
                 "security": [
                     {
                         "bearer": []
+                    },
+                    {
+                        "OAuth2": [
+                            "openid",
+                            "profile",
+                            "email",
+                            "groups",
+                            "audience:server:client_id:unimq-dashboard"
+                        ]
                     }
                 ],
                 "description": "Delete a specific notification rule for a vhost",
@@ -1413,6 +1523,15 @@ const docTemplate = `{
                 "security": [
                     {
                         "bearer": []
+                    },
+                    {
+                        "OAuth2": [
+                            "openid",
+                            "profile",
+                            "email",
+                            "groups",
+                            "audience:server:client_id:unimq-dashboard"
+                        ]
                     }
                 ],
                 "description": "Send a test notification using the specified rule to verify its configuration",
@@ -1478,6 +1597,15 @@ const docTemplate = `{
                 "security": [
                     {
                         "bearer": []
+                    },
+                    {
+                        "OAuth2": [
+                            "openid",
+                            "profile",
+                            "email",
+                            "groups",
+                            "audience:server:client_id:unimq-dashboard"
+                        ]
                     }
                 ],
                 "description": "Enable or disable a specific notification rule for a vhost",
@@ -1540,6 +1668,15 @@ const docTemplate = `{
                 "security": [
                     {
                         "bearer": []
+                    },
+                    {
+                        "OAuth2": [
+                            "openid",
+                            "profile",
+                            "email",
+                            "groups",
+                            "audience:server:client_id:unimq-dashboard"
+                        ]
                     }
                 ],
                 "description": "Get the profile information of the authenticated user",
@@ -1577,6 +1714,15 @@ const docTemplate = `{
                 "security": [
                     {
                         "bearer": []
+                    },
+                    {
+                        "OAuth2": [
+                            "openid",
+                            "profile",
+                            "email",
+                            "groups",
+                            "audience:server:client_id:unimq-dashboard"
+                        ]
                     }
                 ],
                 "description": "Get statistics for all nodes in the RabbitMQ cluster",
@@ -1623,6 +1769,15 @@ const docTemplate = `{
                 "security": [
                     {
                         "bearer": []
+                    },
+                    {
+                        "OAuth2": [
+                            "openid",
+                            "profile",
+                            "email",
+                            "groups",
+                            "audience:server:client_id:unimq-dashboard"
+                        ]
                     }
                 ],
                 "description": "Get usage statistics for a specific vhost in the RabbitMQ cluster",
@@ -1678,6 +1833,15 @@ const docTemplate = `{
                 "security": [
                     {
                         "bearer": []
+                    },
+                    {
+                        "OAuth2": [
+                            "openid",
+                            "profile",
+                            "email",
+                            "groups",
+                            "audience:server:client_id:unimq-dashboard"
+                        ]
                     }
                 ],
                 "description": "Get a list of all vhosts in the RabbitMQ cluster",
@@ -1733,6 +1897,15 @@ const docTemplate = `{
                 "security": [
                     {
                         "bearer": []
+                    },
+                    {
+                        "OAuth2": [
+                            "openid",
+                            "profile",
+                            "email",
+                            "groups",
+                            "audience:server:client_id:unimq-dashboard"
+                        ]
                     }
                 ],
                 "description": "Get details of a specific vhost by name",
@@ -1791,6 +1964,15 @@ const docTemplate = `{
                 "security": [
                     {
                         "bearer": []
+                    },
+                    {
+                        "OAuth2": [
+                            "openid",
+                            "profile",
+                            "email",
+                            "groups",
+                            "audience:server:client_id:unimq-dashboard"
+                        ]
                     }
                 ],
                 "description": "Get limits of a specific vhost by name",
@@ -1849,6 +2031,15 @@ const docTemplate = `{
                 "security": [
                     {
                         "bearer": []
+                    },
+                    {
+                        "OAuth2": [
+                            "openid",
+                            "profile",
+                            "email",
+                            "groups",
+                            "audience:server:client_id:unimq-dashboard"
+                        ]
                     }
                 ],
                 "description": "Get real-time metrics for a specific vhost, including queue lengths, message rates, and resource usage",
@@ -1907,6 +2098,15 @@ const docTemplate = `{
                 "security": [
                     {
                         "bearer": []
+                    },
+                    {
+                        "OAuth2": [
+                            "openid",
+                            "profile",
+                            "email",
+                            "groups",
+                            "audience:server:client_id:unimq-dashboard"
+                        ]
                     }
                 ],
                 "description": "Fetches a list of all queues in a specified virtual host.",
@@ -1974,6 +2174,15 @@ const docTemplate = `{
                 "security": [
                     {
                         "bearer": []
+                    },
+                    {
+                        "OAuth2": [
+                            "openid",
+                            "profile",
+                            "email",
+                            "groups",
+                            "audience:server:client_id:unimq-dashboard"
+                        ]
                     }
                 ],
                 "description": "Fetches details of all queues in a specified virtual host.",
@@ -2045,39 +2254,6 @@ const docTemplate = `{
         }
     },
     "definitions": {
-        "dex.LoginRequest": {
-            "type": "object",
-            "properties": {
-                "password": {
-                    "type": "string",
-                    "example": "password"
-                },
-                "username": {
-                    "type": "string",
-                    "example": "olanordmann@test.com"
-                }
-            }
-        },
-        "dex.TokenResponse": {
-            "type": "object",
-            "properties": {
-                "access_token": {
-                    "type": "string"
-                },
-                "expires_in": {
-                    "type": "integer"
-                },
-                "id_token": {
-                    "type": "string"
-                },
-                "refresh_token": {
-                    "type": "string"
-                },
-                "token_type": {
-                    "type": "string"
-                }
-            }
-        },
         "httpsuite.ErrorResponse": {
             "type": "object",
             "properties": {
@@ -2833,6 +3009,19 @@ const docTemplate = `{
         }
     },
     "securityDefinitions": {
+        "OAuth2": {
+            "type": "oauth2",
+            "flow": "accessCode",
+            "authorizationUrl": "http://localhost:5556/dex/auth",
+            "tokenUrl": "http://localhost:5556/dex/token",
+            "scopes": {
+                "audience:server:client_id:unimq-dashboard": "Issue a token whose audience the dashboard API accepts",
+                "email": "User email address",
+                "groups": "Group membership used for authorization",
+                "openid": "OpenID Connect identity",
+                "profile": "User profile"
+            }
+        },
         "bearer": {
             "description": "\"JWT token for authentication, obtained from the Dex OIDC provider, formatted as 'Bearer {token}' in the Authorization header\"",
             "type": "apiKey",

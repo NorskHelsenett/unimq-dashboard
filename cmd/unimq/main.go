@@ -35,6 +35,15 @@ import (
 //	@name						Authorization
 //	@description				"JWT token for authentication, obtained from the Dex OIDC provider, formatted as 'Bearer {token}' in the Authorization header"
 
+//	@securitydefinitions.oauth2.accessCode				OAuth2
+//	@authorizationUrl									http://localhost:5556/dex/auth
+//	@tokenUrl											http://localhost:5556/dex/token
+//	@scope.openid										OpenID Connect identity
+//	@scope.profile										User profile
+//	@scope.email										User email address
+//	@scope.groups										Group membership used for authorization
+//	@scope.audience:server:client_id:unimq-dashboard	Issue a token whose audience the dashboard API accepts
+
 func main() {
 
 	logger.SetupLogger()

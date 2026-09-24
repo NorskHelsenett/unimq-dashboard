@@ -1,27 +1,5 @@
 basePath: /api
 definitions:
-  dex.LoginRequest:
-    properties:
-      password:
-        example: password
-        type: string
-      username:
-        example: olanordmann@test.com
-        type: string
-    type: object
-  dex.TokenResponse:
-    properties:
-      access_token:
-        type: string
-      expires_in:
-        type: integer
-      id_token:
-        type: string
-      refresh_token:
-        type: string
-      token_type:
-        type: string
-    type: object
   httpsuite.ErrorResponse:
     properties:
       error:
@@ -603,6 +581,12 @@ paths:
             $ref: '#/definitions/httpsuite.ErrorResponse'
       security:
       - bearer: []
+      - OAuth2:
+        - openid
+        - profile
+        - email
+        - groups
+        - audience:server:client_id:unimq-dashboard
       summary: Get Alarm History
       tags:
       - Alarms
@@ -648,6 +632,12 @@ paths:
             $ref: '#/definitions/httpsuite.ErrorResponse'
       security:
       - bearer: []
+      - OAuth2:
+        - openid
+        - profile
+        - email
+        - groups
+        - audience:server:client_id:unimq-dashboard
       summary: Get Alarm History for a rule
       tags:
       - Alarms
@@ -679,43 +669,15 @@ paths:
             $ref: '#/definitions/httpsuite.ErrorResponse'
       security:
       - bearer: []
+      - OAuth2:
+        - openid
+        - profile
+        - email
+        - groups
+        - audience:server:client_id:unimq-dashboard
       summary: Get checker status
       tags:
       - Notifications
-  /v1/login:
-    post:
-      consumes:
-      - application/json
-      description: Login with Dex using username and password
-      parameters:
-      - description: Login Request
-        in: body
-        name: loginRequest
-        required: true
-        schema:
-          $ref: '#/definitions/dex.LoginRequest'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/dex.TokenResponse'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/httpsuite.ErrorResponse'
-        "401":
-          description: Unauthorized
-          schema:
-            $ref: '#/definitions/httpsuite.ErrorResponse'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/httpsuite.ErrorResponse'
-      summary: Login with Dex
-      tags:
-      - Authentication
   /v1/login/callback:
     get:
       description: Handles the OAuth callback from Dex and exchanges the code for
@@ -781,6 +743,12 @@ paths:
             $ref: '#/definitions/httpsuite.ErrorResponse'
       security:
       - bearer: []
+      - OAuth2:
+        - openid
+        - profile
+        - email
+        - groups
+        - audience:server:client_id:unimq-dashboard
       summary: Get scheduled  maintenance information and history
       tags:
       - Maintenance
@@ -819,6 +787,12 @@ paths:
             $ref: '#/definitions/httpsuite.ErrorResponse'
       security:
       - bearer: []
+      - OAuth2:
+        - openid
+        - profile
+        - email
+        - groups
+        - audience:server:client_id:unimq-dashboard
       summary: Add new scheduled maintenance entry
       tags:
       - Maintenance
@@ -860,6 +834,12 @@ paths:
             $ref: '#/definitions/httpsuite.ErrorResponse'
       security:
       - bearer: []
+      - OAuth2:
+        - openid
+        - profile
+        - email
+        - groups
+        - audience:server:client_id:unimq-dashboard
       summary: Delete a maintenance entry
       tags:
       - Maintenance
@@ -900,6 +880,12 @@ paths:
             $ref: '#/definitions/httpsuite.ErrorResponse'
       security:
       - bearer: []
+      - OAuth2:
+        - openid
+        - profile
+        - email
+        - groups
+        - audience:server:client_id:unimq-dashboard
       summary: Get a specific maintenance entry
       tags:
       - Maintenance
@@ -996,6 +982,12 @@ paths:
             $ref: '#/definitions/httpsuite.ErrorResponse'
       security:
       - bearer: []
+      - OAuth2:
+        - openid
+        - profile
+        - email
+        - groups
+        - audience:server:client_id:unimq-dashboard
       summary: Update maintenance entry status
       tags:
       - Maintenance
@@ -1062,6 +1054,12 @@ paths:
             $ref: '#/definitions/httpsuite.ErrorResponse'
       security:
       - bearer: []
+      - OAuth2:
+        - openid
+        - profile
+        - email
+        - groups
+        - audience:server:client_id:unimq-dashboard
       summary: Get Notifications
       tags:
       - Notifications
@@ -1099,6 +1097,12 @@ paths:
             $ref: '#/definitions/httpsuite.ErrorResponse'
       security:
       - bearer: []
+      - OAuth2:
+        - openid
+        - profile
+        - email
+        - groups
+        - audience:server:client_id:unimq-dashboard
       summary: Delete Notifications
       tags:
       - Notifications
@@ -1135,6 +1139,12 @@ paths:
             $ref: '#/definitions/httpsuite.ErrorResponse'
       security:
       - bearer: []
+      - OAuth2:
+        - openid
+        - profile
+        - email
+        - groups
+        - audience:server:client_id:unimq-dashboard
       summary: Get Notification on Vhost
       tags:
       - Notifications
@@ -1180,6 +1190,12 @@ paths:
             $ref: '#/definitions/httpsuite.ErrorResponse'
       security:
       - bearer: []
+      - OAuth2:
+        - openid
+        - profile
+        - email
+        - groups
+        - audience:server:client_id:unimq-dashboard
       summary: Add a new notification recipient
       tags:
       - Notifications
@@ -1220,6 +1236,12 @@ paths:
             $ref: '#/definitions/httpsuite.ErrorResponse'
       security:
       - bearer: []
+      - OAuth2:
+        - openid
+        - profile
+        - email
+        - groups
+        - audience:server:client_id:unimq-dashboard
       summary: Delete a notification recipient
       tags:
       - Notifications
@@ -1261,6 +1283,12 @@ paths:
             $ref: '#/definitions/httpsuite.ErrorResponse'
       security:
       - bearer: []
+      - OAuth2:
+        - openid
+        - profile
+        - email
+        - groups
+        - audience:server:client_id:unimq-dashboard
       summary: Get a notification recipient
       tags:
       - Notifications
@@ -1310,6 +1338,12 @@ paths:
             $ref: '#/definitions/httpsuite.ErrorResponse'
       security:
       - bearer: []
+      - OAuth2:
+        - openid
+        - profile
+        - email
+        - groups
+        - audience:server:client_id:unimq-dashboard
       summary: Add a new notification rule
       tags:
       - Notifications
@@ -1350,6 +1384,12 @@ paths:
             $ref: '#/definitions/httpsuite.ErrorResponse'
       security:
       - bearer: []
+      - OAuth2:
+        - openid
+        - profile
+        - email
+        - groups
+        - audience:server:client_id:unimq-dashboard
       summary: Delete a notification rule
       tags:
       - Notifications
@@ -1395,6 +1435,12 @@ paths:
             $ref: '#/definitions/httpsuite.ErrorResponse'
       security:
       - bearer: []
+      - OAuth2:
+        - openid
+        - profile
+        - email
+        - groups
+        - audience:server:client_id:unimq-dashboard
       summary: Get a notification rule
       tags:
       - Notifications
@@ -1440,6 +1486,12 @@ paths:
             $ref: '#/definitions/httpsuite.ErrorResponse'
       security:
       - bearer: []
+      - OAuth2:
+        - openid
+        - profile
+        - email
+        - groups
+        - audience:server:client_id:unimq-dashboard
       summary: Update a notification rule
       tags:
       - Notifications
@@ -1483,6 +1535,12 @@ paths:
             $ref: '#/definitions/httpsuite.ErrorResponse'
       security:
       - bearer: []
+      - OAuth2:
+        - openid
+        - profile
+        - email
+        - groups
+        - audience:server:client_id:unimq-dashboard
       summary: Test Notification Rule
       tags:
       - Notifications
@@ -1523,6 +1581,12 @@ paths:
             $ref: '#/definitions/httpsuite.ErrorResponse'
       security:
       - bearer: []
+      - OAuth2:
+        - openid
+        - profile
+        - email
+        - groups
+        - audience:server:client_id:unimq-dashboard
       summary: Toggle a notification rule
       tags:
       - Notifications
@@ -1546,6 +1610,12 @@ paths:
             $ref: '#/definitions/httpsuite.ErrorResponse'
       security:
       - bearer: []
+      - OAuth2:
+        - openid
+        - profile
+        - email
+        - groups
+        - audience:server:client_id:unimq-dashboard
       summary: Get user profile
       tags:
       - Profile
@@ -1575,6 +1645,12 @@ paths:
             $ref: '#/definitions/httpsuite.ErrorResponse'
       security:
       - bearer: []
+      - OAuth2:
+        - openid
+        - profile
+        - email
+        - groups
+        - audience:server:client_id:unimq-dashboard
       summary: Get node statistics
       tags:
       - RabbitMQ
@@ -1610,6 +1686,12 @@ paths:
             $ref: '#/definitions/httpsuite.ErrorResponse'
       security:
       - bearer: []
+      - OAuth2:
+        - openid
+        - profile
+        - email
+        - groups
+        - audience:server:client_id:unimq-dashboard
       summary: Get Vhost usage
       tags:
       - Vhosts
@@ -1645,6 +1727,12 @@ paths:
             $ref: '#/definitions/httpsuite.ErrorResponse'
       security:
       - bearer: []
+      - OAuth2:
+        - openid
+        - profile
+        - email
+        - groups
+        - audience:server:client_id:unimq-dashboard
       summary: Get all vhosts
       tags:
       - Vhosts
@@ -1682,6 +1770,12 @@ paths:
             $ref: '#/definitions/httpsuite.ErrorResponse'
       security:
       - bearer: []
+      - OAuth2:
+        - openid
+        - profile
+        - email
+        - groups
+        - audience:server:client_id:unimq-dashboard
       summary: Get vhost details
       tags:
       - Vhosts
@@ -1719,6 +1813,12 @@ paths:
             $ref: '#/definitions/httpsuite.ErrorResponse'
       security:
       - bearer: []
+      - OAuth2:
+        - openid
+        - profile
+        - email
+        - groups
+        - audience:server:client_id:unimq-dashboard
       summary: Get vhost limits
       tags:
       - Vhosts
@@ -1757,6 +1857,12 @@ paths:
             $ref: '#/definitions/httpsuite.ErrorResponse'
       security:
       - bearer: []
+      - OAuth2:
+        - openid
+        - profile
+        - email
+        - groups
+        - audience:server:client_id:unimq-dashboard
       summary: Get Vhost Metrics
       tags:
       - Vhosts
@@ -1800,6 +1906,12 @@ paths:
             $ref: '#/definitions/httpsuite.ErrorResponse'
       security:
       - bearer: []
+      - OAuth2:
+        - openid
+        - profile
+        - email
+        - groups
+        - audience:server:client_id:unimq-dashboard
       summary: Get Queues for a specific vhost
       tags:
       - Queues
@@ -1848,10 +1960,28 @@ paths:
             $ref: '#/definitions/httpsuite.ErrorResponse'
       security:
       - bearer: []
+      - OAuth2:
+        - openid
+        - profile
+        - email
+        - groups
+        - audience:server:client_id:unimq-dashboard
       summary: Get a specific queue to a specified virtual host
       tags:
       - Queues
 securityDefinitions:
+  OAuth2:
+    authorizationUrl: http://localhost:5556/dex/auth
+    flow: accessCode
+    scopes:
+      audience:server:client_id:unimq-dashboard: Issue a token whose audience the
+        dashboard API accepts
+      email: User email address
+      groups: Group membership used for authorization
+      openid: OpenID Connect identity
+      profile: User profile
+    tokenUrl: http://localhost:5556/dex/token
+    type: oauth2
   bearer:
     description: '"JWT token for authentication, obtained from the Dex OIDC provider,
       formatted as ''Bearer {token}'' in the Authorization header"'

@@ -23,6 +23,7 @@ import (
 // @Failure		500			{object}	httpsuite.ErrorResponse	"Internal Server Error"
 // @Router			/v1/vhosts/{vhost-name}/queues [get]
 // @security		bearer
+// @security		OAuth2[openid, profile, email, groups, audience:server:client_id:unimq-dashboard]
 func (rc *RMQHandler) GetQueuesHandler(w http.ResponseWriter, r *http.Request) {
 
 	_, err := httpsuite.IsAGroupInClaim(r.Context(), rc.AdminGroups)
@@ -78,6 +79,7 @@ func (rc *RMQHandler) GetQueuesHandler(w http.ResponseWriter, r *http.Request) {
 // @Failure		500			{object}	httpsuite.ErrorResponse	"Internal Server Error"
 // @Router			/v1/vhosts/{vhost-name}/queues/{queue-id} [get]
 // @security		bearer
+// @security		OAuth2[openid, profile, email, groups, audience:server:client_id:unimq-dashboard]
 func (rc *RMQHandler) GetQueuesByNameHandler(w http.ResponseWriter, r *http.Request) {
 
 	_, err := httpsuite.IsAGroupInClaim(r.Context(), rc.AdminGroups)
