@@ -166,7 +166,6 @@ func (e *MaintenanceEntry) UnmarshalJSON(data []byte) error {
 		return fmt.Errorf("invalid maintenance status: %s, expected any of %v", aux.Status, GetMaintenanceStatusAllString())
 	}
 
-	e.Notified = false
 	e.ID = aux.ID
 	e.UpdatedBy = aux.UpdatedBy
 	e.UpdatedAt = now
