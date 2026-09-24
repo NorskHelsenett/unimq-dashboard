@@ -1,12 +1,14 @@
 package models
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"slices"
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/sisneve/rabbitmq-dashboard/internal/api/httpsuite"
 	"github.com/sisneve/rabbitmq-dashboard/internal/helpers/timehelper"
 )
 
@@ -60,14 +62,14 @@ func IsValidMaintenanceStatus(s string) bool {
 }
 
 // PostMaintenanceEntry is the model for creating a new maintenance entry
-// The start and end time must follow the format "2006-01-02 15:04:05"
+// The start and end time must follow the RFC3339 format, e.g. "2024-06-01T10:00:00Z"
 type PostMaintenanceEntry struct {
 	Description string `json:"description" bson:"description" example:"maintenance for server upgrade"`
-	Start       string `json:"start" bson:"start" example:"2024-06-01 10:00:00"`
-	End         string `json:"end" bson:"end" example:"2024-06-01 12:00:00"`
+	Start       string `json:"start" bson:"start" example:"2024-06-01T10:00:00Z"`
+	End         string `json:"end" bson:"end" example:"2024-06-01T12:00:00Z"`
 }
 
-func (p *PostMaintenanceEntry) ToMaintenanceEntry() (*MaintenanceEntry, error) {
+func (p *PostMaintenanceEntry) ToMaintenanceEntry(ctx context.Context) (*MaintenanceEntry, error) {
 
 	start, err := timehelper.ParseTimeInRFC3339(p.Start)
 	if err != nil {
@@ -83,25 +85,33 @@ func (p *PostMaintenanceEntry) ToMaintenanceEntry() (*MaintenanceEntry, error) {
 		return nil, fmt.Errorf("end time must be after start time")
 	}
 
+	email, err := httpsuite.GetEmailFromContext(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get email from context: %w", err)
+	}
+
 	return &MaintenanceEntry{
-		ID:          uuid.New().String(),
-		Description: p.Description,
-		Start:       start,
-		End:         end,
-		Status:      MaintenanceStatusScheduled,
-		Notified:    false,
+		ID:           uuid.New().String(),
+		Description:  p.Description,
+		Start:        start,
+		End:          end,
+		Status:       MaintenanceStatusScheduled,
+		UpdatedBy:    email,
+		UpdatedAt:    time.Now(),
+		UpdateReason: "created",
+		Notified:     false,
 	}, nil
 }
 
 type MaintenanceEntry struct {
 	ID           string            `json:"id" bson:"_id" example:""`
 	Description  string            `json:"description" bson:"description" example:"maintenance for server upgrade"`
-	Start        time.Time         `json:"start" bson:"start" example:"2024-06-01 10:00:00"`
-	End          time.Time         `json:"end" bson:"end" example:"2024-06-01 12:00:00"`
+	Start        time.Time         `json:"start" bson:"start" example:"2024-06-01T10:00:00Z"`
+	End          time.Time         `json:"end" bson:"end" example:"2024-06-01T12:00:00Z"`
 	Status       MaintenanceStatus `json:"status" bson:"status" example:"-"`
 	Notified     bool              `json:"notified" bson:"notified"`
 	UpdatedBy    string            `json:"updated_by,omitempty" bson:"updated_by,omitempty"`
-	UpdatedAt    time.Time         `json:"updated_at,omitempty" bson:"updated_at,omitempty"`
+	UpdatedAt    time.Time         `json:"updated_at" bson:"updated_at"`
 	UpdateReason string            `json:"update_reason,omitempty" bson:"update_reason,omitempty"`
 }
 
@@ -130,8 +140,13 @@ func (e *MaintenanceEntry) UnmarshalJSON(data []byte) error {
 		return fmt.Errorf("end is required")
 	}
 
+	now := time.Now()
 	if aux.UpdatedAt == "" {
-		return fmt.Errorf("updated_at is required")
+		var err error
+		now, err = timehelper.ParseTimeInRFC3339(aux.UpdatedAt)
+		if err != nil {
+			return fmt.Errorf("invalid updated_at time format: %w", err)
+		}
 	}
 
 	var err error
@@ -150,15 +165,11 @@ func (e *MaintenanceEntry) UnmarshalJSON(data []byte) error {
 	if !ok {
 		return fmt.Errorf("invalid maintenance status: %s, expected any of %v", aux.Status, GetMaintenanceStatusAllString())
 	}
-	time, err := timehelper.ParseTimeInRFC3339(aux.UpdatedAt)
-	if err != nil {
-		return fmt.Errorf("invalid updated_at time format: %w", err)
-	}
 
 	e.Notified = false
 	e.ID = aux.ID
 	e.UpdatedBy = aux.UpdatedBy
-	e.UpdatedAt = time
+	e.UpdatedAt = now
 	e.UpdateReason = aux.UpdateReason
 	e.Status = ParseMaintenanceStatus(aux.Status)
 	e.Notified = aux.Notified
