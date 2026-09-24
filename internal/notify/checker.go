@@ -322,10 +322,6 @@ func checkMaintenanceSchedules(ctx context.Context, db *database.Database, urls 
 			}
 		}
 
-		if err := db.SetMaintenanceEntryNotified(ctx, m.ID, true); err != nil {
-			slog.ErrorContext(ctx, "Failed to mark maintenance as notified", "error", err)
-		}
-
 		emailStatus := notificationhelper.EmailSenderInstance.SendEmails(ctx, emails, subject, body, "text/plain")
 
 		for _, s := range emailStatus {
@@ -340,6 +336,8 @@ func checkMaintenanceSchedules(ctx context.Context, db *database.Database, urls 
 			}
 		}
 
-		slog.InfoContext(ctx, "notify: maintenance email sent", "emails", emails)
+		if err := db.SetMaintenanceEntryNotified(ctx, m.ID, true); err != nil {
+			slog.ErrorContext(ctx, "Failed to mark maintenance as notified", "error", err)
+		}
 	}
 }
