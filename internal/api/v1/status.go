@@ -8,7 +8,7 @@ import (
 
 // @Summary		Get checker status
 // @Description	Get the current status of the notification checker
-// @Tags			Notifications
+// @Tags			Checker
 // @Produce		json
 // @Success		200	{object}	notify.CheckerStatus
 // @Failure		400	{object}	httpsuite.ErrorResponse
