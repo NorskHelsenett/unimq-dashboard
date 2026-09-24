@@ -18,7 +18,7 @@ const docTemplate = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
-        "/healthz": {
+        "/api/healthz": {
             "get": {
                 "description": "Returns a simple health check response to indicate that the service is running",
                 "produces": [
@@ -38,7 +38,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/readyz": {
+        "/api/readyz": {
             "get": {
                 "description": "Checks the readiness of the service by verifying connectivity to RabbitMQ, MongoDB, and Dex",
                 "produces": [
@@ -200,64 +200,6 @@ const docTemplate = `{
                     },
                     "502": {
                         "description": "Bad Gateway",
-                        "schema": {
-                            "$ref": "#/definitions/httpsuite.ErrorResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/v1/checker/status": {
-            "get": {
-                "security": [
-                    {
-                        "bearer": []
-                    },
-                    {
-                        "OAuth2": [
-                            "openid",
-                            "profile",
-                            "email",
-                            "groups",
-                            "audience:server:client_id:unimq-dashboard"
-                        ]
-                    }
-                ],
-                "description": "Get the current status of the notification checker",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Checker"
-                ],
-                "summary": "Get checker status",
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/notify.CheckerStatus"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/httpsuite.ErrorResponse"
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized",
-                        "schema": {
-                            "$ref": "#/definitions/httpsuite.ErrorResponse"
-                        }
-                    },
-                    "403": {
-                        "description": "Forbidden",
-                        "schema": {
-                            "$ref": "#/definitions/httpsuite.ErrorResponse"
-                        }
-                    },
-                    "503": {
-                        "description": "Service Unavailable",
                         "schema": {
                             "$ref": "#/definitions/httpsuite.ErrorResponse"
                         }
@@ -1770,6 +1712,64 @@ const docTemplate = `{
                     },
                     "500": {
                         "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/httpsuite.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/v1/status": {
+            "get": {
+                "security": [
+                    {
+                        "bearer": []
+                    },
+                    {
+                        "OAuth2": [
+                            "openid",
+                            "profile",
+                            "email",
+                            "groups",
+                            "audience:server:client_id:unimq-dashboard"
+                        ]
+                    }
+                ],
+                "description": "Get the current status of the notification checker",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Checker"
+                ],
+                "summary": "Get checker status",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/notify.CheckerStatus"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/httpsuite.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/httpsuite.ErrorResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/httpsuite.ErrorResponse"
+                        }
+                    },
+                    "503": {
+                        "description": "Service Unavailable",
                         "schema": {
                             "$ref": "#/definitions/httpsuite.ErrorResponse"
                         }

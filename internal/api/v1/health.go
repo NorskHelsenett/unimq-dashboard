@@ -14,7 +14,7 @@ import (
 // @Tags			Health
 // @Produce		json
 // @Success		200	{string}	string	"healthy"
-// @Router			/healthz [get]
+// @Router			/api/healthz [get]
 func (rc *APIService) HealthzHandler(w http.ResponseWriter, r *http.Request) {
 	httpsuite.SendEmptyResponse(r.Context(), w, "healthy", http.StatusOK)
 }
@@ -25,7 +25,7 @@ func (rc *APIService) HealthzHandler(w http.ResponseWriter, r *http.Request) {
 // @Produce		json
 // @Success		200	{object}	models.HealthStatus	"ready"
 // @Failure		502	{object}	models.HealthStatus	"not ready"
-// @Router			/readyz [get]
+// @Router			/api/readyz [get]
 func (rc *APIService) ReadyzHandler(rmq *rmq.RMQHandler, dex *dex.DexClient) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		status := models.NewHealthStatus()

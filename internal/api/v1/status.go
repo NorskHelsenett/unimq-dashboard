@@ -15,7 +15,7 @@ import (
 // @Failure		401	{object}	httpsuite.ErrorResponse
 // @Failure		403	{object}	httpsuite.ErrorResponse
 // @Failure		503	{object}	httpsuite.ErrorResponse
-// @Router			/v1/checker/status [get]
+// @Router			/v1/status [get]
 // @security		bearer
 // @security		OAuth2[openid, profile, email, groups, audience:server:client_id:unimq-dashboard]
 func (rc *APIService) GetCheckerStatusHandler(w http.ResponseWriter, r *http.Request) {
