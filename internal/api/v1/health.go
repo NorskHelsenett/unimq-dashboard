@@ -53,6 +53,7 @@ func (rc *APIService) ReadyzHandler(rmq *rmq.RMQHandler, dex *dex.DexClient) fun
 
 		if !status.IsHealthy() {
 			httpsuite.SendResponse(r.Context(), w, "not ready", http.StatusServiceUnavailable, &status)
+			return
 		}
 
 		httpsuite.SendResponse(r.Context(), w, "ready", http.StatusOK, &status)
