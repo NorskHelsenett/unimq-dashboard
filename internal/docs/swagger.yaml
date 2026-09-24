@@ -677,7 +677,7 @@ paths:
         - audience:server:client_id:unimq-dashboard
       summary: Get checker status
       tags:
-      - Notifications
+      - Checker
   /v1/login/callback:
     get:
       description: Handles the OAuth callback from Dex and exchanges the code for

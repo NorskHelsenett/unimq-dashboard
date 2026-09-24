@@ -228,7 +228,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "Notifications"
+                    "Checker"
                 ],
                 "summary": "Get checker status",
                 "responses": {
