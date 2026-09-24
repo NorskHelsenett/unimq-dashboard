@@ -29,7 +29,7 @@ func SendWebhook(ctx context.Context, url string, subject, body string) *Webhook
 
 	text := subject + "\n\n" + body
 	payload, _ := json.Marshal(map[string]string{"text": text})
-	tctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	tctx, cancel := context.WithTimeout(ctx, 10*time.Second)
 	defer cancel()
 	req, err := http.NewRequestWithContext(tctx, http.MethodPost, url, bytes.NewBuffer(payload))
 	if err != nil {
