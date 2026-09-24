@@ -64,7 +64,7 @@ func (rc *APIService) GetNotificationsVhostHandler(w http.ResponseWriter, r *htt
 		return
 	}
 
-	vhost := chi.URLParam(r, "vhost")
+	vhost := chi.URLParam(r, "vhost-name")
 	if vhost == "" {
 		httpsuite.WriteJSONError(w,
 			http.StatusBadRequest,
@@ -123,7 +123,7 @@ func (rc *APIService) DeleteNotificationsHandler(w http.ResponseWriter, r *http.
 		return
 	}
 
-	vhost := chi.URLParam(r, "vhost")
+	vhost := chi.URLParam(r, "vhost-name")
 	if vhost == "" {
 		httpsuite.WriteJSONError(w,
 			http.StatusBadRequest,

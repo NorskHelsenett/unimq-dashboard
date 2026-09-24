@@ -85,7 +85,7 @@ func (rc *APIService) GetMaintenanceEntryHandler(w http.ResponseWriter, r *http.
 		return
 	}
 
-	id := chi.URLParam(r, "maintenance")
+	id := chi.URLParam(r, "maintenance-id")
 	if id == "" {
 		httpsuite.WriteJSONError(w,
 			http.StatusBadRequest,
@@ -195,7 +195,7 @@ func (rc *APIService) UpdateMaintenanceStatusHandler(w http.ResponseWriter, r *h
 		return
 	}
 
-	id := chi.URLParam(r, "maintenance")
+	id := chi.URLParam(r, "maintenance-id")
 	if id == "" {
 		httpsuite.WriteJSONError(w,
 			http.StatusBadRequest,
@@ -250,7 +250,7 @@ func (rc *APIService) PatchMaintenanceHandler(w http.ResponseWriter, r *http.Req
 		return
 	}
 
-	id := chi.URLParam(r, "maintenance")
+	id := chi.URLParam(r, "maintenance-id")
 	if id == "" {
 		httpsuite.WriteJSONError(w,
 			http.StatusBadRequest,
@@ -344,7 +344,7 @@ func (rc *APIService) GetMaintenanceEditLogsHandler(w http.ResponseWriter, r *ht
 		return
 	}
 
-	id := chi.URLParam(r, "maintenance")
+	id := chi.URLParam(r, "maintenance-id")
 	if id == "" {
 		httpsuite.WriteJSONError(w,
 			http.StatusBadRequest,
@@ -391,7 +391,7 @@ func (rc *APIService) DeleteMaintenanceHandler(w http.ResponseWriter, r *http.Re
 		return
 	}
 
-	id := chi.URLParam(r, "maintenance")
+	id := chi.URLParam(r, "maintenance-id")
 	if id == "" {
 		httpsuite.WriteJSONError(w,
 			http.StatusBadRequest,

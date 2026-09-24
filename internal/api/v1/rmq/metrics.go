@@ -29,7 +29,7 @@ func (rc *RMQHandler) MetricHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	vhost := chi.URLParam(r, "vhost")
+	vhost := chi.URLParam(r, "vhost-name")
 	if vhost == "" {
 		httpsuite.WriteJSONError(w,
 			http.StatusBadRequest,

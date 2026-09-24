@@ -32,7 +32,7 @@ func (rc *RMQHandler) GetQueuesHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	vhost := chi.URLParam(r, "vhost")
+	vhost := chi.URLParam(r, "vhost-name")
 	if vhost == "" {
 		httpsuite.WriteJSONError(w,
 			http.StatusBadRequest,
@@ -88,7 +88,7 @@ func (rc *RMQHandler) GetQueuesByNameHandler(w http.ResponseWriter, r *http.Requ
 		return
 	}
 
-	vhost := chi.URLParam(r, "vhost")
+	vhost := chi.URLParam(r, "vhost-name")
 	if vhost == "" {
 		httpsuite.WriteJSONError(w,
 			http.StatusBadRequest,
@@ -108,7 +108,7 @@ func (rc *RMQHandler) GetQueuesByNameHandler(w http.ResponseWriter, r *http.Requ
 		return
 	}
 
-	queue := chi.URLParam(r, "queue")
+	queue := chi.URLParam(r, "queue-id")
 	if queue == "" {
 		httpsuite.WriteJSONError(w,
 			http.StatusBadRequest,

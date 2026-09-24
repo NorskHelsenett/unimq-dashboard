@@ -66,7 +66,7 @@ func (rc *RMQHandler) GetVhostHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	vhostName := chi.URLParam(r, "vhost")
+	vhostName := chi.URLParam(r, "vhost-name")
 	if vhostName == "" {
 		httpsuite.WriteJSONError(w,
 			http.StatusBadRequest,
@@ -120,7 +120,7 @@ func (rc *RMQHandler) GetVhostLimitsHandler(w http.ResponseWriter, r *http.Reque
 		return
 	}
 
-	vhostName := chi.URLParam(r, "vhost")
+	vhostName := chi.URLParam(r, "vhost-name")
 	if vhostName == "" {
 		httpsuite.WriteJSONError(w,
 			http.StatusBadRequest,
@@ -177,7 +177,7 @@ func (rc *RMQHandler) GetRMQVhostUsageHandler(w http.ResponseWriter, r *http.Req
 		return
 	}
 
-	vhost := chi.URLParam(r, "vhost")
+	vhost := chi.URLParam(r, "vhost-name")
 	if vhost == "" {
 		httpsuite.WriteJSONError(w,
 			http.StatusBadRequest,
@@ -185,8 +185,17 @@ func (rc *RMQHandler) GetRMQVhostUsageHandler(w http.ResponseWriter, r *http.Req
 		)
 		return
 	}
+	evhost, err := url.QueryUnescape(vhost)
+	if err != nil {
+		httpsuite.WriteJSONError(w,
+			http.StatusBadRequest,
+			httpsuite.WithError(err),
+			httpsuite.WithErrorMessage("failed to decode vhost name"),
+		)
+		return
+	}
 
-	usage, err := rc.RMQClient.GetVhostUsage(vhost)
+	usage, err := rc.RMQClient.GetVhostUsage(evhost)
 	if err != nil {
 		httpsuite.WriteJSONError(w,
 			http.StatusInternalServerError,

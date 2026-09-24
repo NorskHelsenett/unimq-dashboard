@@ -31,7 +31,7 @@ func (rc *APIService) GetNotificationsRecipientHandler(w http.ResponseWriter, r 
 		return
 	}
 
-	vhost := chi.URLParam(r, "vhost")
+	vhost := chi.URLParam(r, "vhost-name")
 	if vhost == "" {
 		httpsuite.WriteJSONError(w,
 			http.StatusBadRequest,
@@ -51,7 +51,7 @@ func (rc *APIService) GetNotificationsRecipientHandler(w http.ResponseWriter, r 
 		return
 	}
 
-	id := chi.URLParam(r, "recipient")
+	id := chi.URLParam(r, "recipient-id")
 	if id == "" {
 		httpsuite.WriteJSONError(w,
 			http.StatusBadRequest,
@@ -97,7 +97,7 @@ func (rc *APIService) AddNotificationsRecipientHandler(w http.ResponseWriter, r 
 		return
 	}
 
-	vhost := chi.URLParam(r, "vhost")
+	vhost := chi.URLParam(r, "vhost-name")
 	if vhost == "" {
 		httpsuite.WriteJSONError(w,
 			http.StatusBadRequest,
@@ -192,7 +192,7 @@ func (rc *APIService) DeleteNotificationsRecipientHandler(w http.ResponseWriter,
 		return
 	}
 
-	vhost := chi.URLParam(r, "vhost")
+	vhost := chi.URLParam(r, "vhost-name")
 	if vhost == "" {
 		httpsuite.WriteJSONError(w,
 			http.StatusBadRequest,
