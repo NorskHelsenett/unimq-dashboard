@@ -23,6 +23,5 @@ func SetupRMQRoutes(r chi.Router, rmqhandler *rmq.RMQHandler) {
 
 	r.Route("/rabbitmq", func(r chi.Router) {
 		r.Get("/", rmqhandler.GetRMQNodesHandler)
-		r.Get("/usage", rmqhandler.GetRMQVhostUsageHandler)
 	})
 }
