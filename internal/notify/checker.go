@@ -327,7 +327,7 @@ func checkMaintenanceSchedules(ctx context.Context, db *database.Database, urls 
 		for _, s := range emailStatus {
 			if errors.Is(s.Error, notificationhelper.ErrEmailNotConfigured) {
 				slog.WarnContext(ctx, "maintenance email not sent, smtp server is not configured", "emails", emails)
-				return
+				break
 			}
 			if !s.OK {
 				slog.ErrorContext(ctx, "maintenance email failed", "recipient", s.Recipient, "error", s.Error)
