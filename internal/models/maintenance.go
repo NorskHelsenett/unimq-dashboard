@@ -141,7 +141,7 @@ func (e *MaintenanceEntry) UnmarshalJSON(data []byte) error {
 	}
 
 	now := time.Now()
-	if aux.UpdatedAt == "" {
+	if aux.UpdatedAt != "" {
 		var err error
 		now, err = timehelper.ParseTimeInRFC3339(aux.UpdatedAt)
 		if err != nil {
