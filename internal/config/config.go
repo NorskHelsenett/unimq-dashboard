@@ -112,16 +112,24 @@ func (c *Config) CheckURLs() error {
 
 	rmq := strings.TrimPrefix(c.RabbitMQHost, "http://")
 	rmq = strings.TrimPrefix(rmq, "https://")
-	_, err := net.DialTimeout("tcp", fmt.Sprintf("%s:%d", rmq, c.RabbitMQPort), 5*time.Second)
+	dial, err := net.DialTimeout("tcp", fmt.Sprintf("%s:%d", rmq, c.RabbitMQPort), 5*time.Second)
 	if err != nil {
 		return fmt.Errorf("failed to connect to RabbitMQ URL: %w", err)
+	}
+	err = dial.Close()
+	if err != nil {
+		return fmt.Errorf("failed to close connection to RabbitMQ URL: %w", err)
 	}
 	slog.Info("successfully connected to RabbitMQ URL", "host", c.RabbitMQHost, "port", c.RabbitMQPort)
 
 	mdb := strings.TrimPrefix(c.MongoDBHost, "mongodb://")
-	_, err = net.DialTimeout("tcp", fmt.Sprintf("%s:%d", mdb, c.MongoDBPort), 5*time.Second)
+	dial, err = net.DialTimeout("tcp", fmt.Sprintf("%s:%d", mdb, c.MongoDBPort), 5*time.Second)
 	if err != nil {
 		return fmt.Errorf("failed to connect to MongoDB URL: %w", err)
+	}
+	err = dial.Close()
+	if err != nil {
+		return fmt.Errorf("failed to close connection to mongoDB URL: %w", err)
 	}
 	slog.Info("successfully connected to MongoDB URL", "host", c.MongoDBHost, "port", c.MongoDBPort)
 
