@@ -119,7 +119,7 @@ export function DashboardAlarmsSummaryWidget({
 }: {
   notification: VhostNotification | null
 }) {
-  const alarms = notification?.Rules ?? []
+  const alarms = notification?.rules ?? []
   const firingCount = alarms.filter(a => a.status === 'firing').length
   const firedCount = alarms.filter(a => a.status === 'fired').length
 
@@ -144,11 +144,11 @@ export function DashboardAlarmsSummaryWidget({
           <AlarmStatusBanner alarms={alarms} />
           <div>
             {sorted.map(a => (
-              <AlarmRow key={a.id} alarm={a} vhost={notification?.Name ?? ''} />
+              <AlarmRow key={a.id} alarm={a} vhost={notification?.name ?? ''} />
             ))}
           </div>
           <p className="mt-auto pt-3">
-            <a href={`/notifications?vhost=${encodeURIComponent(notification?.Name ?? '')}`} className={cn("text-submit-button text-xs hover:font-semibold transition-colors inline-flex items-center gap-1 [text-decoration:none] hover:[text-decoration:none]")}>
+            <a href={`/notifications?vhost=${encodeURIComponent(notification?.name ?? '')}`} className={cn("text-submit-button text-xs hover:font-semibold transition-colors inline-flex items-center gap-1 [text-decoration:none] hover:[text-decoration:none]")}>
               View all alarms <ArrowRight className="w-3 h-3 inline ml-1" />
             </a>
           </p>

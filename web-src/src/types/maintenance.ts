@@ -2,8 +2,8 @@ export interface ApiResponse<Scheduled, History> {
     code: number
     message: string
     body: {
-        Scheduled: Scheduled[]
-        History: History[]
+        scheduled: Scheduled[]
+        history: History[]
     }
 }
 

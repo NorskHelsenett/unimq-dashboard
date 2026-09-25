@@ -97,6 +97,6 @@ export async function deleteRecipient(vhost: string, recipientId: string): Promi
 export async function getAlarmLogsByRuleId(ruleId: string): Promise<LogEntry[]> {
   const res = await apiFetch(`/api/v1/alarms/${encodeURIComponent(ruleId)}`)
   if (!res.ok) throw new Error('Failed to fetch notification alarm logs')
-  const data: ApiResponse<{ Entries?: LogEntry[] }> = await res.json()
-  return data.body?.Entries ?? []
+  const data: ApiResponse<{ entries?: LogEntry[] }> = await res.json()
+  return data.body?.entries ?? []
 }

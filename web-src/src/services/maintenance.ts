@@ -14,7 +14,7 @@ export async function getScheduledMaintenance(): Promise<Maintenance[]> {
   const res = await apiFetch('/api/v1/maintenance')
   if (!res.ok) throw new Error('Failed to fetch maintenance data')
   const data: ApiResponse<Maintenance, Maintenance> = await res.json()
-  return data.body.Scheduled ?? []
+  return data.body.scheduled ?? []
 }
 
 export async function getMaintenanceById(id: string): Promise<Maintenance | null> {
@@ -28,7 +28,7 @@ export async function getMaintenanceHistory(): Promise<Maintenance[]> {
     const res = await apiFetch('/api/v1/maintenance')
     if (!res.ok) throw new Error('Failed to fetch maintenance data')
     const data: ApiResponse<Maintenance, Maintenance> = await res.json()
-    return data.body.History ?? []
+    return data.body.history ?? []
 }
 
 export async function addMaintenance({

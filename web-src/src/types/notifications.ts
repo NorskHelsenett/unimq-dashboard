@@ -1,10 +1,10 @@
 import type { RecipientsProps } from '@/components/notifications/RecipientCard'
 
 export interface VhostNotification {
-  Name: string
-  Recipients: RecipientsProps[]
-  Rules: AlarmProps[]
-  Notified: boolean
+  name: string
+  recipients: RecipientsProps[]
+  rules: AlarmProps[]
+  notified: boolean
 }
 
 export type Status = 'ok' | 'active' | 'inactive' | 'firing' | 'fired' | 'unknown' | ''
