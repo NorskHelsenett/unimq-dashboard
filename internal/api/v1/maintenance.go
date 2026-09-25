@@ -11,6 +11,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/sisneve/rabbitmq-dashboard/internal/api/httpsuite"
 	"github.com/sisneve/rabbitmq-dashboard/internal/database"
+	"github.com/sisneve/rabbitmq-dashboard/internal/helpers/requesthelper"
 	"github.com/sisneve/rabbitmq-dashboard/internal/helpers/timehelper"
 	"github.com/sisneve/rabbitmq-dashboard/internal/models"
 )
@@ -195,11 +196,12 @@ func (rc *APIService) UpdateMaintenanceStatusHandler(w http.ResponseWriter, r *h
 		return
 	}
 
-	id := chi.URLParam(r, "maintenance-id")
-	if id == "" {
+	maintenance, err := requesthelper.ReadMaintenanceIDFromRequest(r)
+	if err != nil {
 		httpsuite.WriteJSONError(w,
 			http.StatusBadRequest,
-			httpsuite.WithErrorMessage("maintenance id is required"),
+			httpsuite.WithError(err),
+			httpsuite.WithErrorMessage("failed to read maintenance id parameter"),
 		)
 		return
 	}
@@ -215,7 +217,7 @@ func (rc *APIService) UpdateMaintenanceStatusHandler(w http.ResponseWriter, r *h
 		return
 	}
 
-	err = rc.DB.SetMaintenanceEntryStatus(r.Context(), id, request.Status)
+	err = rc.DB.SetMaintenanceEntryStatus(r.Context(), maintenance, request.Status)
 	if err != nil {
 		httpsuite.WriteJSONError(w,
 			http.StatusInternalServerError,
