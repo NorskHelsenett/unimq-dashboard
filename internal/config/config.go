@@ -90,8 +90,12 @@ func (c *Config) Load() error {
 
 	viper.AutomaticEnv()
 	c.loadEnvironmentVariables()
-	_ = c.loadConfigurationFile(".")
-	err := viper.Unmarshal(c)
+	err := c.loadConfigurationFile(".")
+	if err != nil {
+		return err
+	}
+
+	err = viper.Unmarshal(c)
 	if err != nil {
 		return err
 	}
@@ -142,7 +146,7 @@ func (c *Config) loadConfigurationFile(path string) error {
 
 	err := viper.ReadInConfig()
 	if err != nil {
-		ok := errors.Is(viper.ConfigFileNotFoundError{}, err)
+		ok := errors.Is(err, viper.ConfigFileNotFoundError{})
 		if ok {
 			return nil
 		}
@@ -211,6 +215,8 @@ func (c *Config) validateConfiguration() error {
 	parameterChecks["OIDC_REDIRECT_URL"] = isPresent(c.OIDC.OIDCRedirectURL)
 	parameterChecks["OIDC_SWAGGER_CLIENT_ID"] = isPresent(c.OIDC.OIDCSwaggerClientID)
 
+	parameterChecks["ADMIN_GROUPS"] = isPresent(c.AdminGroups)
+
 	errString := checkParameters(parameterChecks)
 	if len(errString) > 0 {
 		return errors.New(errString)
@@ -220,7 +226,7 @@ func (c *Config) validateConfiguration() error {
 }
 
 func isPresent(value any) bool {
-	switch v := value.(type) {
+	switch value.(type) {
 	case string:
 
 		if value == "" {
@@ -228,9 +234,17 @@ func isPresent(value any) bool {
 		}
 		return true
 	case int:
+		if value == 0 {
+			return false
+		}
+		return true
+	case []string:
+		if len(value.([]string)) == 0 {
+			return false
+		}
 		return true
 	default:
-		panic(fmt.Sprintf("Unsupported type check of type %v", v))
+		return false
 	}
 }
 
