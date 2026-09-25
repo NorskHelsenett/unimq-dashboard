@@ -3,11 +3,10 @@ package rmq
 import (
 	"errors"
 	"net/http"
-	"net/url"
 
-	"github.com/go-chi/chi/v5"
 	"github.com/sisneve/rabbitmq-dashboard/internal/api/httpsuite"
 	"github.com/sisneve/rabbitmq-dashboard/internal/clients/rabbitmq"
+	"github.com/sisneve/rabbitmq-dashboard/internal/helpers/requesthelper"
 )
 
 // @Summary		Get Queues for a specific vhost
@@ -32,11 +31,12 @@ func (rc *RMQHandler) GetQueuesHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	vhost := chi.URLParam(r, "vhost-name")
-	if vhost == "" {
+	vhost, err := requesthelper.ReadVhostFromRequest(r)
+	if err != nil {
 		httpsuite.WriteJSONError(w,
 			http.StatusBadRequest,
-			httpsuite.WithErrorMessage("missing vhost parameter"),
+			httpsuite.WithError(err),
+			httpsuite.WithErrorMessage("failed to read vhost parameter"),
 		)
 		return
 	}
@@ -77,36 +77,27 @@ func (rc *RMQHandler) GetQueuesByNameHandler(w http.ResponseWriter, r *http.Requ
 		return
 	}
 
-	vhost := chi.URLParam(r, "vhost-name")
-	if vhost == "" {
-		httpsuite.WriteJSONError(w,
-			http.StatusBadRequest,
-			httpsuite.WithErrorMessage("missing vhost parameter"),
-		)
-		return
-	}
-
-	queue := chi.URLParam(r, "queue-id")
-	if queue == "" {
-		httpsuite.WriteJSONError(w,
-			http.StatusBadRequest,
-			httpsuite.WithErrorMessage("missing queue name"),
-		)
-		return
-	}
-
-	eQueue, err := url.QueryUnescape(queue)
+	vhost, err := requesthelper.ReadVhostFromRequest(r)
 	if err != nil {
 		httpsuite.WriteJSONError(w,
-			http.StatusInternalServerError,
+			http.StatusBadRequest,
 			httpsuite.WithError(err),
-			httpsuite.WithExternalErrorMessage("failed to decode queue name"),
-			httpsuite.WithInternalErrorMessage("failed to decode queue name: "+queue),
+			httpsuite.WithErrorMessage("failed to read vhost parameter"),
 		)
 		return
 	}
 
-	queues, err := rc.RMQClient.GetQueueByName(vhost, eQueue)
+	queue, err := requesthelper.ReadQueueIDFromRequest(r)
+	if err != nil {
+		httpsuite.WriteJSONError(w,
+			http.StatusBadRequest,
+			httpsuite.WithError(err),
+			httpsuite.WithErrorMessage("failed to read queue parameter"),
+		)
+		return
+	}
+
+	queues, err := rc.RMQClient.GetQueueByName(vhost, queue)
 	if err != nil {
 		if errors.Is(err, rabbitmq.ErrQueueNotFound) {
 			httpsuite.WriteJSONError(w,

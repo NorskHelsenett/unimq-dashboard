@@ -4,9 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
-	"net/url"
 
-	"github.com/go-chi/chi/v5"
 	"github.com/sisneve/rabbitmq-dashboard/internal/api/httpsuite"
 	"github.com/sisneve/rabbitmq-dashboard/internal/clients/rabbitmq"
 	"github.com/sisneve/rabbitmq-dashboard/internal/helpers/requesthelper"
@@ -112,35 +110,26 @@ func (rc *RMQHandler) GetVhostLimitsHandler(w http.ResponseWriter, r *http.Reque
 		return
 	}
 
-	vhostName := chi.URLParam(r, "vhost-name")
-	if vhostName == "" {
-		httpsuite.WriteJSONError(w,
-			http.StatusBadRequest,
-			httpsuite.WithErrorMessage("vhost name is required"),
-		)
-		return
-	}
-
-	eVhostName, err := url.QueryUnescape(vhostName)
+	vhost, err := requesthelper.ReadVhostFromRequest(r)
 	if err != nil {
 		httpsuite.WriteJSONError(w,
 			http.StatusBadRequest,
 			httpsuite.WithError(err),
-			httpsuite.WithErrorMessage("failed to decode vhost name"),
+			httpsuite.WithErrorMessage("failed to read vhost parameter"),
 		)
 		return
 	}
 
-	vhostLimits, err := rc.RMQClient.GetVhostLimit(eVhostName)
+	vhostLimits, err := rc.RMQClient.GetVhostLimit(vhost)
 	if err != nil {
 		if errors.Is(err, rabbitmq.ErrLimitsNotFound) {
-			vhostLimits = models.NewRMQVhostLimits(eVhostName)
+			vhostLimits = models.NewRMQVhostLimits(vhost)
 		} else {
 			httpsuite.WriteJSONError(w,
 				http.StatusInternalServerError,
 				httpsuite.WithError(err),
 				httpsuite.WithErrorMessage("failed to fetch vhost limits"),
-				httpsuite.WithInternalErrorMessage(fmt.Sprintf("failed to fetch vhost limits for vhost '%s': %v", eVhostName, err)),
+				httpsuite.WithInternalErrorMessage(fmt.Sprintf("failed to fetch vhost limits for vhost '%s': %v", vhost, err)),
 			)
 			return
 		}
@@ -169,11 +158,12 @@ func (rc *RMQHandler) GetRMQVhostUsageHandler(w http.ResponseWriter, r *http.Req
 		return
 	}
 
-	vhost := chi.URLParam(r, "vhost-name")
-	if vhost == "" {
+	vhost, err := requesthelper.ReadVhostFromRequest(r)
+	if err != nil {
 		httpsuite.WriteJSONError(w,
 			http.StatusBadRequest,
-			httpsuite.WithErrorMessage("vhost name is required"),
+			httpsuite.WithError(err),
+			httpsuite.WithErrorMessage("failed to read vhost parameter"),
 		)
 		return
 	}

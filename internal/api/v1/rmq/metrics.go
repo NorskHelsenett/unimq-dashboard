@@ -3,8 +3,8 @@ package rmq
 import (
 	"net/http"
 
-	"github.com/go-chi/chi/v5"
 	"github.com/sisneve/rabbitmq-dashboard/internal/api/httpsuite"
+	"github.com/sisneve/rabbitmq-dashboard/internal/helpers/requesthelper"
 )
 
 // @Summary		Get Vhost Metrics
@@ -28,11 +28,12 @@ func (rc *RMQHandler) MetricHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	vhost := chi.URLParam(r, "vhost-name")
-	if vhost == "" {
+	vhost, err := requesthelper.ReadVhostFromRequest(r)
+	if err != nil {
 		httpsuite.WriteJSONError(w,
 			http.StatusBadRequest,
-			httpsuite.WithErrorMessage("vhost name is required"),
+			httpsuite.WithError(err),
+			httpsuite.WithErrorMessage("failed to read vhost parameter"),
 		)
 		return
 	}

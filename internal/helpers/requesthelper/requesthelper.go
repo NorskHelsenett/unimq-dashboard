@@ -54,3 +54,17 @@ func ReadMaintenanceIDFromRequest(r *http.Request) (string, error) {
 
 	return id, nil
 }
+
+func ReadQueueIDFromRequest(r *http.Request) (string, error) {
+	queue := chi.URLParam(r, "queue-id")
+	if queue == "" {
+		return "", fmt.Errorf("%w: queue-id", ErrMissingRequiredParameter)
+	}
+
+	eQueue, err := url.QueryUnescape(queue)
+	if err != nil {
+		return "", fmt.Errorf("%w: %v", ErrFailedToDecodeParameter, err)
+	}
+
+	return eQueue, nil
+}
