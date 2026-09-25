@@ -110,10 +110,12 @@ func main() {
 	wg := &sync.WaitGroup{}
 
 	server := &http.Server{
-		Addr:         fmt.Sprintf("%v:%d", config.BaseURL, config.BasePort),
-		Handler:      routes,
-		ReadTimeout:  30 * time.Second,
-		WriteTimeout: 90 * time.Second,
+		Addr:              fmt.Sprintf("%v:%d", config.BaseURL, config.BasePort),
+		Handler:           routes,
+		ReadTimeout:       30 * time.Second,
+		WriteTimeout:      90 * time.Second,
+		IdleTimeout:       120 * time.Second,
+		ReadHeaderTimeout: 10 * time.Second,
 	}
 
 	wg.Go(func() {
