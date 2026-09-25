@@ -75,16 +75,7 @@ func WithAuthProvider(authProvider models.HTTPAuthProvider) ConfigOption {
 		c.authProvider = authProvider
 	}
 }
-func WithUsername(username string) ConfigOption {
-	return func(c *Config) {
-		c.Username = username
-	}
-}
-func WithPassword(password string) ConfigOption {
-	return func(c *Config) {
-		c.password = password
-	}
-}
+
 func WithTimeout(timeout int) ConfigOption {
 	return func(c *Config) {
 		c.Timeout = time.Second * time.Duration(timeout)
