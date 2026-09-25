@@ -54,7 +54,7 @@ func main() {
 	config := config.NewConfig()
 	if err := config.Load(); err != nil {
 		slog.ErrorContext(ctx, "failed to load config", "error", err)
-		return
+		os.Exit(1)
 	}
 
 	logger.UpdateLogLevel(slog.Level(config.LogLevel))
@@ -62,7 +62,7 @@ func main() {
 	err := config.CheckURLs()
 	if err != nil {
 		slog.ErrorContext(ctx, "failed to validate URLs", "error", err)
-		return
+		os.Exit(1)
 	}
 
 	db, err := database.NewDatabase(
@@ -74,7 +74,7 @@ func main() {
 	)
 	if err != nil {
 		slog.ErrorContext(ctx, "failed to connect to database", "error", err)
-		return
+		os.Exit(1)
 	}
 
 	rmq, err := rabbitmq.NewRMQClient(
@@ -86,7 +86,7 @@ func main() {
 	)
 	if err != nil {
 		slog.ErrorContext(ctx, "failed to create RabbitMQ client", "error", err)
-		return
+		os.Exit(1)
 	}
 
 	// Sets up the global email sender instance for the notification helper package
@@ -102,7 +102,7 @@ func main() {
 	routes, err := routes.SetupRoutes(ctx, config, db, rmq, checker)
 	if err != nil {
 		slog.ErrorContext(ctx, "failed to set up routes", "error", err)
-		return
+		os.Exit(1)
 	}
 
 	slog.InfoContext(ctx, "starting RabbitMQ Dashboard", "URL", config.BaseURL, "port", config.BasePort)
@@ -153,7 +153,7 @@ func main() {
 		if err != nil {
 			slog.Error("forced shutdown of server", "error", err)
 		}
-		return
+		os.Exit(1)
 	}
 
 	wg.Wait()
