@@ -3,10 +3,9 @@ package api
 import (
 	"errors"
 	"net/http"
-	"net/url"
 
-	"github.com/go-chi/chi/v5"
 	"github.com/sisneve/rabbitmq-dashboard/internal/api/httpsuite"
+	"github.com/sisneve/rabbitmq-dashboard/internal/helpers/requesthelper"
 	"go.mongodb.org/mongo-driver/v2/mongo"
 )
 
@@ -65,38 +64,28 @@ func (rc *APIService) GetAlarmHistoryHandler(w http.ResponseWriter, r *http.Requ
 		return
 	}
 
-	ruleID := chi.URLParam(r, "rule-id")
-	if ruleID == "" {
-		httpsuite.WriteJSONError(w,
-			http.StatusBadRequest,
-			httpsuite.WithErrorMessage("missing required rule-id parameter"),
-		)
-		return
-	}
-
-	eRuleID, err := url.QueryUnescape(ruleID)
+	ruleID, err := requesthelper.ReadRuleIDFromRequest(r)
 	if err != nil {
 		httpsuite.WriteJSONError(w,
 			http.StatusBadRequest,
-			httpsuite.WithError(err),
-			httpsuite.WithErrorMessage("failed to decode rule-id parameter"),
+			httpsuite.WithErrorMessage("missing required rule id parameter"),
 		)
 		return
 	}
 
-	alarms, err := rc.DB.GetAlarm(r.Context(), eRuleID)
+	alarms, err := rc.DB.GetAlarm(r.Context(), ruleID)
 	if err != nil {
 		if errors.Is(err, mongo.ErrNoDocuments) {
 			httpsuite.WriteJSONError(w,
 				http.StatusNotFound,
-				httpsuite.WithErrorMessage("no alarm history found for rule ID: "+eRuleID),
+				httpsuite.WithErrorMessage("no alarm history found for rule ID: "+ruleID),
 			)
 			return
 		}
 		httpsuite.WriteJSONError(w,
 			http.StatusInternalServerError,
 			httpsuite.WithError(err),
-			httpsuite.WithErrorMessage("failed to fetch alarm history for rule ID: "+eRuleID),
+			httpsuite.WithErrorMessage("failed to fetch alarm history for rule ID: "+ruleID),
 		)
 		return
 	}
@@ -104,10 +93,10 @@ func (rc *APIService) GetAlarmHistoryHandler(w http.ResponseWriter, r *http.Requ
 	if alarms == nil {
 		httpsuite.WriteJSONError(w,
 			http.StatusNotFound,
-			httpsuite.WithErrorMessage("no alarm history found for rule ID: "+eRuleID),
+			httpsuite.WithErrorMessage("no alarm history found for rule ID: "+ruleID),
 		)
 		return
 	}
 
-	httpsuite.SendResponse(r.Context(), w, "Gathered notification history on rule ID "+eRuleID, http.StatusOK, alarms)
+	httpsuite.SendResponse(r.Context(), w, "Gathered notification history on rule ID "+ruleID, http.StatusOK, alarms)
 }

@@ -3,10 +3,9 @@ package api
 import (
 	"errors"
 	"net/http"
-	"net/url"
 
-	"github.com/go-chi/chi/v5"
 	"github.com/sisneve/rabbitmq-dashboard/internal/api/httpsuite"
+	"github.com/sisneve/rabbitmq-dashboard/internal/helpers/requesthelper"
 	"github.com/sisneve/rabbitmq-dashboard/internal/models"
 	"go.mongodb.org/mongo-driver/v2/mongo"
 )
@@ -64,30 +63,20 @@ func (rc *APIService) GetNotificationsVhostHandler(w http.ResponseWriter, r *htt
 		return
 	}
 
-	vhost := chi.URLParam(r, "vhost-name")
-	if vhost == "" {
-		httpsuite.WriteJSONError(w,
-			http.StatusBadRequest,
-			httpsuite.WithErrorMessage("missing required vhost parameter"),
-		)
-		return
-	}
-
-	eVhost, err := url.QueryUnescape(vhost)
+	vhost, err := requesthelper.ReadVhostFromRequest(r)
 	if err != nil {
 		httpsuite.WriteJSONError(w,
 			http.StatusBadRequest,
 			httpsuite.WithError(err),
-			httpsuite.WithExternalErrorMessage("failed to decode vhost name"),
-			httpsuite.WithInternalErrorMessage("error decoding vhost name: "+vhost),
+			httpsuite.WithErrorMessage("failed to read vhost parameter"),
 		)
 		return
 	}
 
-	notification, err := rc.DB.GetNotification(r.Context(), eVhost)
+	notification, err := rc.DB.GetNotification(r.Context(), vhost)
 	if err != nil {
 		if errors.Is(err, mongo.ErrNoDocuments) {
-			empty := models.NewVhostNotification(eVhost)
+			empty := models.NewVhostNotification(vhost)
 			httpsuite.SendResponse(r.Context(), w, "Gathered notifications on vhost", http.StatusOK, empty)
 			return
 		}
@@ -123,27 +112,17 @@ func (rc *APIService) DeleteNotificationsHandler(w http.ResponseWriter, r *http.
 		return
 	}
 
-	vhost := chi.URLParam(r, "vhost-name")
-	if vhost == "" {
-		httpsuite.WriteJSONError(w,
-			http.StatusBadRequest,
-			httpsuite.WithErrorMessage("missing required vhost parameter"),
-		)
-		return
-	}
-
-	eVhost, err := url.QueryUnescape(vhost)
+	vhost, err := requesthelper.ReadVhostFromRequest(r)
 	if err != nil {
 		httpsuite.WriteJSONError(w,
 			http.StatusBadRequest,
 			httpsuite.WithError(err),
-			httpsuite.WithExternalErrorMessage("failed to decode vhost name"),
-			httpsuite.WithInternalErrorMessage("error decoding vhost name: "+vhost),
+			httpsuite.WithErrorMessage("failed to read vhost parameter"),
 		)
 		return
 	}
 
-	err = rc.DB.DeleteNotification(r.Context(), eVhost)
+	err = rc.DB.DeleteNotification(r.Context(), vhost)
 	if err != nil {
 		httpsuite.WriteJSONError(w,
 			http.StatusInternalServerError,

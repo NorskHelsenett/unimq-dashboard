@@ -5,11 +5,11 @@ import (
 	"log/slog"
 	"net/http"
 
-	"github.com/go-chi/chi/v5"
 	"github.com/sisneve/rabbitmq-dashboard/internal/api/httpsuite"
 	"github.com/sisneve/rabbitmq-dashboard/internal/clients/rabbitmq"
 	"github.com/sisneve/rabbitmq-dashboard/internal/database"
 	"github.com/sisneve/rabbitmq-dashboard/internal/helpers/notificationhelper"
+	"github.com/sisneve/rabbitmq-dashboard/internal/helpers/requesthelper"
 	"github.com/sisneve/rabbitmq-dashboard/internal/models"
 	"go.mongodb.org/mongo-driver/v2/mongo"
 )
@@ -37,17 +37,18 @@ func (rc *APIService) GetNotificationRuleHandler(w http.ResponseWriter, r *http.
 		return
 	}
 
-	vhost := chi.URLParam(r, "vhost-name")
-	if vhost == "" {
+	vhost, err := requesthelper.ReadVhostFromRequest(r)
+	if err != nil {
 		httpsuite.WriteJSONError(w,
 			http.StatusBadRequest,
-			httpsuite.WithErrorMessage("missing required vhost parameter"),
+			httpsuite.WithError(err),
+			httpsuite.WithErrorMessage("failed to read vhost parameter"),
 		)
 		return
 	}
 
-	id := chi.URLParam(r, "rule-id")
-	if id == "" {
+	ruleID, err := requesthelper.ReadRuleIDFromRequest(r)
+	if err != nil {
 		httpsuite.WriteJSONError(w,
 			http.StatusBadRequest,
 			httpsuite.WithErrorMessage("missing required rule id parameter"),
@@ -55,7 +56,7 @@ func (rc *APIService) GetNotificationRuleHandler(w http.ResponseWriter, r *http.
 		return
 	}
 
-	rule, err := rc.DB.GetNotificationRule(r.Context(), vhost, id)
+	rule, err := rc.DB.GetNotificationRule(r.Context(), vhost, ruleID)
 	if err != nil {
 		if errors.Is(err, database.ErrNotificationRuleNotFound) {
 			httpsuite.WriteJSONError(w,
@@ -108,11 +109,12 @@ func (rc *APIService) AddNotificationsRuleHandler(w http.ResponseWriter, r *http
 		return
 	}
 
-	vhost := chi.URLParam(r, "vhost-name")
-	if vhost == "" {
+	vhost, err := requesthelper.ReadVhostFromRequest(r)
+	if err != nil {
 		httpsuite.WriteJSONError(w,
 			http.StatusBadRequest,
-			httpsuite.WithErrorMessage("missing required vhost parameter"),
+			httpsuite.WithError(err),
+			httpsuite.WithErrorMessage("failed to read vhost parameter"),
 		)
 		return
 	}
@@ -190,24 +192,26 @@ func (rc *APIService) DeleteNotificationsRuleHandler(w http.ResponseWriter, r *h
 		return
 	}
 
-	vhost := chi.URLParam(r, "vhost-name")
-	if vhost == "" {
+	vhost, err := requesthelper.ReadVhostFromRequest(r)
+	if err != nil {
 		httpsuite.WriteJSONError(w,
 			http.StatusBadRequest,
-			httpsuite.WithErrorMessage("missing required vhost parameter"),
+			httpsuite.WithError(err),
+			httpsuite.WithErrorMessage("failed to read vhost parameter"),
 		)
 		return
 	}
 
-	id := chi.URLParam(r, "rule-id")
-	if id == "" {
+	ruleID, err := requesthelper.ReadRuleIDFromRequest(r)
+	if err != nil {
 		httpsuite.WriteJSONError(w,
 			http.StatusBadRequest,
 			httpsuite.WithErrorMessage("missing required rule id parameter"),
 		)
 		return
 	}
-	err = rc.DB.DeleteNotificationRule(r.Context(), vhost, id)
+
+	err = rc.DB.DeleteNotificationRule(r.Context(), vhost, ruleID)
 	if err != nil {
 		httpsuite.WriteJSONError(w,
 			http.StatusInternalServerError,
@@ -242,17 +246,18 @@ func (rc *APIService) UpdateNotificationsRuleHandler(w http.ResponseWriter, r *h
 		return
 	}
 
-	vhost := chi.URLParam(r, "vhost-name")
-	if vhost == "" {
+	vhost, err := requesthelper.ReadVhostFromRequest(r)
+	if err != nil {
 		httpsuite.WriteJSONError(w,
 			http.StatusBadRequest,
-			httpsuite.WithErrorMessage("missing required vhost parameter"),
+			httpsuite.WithError(err),
+			httpsuite.WithErrorMessage("failed to read vhost parameter"),
 		)
 		return
 	}
 
-	id := chi.URLParam(r, "rule-id")
-	if id == "" {
+	ruleID, err := requesthelper.ReadRuleIDFromRequest(r)
+	if err != nil {
 		httpsuite.WriteJSONError(w,
 			http.StatusBadRequest,
 			httpsuite.WithErrorMessage("missing required rule id parameter"),
@@ -272,7 +277,7 @@ func (rc *APIService) UpdateNotificationsRuleHandler(w http.ResponseWriter, r *h
 	}
 
 	if rule.Threshold != nil {
-		err = rc.DB.UpdateNotificationRuleThreshold(r.Context(), vhost, id, *rule.Threshold)
+		err = rc.DB.UpdateNotificationRuleThreshold(r.Context(), vhost, ruleID, *rule.Threshold)
 		if err != nil {
 			httpsuite.WriteJSONError(w,
 				http.StatusInternalServerError,
@@ -284,7 +289,7 @@ func (rc *APIService) UpdateNotificationsRuleHandler(w http.ResponseWriter, r *h
 	}
 
 	if rule.Message != nil {
-		err = rc.DB.UpdateNotificationRuleMessage(r.Context(), vhost, id, *rule.Message)
+		err = rc.DB.UpdateNotificationRuleMessage(r.Context(), vhost, ruleID, *rule.Message)
 		if err != nil {
 			httpsuite.WriteJSONError(w,
 				http.StatusInternalServerError,
@@ -319,17 +324,18 @@ func (rc *APIService) ToggleNotificationsRuleHandler(w http.ResponseWriter, r *h
 		return
 	}
 
-	vhost := chi.URLParam(r, "vhost-name")
-	if vhost == "" {
+	vhost, err := requesthelper.ReadVhostFromRequest(r)
+	if err != nil {
 		httpsuite.WriteJSONError(w,
 			http.StatusBadRequest,
-			httpsuite.WithErrorMessage("missing required vhost parameter"),
+			httpsuite.WithError(err),
+			httpsuite.WithErrorMessage("failed to read vhost parameter"),
 		)
 		return
 	}
 
-	id := chi.URLParam(r, "rule-id")
-	if id == "" {
+	ruleID, err := requesthelper.ReadRuleIDFromRequest(r)
+	if err != nil {
 		httpsuite.WriteJSONError(w,
 			http.StatusBadRequest,
 			httpsuite.WithErrorMessage("missing required rule id parameter"),
@@ -337,7 +343,7 @@ func (rc *APIService) ToggleNotificationsRuleHandler(w http.ResponseWriter, r *h
 		return
 	}
 
-	rule, err := rc.DB.GetNotificationRule(r.Context(), vhost, id)
+	rule, err := rc.DB.GetNotificationRule(r.Context(), vhost, ruleID)
 	if err != nil {
 		httpsuite.WriteJSONError(w,
 			http.StatusInternalServerError,
@@ -356,7 +362,7 @@ func (rc *APIService) ToggleNotificationsRuleHandler(w http.ResponseWriter, r *h
 		return
 	}
 
-	err = rc.DB.ToggleNotificationRule(r.Context(), vhost, id, !rule.Enabled)
+	err = rc.DB.ToggleNotificationRule(r.Context(), vhost, ruleID, !rule.Enabled)
 	if err != nil {
 		httpsuite.WriteJSONError(w,
 			http.StatusInternalServerError,
@@ -392,25 +398,26 @@ func (rc *APIService) TestNotificationsRuleHandler(w http.ResponseWriter, r *htt
 		return
 	}
 
-	vhost := chi.URLParam(r, "vhost-name")
-	if vhost == "" {
+	vhost, err := requesthelper.ReadVhostFromRequest(r)
+	if err != nil {
 		httpsuite.WriteJSONError(w,
 			http.StatusBadRequest,
-			httpsuite.WithErrorMessage("missing required vhost parameter"),
+			httpsuite.WithError(err),
+			httpsuite.WithErrorMessage("failed to read vhost parameter"),
 		)
 		return
 	}
 
-	id := chi.URLParam(r, "rule-id")
-	if id == "" {
+	ruleID, err := requesthelper.ReadRuleIDFromRequest(r)
+	if err != nil {
 		httpsuite.WriteJSONError(w,
 			http.StatusBadRequest,
-			httpsuite.WithErrorMessage("missing required rule parameter"),
+			httpsuite.WithErrorMessage("missing required rule id parameter"),
 		)
 		return
 	}
 
-	rule, err := rc.DB.GetNotificationRule(r.Context(), vhost, id)
+	rule, err := rc.DB.GetNotificationRule(r.Context(), vhost, ruleID)
 	if err != nil {
 		if errors.Is(err, database.ErrVhostNotFound) {
 			httpsuite.WriteJSONError(w,
