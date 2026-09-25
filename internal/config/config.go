@@ -3,6 +3,7 @@ package config
 import (
 	"errors"
 	"fmt"
+	"io/fs"
 	"log/slog"
 	"net"
 	"strings"
@@ -92,7 +93,11 @@ func (c *Config) Load() error {
 	c.loadEnvironmentVariables()
 	err := c.loadConfigurationFile(".")
 	if err != nil {
-		return err
+		if errors.Is(err, new(fs.PathError)) {
+			slog.Warn("configuration file not found, using environment variables only")
+		} else {
+			return err
+		}
 	}
 
 	err = viper.Unmarshal(c)
@@ -206,7 +211,6 @@ func (c *Config) validateConfiguration() error {
 
 	parameterChecks["BASE_URL"] = isPresent(c.BaseURL)
 	parameterChecks["BASE_PORT"] = isPresent(c.BasePort)
-	parameterChecks["LOG_LEVEL"] = isPresent(c.LogLevel)
 	parameterChecks["MONGODB_HOST"] = isPresent(c.MongoDBHost)
 	parameterChecks["MONGODB_PORT"] = isPresent(c.MongoDBPort)
 	parameterChecks["MONGODB_USERNAME"] = isPresent(c.MongoDBUsername)
