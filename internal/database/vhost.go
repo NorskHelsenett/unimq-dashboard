@@ -36,27 +36,14 @@ func (dbc *Database) GetVhost(ctx context.Context, vhost string) (*models.VhostN
 
 func (dbc *Database) CheckVhostExists(ctx context.Context, vhost string) (bool, error) {
 	start := time.Now()
-	cursor, err := dbc.Collections.Notifications.Find(ctx, map[string]any{id: vhost})
+	filter := bson.M{id: vhost}
+	count, err := dbc.Collections.Notifications.CountDocuments(ctx, filter)
 	if err != nil {
 		return false, err
 	}
 
-	defer func() {
-		err := cursor.Close(ctx)
-		if err != nil {
-			slog.ErrorContext(ctx, "failed to close cursor", "runtime", time.Since(start), "error", err)
-		}
-	}()
-
-	var alarms []models.AlarmEntry
-	err = cursor.All(ctx, &alarms)
-	if err != nil {
-		slog.ErrorContext(ctx, "checked vhost existence", "runtime", time.Since(start), id, vhost, "exists", len(alarms) > 0, "error", err)
-		return false, err
-	}
-
-	slog.DebugContext(ctx, "checked vhost existence", "runtime", time.Since(start), id, vhost, "exists", len(alarms) > 0)
-	return len(alarms) > 0, nil
+	slog.DebugContext(ctx, "checked vhost existence", "runtime", time.Since(start), id, vhost, "exists", count > 0)
+	return count > 0, nil
 }
 
 func (dbc *Database) EnsureVhostExists(ctx context.Context, name string) error {
