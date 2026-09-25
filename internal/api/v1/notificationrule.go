@@ -46,7 +46,7 @@ func (rc *APIService) GetNotificationRuleHandler(w http.ResponseWriter, r *http.
 		return
 	}
 
-	id := chi.URLParam(r, "rule")
+	id := chi.URLParam(r, "rule-id")
 	if id == "" {
 		httpsuite.WriteJSONError(w,
 			http.StatusBadRequest,
@@ -199,7 +199,7 @@ func (rc *APIService) DeleteNotificationsRuleHandler(w http.ResponseWriter, r *h
 		return
 	}
 
-	id := chi.URLParam(r, "rule")
+	id := chi.URLParam(r, "rule-id")
 	if id == "" {
 		httpsuite.WriteJSONError(w,
 			http.StatusBadRequest,
@@ -251,7 +251,7 @@ func (rc *APIService) UpdateNotificationsRuleHandler(w http.ResponseWriter, r *h
 		return
 	}
 
-	id := chi.URLParam(r, "rule")
+	id := chi.URLParam(r, "rule-id")
 	if id == "" {
 		httpsuite.WriteJSONError(w,
 			http.StatusBadRequest,
@@ -328,7 +328,7 @@ func (rc *APIService) ToggleNotificationsRuleHandler(w http.ResponseWriter, r *h
 		return
 	}
 
-	id := chi.URLParam(r, "rule")
+	id := chi.URLParam(r, "rule-id")
 	if id == "" {
 		httpsuite.WriteJSONError(w,
 			http.StatusBadRequest,

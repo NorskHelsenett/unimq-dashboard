@@ -212,7 +212,7 @@ func (rc *APIService) DeleteNotificationsRecipientHandler(w http.ResponseWriter,
 		return
 	}
 
-	id := chi.URLParam(r, "recipient")
+	id := chi.URLParam(r, "recipient-id")
 	if id == "" {
 		httpsuite.WriteJSONError(w,
 			http.StatusBadRequest,
