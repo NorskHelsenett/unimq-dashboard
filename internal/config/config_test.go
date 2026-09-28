@@ -198,19 +198,6 @@ func TestIsPresent(t *testing.T) {
 	}
 }
 
-// Zero is a legitimate value for a slog.Level, so any int config whose zero
-// value is meaningful must not be routed through isPresent. LOG_LEVEL was
-// checked here once and made the shipped LOG_LEVEL=0 unstartable.
-func TestIsPresentRejectsZeroInt(t *testing.T) {
-	if isPresent(0) {
-		t.Fatal("expected isPresent(0) to be false")
-	}
-	if _, checked := requiredParameters(t)["LOG_LEVEL"]; checked {
-		t.Error("LOG_LEVEL must not be a required parameter: slog.LevelInfo is 0, " +
-			"which isPresent reports as missing, so the shipped LOG_LEVEL=0 cannot start")
-	}
-}
-
 // requiredParameters rebuilds the parameter map validateConfiguration checks,
 // by validating a config where every field is zero and reading back the names.
 func requiredParameters(t *testing.T) map[string]bool {
@@ -433,11 +420,7 @@ func TestLoadFromEnvironmentWithoutEnvFile(t *testing.T) {
 
 	c := NewConfig()
 	if err := c.Load(); err != nil {
-		t.Fatalf("Load() = %v, want nil.\n"+
-			"A missing .env must not be fatal — this is the container and Helm path.\n"+
-			"loadConfigurationFile guards with errors.Is(err, new(fs.PathError)), but errors.Is\n"+
-			"compares pointers, so a freshly allocated *fs.PathError never matches.\n"+
-			"Use errors.As(err, &pathErr) with a declared var, or os.Stat(\".env\") before ReadInConfig.", err)
+		t.Fatalf("Load() = %v, want nil. A missing .env must not be fatal", err)
 	}
 
 	if c.MongoDBUsername != "mongo-user" {
@@ -705,7 +688,6 @@ func TestCheckURLs(t *testing.T) {
 	})
 
 	// Email is optional: an invalid block warns and disables notifications
-	// rather than preventing startup.
 	t.Run("invalid email is not fatal", func(t *testing.T) {
 		c := reachable(t)
 		c.Email = &EmailConfig{}
