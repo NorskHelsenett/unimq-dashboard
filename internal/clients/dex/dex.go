@@ -126,8 +126,6 @@ func setStateCookie(w http.ResponseWriter, r *http.Request, state string) {
 		MaxAge:   int(oauthStateTTL.Seconds()),
 		HttpOnly: true,
 		Secure:   isSecureRequest(r),
-		// Lax still travels on the top-level GET redirect back from Dex,
-		// while keeping the cookie off cross-site subresource requests.
 		SameSite: http.SameSiteLaxMode,
 	})
 }
@@ -139,17 +137,16 @@ func clearStateCookie(w http.ResponseWriter, r *http.Request) {
 		Path:     "/",
 		MaxAge:   -1,
 		Expires:  time.Unix(0, 0),
-		HttpOnly: true,
+		HttpOnly: true, // keep the cookie out of reach of XSS and page scripts.
 		Secure:   isSecureRequest(r),
 		SameSite: http.SameSiteLaxMode,
 	})
 }
 
-// sessionCookieName carries the verified ID token for browser clients. It is
-// HttpOnly so page scripts cannot read it, which keeps the token out of reach
-// of XSS and out of the URL entirely.
+// sessionCookieName carries the verified ID token for browser clients.
 const sessionCookieName = "unimq_session"
 
+// setSessionCookie sets the session cookie with the ID token and expiry.
 func setSessionCookie(w http.ResponseWriter, r *http.Request, idToken string, expiry time.Time) {
 	maxAge := int(time.Until(expiry).Seconds())
 	if maxAge < 0 {
@@ -167,6 +164,7 @@ func setSessionCookie(w http.ResponseWriter, r *http.Request, idToken string, ex
 	})
 }
 
+// clearSessionCookie clears the session cookie by setting it to an empty value and a past expiry date.
 func clearSessionCookie(w http.ResponseWriter, r *http.Request) {
 	http.SetCookie(w, &http.Cookie{
 		Name:     sessionCookieName,
@@ -269,6 +267,11 @@ func (d *DexClient) rawTokenFromRequest(r *http.Request) (string, error) {
 	return cookie.Value, nil
 }
 
+// getBearerToken returns the verified ID token for a request. It checks the
+// bearer token in the Authorization header first, then the session cookie. If
+// neither is present, it returns [ErrBearerTokenMissing]. If the token is present
+// but invalid, it returns [ErrBearerTokenInvalid]. If the token is expired, it
+// returns [ErrBearerTokenExpired].
 func (d *DexClient) getBearerToken(r *http.Request) (*oidc.IDToken, error) {
 	token, err := d.rawTokenFromRequest(r)
 	if err != nil {
