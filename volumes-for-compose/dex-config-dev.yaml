@@ -47,6 +47,7 @@ staticPasswords:
     hash: "$2a$10$2b2cU8CPhOTaGrs1HRQuAueS7JTT5ZHsHSzYiFPm1leZck7Mc8T4W"
     groups:
       - group.name1@local
+      - acl-admin-group
   - email: acluser@test.com
     username: ACL User
     userID: "124"
