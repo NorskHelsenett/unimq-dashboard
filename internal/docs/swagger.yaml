@@ -15,7 +15,11 @@ definitions:
         type: string
       permissions:
         items:
-          $ref: '#/definitions/models.Scope'
+          enum:
+          - read
+          - write
+          - admin
+          type: string
         type: array
       vhost_ids:
         items:

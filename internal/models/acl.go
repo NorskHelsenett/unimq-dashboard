@@ -21,7 +21,7 @@ const AllVhosts = "*"
 
 type ACL struct {
 	Group       string   `json:"group" bson:"_id"`
-	Permissions []Scope  `json:"permissions" bson:"permissions"`
+	Permissions []Scope  `json:"permissions" bson:"permissions" swaggertype:"array,string" enums:"read,write,admin"`
 	VhostIDs    []string `json:"vhost_ids" bson:"vhost_ids"`
 }
 

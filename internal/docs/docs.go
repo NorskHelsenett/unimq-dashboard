@@ -1989,7 +1989,12 @@ const docTemplate = `{
                 "permissions": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/models.Scope"
+                        "type": "string",
+                        "enum": [
+                            "read",
+                            "write",
+                            "admin"
+                        ]
                     }
                 },
                 "vhost_ids": {
