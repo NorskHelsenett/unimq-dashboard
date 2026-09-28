@@ -152,23 +152,20 @@ func (c *Config) CheckURLs() error {
 func (c *Config) loadConfigurationFile(path string) error {
 
 	viper.AddConfigPath(path)
+	viper.AddConfigPath(".")
 	viper.SetConfigType("env")
 	viper.SetConfigName("")
-	viper.AddConfigPath(".")
 	viper.SetConfigFile(".env")
 
 	err := viper.ReadInConfig()
 	if err != nil {
-		ok := errors.Is(err, viper.ConfigFileNotFoundError{})
-		if ok {
-			return nil
+		var pathError *fs.PathError
+		if !errors.As(err, &pathError) {
+			return err
 		}
-		return err
 	}
 
-	err = viper.Unmarshal(&c)
-
-	return err
+	return viper.Unmarshal(&c)
 }
 
 func (c *Config) loadEnvironmentVariables() {
