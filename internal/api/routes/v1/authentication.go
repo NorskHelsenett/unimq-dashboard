@@ -10,5 +10,7 @@ func SetupAuthenticationRoutes(r chi.Router, dex *dex.DexClient) {
 	r.Route("/login", func(r chi.Router) {
 		r.Get("/redirect", dex.RedirectHandler)
 		r.Get("/callback", dex.OauthCallbackHandler)
+		r.Post("/refresh", dex.RefreshHandler)
 	})
+	r.Post("/logout", dex.LogoutHandler)
 }
