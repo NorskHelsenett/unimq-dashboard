@@ -8,9 +8,6 @@ import (
 	"github.com/sisneve/rabbitmq-dashboard/internal/models"
 )
 
-// TODO: This is going to become the profile service.
-// Currently empty as it's not been implemented.
-
 type ProfileHandler struct {
 	adminGroups []string
 }
@@ -20,8 +17,6 @@ func NewProfileHandler(groups []string) *ProfileHandler {
 		adminGroups: groups,
 	}
 }
-
-// TODO: Implement the profile service to return user profile information.
 
 // @Summary		Get user profile
 // @Description	Get the profile information of the authenticated user
@@ -65,6 +60,21 @@ func (ps *ProfileHandler) GetProfileHandler(w http.ResponseWriter, r *http.Reque
 		Username: username,
 		Email:    email,
 		Groups:   groups,
+	}
+
+	// The remaining claims are optional functionalities for the profile page,
+	// so a provider that omits them yields zero values rather than an error.
+	if claims, err := httpsuite.GetClaimsFromContext(r.Context()); err == nil {
+		profile.EmailVerified, _ = claims["email_verified"].(bool)
+		profile.Subject, _ = claims["sub"].(string)
+		profile.Issuer, _ = claims["iss"].(string)
+		// Numeric claims arrive as float64 from encoding/json.
+		if iat, ok := claims["iat"].(float64); ok {
+			profile.IssuedAt = int64(iat)
+		}
+		if exp, ok := claims["exp"].(float64); ok {
+			profile.ExpiresAt = int64(exp)
+		}
 	}
 
 	httpsuite.SendResponse(r.Context(), w, "User profile fetched successfully", http.StatusOK, &profile)
