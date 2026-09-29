@@ -82,6 +82,6 @@ unimq:
     oidc_client_id: "unimq-dashboard"
     oidc_client_secret: "placeholder"
     oidc_url: "http://localhost:5556/dex"
-    oidc_redirect_url: "http://localhost:5173/api/callback"
+    oidc_redirect_url: "http://localhost/api/v1/login/callback"
 
     admin_groups: "group.name1@local,group.name2@local"
