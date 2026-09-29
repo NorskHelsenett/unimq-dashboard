@@ -7,7 +7,6 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/go-chi/chi/v5"
 	"github.com/google/uuid"
 	"github.com/sisneve/rabbitmq-dashboard/internal/api/httpsuite"
 	"github.com/sisneve/rabbitmq-dashboard/internal/database"
@@ -86,16 +85,17 @@ func (rc *APIService) GetMaintenanceEntryHandler(w http.ResponseWriter, r *http.
 		return
 	}
 
-	id := chi.URLParam(r, "maintenance-id")
-	if id == "" {
+	maintenanceId, err := requesthelper.ReadMaintenanceIDFromRequest(r)
+	if err != nil {
 		httpsuite.WriteJSONError(w,
 			http.StatusBadRequest,
-			httpsuite.WithErrorMessage("maintenance id is required"),
+			httpsuite.WithError(err),
+			httpsuite.WithErrorMessage("failed to read maintenance id parameter"),
 		)
 		return
 	}
 
-	entry, err := rc.DB.GetMaintenanceEntry(r.Context(), id)
+	entry, err := rc.DB.GetMaintenanceEntry(r.Context(), maintenanceId)
 	if err != nil {
 		if errors.Is(err, database.ErrMaintenanceNotFound) {
 			httpsuite.WriteJSONError(w,
@@ -252,11 +252,12 @@ func (rc *APIService) PatchMaintenanceHandler(w http.ResponseWriter, r *http.Req
 		return
 	}
 
-	id := chi.URLParam(r, "maintenance-id")
-	if id == "" {
+	maintenanceId, err := requesthelper.ReadMaintenanceIDFromRequest(r)
+	if err != nil {
 		httpsuite.WriteJSONError(w,
 			http.StatusBadRequest,
-			httpsuite.WithErrorMessage("maintenance id is required"),
+			httpsuite.WithError(err),
+			httpsuite.WithErrorMessage("failed to read maintenance id parameter"),
 		)
 		return
 	}
@@ -292,7 +293,7 @@ func (rc *APIService) PatchMaintenanceHandler(w http.ResponseWriter, r *http.Req
 		)
 		return
 	}
-	err = rc.DB.PatchMaintenanceEntry(r.Context(), id, request.Description, start, end, request.Reason, email)
+	err = rc.DB.PatchMaintenanceEntry(r.Context(), maintenanceId, request.Description, start, end, request.Reason, email)
 	if err != nil {
 		if errors.Is(err, database.ErrMaintenanceNotFound) {
 			httpsuite.WriteJSONError(w,
@@ -312,7 +313,7 @@ func (rc *APIService) PatchMaintenanceHandler(w http.ResponseWriter, r *http.Req
 
 	logEntry := &models.MaintenanceEditLog{
 		ID:            uuid.New().String(),
-		MaintenanceID: id,
+		MaintenanceID: maintenanceId,
 		Description:   request.Description,
 		Start:         start,
 		End:           end,
@@ -346,16 +347,17 @@ func (rc *APIService) GetMaintenanceEditLogsHandler(w http.ResponseWriter, r *ht
 		return
 	}
 
-	id := chi.URLParam(r, "maintenance-id")
-	if id == "" {
+	maintenanceId, err := requesthelper.ReadMaintenanceIDFromRequest(r)
+	if err != nil {
 		httpsuite.WriteJSONError(w,
 			http.StatusBadRequest,
-			httpsuite.WithErrorMessage("maintenance id is required"),
+			httpsuite.WithError(err),
+			httpsuite.WithErrorMessage("failed to read maintenance id parameter"),
 		)
 		return
 	}
 
-	logs, err := rc.DB.GetMaintenanceEditLogs(r.Context(), id)
+	logs, err := rc.DB.GetMaintenanceEditLogs(r.Context(), maintenanceId)
 	if err != nil {
 		httpsuite.WriteJSONError(w,
 			http.StatusInternalServerError,
@@ -393,16 +395,17 @@ func (rc *APIService) DeleteMaintenanceHandler(w http.ResponseWriter, r *http.Re
 		return
 	}
 
-	id := chi.URLParam(r, "maintenance-id")
-	if id == "" {
+	maintenanceId, err := requesthelper.ReadMaintenanceIDFromRequest(r)
+	if err != nil {
 		httpsuite.WriteJSONError(w,
 			http.StatusBadRequest,
-			httpsuite.WithErrorMessage("maintenance id is required"),
+			httpsuite.WithError(err),
+			httpsuite.WithErrorMessage("failed to read maintenance id parameter"),
 		)
 		return
 	}
 
-	err = rc.DB.DeleteMaintenanceEntry(r.Context(), id)
+	err = rc.DB.DeleteMaintenanceEntry(r.Context(), maintenanceId)
 	if err != nil {
 		if errors.Is(err, database.ErrMaintenanceNotFound) {
 			httpsuite.WriteJSONError(w,
