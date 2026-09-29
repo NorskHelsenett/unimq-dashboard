@@ -281,6 +281,58 @@ const docTemplate = `{
                 }
             }
         },
+        "/v1/login/refresh": {
+            "post": {
+                "description": "Exchanges the refresh token for a new ID token and reissues the session cookie.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Authentication"
+                ],
+                "summary": "Refresh the session",
+                "responses": {
+                    "204": {
+                        "description": "no content",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/httpsuite.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/httpsuite.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/v1/logout": {
+            "post": {
+                "description": "Clears the session cookie. The OIDC provider session is untouched because Dex exposes no end_session_endpoint.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Authentication"
+                ],
+                "summary": "Log out",
+                "responses": {
+                    "204": {
+                        "description": "no content",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
         "/v1/maintenance": {
             "get": {
                 "security": [
@@ -2688,11 +2740,28 @@ const docTemplate = `{
                 "email": {
                     "type": "string"
                 },
+                "email_verified": {
+                    "type": "boolean"
+                },
+                "expires_at": {
+                    "description": "\"exp\" claim in Unix seconds",
+                    "type": "integer"
+                },
                 "groups": {
                     "type": "array",
                     "items": {
                         "type": "string"
                     }
+                },
+                "issued_at": {
+                    "description": "\"iat\" claim in Unix seconds",
+                    "type": "integer"
+                },
+                "issuer": {
+                    "type": "string"
+                },
+                "subject": {
+                    "type": "string"
                 },
                 "username": {
                     "type": "string"
