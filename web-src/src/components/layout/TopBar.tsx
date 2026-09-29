@@ -1,19 +1,9 @@
-import { useEffect, useState } from 'react'
-import { getVhosts } from '@/services/vhosts'
+import { useVhost } from '@/hooks/useVhost'
 import { VhostSelector } from './VhostSelector'
 import { LiveDataWidget } from '../dashboard/LiveDataWidget'
 
 export function TopBar() {
-  const [vhosts, setVhosts] = useState<string[]>([])
-  const [selected, setSelected] = useState('')
-
-  useEffect(() => {
-    getVhosts().then(names => {
-      setVhosts(names)
-      const fromUrl = new URLSearchParams(window.location.search).get('vhost')
-      setSelected(fromUrl ?? names[0] ?? '')
-    })
-  }, [])
+  const { vhosts, selected } = useVhost()
 
   if (vhosts.length === 0) return null
 
