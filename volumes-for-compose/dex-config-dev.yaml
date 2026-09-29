@@ -35,7 +35,7 @@ staticClients:
     name: Unimq Dashboard
     secret: O8jad9kl1PD1er
     redirectURIs:
-      - http://localhost:8080/api/v1/login/callback
+      - http://localhost:5173/api/v1/login/callback
       - https://unimq.test.nhn.no/api/v1/login/callback
     scopes:
       - email
