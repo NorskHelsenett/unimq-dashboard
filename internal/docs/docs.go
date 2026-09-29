@@ -18,7 +18,7 @@ const docTemplate = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
-        "/api/healthz": {
+        "/healthz": {
             "get": {
                 "description": "Returns a simple health check response to indicate that the service is running",
                 "produces": [
@@ -38,7 +38,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/readyz": {
+        "/readyz": {
             "get": {
                 "description": "Checks the readiness of the service by verifying connectivity to RabbitMQ, MongoDB, and Dex",
                 "produces": [
