@@ -1,5 +1,5 @@
 import { useState } from "react"
-import { useAuth } from "react-oidc-context"
+import { useSession } from "@/auth/RequireAuth"
 import { Maintenance } from "@/types/maintenance"
 import { updateMaintenance } from "@/services/maintenance"
 import { Button } from "../ui/button"
@@ -73,8 +73,8 @@ const nowLabel = () => {
 }
 
 export function EditMaintenance({ maintenance }: { maintenance: Maintenance }) {
-    const auth = useAuth()
-    const userName = auth.user?.profile?.name ?? auth.user?.profile?.email ?? "Unknown"
+    const session = useSession()
+    const userName = session.username || session.email || "Unknown"
 
     const currentVhost = new URLSearchParams(window.location.search).get('vhost')
     const vhostParam = currentVhost ? `?vhost=${encodeURIComponent(currentVhost)}` : ''
