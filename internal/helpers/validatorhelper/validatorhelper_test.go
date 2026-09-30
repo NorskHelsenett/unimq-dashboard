@@ -1,9 +1,9 @@
-package httpsuite_test
+package validatorhelper_test
 
 import (
 	"testing"
 
-	"github.com/sisneve/rabbitmq-dashboard/internal/api/httpsuite"
+	"github.com/sisneve/rabbitmq-dashboard/internal/helpers/validatorhelper"
 	"github.com/stretchr/testify/require"
 )
 
@@ -49,7 +49,7 @@ func TestValidateRequest(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
-			err := httpsuite.IsRequestValid(tt.request)
+			err := validatorhelper.IsRequestValid(tt.request)
 			if tt.expectError {
 				require.Error(t, err)
 			} else {
