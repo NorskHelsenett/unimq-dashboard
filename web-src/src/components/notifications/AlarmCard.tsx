@@ -121,7 +121,7 @@ function ExistingAlarms({existingAlarms, vhost, disabledIds, onToggle}: {
                                                          'Unknown'}
                                                     </Pill>
                                                 </td>
-                                                <td className="border-b border-border-card py-2 pl-1 pr-1">
+                                                <td className="border-b border-border-card py-2 pl-1 pr-1" onClick={e => e.stopPropagation()}>
                                                     <Switch
                                                         checked={!isDisabled}
                                                         onCheckedChange={() => alarm.id && toggleAlarm(alarm.id)}
