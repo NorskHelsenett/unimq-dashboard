@@ -234,21 +234,21 @@ func (c *Config) validateConfiguration() error {
 	return nil
 }
 
-func isPresent(value any) bool {
-	switch value.(type) {
+func isPresent(val any) bool {
+	switch tval := val.(type) {
 	case string:
 
-		if value == "" {
+		if val == "" {
 			return false
 		}
 		return true
 	case int:
-		if value == 0 {
+		if val == 0 {
 			return false
 		}
 		return true
 	case []string:
-		if len(value.([]string)) == 0 {
+		if len(tval) == 0 {
 			return false
 		}
 		return true
