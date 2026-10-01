@@ -22,7 +22,7 @@ func ReadVhostFromRequest(r *http.Request) (string, error) {
 
 	eVhost, err := url.PathUnescape(vhost)
 	if err != nil {
-		return "", fmt.Errorf("%w: %v", ErrFailedToDecodeParameter, err)
+		return "", fmt.Errorf("%w: %w", ErrFailedToDecodeParameter, err)
 	}
 
 	return eVhost, nil
@@ -63,7 +63,7 @@ func ReadQueueIDFromRequest(r *http.Request) (string, error) {
 
 	eQueue, err := url.QueryUnescape(queue)
 	if err != nil {
-		return "", fmt.Errorf("%w: %v", ErrFailedToDecodeParameter, err)
+		return "", fmt.Errorf("%w: %w", ErrFailedToDecodeParameter, err)
 	}
 
 	return eQueue, nil
