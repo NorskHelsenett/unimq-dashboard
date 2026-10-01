@@ -73,7 +73,7 @@ func SetupInternalRoutes(r chi.Router, apiservice *api.APIService) {
 
 			r.Post("/rules", apiservice.AddNotificationsRuleHandler)
 			r.Get("/rules/{rule-id}", apiservice.GetNotificationRuleHandler)
-			r.Post("/rules/{rule-id}", apiservice.UpdateNotificationsRuleHandler)
+			r.Patch("/rules/{rule-id}", apiservice.PatchNotificationsRuleHandler)
 			r.Post("/rules/{rule-id}/toggle", apiservice.ToggleNotificationsRuleHandler)
 			r.Post("/rules/{rule-id}/test", apiservice.TestNotificationsRuleHandler)
 			r.Delete("/rules/{rule-id}", apiservice.DeleteNotificationsRuleHandler)
