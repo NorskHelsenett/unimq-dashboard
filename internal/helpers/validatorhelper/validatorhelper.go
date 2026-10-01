@@ -2,6 +2,7 @@ package validatorhelper
 
 import (
 	"fmt"
+	"log/slog"
 	"strings"
 
 	"github.com/go-playground/validator/v10"
@@ -95,7 +96,7 @@ type OptionalAny interface {
 }
 
 func RegisterNonNullValidation(v *validator.Validate) {
-	v.RegisterValidation("nonull", func(fl validator.FieldLevel) bool {
+	err := v.RegisterValidation("nonull", func(fl validator.FieldLevel) bool {
 		optAny, ok := fl.Field().Interface().(OptionalAny)
 		if !ok {
 			return true
@@ -104,10 +105,14 @@ func RegisterNonNullValidation(v *validator.Validate) {
 		// If the field is set and null, that's invalid
 		return !optAny.IsNull()
 	})
+
+	if err != nil {
+		slog.Error("failed to register nonull validation", "error", err)
+	}
 }
 
 func RegisterOptionalValidation(v *validator.Validate) {
-	v.RegisterValidation("opt", func(fl validator.FieldLevel) bool {
+	err := v.RegisterValidation("opt", func(fl validator.FieldLevel) bool {
 		// Check if this field implements OptionalAny
 		optAny, ok := fl.Field().Interface().(OptionalAny)
 		if !ok {
@@ -137,10 +142,14 @@ func RegisterOptionalValidation(v *validator.Validate) {
 		tmpValidator := validator.New()
 		return tmpValidator.Var(val, rules) == nil
 	})
+
+	if err != nil {
+		panic("failed to register opt validation: " + err.Error())
+	}
 }
 
 func RegisterAlarmTypeValidation(v *validator.Validate) {
-	v.RegisterValidation("alarmtype", func(fl validator.FieldLevel) bool {
+	err := v.RegisterValidation("alarmtype", func(fl validator.FieldLevel) bool {
 		// Check if this field implements OptionalAny
 		optAny, ok := fl.Field().Interface().(OptionalAny)
 		if !ok {
@@ -165,4 +174,8 @@ func RegisterAlarmTypeValidation(v *validator.Validate) {
 
 		return models.IsValidAlarmType(strVal)
 	})
+
+	if err != nil {
+		panic("failed to register alarmtype validation: " + err.Error())
+	}
 }
