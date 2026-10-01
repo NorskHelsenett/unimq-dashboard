@@ -74,9 +74,38 @@ func writeJSONResponse[T any](ctx context.Context, w http.ResponseWriter, r *Res
 	}
 }
 
+type (
+	ResponseConfig struct {
+		StrictMode bool
+	}
+
+	ResponseOption func(*ResponseConfig)
+)
+
+func newResponseConfig(opts ...ResponseOption) *ResponseConfig {
+	config := &ResponseConfig{
+		StrictMode: false,
+	}
+
+	for _, opt := range opts {
+		opt(config)
+	}
+
+	return config
+}
+
+// WithStrictMode is a ResponseOption that sets DisallowedUnknownFields on the JSON decoder,
+// which will cause an error if the request body contains fields that are not present in the output structure.
+func WithStrictMode(strict bool) ResponseOption {
+	return func(config *ResponseConfig) {
+		config.StrictMode = strict
+	}
+}
+
 // ReadResponse reads the body of an HTTP request and decodes it into the provided output structure.
 // It closes the request body after reading and logs any errors that occur during the process.
-func ReadResponse(w http.ResponseWriter, r *http.Request, out any) error {
+func ReadResponse(w http.ResponseWriter, r *http.Request, out any, opts ...ResponseOption) error {
+	options := newResponseConfig(opts...)
 	defer func() {
 		err := r.Body.Close()
 		if err != nil {
@@ -87,7 +116,11 @@ func ReadResponse(w http.ResponseWriter, r *http.Request, out any) error {
 	// Limit the size of the request body to 10MB
 	closer := http.MaxBytesReader(w, r.Body, 10*1024*1024)
 
-	if err := json.NewDecoder(closer).Decode(out); err != nil {
+	decoder := json.NewDecoder(closer)
+	if options.StrictMode {
+		decoder.DisallowUnknownFields()
+	}
+	if err := decoder.Decode(out); err != nil {
 		return fmt.Errorf("error decoding response body: %w", err)
 	}
 
