@@ -6,6 +6,7 @@ import { Button } from "../ui/button"
 import { DeleteMaintenance } from "./DeleteMaintenance"
 import { MaintenanceEditLogSheet } from "./MaintenanceEditLogSheet"
 import { Response } from "../ui/response"
+import { Tooltip, TooltipContent, TooltipTrigger } from "../ui/tooltip"
 
 const osloTimeZone = 'Europe/Oslo'
 
@@ -251,19 +252,26 @@ export function EditMaintenance({ maintenance }: { maintenance: Maintenance }) {
                 {error && <p className="text-destructive text-sm col-span-2">{error}</p>}
 
                 <div className="flex items-center justify-between col-span-2">
-                    <Button
-                        type="button"
-                        variant="destructive"
-                        size="sm"
-                        onClick={() => setShowDelete(true)}
-                    >
-                        Delete maintenance
-                    </Button>
+                    <Tooltip>
+                        <TooltipTrigger asChild>
+                            <Button
+                                type="button"
+                                variant="destructive"
+                                size="sm"
+                                className="text-destructive hover:bg-destructive/10 hover:text-destructive/80"
+                                aria-label="Delete maintenance"
+                                onClick={() => setShowDelete(true)}
+                            >
+                                Delete
+                            </Button>
+                        </TooltipTrigger>
+                        <TooltipContent>Delete maintenance</TooltipContent>
+                    </Tooltip>
                     <div className="flex gap-2">
                         <Button type="button" variant="outline" size="sm" onClick={() => setShowLogs(true)}>
                             View edit history
                         </Button>
-                        <Button type="submit" variant="orange" disabled={saving}>
+                        <Button type="submit" className="bg-submit-button text-white hover:bg-submit-button/90" disabled={saving}>
                             {saving ? "Saving…" : "Save changes"}
                         </Button>
                     </div>
