@@ -198,22 +198,6 @@ func TestIsPresent(t *testing.T) {
 	}
 }
 
-// requiredParameters rebuilds the parameter map validateConfiguration checks,
-// by validating a config where every field is zero and reading back the names.
-func requiredParameters(t *testing.T) map[string]bool {
-	t.Helper()
-	empty := &Config{OIDC: &OIDCConfig{}, Email: &EmailConfig{}}
-	err := empty.validateConfiguration()
-	if err == nil {
-		t.Fatal("expected an all-zero config to fail validation")
-	}
-	out := map[string]bool{}
-	for _, part := range strings.Split(err.Error(), ", ") {
-		out[strings.TrimSuffix(part, " missing")] = true
-	}
-	return out
-}
-
 func TestValidateConfiguration(t *testing.T) {
 	t.Run("all required present", func(t *testing.T) {
 		c := NewConfig()
