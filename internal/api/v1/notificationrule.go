@@ -289,12 +289,12 @@ func (rc *APIService) PatchNotificationsRuleHandler(w http.ResponseWriter, r *ht
 
 	err = validatorhelper.Validator.Struct(rule)
 	if err != nil {
-		validationErrors := err.(validator.ValidationErrors)
-		if validationErrors != nil {
+		val, ok := errors.AsType[validator.ValidationErrors](err)
+		if ok {
 			httpsuite.WriteJSONError(w,
 				http.StatusBadRequest,
 				httpsuite.WithError(err),
-				httpsuite.WithErrorMessage(validatorhelper.FormatValidationErrors(validationErrors)),
+				httpsuite.WithErrorMessage(validatorhelper.FormatValidationErrors(val)),
 			)
 			return
 		}
