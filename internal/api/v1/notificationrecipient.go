@@ -5,6 +5,7 @@ import (
 
 	"github.com/sisneve/rabbitmq-dashboard/internal/api/httpsuite"
 	"github.com/sisneve/rabbitmq-dashboard/internal/helpers/requesthelper"
+	"github.com/sisneve/rabbitmq-dashboard/internal/helpers/validatorhelper"
 	"github.com/sisneve/rabbitmq-dashboard/internal/models"
 )
 
@@ -107,7 +108,7 @@ func (rc *APIService) AddNotificationsRecipientHandler(w http.ResponseWriter, r 
 		return
 	}
 
-	err = httpsuite.IsRequestValid(recipient)
+	err = validatorhelper.IsRequestValid(recipient)
 	if err != nil {
 		httpsuite.WriteJSONError(w,
 			http.StatusBadRequest,
