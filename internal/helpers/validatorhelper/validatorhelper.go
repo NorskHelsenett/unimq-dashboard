@@ -167,12 +167,12 @@ func RegisterAlarmTypeValidation(v *validator.Validate) {
 			return true // No value to validate
 		}
 
-		strVal, ok := val.(string)
+		strVal, ok := val.(models.AlarmType)
 		if !ok {
 			return false // Not a string, invalid
 		}
 
-		return models.IsValidAlarmType(strVal)
+		return models.IsValidAlarmType(string(strVal))
 	})
 
 	if err != nil {
