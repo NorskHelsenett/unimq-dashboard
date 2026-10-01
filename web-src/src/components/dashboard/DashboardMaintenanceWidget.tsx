@@ -48,7 +48,7 @@ const rangeSelectorLabels: Record<MaintenanceRange, string> = {
   month: 'This month',
 }
 
-export function DashboardMaintenanceWidget({ schedule }: { schedule: Maintenance[] }) {
+export function DashboardMaintenanceWidget({ schedule, expanded = false }: { schedule: Maintenance[]; expanded?: boolean }) {
   const [range, setRange] = useLocalStorage<MaintenanceRange>('dashboard-maintenance-range', 'today')
   const selectedRange = getRange(range)
   const filteredSchedule = schedule.filter(maintenance => {
@@ -79,7 +79,7 @@ export function DashboardMaintenanceWidget({ schedule }: { schedule: Maintenance
         }
         action={
           <Selector value={range} onValueChange={value => setRange(value as MaintenanceRange)}>
-            <SelectorTrigger className="w-36 border-border-card bg-surface-page px-3 font-medium text-xs text-text-primary shadow-sm hover:border-blue-300 hover:bg-surface-card focus-visible:border-blue-400 focus-visible:ring-blue-200">
+            <SelectorTrigger className={cn("w-36 border-border-card bg-surface-page px-3 font-medium text-xs text-text-primary shadow-sm hover:border-blue-300 hover:bg-surface-card focus-visible:border-blue-400 focus-visible:ring-blue-200", expanded && "w-40")}>
               <span className="flex min-w-0 items-center gap-2">
                 <CalendarDays className="h-4 w-4 shrink-0 text-text-muted" />
                 <SelectorValue />
@@ -107,18 +107,19 @@ export function DashboardMaintenanceWidget({ schedule }: { schedule: Maintenance
                 key={m.id}
                 href={`/maintenance/edit?id=${encodeURIComponent(m.id ?? '')}`}
                 className={cn(
-                  'block py-2 px-1 -mx-1 rounded border-b last:border-0 border-border-card [text-decoration:none] hover:bg-surface-page transition-colors',
+                  'block px-1 -mx-1 rounded border-b last:border-0 border-border-card [text-decoration:none] hover:bg-surface-page transition-colors',
+                  expanded ? 'py-2.5' : 'py-2',
                   inProgress && 'rounded-lg px-2 -mx-2 mb-1 bg-maintenance-in-progress-bg hover:bg-maintenance-in-progress-bg-hover border-amber-200'
                 )}
               >
                 <div className="flex items-start justify-between gap-2 mb-0.5">
-                  <span className={cn('text-sm leading-tight', inProgress ? 'font-semibold text-amber-900' : 'font-medium')}>
+                  <span className={cn(expanded ? 'text-base' : 'text-sm', 'leading-tight', inProgress ? 'font-semibold text-amber-900' : 'font-medium')}>
                     {inProgress && <Wrench className="w-3 h-3 inline mr-1.5 text-amber-500 shrink-0" />}
                     {m.description}
                   </span>
                   <Pill variant={pill.variant} className="shrink-0">{pill.label}</Pill>
                 </div>
-                <p className={cn('text-xs', inProgress ? 'text-amber-600' : 'text-text-muted')}>
+                <p className={cn(expanded ? 'text-sm' : 'text-xs', inProgress ? 'text-amber-600' : 'text-text-muted')}>
                   {formatDateRange(m.start, m.end)}
                 </p>
               </a>
