@@ -98,7 +98,6 @@ func NewRMQVhostLimits(vhost string) *RMQVhostLimits {
 }
 
 func (l *RMQVhostLimits) UnmarshalJSON(data []byte) error {
-	type Alias RMQVhostLimits
 	aux := &struct {
 		Vhost  string `json:"vhost"`
 		Values struct {
