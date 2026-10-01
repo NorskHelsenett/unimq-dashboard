@@ -5,11 +5,13 @@ import (
 	"log/slog"
 	"net/http"
 
+	"github.com/go-playground/validator/v10"
 	"github.com/sisneve/rabbitmq-dashboard/internal/api/httpsuite"
 	"github.com/sisneve/rabbitmq-dashboard/internal/clients/rabbitmq"
 	"github.com/sisneve/rabbitmq-dashboard/internal/database"
 	"github.com/sisneve/rabbitmq-dashboard/internal/helpers/notificationhelper"
 	"github.com/sisneve/rabbitmq-dashboard/internal/helpers/requesthelper"
+	"github.com/sisneve/rabbitmq-dashboard/internal/helpers/validatorhelper"
 	"github.com/sisneve/rabbitmq-dashboard/internal/models"
 	"go.mongodb.org/mongo-driver/v2/mongo"
 )
@@ -91,7 +93,7 @@ func (rc *APIService) GetNotificationRuleHandler(w http.ResponseWriter, r *http.
 // @Accept			json
 // @Produce		json
 // @Param			vhost-name	path		string					true	"Vhost Name"
-// @Param			rule		body		models.PostAlarmRule	true	"Notification Rule Object"
+// @Param			rule		body		models.AlarmRuleCreate	true	"Notification Rule Object"
 // @Success		201			{object}	string					"Rule added successfully"
 // @Failure		400			{object}	httpsuite.ErrorResponse
 // @Failure		401			{object}	httpsuite.ErrorResponse
@@ -119,7 +121,7 @@ func (rc *APIService) AddNotificationsRuleHandler(w http.ResponseWriter, r *http
 		return
 	}
 
-	var rule models.PostAlarmRule
+	var rule models.AlarmRuleCreate
 	err = httpsuite.ReadResponse(w, r, &rule)
 	if err != nil {
 		httpsuite.WriteJSONError(w,
@@ -150,14 +152,23 @@ func (rc *APIService) AddNotificationsRuleHandler(w http.ResponseWriter, r *http
 
 	out, err := rule.ToAlarmRule()
 	if err != nil {
+		if errors.Is(err, models.ErrInvalidAlarmType) {
+			httpsuite.WriteJSONError(w,
+				http.StatusBadRequest,
+				httpsuite.WithError(err),
+				httpsuite.WithErrorMessage("invalid notification rule"),
+			)
+
+			return
+		}
 		httpsuite.WriteJSONError(w,
-			http.StatusBadRequest,
+			http.StatusInternalServerError,
 			httpsuite.WithError(err),
-			httpsuite.WithErrorMessage("failed to convert rule data"),
+			httpsuite.WithErrorMessage("failed to convert rule to internal format"),
 		)
 		return
-	}
 
+	}
 	err = rc.DB.AddNotificationRule(r.Context(), vhost, out)
 	if err != nil {
 		httpsuite.WriteJSONError(w,
@@ -224,21 +235,21 @@ func (rc *APIService) DeleteNotificationsRuleHandler(w http.ResponseWriter, r *h
 	httpsuite.SendEmptyResponse(r.Context(), w, "Rule deleted successfully", http.StatusOK)
 }
 
-// @Summary		Update a notification rule
-// @Description	Delete a specific notification rule for a vhost
+// @Summary		Patch a notification rule
+// @Description	Patch a specific notification rule for a vhost
 // @Tags			Notifications
 // @Param			vhost-name	path		string					true	"Vhost Name"
 // @Param			rule-id		path		string					true	"Notification Rule ID"
-// @Param			rule		body		models.AlarmRuleUpdate	true	"Updated Notification Rule Object"
-// @Success		200			{string}	string					"Rule updated successfully"
+// @Param			rule		body		models.AlarmRulePatch	true	"Patched Notification Rule Object"
+// @Success		200			{string}	string					"Rule patched successfully"
 // @Failure		400			{object}	httpsuite.ErrorResponse
 // @Failure		401			{object}	httpsuite.ErrorResponse
 // @Failure		403			{object}	httpsuite.ErrorResponse
 // @Failure		500			{object}	httpsuite.ErrorResponse
-// @Router			/v1/notifications/{vhost-name}/rules/{rule-id} [Post]
+// @Router			/v1/notifications/{vhost-name}/rules/{rule-id} [patch]
 // @security		bearer
 // @security		OAuth2[openid, profile, email, groups, audience:server:client_id:unimq-dashboard]
-func (rc *APIService) UpdateNotificationsRuleHandler(w http.ResponseWriter, r *http.Request) {
+func (rc *APIService) PatchNotificationsRuleHandler(w http.ResponseWriter, r *http.Request) {
 
 	_, err := httpsuite.IsAGroupInClaim(r.Context(), rc.AdminGroups)
 	if err != nil {
@@ -265,8 +276,8 @@ func (rc *APIService) UpdateNotificationsRuleHandler(w http.ResponseWriter, r *h
 		return
 	}
 
-	var rule models.AlarmRuleUpdate
-	err = httpsuite.ReadResponse(w, r, &rule)
+	var rule models.AlarmRulePatch
+	err = httpsuite.ReadResponse(w, r, &rule, httpsuite.WithStrictMode(true))
 	if err != nil {
 		httpsuite.WriteJSONError(w,
 			http.StatusBadRequest,
@@ -276,31 +287,55 @@ func (rc *APIService) UpdateNotificationsRuleHandler(w http.ResponseWriter, r *h
 		return
 	}
 
-	if rule.Threshold != nil {
-		err = rc.DB.UpdateNotificationRuleThreshold(r.Context(), vhost, ruleID, *rule.Threshold)
-		if err != nil {
+	err = validatorhelper.Validator.Struct(rule)
+	if err != nil {
+		validationErrors := err.(validator.ValidationErrors)
+		if validationErrors != nil {
+			httpsuite.WriteJSONError(w,
+				http.StatusBadRequest,
+				httpsuite.WithError(err),
+				httpsuite.WithErrorMessage(validatorhelper.FormatValidationErrors(validationErrors)),
+			)
+			return
+		}
+		httpsuite.WriteJSONError(w,
+			http.StatusBadRequest,
+			httpsuite.WithError(err),
+			httpsuite.WithErrorMessage("invalid request body"),
+		)
+		return
+	}
+
+	err = rc.DB.PatchNotificationRule(r.Context(), vhost, ruleID, &rule)
+	if err != nil {
+		switch {
+		case errors.Is(err, models.ErrNoFieldsToUpdate):
+			httpsuite.WriteJSONError(w,
+				http.StatusBadRequest,
+				httpsuite.WithError(err),
+				httpsuite.WithErrorMessage("no fields to update"),
+			)
+			return
+
+		case errors.Is(err, database.ErrNotificationRuleNotFound):
+			httpsuite.WriteJSONError(w,
+				http.StatusNotFound,
+				httpsuite.WithError(err),
+				httpsuite.WithErrorMessage("notification rule not found"),
+			)
+			return
+
+		default:
 			httpsuite.WriteJSONError(w,
 				http.StatusInternalServerError,
 				httpsuite.WithError(err),
-				httpsuite.WithErrorMessage("failed to update rule threshold"),
+				httpsuite.WithErrorMessage("failed to patch notification rule"),
 			)
 			return
 		}
 	}
 
-	if rule.Message != nil {
-		err = rc.DB.UpdateNotificationRuleMessage(r.Context(), vhost, ruleID, *rule.Message)
-		if err != nil {
-			httpsuite.WriteJSONError(w,
-				http.StatusInternalServerError,
-				httpsuite.WithError(err),
-				httpsuite.WithErrorMessage("failed to update rule message"),
-			)
-			return
-		}
-	}
-
-	httpsuite.SendResponse(r.Context(), w, "Rule updated successfully", http.StatusOK, httpsuite.NewEmptyResponse())
+	httpsuite.SendResponse(r.Context(), w, "Rule patched successfully", http.StatusOK, httpsuite.NewEmptyResponse())
 }
 
 // @Summary		Toggle a notification rule
