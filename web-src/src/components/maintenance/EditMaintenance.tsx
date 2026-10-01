@@ -6,71 +6,7 @@ import { Button } from "../ui/button"
 import { DeleteMaintenance } from "./DeleteMaintenance"
 import { MaintenanceEditLogSheet } from "./MaintenanceEditLogSheet"
 import { Response } from "../ui/response"
-
-const osloTimeZone = 'Europe/Oslo'
-
-const osloDateParts = (date: Date) => {
-    const parts = new Intl.DateTimeFormat('en-CA', {
-        timeZone: osloTimeZone,
-        year: 'numeric',
-        month: '2-digit',
-        day: '2-digit',
-        hour: '2-digit',
-        minute: '2-digit',
-        second: '2-digit',
-        hourCycle: 'h23',
-    }).formatToParts(date).reduce<Record<string, string>>((result, part) => {
-        result[part.type] = part.value
-        return result
-    }, {})
-
-    return parts
-}
-
-const toDatetimeLocal = (datetime: string) => {
-    const parts = osloDateParts(new Date(datetime))
-    return `${parts.year}-${parts.month}-${parts.day}T${parts.hour}:${parts.minute}`
-}
-
-const toServerDateTime = (value: string) => {
-    const [datePart, timePart] = value.split('T')
-    const [year, month, day] = datePart.split('-').map(Number)
-    const [hour, minute] = timePart.split(':').map(Number)
-
-    // Treat the input as Oslo wall-clock time, then send the equivalent UTC time.
-    const wallClockAsUtc = Date.UTC(year, month - 1, day, hour, minute)
-    const osloParts = osloDateParts(new Date(wallClockAsUtc))
-    const osloClockAsUtc = Date.UTC(
-        Number(osloParts.year),
-        Number(osloParts.month) - 1,
-        Number(osloParts.day),
-        Number(osloParts.hour),
-        Number(osloParts.minute),
-    )
-    const utc = new Date(wallClockAsUtc - (osloClockAsUtc - wallClockAsUtc))
-    return `${utc.getUTCFullYear()}-${String(utc.getUTCMonth() + 1).padStart(2, '0')}-${String(utc.getUTCDate()).padStart(2, '0')} ${String(utc.getUTCHours()).padStart(2, '0')}:${String(utc.getUTCMinutes()).padStart(2, '0')}:00`
-}
-
-const osloWallClockToTimestamp = (value: string) => {
-    const [datePart, timePart] = value.split('T')
-    const [year, month, day] = datePart.split('-').map(Number)
-    const [hour, minute] = timePart.split(':').map(Number)
-    const wallClockAsUtc = Date.UTC(year, month - 1, day, hour, minute)
-    const osloParts = osloDateParts(new Date(wallClockAsUtc))
-    const osloClockAsUtc = Date.UTC(
-        Number(osloParts.year),
-        Number(osloParts.month) - 1,
-        Number(osloParts.day),
-        Number(osloParts.hour),
-        Number(osloParts.minute),
-    )
-    return wallClockAsUtc - (osloClockAsUtc - wallClockAsUtc)
-}
-
-const nowLabel = () => {
-    const parts = osloDateParts(new Date())
-    return `${parts.year}-${parts.month}-${parts.day} ${parts.hour}:${parts.minute}:${parts.second}`
-}
+import { toDatetimeLocal, toServerDateTime, osloWallClockToTimestamp, nowLabel } from "@/lib/osloTime"
 
 export function EditMaintenance({ maintenance }: { maintenance: Maintenance }) {
     const session = useSession()
