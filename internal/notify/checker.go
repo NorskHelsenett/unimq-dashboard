@@ -150,7 +150,7 @@ func (c *Checker) runChecks() {
 			continue
 		}
 
-		queues, err := c.RMQClient.GetQueueDetails(vhost.Name)
+		queues, err := c.RMQClient.GetQueue(vhost.Name)
 		if err != nil {
 			slog.ErrorContext(c.Ctx, "Failed to fetch queue details", "vhost", vhost.Name, "error", err)
 			continue
@@ -185,7 +185,7 @@ var (
 func (c *Checker) checkRule(rule *models.AlarmRule,
 	vhost *models.VhostNotification,
 	metrics *models.VhostMetrics,
-	queues []models.QueueDetail,
+	queues []models.RMQQueue,
 ) {
 
 	metricFailure := false

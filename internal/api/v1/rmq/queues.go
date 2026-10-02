@@ -60,7 +60,7 @@ func (rc *RMQHandler) GetQueuesHandler(w http.ResponseWriter, r *http.Request) {
 // @Produce		json
 // @Param			vhost-name	path		string					true	"Virtual Host"
 // @Param			queue-id	path		string					true	"Queue Name"
-// @Success		200			{array}		models.QueueDetail		"List of queue details"
+// @Success		200			{array}		models.RMQQueue			"List of queue details"
 // @Failure		400			{object}	httpsuite.ErrorResponse	"Bad Request"
 // @Failure		401			{object}	httpsuite.ErrorResponse
 // @Failure		403			{object}	httpsuite.ErrorResponse

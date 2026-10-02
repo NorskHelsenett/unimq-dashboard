@@ -151,8 +151,8 @@ func TestEvaluateMetrics_MetricBasedTypes(t *testing.T) {
 }
 
 func TestEvaluateMetrics_QueueBasedTypes(t *testing.T) {
-	queues := []models.QueueDetail{
-		{Name: "test-queue", Messages: 15, Unacked: 7, MessageBytes: 2048, Consumers: 0},
+	queues := []models.RMQQueue{
+		{Name: "test-queue", Messages: 15, MessagesUnacknowledged: 7, MessageBytes: 2048, Consumers: 0},
 	}
 
 	metrics := &models.VhostMetrics{
@@ -234,25 +234,25 @@ func TestEvaluateMetrics_QueueBasedTypes(t *testing.T) {
 func TestEvaluateMetrics_NoConsumer(t *testing.T) {
 	cases := []struct {
 		name           string
-		queue          models.QueueDetail
+		queue          models.RMQQueue
 		expectedValue  float64
 		expectedFiring bool
 	}{
 		{
 			name:           "messages with no consumers triggers",
-			queue:          models.QueueDetail{Name: "test-queue", Messages: 10, Consumers: 0},
+			queue:          models.RMQQueue{Name: "test-queue", Messages: 10, Consumers: 0},
 			expectedValue:  0,
 			expectedFiring: true,
 		},
 		{
 			name:           "messages with consumers does not trigger",
-			queue:          models.QueueDetail{Name: "test-queue", Messages: 10, Consumers: 2},
+			queue:          models.RMQQueue{Name: "test-queue", Messages: 10, Consumers: 2},
 			expectedValue:  2,
 			expectedFiring: false,
 		},
 		{
 			name:           "no messages and no consumers does not trigger",
-			queue:          models.QueueDetail{Name: "test-queue", Messages: 0, Consumers: 0},
+			queue:          models.RMQQueue{Name: "test-queue", Messages: 0, Consumers: 0},
 			expectedValue:  0,
 			expectedFiring: false,
 		},
@@ -263,7 +263,7 @@ func TestEvaluateMetrics_NoConsumer(t *testing.T) {
 			t.Parallel()
 			rule := newRule(models.AlarmTypeNoConsumer, "test-queue", 0, true)
 
-			result, err := notify.EvaluateMetrics(rule, &models.VhostMetrics{}, []models.QueueDetail{tc.queue})
+			result, err := notify.EvaluateMetrics(rule, &models.VhostMetrics{}, []models.RMQQueue{tc.queue})
 
 			require.NoError(t, err)
 			require.NotNil(t, result.Value)

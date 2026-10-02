@@ -181,6 +181,11 @@ func (r *RMQClient) GetQueues() ([]models.RMQQueue, error) {
 	if err != nil {
 		return nil, fmt.Errorf("%w. %w", ErrQueueNotFound, err)
 	}
+
+	for _, q := range queues {
+		q.History = appendHistory(q.Vhost+"/"+q.Name, q.Messages)
+	}
+
 	return queues, nil
 }
 
@@ -194,6 +199,10 @@ func (r *RMQClient) GetQueue(vhost string) ([]models.RMQQueue, error) {
 		default:
 			return nil, fmt.Errorf("%w. %w", ErrInternalServerError, err)
 		}
+	}
+
+	for _, q := range queues {
+		q.History = appendHistory(vhost+"/"+q.Name, q.Messages)
 	}
 	return queues, nil
 }
@@ -268,33 +277,6 @@ func (r *RMQClient) GetMetrics(vhost string) (*models.VhostMetrics, error) {
 		UnackedMessages: vhostObject.MessagesUnacknowledged,
 		ReadyMessages:   vhostObject.Messages,
 	}, nil
-}
-
-// TODO: Replace use of this with GetQueue(vhost)
-// They serve the same purpose.
-func (r *RMQClient) GetQueueDetails(vhost string) ([]models.QueueDetail, error) {
-
-	queues, err := r.GetQueue(vhost)
-	if err != nil {
-		return nil, fmt.Errorf("failed to retrieve queues for vhost %s. %w", vhost, err)
-	}
-
-	details := make([]models.QueueDetail, len(queues))
-	for i, q := range queues {
-		key := vhost + "/" + q.Name
-		details[i] = models.QueueDetail{
-			Name:         q.Name,
-			Messages:     q.Messages,
-			MessageBytes: q.MessageBytes,
-			History:      appendHistory(key, q.Messages),
-			Consumers:    q.Consumers,
-			PublishRate:  q.MessageStats.PublishDetails.Rate,
-			DeliverRate:  q.MessageStats.DeliverDetails.Rate,
-			RedelivRate:  q.MessageStats.RedelivDetails.Rate,
-			Unacked:      q.MessagesUnacknowledged,
-		}
-	}
-	return details, nil
 }
 
 func (r *RMQClient) GetVhostUsage(vhost string) (*models.RMQVhostUsage, error) {

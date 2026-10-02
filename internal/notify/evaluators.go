@@ -14,7 +14,7 @@ type evaluationResult struct {
 }
 
 // EvaluateMetrics evaluates a single alarm rule against the current metrics and returns whether it is triggered, the current value, and the new status.
-func EvaluateMetrics(rule *models.AlarmRule, metrics *models.VhostMetrics, queues []models.QueueDetail) (*evaluationResult, error) {
+func EvaluateMetrics(rule *models.AlarmRule, metrics *models.VhostMetrics, queues []models.RMQQueue) (*evaluationResult, error) {
 
 	if !rule.Enabled {
 		return nil, ErrNotificationRuleDisabled
@@ -76,7 +76,7 @@ func evaluateVhostMetrics(rule *models.AlarmRule, metrics *models.VhostMetrics) 
 	return *v >= rule.Threshold, v, nil
 }
 
-func evaluateQueueMetrics(rule *models.AlarmRule, queues []models.QueueDetail) (bool, *float64, error) {
+func evaluateQueueMetrics(rule *models.AlarmRule, queues []models.RMQQueue) (bool, *float64, error) {
 	if len(queues) == 0 {
 		return false, nil, fmt.Errorf("queue metrics are nil, %w", ErrNotificationRuleNoqueueMetrics)
 	}
@@ -88,7 +88,7 @@ func evaluateQueueMetrics(rule *models.AlarmRule, queues []models.QueueDetail) (
 			queueFound = true
 			switch rule.Type {
 			case models.AlarmTypeUnacked:
-				v = new(float64(q.Unacked))
+				v = new(float64(q.MessagesUnacknowledged))
 			case models.AlarmTypeQueueMessages:
 				v = new(float64(q.Messages))
 			case models.AlarmTypeQueueSize:

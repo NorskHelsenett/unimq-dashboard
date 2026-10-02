@@ -51,20 +51,6 @@ type RMQVhostUsage struct {
 	DiskBytes    int64  `json:"disk_bytes"`
 }
 
-// TODO: what is the difference between this and RMQQueue? This is just a flattend version.
-// Resolve this and remove one of them.
-type QueueDetail struct {
-	Name         string  `json:"name"`
-	Messages     int     `json:"messages"`
-	MessageBytes int64   `json:"message_bytes"`
-	History      []int   `json:"history"`
-	Consumers    int     `json:"consumers"`
-	PublishRate  float64 `json:"publish_rate"`
-	DeliverRate  float64 `json:"deliver_rate"`
-	RedelivRate  float64 `json:"redeliver_rate"`
-	Unacked      int     `json:"messages_unacknowledged"`
-}
-
 type RMQNode struct {
 	Name          string `json:"name"`
 	MemUsed       int64  `json:"mem_used"`
@@ -133,25 +119,48 @@ type RMQChannel struct {
 	Vhost string `json:"vhost"`
 }
 
-type RateDetail struct {
-	Rate float64 `json:"rate"`
-}
-
-type MessageStats struct {
-	PublishDetails RateDetail `json:"publish_details"`
-	DeliverDetails RateDetail `json:"deliver_get_details"`
-	RedelivDetails RateDetail `json:"redeliver_details"`
-}
-
 type RMQQueue struct {
-	Name                   string       `json:"name"`
-	Vhost                  string       `json:"vhost"`
-	Messages               int          `json:"messages"`
-	MessagesUnacknowledged int          `json:"messages_unacknowledged"`
-	Consumers              int          `json:"consumers"`
-	MessageBytes           int64        `json:"message_bytes"`
-	MessageBytesPersistent int64        `json:"message_bytes_persistent"`
-	MessageStats           MessageStats `json:"message_stats"`
+	Name                   string  `json:"name"`
+	Vhost                  string  `json:"vhost"`
+	Messages               int     `json:"messages"`
+	MessagesUnacknowledged int     `json:"messages_unacknowledged"`
+	Consumers              int     `json:"consumers"`
+	MessageBytes           int64   `json:"message_bytes"`
+	MessageBytesPersistent int64   `json:"message_bytes_persistent"`
+	History                []int   `json:"history"`
+	PublishRate            float64 `json:"publish_rate"`
+	DeliverRate            float64 `json:"deliver_rate"`
+	RedliverRate           float64 `json:"redeliver_rate"`
+}
+
+func (q *RMQQueue) UnmarshalJSON(data []byte) error {
+	type Alias RMQQueue
+	aux := &struct {
+		MessageStats struct {
+			PublishDetails struct {
+				Rate float64 `json:"rate"`
+			} `json:"publish_details"`
+			DeliverDetails struct {
+				Rate float64 `json:"rate"`
+			} `json:"deliver_details"`
+			RedelivDetails struct {
+				Rate float64 `json:"rate"`
+			} `json:"redeliver_details"`
+		} `json:"message_stats"`
+		*Alias
+	}{
+		Alias: (*Alias)(q),
+	}
+
+	if err := json.Unmarshal(data, &aux); err != nil {
+		return err
+	}
+
+	q.PublishRate = aux.MessageStats.PublishDetails.Rate
+	q.DeliverRate = aux.MessageStats.DeliverDetails.Rate
+	q.RedliverRate = aux.MessageStats.RedelivDetails.Rate
+
+	return nil
 }
 
 type QueuePost struct {
