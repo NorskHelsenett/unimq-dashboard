@@ -96,6 +96,8 @@ func (l *RMQVhostLimits) UnmarshalJSON(data []byte) error {
 		return err
 	}
 
+	l.Vhost = aux.Vhost
+
 	if aux.Values.MaxConnections != nil {
 		l.MaxConnections = *aux.Values.MaxConnections
 	} else {
