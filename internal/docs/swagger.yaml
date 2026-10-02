@@ -9,6 +9,8 @@ definitions:
       status_code:
         type: integer
     type: object
+  httpsuite.Optional-string:
+    type: object
   models.AlarmEntry:
     properties:
       alarmID:
@@ -41,14 +43,47 @@ definitions:
       type:
         $ref: '#/definitions/models.AlarmType'
     type: object
-  models.AlarmRuleUpdate:
+  models.AlarmRuleCreate:
     properties:
+      enabled:
+        example: true
+        type: boolean
       message:
         example: Queue size has exceeded the threshold
+        type: string
+      name:
+        example: High Queue Size
+        type: string
+      queue_name:
+        example: my-queue
         type: string
       threshold:
         example: 1000
         type: number
+      type:
+        allOf:
+        - $ref: '#/definitions/models.AlarmType'
+        example: queue_size
+    type: object
+  models.AlarmRulePatch:
+    properties:
+      enabled:
+        example: true
+        type: boolean
+      message:
+        example: Queue size has exceeded the threshold
+        type: string
+      name:
+        example: High Queue Size
+        type: string
+      queue_name:
+        $ref: '#/definitions/httpsuite.Optional-string'
+      threshold:
+        example: 1000
+        type: number
+      type:
+        example: queue_size
+        type: string
     type: object
   models.AlarmStatus:
     enum:
@@ -230,28 +265,6 @@ definitions:
       start:
         example: "2024-06-01T10:00:00Z"
         type: string
-    type: object
-  models.PostAlarmRule:
-    properties:
-      enabled:
-        example: true
-        type: boolean
-      message:
-        example: Queue size has exceeded the threshold
-        type: string
-      name:
-        example: High Queue Size
-        type: string
-      queue_name:
-        example: my-queue
-        type: string
-      threshold:
-        example: 1000
-        type: number
-      type:
-        allOf:
-        - $ref: '#/definitions/models.AlarmType'
-        example: queue_size
     type: object
   models.PostMaintenanceEntry:
     properties:
@@ -1328,7 +1341,7 @@ paths:
         name: rule
         required: true
         schema:
-          $ref: '#/definitions/models.PostAlarmRule'
+          $ref: '#/definitions/models.AlarmRuleCreate'
       produces:
       - application/json
       responses:
@@ -1464,8 +1477,8 @@ paths:
       summary: Get a notification rule
       tags:
       - Notifications
-    post:
-      description: Delete a specific notification rule for a vhost
+    patch:
+      description: Patch a specific notification rule for a vhost
       parameters:
       - description: Vhost Name
         in: path
@@ -1477,15 +1490,15 @@ paths:
         name: rule-id
         required: true
         type: string
-      - description: Updated Notification Rule Object
+      - description: Patched Notification Rule Object
         in: body
         name: rule
         required: true
         schema:
-          $ref: '#/definitions/models.AlarmRuleUpdate'
+          $ref: '#/definitions/models.AlarmRulePatch'
       responses:
         "200":
-          description: Rule updated successfully
+          description: Rule patched successfully
           schema:
             type: string
         "400":
@@ -1512,7 +1525,7 @@ paths:
         - email
         - groups
         - audience:server:client_id:unimq-dashboard
-      summary: Update a notification rule
+      summary: Patch a notification rule
       tags:
       - Notifications
   /v1/notifications/{vhost-name}/rules/{rule-id}/test:

@@ -1254,7 +1254,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/models.PostAlarmRule"
+                            "$ref": "#/definitions/models.AlarmRuleCreate"
                         }
                     }
                 ],
@@ -1377,84 +1377,6 @@ const docTemplate = `{
                     }
                 }
             },
-            "post": {
-                "security": [
-                    {
-                        "bearer": []
-                    },
-                    {
-                        "OAuth2": [
-                            "openid",
-                            "profile",
-                            "email",
-                            "groups",
-                            "audience:server:client_id:unimq-dashboard"
-                        ]
-                    }
-                ],
-                "description": "Delete a specific notification rule for a vhost",
-                "tags": [
-                    "Notifications"
-                ],
-                "summary": "Update a notification rule",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "Vhost Name",
-                        "name": "vhost-name",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "Notification Rule ID",
-                        "name": "rule-id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "description": "Updated Notification Rule Object",
-                        "name": "rule",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/models.AlarmRuleUpdate"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "Rule updated successfully",
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/httpsuite.ErrorResponse"
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized",
-                        "schema": {
-                            "$ref": "#/definitions/httpsuite.ErrorResponse"
-                        }
-                    },
-                    "403": {
-                        "description": "Forbidden",
-                        "schema": {
-                            "$ref": "#/definitions/httpsuite.ErrorResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/httpsuite.ErrorResponse"
-                        }
-                    }
-                }
-            },
             "delete": {
                 "security": [
                     {
@@ -1494,6 +1416,84 @@ const docTemplate = `{
                 "responses": {
                     "200": {
                         "description": "Rule deleted successfully",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/httpsuite.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/httpsuite.ErrorResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/httpsuite.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/httpsuite.ErrorResponse"
+                        }
+                    }
+                }
+            },
+            "patch": {
+                "security": [
+                    {
+                        "bearer": []
+                    },
+                    {
+                        "OAuth2": [
+                            "openid",
+                            "profile",
+                            "email",
+                            "groups",
+                            "audience:server:client_id:unimq-dashboard"
+                        ]
+                    }
+                ],
+                "description": "Patch a specific notification rule for a vhost",
+                "tags": [
+                    "Notifications"
+                ],
+                "summary": "Patch a notification rule",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Vhost Name",
+                        "name": "vhost-name",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Notification Rule ID",
+                        "name": "rule-id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Patched Notification Rule Object",
+                        "name": "rule",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/models.AlarmRulePatch"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Rule patched successfully",
                         "schema": {
                             "type": "string"
                         }
@@ -2333,6 +2333,9 @@ const docTemplate = `{
                 }
             }
         },
+        "httpsuite.Optional-string": {
+            "type": "object"
+        },
         "models.AlarmEntry": {
             "type": "object",
             "properties": {
@@ -2382,16 +2385,64 @@ const docTemplate = `{
                 }
             }
         },
-        "models.AlarmRuleUpdate": {
+        "models.AlarmRuleCreate": {
             "type": "object",
             "properties": {
+                "enabled": {
+                    "type": "boolean",
+                    "example": true
+                },
                 "message": {
                     "type": "string",
                     "example": "Queue size has exceeded the threshold"
                 },
+                "name": {
+                    "type": "string",
+                    "example": "High Queue Size"
+                },
+                "queue_name": {
+                    "type": "string",
+                    "example": "my-queue"
+                },
                 "threshold": {
                     "type": "number",
                     "example": 1000
+                },
+                "type": {
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/models.AlarmType"
+                        }
+                    ],
+                    "example": "queue_size"
+                }
+            }
+        },
+        "models.AlarmRulePatch": {
+            "type": "object",
+            "properties": {
+                "enabled": {
+                    "type": "boolean",
+                    "example": true
+                },
+                "message": {
+                    "type": "string",
+                    "example": "Queue size has exceeded the threshold"
+                },
+                "name": {
+                    "type": "string",
+                    "example": "High Queue Size"
+                },
+                "queue_name": {
+                    "$ref": "#/definitions/httpsuite.Optional-string"
+                },
+                "threshold": {
+                    "type": "number",
+                    "example": 1000
+                },
+                "type": {
+                    "type": "string",
+                    "example": "queue_size"
                 }
             }
         },
@@ -2648,39 +2699,6 @@ const docTemplate = `{
                 "start": {
                     "type": "string",
                     "example": "2024-06-01T10:00:00Z"
-                }
-            }
-        },
-        "models.PostAlarmRule": {
-            "type": "object",
-            "properties": {
-                "enabled": {
-                    "type": "boolean",
-                    "example": true
-                },
-                "message": {
-                    "type": "string",
-                    "example": "Queue size has exceeded the threshold"
-                },
-                "name": {
-                    "type": "string",
-                    "example": "High Queue Size"
-                },
-                "queue_name": {
-                    "type": "string",
-                    "example": "my-queue"
-                },
-                "threshold": {
-                    "type": "number",
-                    "example": 1000
-                },
-                "type": {
-                    "allOf": [
-                        {
-                            "$ref": "#/definitions/models.AlarmType"
-                        }
-                    ],
-                    "example": "queue_size"
                 }
             }
         },
