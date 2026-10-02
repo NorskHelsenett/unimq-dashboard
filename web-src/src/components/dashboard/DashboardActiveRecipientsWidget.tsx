@@ -15,7 +15,7 @@ export function DashboardActiveRecipientsWidget({
 }: {
   notification: VhostNotification | null
 }) {
-  const recipients = notification?.Recipients ?? []
+  const recipients = notification?.recipients ?? []
 
   return (
     <SectionCard accent="blue" className="min-w-0 h-full flex flex-col">
@@ -44,7 +44,7 @@ export function DashboardActiveRecipientsWidget({
         </div>
       )}
       <p className="mt-auto pt-3">
-        <a href={`/notifications?vhost=${encodeURIComponent(notification?.Name ?? '')}`} className={cn("text-submit-button text-xs hover:font-semibold transition-colors inline-flex items-center gap-1 [text-decoration:none] hover:[text-decoration:none]")}>
+        <a href={`/notifications?vhost=${encodeURIComponent(notification?.name ?? '')}`} className={cn("text-submit-button text-xs hover:font-semibold transition-colors inline-flex items-center gap-1 [text-decoration:none] hover:[text-decoration:none]")}>
           View all recipients <ArrowRight className="w-3 h-3 inline ml-1" />
         </a>
       </p>

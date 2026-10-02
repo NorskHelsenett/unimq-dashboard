@@ -1,30 +1,31 @@
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import '../index.css'
-import { RequireAuth } from '@/auth/RequireAuth'
+import { RequireAuth, useSession } from '@/auth/RequireAuth'
 import { Layout } from '@/components/layout/Layout'
-import { useAuth } from 'react-oidc-context'
+import { logout } from '@/lib/apiClient'
 import { ProfileHeroCard } from '@/components/profile/ProfileHeroCard'
 import { AccountDetailsCard } from '@/components/profile/AccountDetailsCard'
 import { AccessPermissionsCard } from '@/components/profile/AccessPermissionsCard'
 import { DEFAULT_ROLES, resolveIdProvider } from '@/components/profile/profileUtils'
 
 const ProfilePage = () => {
-  const auth = useAuth()
-  const p = auth.user?.profile as Record<string, unknown>
+  const profile = useSession()
 
-  const name     = p?.name as string | undefined
-  const email    = p?.email as string | undefined
-  const verified = p?.email_verified as boolean | undefined
-  const sub      = p?.sub as string | undefined
-  const username = p?.preferred_username as string | undefined
-  const iss      = p?.iss as string | undefined
-  const iat      = p?.iat as number | undefined
-  const exp      = auth.user?.expires_at
+  const name     = profile.username || undefined
+  const email    = profile.email || undefined
+  const verified = profile.email_verified
+  const sub      = profile.subject || undefined
+  const username = profile.username || undefined
+  const iss      = profile.issuer || undefined
+  const iat      = profile.issued_at || undefined
+  const exp      = profile.expires_at || undefined
 
-  const realmRoles     = (p?.realm_access as { roles?: string[] })?.roles ?? []
-  const resourceAccess = (p?.resource_access as Record<string, { roles: string[] }>) ?? {}
-  const groups         = (p?.groups as string[]) ?? []
+  // Realm and resource roles are Keycloak-specific and are not forwarded by
+  // the backend profile endpoint. Groups carry the access model today.
+  const realmRoles: string[] = []
+  const resourceAccess: Record<string, { roles: string[] }> = {}
+  const groups         = profile.groups ?? []
   const displayRoles   = realmRoles.filter(r => !DEFAULT_ROLES.has(r))
 
   return (
@@ -36,7 +37,7 @@ const ProfilePage = () => {
             <p className="text-sm text-text-muted mt-1">Manage your account and access.</p>
           </div>
           <button
-            onClick={() => auth.signoutRedirect()}
+            onClick={() => void logout()}
             className="flex items-center gap-2 px-4 py-2 rounded-md border border-destructive/30 text-destructive hover:bg-destructive/15 transition-colors text-sm font-medium"
           >
             Sign out
@@ -63,7 +64,7 @@ const ProfilePage = () => {
             idProvider={resolveIdProvider(iss)}
             iat={iat}
             exp={exp}
-            rawProfile={auth.user?.profile}
+            rawProfile={profile}
           />
           <AccessPermissionsCard
             displayRoles={displayRoles}

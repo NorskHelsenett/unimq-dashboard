@@ -1,7 +1,7 @@
 import "../index.css";
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
-import { RequireAuth } from "@/auth/RequireAuth";
+import { RequireAuth, useSession } from "@/auth/RequireAuth";
 import { Layout } from "@/components/layout/Layout";
 import { LimitsCard } from "@/components/overview/LimitsCard";
 import { QueuesCard } from "@/components/overview/QueuesCard";
@@ -17,7 +17,6 @@ import { useQueues } from "@/hooks/useQueues";
 import { useVhostNotification } from "@/hooks/useVhostNotification";
 import { useScheduledMaintenance } from "@/hooks/useMaintenance";
 import { useDashboard } from "@/hooks/useDashboard";
-import { useAuth } from 'react-oidc-context'
 import type { Metrics } from "@/types/metrics"
 
 
@@ -38,8 +37,8 @@ if (!root) throw new Error("Missing #app mount point")
 
 function GreetingHeader() {
     const hour = new Date().getHours()
-    const auth = useAuth()
-    const firsName = (auth.user?.profile?.name ?? "User").split(" ")[0]
+    const { username } = useSession()
+    const firsName = (username || "User").split(" ")[0]
     const greeting = hour < 12 ? "Good morning" : hour < 18 ? "Good afternoon" : "Good evening"
 
     return (

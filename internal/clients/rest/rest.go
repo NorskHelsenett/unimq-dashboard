@@ -75,16 +75,7 @@ func WithAuthProvider(authProvider models.HTTPAuthProvider) ConfigOption {
 		c.authProvider = authProvider
 	}
 }
-func WithUsername(username string) ConfigOption {
-	return func(c *Config) {
-		c.Username = username
-	}
-}
-func WithPassword(password string) ConfigOption {
-	return func(c *Config) {
-		c.password = password
-	}
-}
+
 func WithTimeout(timeout int) ConfigOption {
 	return func(c *Config) {
 		c.Timeout = time.Second * time.Duration(timeout)
@@ -151,13 +142,17 @@ func (r *RestClient) request(method string, url string, body any, out any, restc
 
 	//nolint:gosec // if this causes an exploitation there are bigger issues.
 	resp, err := r.HTTPClient.Do(req)
-	if err != nil && resp != nil {
-		berr := resp.Body.Close()
-		return http.StatusInternalServerError, fmt.Errorf("unable to Do request. %w, %w", err, berr)
-	}
-	if err != nil && resp == nil {
+	if err != nil {
 		return http.StatusInternalServerError, fmt.Errorf("unable to Do request. %w", err)
 	}
+
+	defer func() {
+		err := resp.Body.Close()
+		if err != nil {
+			slog.ErrorContext(r.Context, "error closing response body", "error", err)
+		}
+	}()
+
 	slog.DebugContext(r.Context, "received response", "method", method, "status_code", resp.StatusCode)
 	badStatusCodeCeiling := 399
 	if resp.StatusCode > badStatusCodeCeiling {

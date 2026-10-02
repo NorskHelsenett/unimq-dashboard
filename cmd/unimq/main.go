@@ -12,13 +12,13 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/sisneve/rabbitmq-dashboard/internal/api/routes"
 	"github.com/sisneve/rabbitmq-dashboard/internal/clients/rabbitmq"
 	"github.com/sisneve/rabbitmq-dashboard/internal/config"
 	"github.com/sisneve/rabbitmq-dashboard/internal/database"
+	"github.com/sisneve/rabbitmq-dashboard/internal/helpers/notificationhelper"
 	"github.com/sisneve/rabbitmq-dashboard/internal/logger"
-	"github.com/sisneve/rabbitmq-dashboard/internal/models"
 	"github.com/sisneve/rabbitmq-dashboard/internal/notify"
-	"github.com/sisneve/rabbitmq-dashboard/internal/routes"
 )
 
 //	@title			RabbitMQ Dashboard API
@@ -35,6 +35,15 @@ import (
 //	@name						Authorization
 //	@description				"JWT token for authentication, obtained from the Dex OIDC provider, formatted as 'Bearer {token}' in the Authorization header"
 
+//	@securitydefinitions.oauth2.accessCode				OAuth2
+//	@authorizationUrl									http://localhost:5556/dex/auth
+//	@tokenUrl											http://localhost:5556/dex/token
+//	@scope.openid										OpenID Connect identity
+//	@scope.profile										User profile
+//	@scope.email										User email address
+//	@scope.groups										Group membership used for authorization
+//	@scope.audience:server:client_id:unimq-dashboard	Issue a token whose audience the dashboard API accepts
+
 func main() {
 
 	logger.SetupLogger()
@@ -45,7 +54,7 @@ func main() {
 	config := config.NewConfig()
 	if err := config.Load(); err != nil {
 		slog.ErrorContext(ctx, "failed to load config", "error", err)
-		return
+		panic(err)
 	}
 
 	logger.UpdateLogLevel(slog.Level(config.LogLevel))
@@ -53,7 +62,7 @@ func main() {
 	err := config.CheckURLs()
 	if err != nil {
 		slog.ErrorContext(ctx, "failed to validate URLs", "error", err)
-		return
+		panic(err)
 	}
 
 	db, err := database.NewDatabase(
@@ -65,13 +74,7 @@ func main() {
 	)
 	if err != nil {
 		slog.ErrorContext(ctx, "failed to connect to database", "error", err)
-		return
-	}
-
-	limits := &models.Limits{
-		MaxChannels:    config.RabbitMQChannelLimit,
-		MaxConnections: config.RabbitMQConnectionLimit,
-		MaxQueues:      config.RabbitMQQueueLimit,
+		panic(err)
 	}
 
 	rmq, err := rabbitmq.NewRMQClient(
@@ -80,12 +83,14 @@ func main() {
 		rabbitmq.WithRMQUsername(config.RabbitMQUsername),
 		rabbitmq.WithRMQPassword(config.RabbitMQPassword),
 		rabbitmq.WithRMQContext(ctx),
-		rabbitmq.WithRMQLimits(limits),
 	)
 	if err != nil {
 		slog.ErrorContext(ctx, "failed to create RabbitMQ client", "error", err)
-		return
+		panic(err)
 	}
+
+	// Sets up the global email sender instance for the notification helper package
+	notificationhelper.InitEmailSender(config.Email)
 
 	checker := notify.NewChecker(
 		notify.WithDB(db),
@@ -97,25 +102,25 @@ func main() {
 	routes, err := routes.SetupRoutes(ctx, config, db, rmq, checker)
 	if err != nil {
 		slog.ErrorContext(ctx, "failed to set up routes", "error", err)
-		return
+		panic(err)
 	}
 
 	slog.InfoContext(ctx, "starting RabbitMQ Dashboard", "URL", config.BaseURL, "port", config.BasePort)
-	slog.InfoContext(ctx, "Swagger documentation available at", "URL", fmt.Sprintf("http://%v:%d/api/swagger/index.html", config.BaseURL, config.BasePort))
+	slog.InfoContext(ctx, "Swagger documentation available at", "URL", fmt.Sprintf("%v:%d/api/swagger/index.html", config.BaseURL, config.BasePort))
 	wg := &sync.WaitGroup{}
 
 	server := &http.Server{
-		Addr:         fmt.Sprintf("%v:%d", config.BaseURL, config.BasePort),
-		Handler:      routes,
-		ReadTimeout:  30 * time.Second,
-		WriteTimeout: 30 * time.Second,
+		Addr:              fmt.Sprintf("%v:%d", config.BaseURL, config.BasePort),
+		Handler:           routes,
+		ReadTimeout:       30 * time.Second,
+		WriteTimeout:      90 * time.Second,
+		IdleTimeout:       120 * time.Second,
+		ReadHeaderTimeout: 10 * time.Second,
 	}
 
-	wg.Add(1)
 	wg.Go(func() {
-		defer wg.Done()
 
-		err = server.ListenAndServe()
+		err := server.ListenAndServe()
 		if err != nil {
 			if errors.Is(err, http.ErrServerClosed) {
 				slog.InfoContext(ctx, "http server closed")
@@ -123,12 +128,11 @@ func main() {
 			}
 			slog.ErrorContext(ctx, "failed to start server", "error", err)
 			cancel()
-			return
+			panic(err)
 		}
 	})
 
-	wg.Add(1)
-	checker.StartChecker(wg)
+	wg.Go(checker.StartChecker)
 
 	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
@@ -149,9 +153,15 @@ func main() {
 		if err != nil {
 			slog.Error("forced shutdown of server", "error", err)
 		}
-	} else {
-		wg.Wait()
-		slog.InfoContext(ctx, "server stopped gracefully, good bye :)")
+		panic(err)
 	}
+
+	wg.Wait()
+	err = db.Close(30)
+	if err != nil {
+		slog.ErrorContext(ctx, "failed to close database connection", "error", err)
+	}
+
+	slog.InfoContext(ctx, "server stopped gracefully, good bye :)")
 
 }

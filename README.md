@@ -231,3 +231,10 @@ cd web-src
 npm install
 npm run dev:all
 ```
+
+## Dex requirements
+
+Dex claims that are required for the dashboard to work properly:
+
+- `groups`
+- `email`

@@ -18,6 +18,14 @@ function jsonPost(body: unknown): RequestInit {
   }
 }
 
+function jsonPatch(body: unknown): RequestInit {
+  return {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body),
+  }
+}
+
 export async function getVhostNotification(vhost: string): Promise<VhostNotification | null> {
   const res = await apiFetch(`/api/v1/notifications/${encodeURIComponent(vhost)}`)
   if (!res.ok) throw new Error('Failed to fetch vhost notification')
@@ -50,7 +58,7 @@ export async function updateRule(
 ): Promise<globalThis.Response> {
   return apiFetch(
     `/api/v1/notifications/${encodeURIComponent(vhost)}/rules/${encodeURIComponent(ruleId)}`,
-    jsonPost({ threshold: Number(threshold), message })
+    jsonPatch({ threshold: Number(threshold), message })
   )
 }
 
@@ -97,6 +105,6 @@ export async function deleteRecipient(vhost: string, recipientId: string): Promi
 export async function getAlarmLogsByRuleId(ruleId: string): Promise<LogEntry[]> {
   const res = await apiFetch(`/api/v1/alarms/${encodeURIComponent(ruleId)}`)
   if (!res.ok) throw new Error('Failed to fetch notification alarm logs')
-  const data: ApiResponse<{ Entries?: LogEntry[] }> = await res.json()
-  return data.body?.Entries ?? []
+  const data: ApiResponse<{ entries?: LogEntry[] }> = await res.json()
+  return data.body?.entries ?? []
 }

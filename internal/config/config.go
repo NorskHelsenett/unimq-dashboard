@@ -3,6 +3,7 @@ package config
 import (
 	"errors"
 	"fmt"
+	"io/fs"
 	"log/slog"
 	"net"
 	"strings"
@@ -23,16 +24,10 @@ type Config struct {
 	MongoDBPassword string `mapstructure:"MONGODB_PASSWORD"`
 	MongoDBDatabase string `mapstructure:"MONGODB_DATABASE"`
 
-	RabbitMQHost            string `mapstructure:"RABBITMQ_HOST"`
-	RabbitMQPort            int    `mapstructure:"RABBITMQ_PORT"`
-	RabbitMQUsername        string `mapstructure:"RABBITMQ_USERNAME"`
-	RabbitMQPassword        string `mapstructure:"RABBITMQ_PASSWORD"`
-	RabbitMQChannelLimit    int    `mapstructure:"RABBITMQ_CHANNEL_LIMIT"`
-	RabbitMQConnectionLimit int    `mapstructure:"RABBITMQ_CONNECTION_LIMIT"`
-	RabbitMQQueueLimit      int    `mapstructure:"RABBITMQ_QUEUE_LIMIT"`
-
-	PrometheusHost string `mapstructure:"PROMETHEUS_HOST"`
-	PrometheusPort int    `mapstructure:"PROMETHEUS_PORT"`
+	RabbitMQHost     string `mapstructure:"RABBITMQ_HOST"`
+	RabbitMQPort     int    `mapstructure:"RABBITMQ_PORT"`
+	RabbitMQUsername string `mapstructure:"RABBITMQ_USERNAME"`
+	RabbitMQPassword string `mapstructure:"RABBITMQ_PASSWORD"`
 
 	Email *EmailConfig `mapstructure:",squash"`
 
@@ -50,29 +45,27 @@ type EmailConfig struct {
 }
 
 type OIDCConfig struct {
-	OIDCClientID string `mapstructure:"OIDC_CLIENT_ID"`
-	OIDCURL      string `mapstructure:"OIDC_URL"`
+	OIDCClientID        string `mapstructure:"OIDC_CLIENT_ID"`
+	OIDCClientSecret    string `mapstructure:"OIDC_CLIENT_SECRET"`
+	OIDCURL             string `mapstructure:"OIDC_URL"`
+	OIDCRedirectURL     string `mapstructure:"OIDC_REDIRECT_URL"`
+	OIDCSwaggerClientID string `mapstructure:"OIDC_SWAGGER_CLIENT_ID"`
 }
 
 func NewConfig() *Config {
 	c := &Config{
-		BaseURL:                 "localhost",
-		BasePort:                8080,
-		LogLevel:                0,
-		MongoDBHost:             "mongodb://localhost",
-		MongoDBPort:             27017,
-		MongoDBUsername:         "",
-		MongoDBPassword:         "",
-		MongoDBDatabase:         "rabbitmq-dashboard",
-		RabbitMQHost:            "http://localhost",
-		RabbitMQPort:            15672,
-		RabbitMQUsername:        "",
-		RabbitMQPassword:        "",
-		RabbitMQChannelLimit:    1000,
-		RabbitMQConnectionLimit: 300,
-		RabbitMQQueueLimit:      150,
-		PrometheusHost:          "http://localhost",
-		PrometheusPort:          9090,
+		BaseURL:          "localhost",
+		BasePort:         8080,
+		LogLevel:         0,
+		MongoDBHost:      "mongodb://localhost",
+		MongoDBPort:      27017,
+		MongoDBUsername:  "",
+		MongoDBPassword:  "",
+		MongoDBDatabase:  "rabbitmq-dashboard",
+		RabbitMQHost:     "https://localhost",
+		RabbitMQPort:     15672,
+		RabbitMQUsername: "",
+		RabbitMQPassword: "",
 
 		Email: &EmailConfig{
 			EmailSMTPHost:     "",
@@ -82,8 +75,11 @@ func NewConfig() *Config {
 			EmailFromAddress:  "unimq@example.com",
 		},
 		OIDC: &OIDCConfig{
-			OIDCClientID: "",
-			OIDCURL:      "",
+			OIDCClientID:        "",
+			OIDCClientSecret:    "",
+			OIDCURL:             "",
+			OIDCRedirectURL:     "",
+			OIDCSwaggerClientID: "unimq-swagger",
 		},
 
 		AdminGroups: []string{},
@@ -95,8 +91,16 @@ func (c *Config) Load() error {
 
 	viper.AutomaticEnv()
 	c.loadEnvironmentVariables()
-	_ = c.loadConfigurationFile(".")
-	err := viper.Unmarshal(c)
+	err := c.loadConfigurationFile(".")
+	if err != nil {
+		if errors.Is(err, new(fs.PathError)) {
+			slog.Warn("configuration file not found, using environment variables only")
+		} else {
+			return err
+		}
+	}
+
+	err = viper.Unmarshal(c)
 	if err != nil {
 		return err
 	}
@@ -113,24 +117,24 @@ func (c *Config) CheckURLs() error {
 
 	rmq := strings.TrimPrefix(c.RabbitMQHost, "http://")
 	rmq = strings.TrimPrefix(rmq, "https://")
-	_, err := net.DialTimeout("tcp", fmt.Sprintf("%s:%d", rmq, c.RabbitMQPort), 5*time.Second)
+	dial, err := net.DialTimeout("tcp", fmt.Sprintf("%s:%d", rmq, c.RabbitMQPort), 5*time.Second)
 	if err != nil {
 		return fmt.Errorf("failed to connect to RabbitMQ URL: %w", err)
 	}
+	err = dial.Close()
+	if err != nil {
+		return fmt.Errorf("failed to close connection to RabbitMQ URL: %w", err)
+	}
 	slog.Info("successfully connected to RabbitMQ URL", "host", c.RabbitMQHost, "port", c.RabbitMQPort)
 
-	prom := strings.TrimPrefix(c.PrometheusHost, "http://")
-	prom = strings.TrimPrefix(prom, "https://")
-	_, err = net.DialTimeout("tcp", fmt.Sprintf("%s:%d", prom, c.PrometheusPort), 5*time.Second)
-	if err != nil {
-		return fmt.Errorf("failed to connect to Prometheus URL: %w", err)
-	}
-	slog.Info("successfully connected to Prometheus URL", "host", c.PrometheusHost, "port", c.PrometheusPort)
-
 	mdb := strings.TrimPrefix(c.MongoDBHost, "mongodb://")
-	_, err = net.DialTimeout("tcp", fmt.Sprintf("%s:%d", mdb, c.MongoDBPort), 5*time.Second)
+	dial, err = net.DialTimeout("tcp", fmt.Sprintf("%s:%d", mdb, c.MongoDBPort), 5*time.Second)
 	if err != nil {
 		return fmt.Errorf("failed to connect to MongoDB URL: %w", err)
+	}
+	err = dial.Close()
+	if err != nil {
+		return fmt.Errorf("failed to close connection to mongoDB URL: %w", err)
 	}
 	slog.Info("successfully connected to MongoDB URL", "host", c.MongoDBHost, "port", c.MongoDBPort)
 
@@ -148,23 +152,20 @@ func (c *Config) CheckURLs() error {
 func (c *Config) loadConfigurationFile(path string) error {
 
 	viper.AddConfigPath(path)
+	viper.AddConfigPath(".")
 	viper.SetConfigType("env")
 	viper.SetConfigName("")
-	viper.AddConfigPath(".")
 	viper.SetConfigFile(".env")
 
 	err := viper.ReadInConfig()
 	if err != nil {
-		ok := errors.Is(viper.ConfigFileNotFoundError{}, err)
-		if ok {
-			return nil
+		var pathError *fs.PathError
+		if !errors.As(err, &pathError) {
+			return err
 		}
-		return err
 	}
 
-	err = viper.Unmarshal(&c)
-
-	return err
+	return viper.Unmarshal(&c)
 }
 
 func (c *Config) loadEnvironmentVariables() {
@@ -184,11 +185,6 @@ func (c *Config) loadEnvironmentVariables() {
 	_ = viper.BindEnv("MONGODB_DATABASE")
 	_ = viper.BindEnv("RABBITMQ_HOST")
 	_ = viper.BindEnv("RABBITMQ_PORT")
-	_ = viper.BindEnv("PROMETHEUS_PORT")
-	_ = viper.BindEnv("PROMETHEUS_HOST")
-	_ = viper.BindEnv("RABBITMQ_CHANNEL_LIMIT")
-	_ = viper.BindEnv("RABBITMQ_CONNECTION_LIMIT")
-	_ = viper.BindEnv("RABBITMQ_QUEUE_LIMIT")
 
 	_ = viper.BindEnv("EMAIL_SMTP_HOST")
 	_ = viper.BindEnv("EMAIL_SMTP_PORT")
@@ -197,7 +193,10 @@ func (c *Config) loadEnvironmentVariables() {
 	_ = viper.BindEnv("EMAIL_FROM_ADDRESS")
 
 	_ = viper.BindEnv("OIDC_CLIENT_ID")
+	_ = viper.BindEnv("OIDC_CLIENT_SECRET")
 	_ = viper.BindEnv("OIDC_URL")
+	_ = viper.BindEnv("OIDC_REDIRECT_URL")
+	_ = viper.BindEnv("OIDC_SWAGGER_CLIENT_ID")
 
 	_ = viper.BindEnv("ADMIN_GROUPS")
 }
@@ -209,7 +208,6 @@ func (c *Config) validateConfiguration() error {
 
 	parameterChecks["BASE_URL"] = isPresent(c.BaseURL)
 	parameterChecks["BASE_PORT"] = isPresent(c.BasePort)
-	parameterChecks["LOG_LEVEL"] = isPresent(c.LogLevel)
 	parameterChecks["MONGODB_HOST"] = isPresent(c.MongoDBHost)
 	parameterChecks["MONGODB_PORT"] = isPresent(c.MongoDBPort)
 	parameterChecks["MONGODB_USERNAME"] = isPresent(c.MongoDBUsername)
@@ -219,14 +217,14 @@ func (c *Config) validateConfiguration() error {
 	parameterChecks["RABBITMQ_PORT"] = isPresent(c.RabbitMQPort)
 	parameterChecks["RABBITMQ_USERNAME"] = isPresent(c.RabbitMQUsername)
 	parameterChecks["RABBITMQ_PASSWORD"] = isPresent(c.RabbitMQPassword)
-	parameterChecks["RABBITMQ_CHANNEL_LIMIT"] = isPresent(c.RabbitMQChannelLimit)
-	parameterChecks["RABBITMQ_CONNECTION_LIMIT"] = isPresent(c.RabbitMQConnectionLimit)
-	parameterChecks["RABBITMQ_QUEUE_LIMIT"] = isPresent(c.RabbitMQQueueLimit)
-	parameterChecks["PROMETHEUS_HOST"] = isPresent(c.PrometheusHost)
-	parameterChecks["PROMETHEUS_PORT"] = isPresent(c.PrometheusPort)
 
 	parameterChecks["OIDC_CLIENT_ID"] = isPresent(c.OIDC.OIDCClientID)
+	parameterChecks["OIDC_CLIENT_SECRET"] = isPresent(c.OIDC.OIDCClientSecret)
 	parameterChecks["OIDC_URL"] = isPresent(c.OIDC.OIDCURL)
+	parameterChecks["OIDC_REDIRECT_URL"] = isPresent(c.OIDC.OIDCRedirectURL)
+	parameterChecks["OIDC_SWAGGER_CLIENT_ID"] = isPresent(c.OIDC.OIDCSwaggerClientID)
+
+	parameterChecks["ADMIN_GROUPS"] = isPresent(c.AdminGroups)
 
 	errString := checkParameters(parameterChecks)
 	if len(errString) > 0 {
@@ -236,18 +234,26 @@ func (c *Config) validateConfiguration() error {
 	return nil
 }
 
-func isPresent(value any) bool {
-	switch v := value.(type) {
+func isPresent(val any) bool {
+	switch tval := val.(type) {
 	case string:
 
-		if value == "" {
+		if val == "" {
 			return false
 		}
 		return true
 	case int:
+		if val == 0 {
+			return false
+		}
+		return true
+	case []string:
+		if len(tval) == 0 {
+			return false
+		}
 		return true
 	default:
-		panic(fmt.Sprintf("Unsupported type check of type %v", v))
+		return false
 	}
 }
 
@@ -272,7 +278,11 @@ func checkParameters(parameter map[string]bool) string {
 
 func (o *OIDCConfig) IsValid() bool {
 
-	if o.OIDCClientID == "" || o.OIDCURL == "" {
+	if o.OIDCClientID == "" ||
+		o.OIDCClientSecret == "" ||
+		o.OIDCURL == "" ||
+		o.OIDCRedirectURL == "" {
+
 		return false
 	}
 

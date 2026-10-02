@@ -21,7 +21,6 @@ export default defineConfig({
         maintenance: resolve(__dirname, "entries/maintenance.html"),
         editMaintenance: resolve(__dirname, "entries/edit_maintenance.html"),
         profile: resolve(__dirname, "entries/profile.html"),
-        callback: resolve(__dirname, "entries/callback.html"),
       },
       output: {
         entryFileNames: "[name].js",
@@ -63,13 +62,6 @@ export default defineConfig({
         target: "http://localhost:8080",
         bypass: (req) => {
           if (req.method === "GET") return "/entries/profile.html"
-          return null
-        },
-      },
-      "/callback": {
-        target: "http://localhost:8080",
-        bypass: (req) => {
-          if (req.method === "GET") return "/entries/callback.html"
           return null
         },
       },

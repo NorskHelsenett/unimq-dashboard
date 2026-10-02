@@ -4,25 +4,13 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/sisneve/rabbitmq-dashboard/internal/clients/dex"
-	"github.com/sisneve/rabbitmq-dashboard/internal/clients/prometheus"
-	"github.com/sisneve/rabbitmq-dashboard/internal/clients/rabbitmq"
-	"github.com/sisneve/rabbitmq-dashboard/internal/config"
 	"github.com/sisneve/rabbitmq-dashboard/internal/database"
-	"github.com/sisneve/rabbitmq-dashboard/internal/models"
 	"github.com/sisneve/rabbitmq-dashboard/internal/notify"
-	"github.com/wneessen/go-mail"
 )
 
 type APIService struct {
 	Ctx         context.Context
-	RMQClient   *rabbitmq.RMQClient
-	PromClient  *prometheus.PromClient
-	DexClient   *dex.DexClient
 	DB          *database.Database
-	EmailClient *mail.Client
-	EmailConfig *config.EmailConfig
-	RMQLimits   *models.Limits
 	AdminGroups []string
 	Checker     *notify.Checker
 }
@@ -36,37 +24,9 @@ func WithContext(ctx context.Context) APIServiceOption {
 	}
 }
 
-func WithRabbitMQClient(rmq *rabbitmq.RMQClient) APIServiceOption {
-	return func(rc *APIService) error {
-		rc.RMQClient = rmq
-		return nil
-	}
-}
-
-func WithPromClient(prom *prometheus.PromClient) APIServiceOption {
-	return func(rc *APIService) error {
-		rc.PromClient = prom
-		return nil
-	}
-}
-
-func WithDexClient(dex *dex.DexClient) APIServiceOption {
-	return func(rc *APIService) error {
-		rc.DexClient = dex
-		return nil
-	}
-}
-
 func WithDatabase(db *database.Database) APIServiceOption {
 	return func(rc *APIService) error {
 		rc.DB = db
-		return nil
-	}
-}
-
-func WithEmailConfig(emailConfig *config.EmailConfig) APIServiceOption {
-	return func(rc *APIService) error {
-		rc.EmailConfig = emailConfig
 		return nil
 	}
 }
@@ -88,13 +48,7 @@ func WithAdminGroups(groups []string) APIServiceOption {
 func newAPIServiceConfig() *APIService {
 	return &APIService{
 		Ctx:         context.Background(),
-		RMQClient:   nil,
-		PromClient:  nil,
-		DexClient:   nil,
 		DB:          nil,
-		EmailConfig: nil,
-		EmailClient: nil,
-		RMQLimits:   nil,
 		AdminGroups: []string{},
 		Checker:     nil,
 	}
@@ -108,26 +62,5 @@ func NewAPIService(opts ...APIServiceOption) (*APIService, error) {
 		}
 	}
 
-	if rc.EmailConfig != nil && rc.EmailConfig.EmailSMTPHost != "" {
-
-		opts := make([]mail.Option, 0)
-		if rc.EmailConfig.EmailSMTPUsername != "" {
-			opts = append(opts, mail.WithUsername(rc.EmailConfig.EmailSMTPUsername))
-		}
-		if rc.EmailConfig.EmailSMTPPassword != "" {
-			opts = append(opts, mail.WithPassword(rc.EmailConfig.EmailSMTPPassword))
-		}
-		if rc.EmailConfig.EmailSMTPPort != 0 {
-			opts = append(opts, mail.WithPort(rc.EmailConfig.EmailSMTPPort))
-		}
-		emailClient, err := mail.NewClient(
-			rc.EmailConfig.EmailSMTPHost,
-			opts...,
-		)
-		if err != nil {
-			return nil, fmt.Errorf("failed to create email client: %w", err)
-		}
-		rc.EmailClient = emailClient
-	}
 	return rc, nil
 }

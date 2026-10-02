@@ -1,5 +1,7 @@
 package models
 
+import "encoding/json"
+
 type Vhost struct {
 	Messages                      int               `json:"messages"`
 	Name                          string            `json:"name"`
@@ -43,25 +45,13 @@ type VhostMetrics struct {
 	ReadyMessages   int    `json:"ready_messages"`
 }
 
-type QueueDetail struct {
-	Name         string  `json:"name"`
-	Messages     int     `json:"messages"`
-	MessageBytes int64   `json:"message_bytes"`
-	History      []int   `json:"history"`
-	Consumers    int     `json:"consumers"`
-	PublishRate  float64 `json:"publish_rate"`
-	DeliverRate  float64 `json:"deliver_rate"`
-	RedelivRate  float64 `json:"redeliver_rate"`
-	Unacked      int     `json:"messages_unacknowledged"`
+type RMQVhostUsage struct {
+	Name         string `json:"name"`
+	MessageBytes int64  `json:"message_bytes"`
+	DiskBytes    int64  `json:"disk_bytes"`
 }
 
-type Limits struct {
-	MaxChannels    int
-	MaxConnections int
-	MaxQueues      int
-}
-
-type NodeStats struct {
+type RMQNode struct {
 	Name          string `json:"name"`
 	MemUsed       int64  `json:"mem_used"`
 	MemLimit      int64  `json:"mem_limit"`
@@ -69,59 +59,109 @@ type NodeStats struct {
 	DiskFreeLimit int64  `json:"disk_free_limit"`
 }
 
-type VhostResources struct {
-	Name         string `json:"name"`
-	MessageBytes int64  `json:"message_bytes"`
-	DiskBytes    int64  `json:"disk_bytes"`
-}
-
-type ClusterStats struct {
-	Nodes          []NodeStats      `json:"nodes"`
-	TotalMemUsed   int64            `json:"total_mem_used"`
-	TotalMemLimit  int64            `json:"total_mem_limit"`
-	TotalDiskFree  int64            `json:"total_disk_free"`
-	MinDiskLimit   int64            `json:"min_disk_limit"`
-	VhostResources []VhostResources `json:"vhost_resources"`
-}
-
-func NewClusterStats() *ClusterStats {
-	return &ClusterStats{
-		Nodes:          []NodeStats{},
-		TotalMemUsed:   0,
-		TotalMemLimit:  0,
-		TotalDiskFree:  0,
-		MinDiskLimit:   0,
-		VhostResources: []VhostResources{},
+func NewRMQNode(name string, memUsed, memLimit, diskFree, diskFreeLimit int64) *RMQNode {
+	return &RMQNode{
+		Name:          name,
+		MemUsed:       memUsed,
+		MemLimit:      memLimit,
+		DiskFree:      diskFree,
+		DiskFreeLimit: diskFreeLimit,
 	}
 }
 
-type ConnectionResponse struct {
+type RMQVhostLimits struct {
+	Vhost          string `json:"vhost"`
+	MaxConnections int    `json:"max_connections"`
+	MaxQueues      int    `json:"max_queues"`
+}
+
+func NewRMQVhostLimits(vhost string) *RMQVhostLimits {
+	return &RMQVhostLimits{
+		Vhost:          vhost,
+		MaxConnections: 0,
+		MaxQueues:      0,
+	}
+}
+
+func (l *RMQVhostLimits) UnmarshalJSON(data []byte) error {
+	aux := &struct {
+		Vhost  string `json:"vhost"`
+		Values struct {
+			MaxConnections *int `json:"max_connections"`
+			MaxQueues      *int `json:"max_queues"`
+		} `json:"values"`
+	}{}
+
+	if err := json.Unmarshal(data, &aux); err != nil {
+		return err
+	}
+
+	l.Vhost = aux.Vhost
+
+	if aux.Values.MaxConnections != nil {
+		l.MaxConnections = *aux.Values.MaxConnections
+	} else {
+		l.MaxConnections = 0
+	}
+
+	if aux.Values.MaxQueues != nil {
+		l.MaxQueues = *aux.Values.MaxQueues
+	} else {
+		l.MaxQueues = 0
+	}
+
+	return nil
+}
+
+type RMQConnection struct {
 	Vhost string `json:"vhost"`
 }
 
-type ChannelResponse struct {
+type RMQChannel struct {
 	Vhost string `json:"vhost"`
 }
 
-type RateDetail struct {
-	Rate float64 `json:"rate"`
+type RMQQueue struct {
+	Name                   string  `json:"name"`
+	Vhost                  string  `json:"vhost"`
+	Messages               int     `json:"messages"`
+	MessagesUnacknowledged int     `json:"messages_unacknowledged"`
+	Consumers              int     `json:"consumers"`
+	MessageBytes           int64   `json:"message_bytes"`
+	MessageBytesPersistent int64   `json:"message_bytes_persistent"`
+	PublishRate            float64 `json:"publish_rate"`
+	DeliverRate            float64 `json:"deliver_rate"`
+	RedliverRate           float64 `json:"redeliver_rate"`
 }
 
-type MessageStats struct {
-	PublishDetails RateDetail `json:"publish_details"`
-	DeliverDetails RateDetail `json:"deliver_get_details"`
-	RedelivDetails RateDetail `json:"redeliver_details"`
-}
+func (q *RMQQueue) UnmarshalJSON(data []byte) error {
+	type Alias RMQQueue
+	aux := &struct {
+		MessageStats struct {
+			PublishDetails struct {
+				Rate float64 `json:"rate"`
+			} `json:"publish_details"`
+			DeliverDetails struct {
+				Rate float64 `json:"rate"`
+			} `json:"deliver_get_details"`
+			RedelivDetails struct {
+				Rate float64 `json:"rate"`
+			} `json:"redeliver_details"`
+		} `json:"message_stats"`
+		*Alias
+	}{
+		Alias: (*Alias)(q),
+	}
 
-type QueueAPIResponse struct {
-	Name                   string       `json:"name"`
-	Vhost                  string       `json:"vhost"`
-	Messages               int          `json:"messages"`
-	MessagesUnacknowledged int          `json:"messages_unacknowledged"`
-	Consumers              int          `json:"consumers"`
-	MessageBytes           int64        `json:"message_bytes"`
-	MessageBytesPersistent int64        `json:"message_bytes_persistent"`
-	MessageStats           MessageStats `json:"message_stats"`
+	if err := json.Unmarshal(data, &aux); err != nil {
+		return err
+	}
+
+	q.PublishRate = aux.MessageStats.PublishDetails.Rate
+	q.DeliverRate = aux.MessageStats.DeliverDetails.Rate
+	q.RedliverRate = aux.MessageStats.RedelivDetails.Rate
+
+	return nil
 }
 
 type QueuePost struct {

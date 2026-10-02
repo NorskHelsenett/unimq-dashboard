@@ -21,9 +21,6 @@ data:
   RABBITMQ_CONNECTION_LIMIT: "{{ $.Values.unimq.backend.rabbitmq_connection_limit }}"
   RABBITMQ_QUEUE_LIMIT: "{{ $.Values.unimq.backend.rabbitmq_queue_limit }}"
 
-  PROMETHEUS_HOST: "{{ $.Values.unimq.backend.prometheus_host }}"
-  PROMETHEUS_PORT: "{{ $.Values.unimq.backend.prometheus_port }}"
-
   EMAIL_SMTP_HOST: "{{ $.Values.unimq.backend.email_smtp_host }}"
   EMAIL_SMTP_PORT: "{{ $.Values.unimq.backend.email_smtp_port }}"
   EMAIL_SMTP_USERNAME: "{{ $.Values.unimq.backend.email_smtp_username }}"

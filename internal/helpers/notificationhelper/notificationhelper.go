@@ -1,59 +1,78 @@
 package notificationhelper
 
-import (
-	"bytes"
-	"encoding/json"
-	"fmt"
-	"net/http"
-
-	"github.com/sisneve/rabbitmq-dashboard/internal/config"
-	"github.com/wneessen/go-mail"
-)
-
-func SendWebhooks(urls []string, subject, body string) error {
-	text := subject + "\n\n" + body
-	payload, _ := json.Marshal(map[string]string{"text": text})
-	var lastErr error
-	for _, u := range urls {
-		resp, err := http.Post(u, "application/json", bytes.NewReader(payload))
-		if err != nil {
-			lastErr = err
-			continue
-		}
-		err = resp.Body.Close()
-		if err != nil {
-			lastErr = err
-		}
-		if resp.StatusCode >= 400 {
-			lastErr = fmt.Errorf("webhook returned %d", resp.StatusCode)
-		}
-	}
-	return lastErr
+type NotifyStatus struct {
+	WebhookURLs     []string        `json:"webhook_urls"`
+	WebhookStatuses []WebhookStatus `json:"webhook_statuses"`
+	EmailRecipients []string        `json:"email_recipients"`
+	EmailStatuses   []EmailStatus   `json:"email_statuses"`
 }
 
-func SendEmail(config *config.EmailConfig, to, subject, body string, typ mail.ContentType) error {
-	if config.EmailFromAddress == "" {
-		return fmt.Errorf("SMTP server is not configured")
+func NewNotifyStatus(webhookURLs []string, emailRecipients []string) *NotifyStatus {
+	return &NotifyStatus{
+		WebhookURLs:     webhookURLs,
+		WebhookStatuses: make([]WebhookStatus, len(webhookURLs)),
+		EmailRecipients: emailRecipients,
+		EmailStatuses:   make([]EmailStatus, len(emailRecipients)),
 	}
-	message := mail.NewMsg()
-	if err := message.From(config.EmailFromAddress); err != nil {
-		return fmt.Errorf("failed to set From address: %w", err)
-	}
-	if err := message.To(to); err != nil {
-		return fmt.Errorf("failed to set To address: %w", err)
-	}
+}
 
-	message.Subject(subject)
-	message.SetBodyString(typ, body)
-
-	client, err := mail.NewClient(config.EmailSMTPHost)
-	if err != nil {
-		return fmt.Errorf("failed to create mail client: %w", err)
+func (nh *NotifyStatus) HasErrors() bool {
+	for _, ws := range nh.WebhookStatuses {
+		if !ws.OK {
+			return true
+		}
 	}
-
-	if err := client.DialAndSend(message); err != nil {
-		return fmt.Errorf("failed to send mail: %w", err)
+	for _, es := range nh.EmailStatuses {
+		if !es.OK {
+			return true
+		}
 	}
+	return false
+}
 
-	return nil
+func (nh *NotifyStatus) IsTotalFailure() bool {
+	for _, ws := range nh.WebhookStatuses {
+		if ws.OK {
+			return false
+		}
+	}
+	for _, es := range nh.EmailStatuses {
+		if es.OK {
+			return false
+		}
+	}
+	return true
+}
+
+func (nh *NotifyStatus) IsPartialFailure() bool {
+	return nh.HasErrors() && !nh.IsTotalFailure()
+}
+
+func (nh *NotifyStatus) IsTotalSuccess() bool {
+	for _, ws := range nh.WebhookStatuses {
+		if !ws.OK {
+			return false
+		}
+	}
+	for _, es := range nh.EmailStatuses {
+		if !es.OK {
+			return false
+		}
+	}
+	return true
+}
+
+func (nh *NotifyStatus) FailedDestinations() []string {
+	failed := make([]string, 0)
+	for _, ws := range nh.WebhookStatuses {
+		if !ws.OK {
+			failed = append(failed, ws.URL)
+		}
+	}
+	for _, es := range nh.EmailStatuses {
+		if !es.OK {
+			failed = append(failed, es.Recipient)
+		}
+	}
+	return failed
 }

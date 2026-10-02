@@ -3,6 +3,7 @@ package database
 import (
 	"context"
 	"errors"
+	"fmt"
 	"log/slog"
 	"time"
 
@@ -35,27 +36,14 @@ func (dbc *Database) GetVhost(ctx context.Context, vhost string) (*models.VhostN
 
 func (dbc *Database) CheckVhostExists(ctx context.Context, vhost string) (bool, error) {
 	start := time.Now()
-	cursor, err := dbc.Collections.Notifications.Find(ctx, map[string]any{id: vhost})
+	filter := bson.M{id: vhost}
+	count, err := dbc.Collections.Notifications.CountDocuments(ctx, filter)
 	if err != nil {
 		return false, err
 	}
 
-	defer func() {
-		err := cursor.Close(ctx)
-		if err != nil {
-			slog.ErrorContext(ctx, "failed to close cursor", "runtime", time.Since(start), "error", err)
-		}
-	}()
-
-	var alarms []models.AlarmEntry
-	err = cursor.All(ctx, &alarms)
-	if err != nil {
-		slog.ErrorContext(ctx, "checked vhost existence", "runtime", time.Since(start), id, vhost, "exists", len(alarms) > 0, "error", err)
-		return false, err
-	}
-
-	slog.DebugContext(ctx, "checked vhost existence", "runtime", time.Since(start), id, vhost, "exists", len(alarms) > 0)
-	return len(alarms) > 0, nil
+	slog.DebugContext(ctx, "checked vhost existence", "runtime", time.Since(start), id, vhost, "exists", count > 0)
+	return count > 0, nil
 }
 
 func (dbc *Database) EnsureVhostExists(ctx context.Context, name string) error {
@@ -75,12 +63,25 @@ func (dbc *Database) AddVhost(ctx context.Context, name string) error {
 	start := time.Now()
 
 	notification := models.NewVhostNotification(name)
-	_, err := dbc.Collections.Notifications.InsertOne(ctx, notification)
+	result, err := dbc.Collections.Notifications.InsertOne(ctx, notification)
 	if err != nil {
-		slog.ErrorContext(ctx, "failed to add vhost", "runtime", time.Since(start), id, name, "error", err)
-	} else {
-		slog.DebugContext(ctx, "added vhost", "runtime", time.Since(start), id, notification.Name)
+		slog.ErrorContext(ctx, "failed to add vhost",
+			"runtime", time.Since(start),
+			id, name,
+			"error", err,
+		)
+		return fmt.Errorf("failed to add vhost %s. %w", name, err)
 	}
 
-	return err
+	if !result.Acknowledged {
+		slog.ErrorContext(ctx, "failed to add vhost",
+			"runtime", time.Since(start),
+			id, name,
+		)
+		return fmt.Errorf("failed to add vhost %s. operation not acknowledged", name)
+	}
+
+	slog.DebugContext(ctx, "added vhost", "runtime", time.Since(start), id, notification.Name)
+
+	return nil
 }

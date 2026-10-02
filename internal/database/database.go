@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"net/url"
+	"strings"
 	"time"
 
 	"go.mongodb.org/mongo-driver/v2/mongo"
@@ -126,14 +127,42 @@ func NewDatabase(opts ...databaseOptions) (*Database, error) {
 	return &dbc, nil
 }
 
+func (dbc *Database) Close(timeoutSecs int) error {
+	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(timeoutSecs)*time.Second)
+	defer cancel()
+
+	if err := dbc.client.Disconnect(ctx); err != nil {
+		return fmt.Errorf("failed to disconnect from database. %w", err)
+	}
+
+	return nil
+}
+
+func (dbc *Database) Ping(ctx context.Context, timeoutSecs int) error {
+	ctx, cancel := context.WithTimeout(ctx, time.Duration(timeoutSecs)*time.Second)
+	defer cancel()
+
+	if err := dbc.client.Ping(ctx, nil); err != nil {
+		return fmt.Errorf("failed to ping database. %w", err)
+	}
+
+	return nil
+}
+
 func CreateUri(host string, port int, username, password string) string {
+
+	// Remove any existing "mongodb://" prefix from the host string
+	host = strings.TrimPrefix(host, "mongodb://")
+
 	if username == "" && password == "" {
 		return fmt.Sprintf("mongodb://%s:%d", url.QueryEscape(host), port)
 	}
-	return fmt.Sprintf("mongodb://%s:%s@%s:%d",
-		url.QueryEscape(username),
-		url.QueryEscape(password),
-		url.QueryEscape(host),
+
+	userInfo := url.UserPassword(username, password)
+
+	return fmt.Sprintf("mongodb://%s@%s:%d",
+		userInfo.String(),
+		url.PathEscape(host),
 		port,
 	)
 }
