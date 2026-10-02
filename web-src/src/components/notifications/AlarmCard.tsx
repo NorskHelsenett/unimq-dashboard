@@ -9,7 +9,7 @@ import { toggleRule, addRule } from '@/services/notifications'
 import { SectionCard, SectionCardHeader } from "../ui/section-card"
 import { StatusDot } from "../ui/status-dot"
 import { Pill } from "../ui/pill"
-import { Bell, Pencil } from "lucide-react"
+import { Bell, Pencil, Trash2 } from "lucide-react"
 import { Tooltip, TooltipContent, TooltipTrigger } from "../ui/tooltip"
 import { cn } from "@/lib/utils"
 
@@ -121,7 +121,7 @@ function ExistingAlarms({existingAlarms, vhost, disabledIds, onToggle}: {
                                                          'Unknown'}
                                                     </Pill>
                                                 </td>
-                                                <td className="border-b border-border-card py-2 pl-1 pr-1">
+                                                <td className="border-b border-border-card py-2 pl-1 pr-1" onClick={e => e.stopPropagation()}>
                                                     <Switch
                                                         checked={!isDisabled}
                                                         onCheckedChange={() => alarm.id && toggleAlarm(alarm.id)}
@@ -142,7 +142,20 @@ function ExistingAlarms({existingAlarms, vhost, disabledIds, onToggle}: {
                                                             </TooltipTrigger>
                                                             <TooltipContent>Edit</TooltipContent>
                                                         </Tooltip>
-                                                        <Button variant="destructive" size="xs" onClick={() => alarm.id && setDeletingId(alarm.id)}>Delete</Button>
+                                                        <Tooltip>
+                                                            <TooltipTrigger asChild>
+                                                                <Button
+                                                                    variant="ghost"
+                                                                    size="sm"
+                                                                    className="p-0 text-text-muted hover:text-destructive"
+                                                                    aria-label={`Delete ${alarm.name}`}
+                                                                    onClick={() => alarm.id && setDeletingId(alarm.id)}
+                                                                >
+                                                                    <Trash2 className="h-4 w-4" />
+                                                                </Button>
+                                                            </TooltipTrigger>
+                                                            <TooltipContent>Delete</TooltipContent>
+                                                        </Tooltip>
                                                     </div>
                                                 </td>
                                             </tr>
@@ -208,7 +221,7 @@ function AddAlarmForm({ selectedAlarm, vhost, onClose }: { selectedAlarm: string
                         <Input name="threshold" type="number" placeholder="e.g. 1000" required />
                     </div>
                 )}
-                <Button type="submit" variant="orange" size="sm">Save</Button>
+                <Button type="submit" size="sm" className="bg-submit-button text-white hover:bg-submit-button/90">Save</Button>
                 <Button type="button" variant="ghost" size="sm" onClick={onClose}>Cancel</Button>
             </div>
             <div className="mt-2 flex flex-col gap-1">

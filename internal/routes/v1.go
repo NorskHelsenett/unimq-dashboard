@@ -17,14 +17,19 @@ func SetupProtectedRoutes(r chi.Router, apiservice *api.APIService) {
 	r.Route("/v1", func(r chi.Router) {
 		r.Route("/vhosts", func(r chi.Router) {
 			r.Get("/", apiservice.VhostsHandler)
-			r.Get("/{vhost}", apiservice.VhostHandler)
-			r.Get("/{vhost}/metrics", apiservice.MetricHandler)
-
+			r.With(apiservice.VhostACLMiddleware).Get("/{vhost}", apiservice.VhostHandler)
+			r.With(apiservice.VhostACLMiddleware).Get("/{vhost}/metrics", apiservice.MetricHandler)
 			r.Route("/{vhost}/queues", func(r chi.Router) {
+				r.Use(apiservice.VhostACLMiddleware)
 				r.Get("/", apiservice.GetQueuesHandler)
 				r.Get("/{queue}", apiservice.GetQueuesByNameHandler)
 			})
-
+		})
+		r.Route("/acls", func(r chi.Router) {
+			r.Get("/", apiservice.GetACLsHandler)
+			r.Put("/", apiservice.UpsertACLHandler)
+			r.Get("/{group}", apiservice.GetACLHandler)
+			r.Delete("/{group}", apiservice.DeleteACLHandler)
 		})
 		r.Route("/maintenance", func(r chi.Router) {
 			r.Get("/", apiservice.GetMaintenanceHandler)
@@ -46,6 +51,7 @@ func SetupProtectedRoutes(r chi.Router, apiservice *api.APIService) {
 		r.Route("/notifications", func(r chi.Router) {
 			r.Get("/", apiservice.GetNotificationsHandler)
 			r.Route("/{vhost}", func(r chi.Router) {
+				r.Use(apiservice.VhostACLMiddleware)
 				r.Get("/", apiservice.GetNotificationsVhostHandler)
 				r.Delete("/", apiservice.DeleteNotificationsHandler)
 				r.Post("/recipients", apiservice.AddNotificationsRecipientHandler)

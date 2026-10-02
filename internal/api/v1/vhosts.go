@@ -1,6 +1,7 @@
 package api
 
 import (
+	"errors"
 	"net/http"
 	"net/url"
 
@@ -20,19 +21,26 @@ import (
 // @Router			/v1/vhosts [get]
 // @security		bearer
 func (rc *APIService) VhostsHandler(w http.ResponseWriter, r *http.Request) {
-
-	_, err := httpsuite.IsAGroupInClaim(r.Context(), rc.AdminGroups)
-	if err != nil {
-		httpsuite.WriteJSONErrorForbidden(w, httpsuite.WithInternalErrorMessage(err.Error()))
-		return
-	}
-
 	vhosts, err := rc.RMQClient.GetVhosts()
 	if err != nil {
 		httpsuite.WriteJSONError(w,
 			http.StatusInternalServerError,
 			httpsuite.WithError(err),
 			httpsuite.WithErrorMessage("failed to fetch vhosts"),
+		)
+		return
+	}
+
+	vhosts, err = rc.FilterAccessibleVhosts(r.Context(), vhosts)
+	if err != nil {
+		if errors.Is(err, ErrACLForbidden) {
+			httpsuite.WriteJSONErrorForbidden(w, httpsuite.WithInternalErrorMessage(err.Error()))
+			return
+		}
+		httpsuite.WriteJSONError(w,
+			http.StatusInternalServerError,
+			httpsuite.WithError(err),
+			httpsuite.WithErrorMessage("failed to validate ACL"),
 		)
 		return
 	}
@@ -53,13 +61,6 @@ func (rc *APIService) VhostsHandler(w http.ResponseWriter, r *http.Request) {
 // @Router			/v1/vhosts/{vhost-name} [get]
 // @security		bearer
 func (rc *APIService) VhostHandler(w http.ResponseWriter, r *http.Request) {
-
-	_, err := httpsuite.IsAGroupInClaim(r.Context(), rc.AdminGroups)
-	if err != nil {
-		httpsuite.WriteJSONErrorForbidden(w, httpsuite.WithInternalErrorMessage(err.Error()))
-		return
-	}
-
 	vhostName := chi.URLParam(r, "vhost")
 	if vhostName == "" {
 		httpsuite.WriteJSONError(w,

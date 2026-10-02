@@ -167,7 +167,7 @@ export const EditAlarm = ({ alarm, vhost }: { alarm: AlarmProps, vhost: string }
                     <p className="text-xs text-amber-600 mt-2">You have unsaved changes. Click <strong>Save</strong> to apply them.</p>
                 )}
                 <div className="flex mt-2 justify-end gap-2"> 
-                    <Button variant="orange" size="sm" onClick={() => updateAlarm(alarm.id!)}>Save</Button>
+                    <Button size="sm" className="bg-submit-button text-white hover:bg-submit-button/90" onClick={() => updateAlarm(alarm.id!)}>Save</Button>
                     <div className="flex">
                         <Button variant="outline" size="sm" className="rounded-r-none border-r-0" onClick={testNotification}>Send test notification</Button>
                         <DropdownMenu.Root>

@@ -57,6 +57,12 @@ const MainPage = () => {
 
     const hasRightCards =
         isVisible('alarms') || isVisible('recipients') || isVisible('maintenance')
+    const recipientsVisible = isVisible('recipients')
+    const notificationGridColumns = recipientsVisible
+        ? 'lg:grid-cols-3'
+        : isVisible('alarms') && isVisible('maintenance')
+            ? 'lg:grid-cols-2'
+            : 'lg:grid-cols-1'
 
     return (
         <Layout>
@@ -78,12 +84,12 @@ const MainPage = () => {
 
                 {/* Notification cards row */}
                 {hasRightCards && (
-                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
+                    <div className={`grid grid-cols-1 ${notificationGridColumns} gap-5`}>
                         {isVisible('maintenance') && (
-                            <DashboardMaintenanceWidget schedule={maintenanceSchedule} />
+                            <DashboardMaintenanceWidget schedule={maintenanceSchedule} expanded={!recipientsVisible} />
                         )}
                         {isVisible('alarms') && (
-                            <DashboardAlarmsSummaryWidget notification={notification} />
+                            <DashboardAlarmsSummaryWidget notification={notification} expanded={!recipientsVisible} />
                         )}
                         {isVisible('recipients') && (
                             <DashboardActiveRecipientsWidget notification={notification} />

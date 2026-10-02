@@ -6,7 +6,8 @@ import { DeleteItem } from "./DeleteItem"
 import { addRecipient } from '@/services/notifications'
 import { StatusDot } from "../ui/status-dot"
 import { SectionCard, SectionCardHeader } from "../ui/section-card"
-import { Users } from "lucide-react"
+import { Trash2, Users } from "lucide-react"
+import { Tooltip, TooltipContent, TooltipTrigger } from "../ui/tooltip"
 
 
 export interface RecipientsProps {
@@ -60,7 +61,20 @@ function ExisitingRecipients({existingRecipients, vhost}: {existingRecipients: R
                                     </td>
                                     <td className="border-b border-border-card py-2 px-4">
                                         <div className="flex items-center justify-end">
-                                            <Button variant="destructive" size="xs" onClick={() => recipient.id && setDeletingId(recipient.id)}>Delete</Button>
+                                            <Tooltip>
+                                                <TooltipTrigger asChild>
+                                                    <Button
+                                                        variant="ghost"
+                                                        size="sm"
+                                                        className="p-0 text-text-muted hover:text-destructive"
+                                                        aria-label={`Delete ${recipient.name}`}
+                                                        onClick={() => recipient.id && setDeletingId(recipient.id)}
+                                                    >
+                                                        <Trash2 className="h-4 w-4" />
+                                                    </Button>
+                                                </TooltipTrigger>
+                                                <TooltipContent>Delete</TooltipContent>
+                                            </Tooltip>
                                         </div>
                                     </td>
                                 </tr>
@@ -98,7 +112,7 @@ function AddRecipientForm({selectedType, vhost, onClose}: {selectedType: string,
                     <label className="text-xs text-text-muted">Webhook URL</label>
                     <Input name="url" type="url" placeholder="https://hooks.example.com/..." className="bg-surface-card" required />
                 </div>
-                <Button type="submit" variant="orange" size="sm">Save</Button>
+                <Button type="submit" size="sm" className="bg-submit-button text-white hover:bg-submit-button/90">Save</Button>
                 <Button type="button" variant="ghost" size="sm" onClick={onClose}>Cancel</Button>
             </div>
         </form>

@@ -9,6 +9,23 @@ definitions:
       status_code:
         type: integer
     type: object
+  models.ACL:
+    properties:
+      group:
+        type: string
+      permissions:
+        items:
+          enum:
+          - read
+          - write
+          - admin
+          type: string
+        type: array
+      vhost_ids:
+        items:
+          type: string
+        type: array
+    type: object
   models.AlarmEntry:
     properties:
       alarmID:
@@ -370,6 +387,19 @@ definitions:
     - Webhook
     - Email
     - RecipientTypeUnknown
+  models.Scope:
+    enum:
+    - 0
+    - 1
+    - 2
+    - 3
+    format: int32
+    type: integer
+    x-enum-varnames:
+    - ScopeUnknown
+    - ScopeRead
+    - ScopeWrite
+    - ScopeAdmin
   models.TestNotificationResponse:
     properties:
       message:
@@ -477,6 +507,159 @@ info:
   title: RabbitMQ Dashboard API
   version: "1.0"
 paths:
+  /v1/acls:
+    get:
+      description: Get all vhost access control lists. Requires membership in an admin
+        group.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/models.ACL'
+            type: array
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/httpsuite.ErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/httpsuite.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/httpsuite.ErrorResponse'
+      security:
+      - bearer: []
+      summary: Get ACLs
+      tags:
+      - ACLs
+    put:
+      consumes:
+      - application/json
+      description: Create or replace a group's vhost access control list. Requires
+        membership in an admin group.
+      parameters:
+      - description: ACL definition
+        in: body
+        name: acl
+        required: true
+        schema:
+          $ref: '#/definitions/models.ACL'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.ACL'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/httpsuite.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/httpsuite.ErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/httpsuite.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/httpsuite.ErrorResponse'
+      security:
+      - bearer: []
+      summary: Create or update an ACL
+      tags:
+      - ACLs
+  /v1/acls/{group}:
+    delete:
+      description: Delete a group's vhost access control list. Requires membership
+        in an admin group.
+      parameters:
+      - description: Group name
+        in: path
+        name: group
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: ACL deleted successfully
+          schema:
+            type: string
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/httpsuite.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/httpsuite.ErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/httpsuite.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/httpsuite.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/httpsuite.ErrorResponse'
+      security:
+      - bearer: []
+      summary: Delete an ACL
+      tags:
+      - ACLs
+    get:
+      description: Get the access control list for a group. Requires membership in
+        an admin group.
+      parameters:
+      - description: Group name
+        in: path
+        name: group
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.ACL'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/httpsuite.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/httpsuite.ErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/httpsuite.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/httpsuite.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/httpsuite.ErrorResponse'
+      security:
+      - bearer: []
+      summary: Get an ACL
+      tags:
+      - ACLs
   /v1/alarms:
     get:
       description: Get alarm history for all rules

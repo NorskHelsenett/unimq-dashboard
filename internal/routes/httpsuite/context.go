@@ -47,14 +47,28 @@ func IsGroupInClaim(ctx context.Context, group string) (string, error) {
 	return IsAGroupInClaim(ctx, []string{group})
 }
 
+func GetGroupsFromClaim(ctx context.Context) ([]string, error) {
+	value, err := IsParameterInClaim(ctx, "groups")
+	if err != nil {
+		return nil, err
+	}
+
+	switch groups := value.(type) {
+	case []string:
+		return groups, nil
+	case []any:
+		return castSliceToStringSlice(groups), nil
+	default:
+		return nil, ErrInvalidGroupsType
+	}
+}
+
 // isAGroupinClaim checks if any of the specified groups exist in the claims.
 func IsAGroupInClaim(ctx context.Context, groups []string) (string, error) {
-	aClaimGroups, err := IsParameterInClaim(ctx, "groups")
+	claimGroups, err := GetGroupsFromClaim(ctx)
 	if err != nil {
 		return "", err
 	}
-
-	claimGroups := castSliceToStringSlice(aClaimGroups.([]any))
 
 	for _, g := range claimGroups {
 		if slices.Contains(groups, g) {
@@ -62,7 +76,7 @@ func IsAGroupInClaim(ctx context.Context, groups []string) (string, error) {
 		}
 	}
 
-	slog.InfoContext(ctx, "no matching group found in claims", "expected_groups", groups, "retrieved_groups", claimGroups)
+	slog.DebugContext(ctx, "no matching group found in claims", "expected_groups", groups, "retrieved_groups", claimGroups)
 	return "", fmt.Errorf("%w. %v", ErrNoMatchingGroup, claimGroups)
 }
 
