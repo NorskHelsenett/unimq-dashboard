@@ -1,13 +1,20 @@
 package models_test
 
 import (
+	"context"
 	"encoding/json"
 	"testing"
 	"time"
 
+	"github.com/sisneve/rabbitmq-dashboard/internal/api/httpsuite"
 	"github.com/sisneve/rabbitmq-dashboard/internal/models"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+)
+
+const (
+	testMaintenanceStart = "2024-06-01T10:00:00Z"
+	testMaintenanceEnd   = "2024-06-01T12:00:00Z"
 )
 
 func TestMaintenanceEntry_UnmarshalJSON_Valid(t *testing.T) {
@@ -156,4 +163,132 @@ func TestUpdateMaintenance_UnmarshalJSON_MalformedJSON(t *testing.T) {
 	var u models.UpdateMaintenance
 	err := json.Unmarshal([]byte(`{"status":`), &u)
 	assert.Error(t, err)
+}
+
+func TestPatchMaintenanceEntry_Validate(t *testing.T) {
+	valid := func() *models.PatchMaintenanceEntry {
+		return &models.PatchMaintenanceEntry{
+			Description: "server upgrade",
+			Start:       testMaintenanceStart,
+			End:         testMaintenanceEnd,
+			Reason:      "updated maintenance time",
+		}
+	}
+
+	t.Run("valid", func(t *testing.T) {
+		assert.NoError(t, valid().Validate())
+	})
+
+	t.Run("missing description", func(t *testing.T) {
+		p := valid()
+		p.Description = ""
+		err := p.Validate()
+		require.Error(t, err)
+		assert.Contains(t, err.Error(), "description is required")
+	})
+
+	t.Run("missing reason", func(t *testing.T) {
+		p := valid()
+		p.Reason = ""
+		err := p.Validate()
+		require.Error(t, err)
+		assert.Contains(t, err.Error(), "reason is required")
+	})
+
+	t.Run("invalid start format", func(t *testing.T) {
+		p := valid()
+		p.Start = "2024-06-01 10:00:00"
+		err := p.Validate()
+		require.Error(t, err)
+		assert.Contains(t, err.Error(), "invalid start time format")
+	})
+
+	t.Run("invalid end format", func(t *testing.T) {
+		p := valid()
+		p.End = "2024-06-01 12:00:00"
+		err := p.Validate()
+		require.Error(t, err)
+		assert.Contains(t, err.Error(), "invalid end time format")
+	})
+
+	t.Run("end before start", func(t *testing.T) {
+		p := valid()
+		p.Start = testMaintenanceEnd
+		p.End = testMaintenanceStart
+		err := p.Validate()
+		require.Error(t, err)
+		assert.Contains(t, err.Error(), "end time must be after start time")
+	})
+
+	t.Run("end equal to start is accepted", func(t *testing.T) {
+		p := valid()
+		p.Start = testMaintenanceStart
+		p.End = testMaintenanceStart
+		assert.NoError(t, p.Validate(), "end.Before(start) is false when they are equal, so this currently passes validation")
+	})
+}
+
+const testMaintenanceEmail = "jane@example.com"
+
+func contextWithEmail() context.Context {
+	return context.WithValue(context.Background(), httpsuite.ClaimsContextKey, map[string]any{"email": testMaintenanceEmail})
+}
+
+func TestPostMaintenanceEntry_ToMaintenanceEntry(t *testing.T) {
+	valid := func() *models.PostMaintenanceEntry {
+		return &models.PostMaintenanceEntry{
+			Description: "server upgrade",
+			Start:       testMaintenanceStart,
+			End:         testMaintenanceEnd,
+		}
+	}
+
+	t.Run("valid", func(t *testing.T) {
+		ctx := contextWithEmail()
+		before := time.Now()
+		entry, err := valid().ToMaintenanceEntry(ctx)
+		after := time.Now()
+		require.NoError(t, err)
+
+		assert.NotEmpty(t, entry.ID)
+		assert.Equal(t, "server upgrade", entry.Description)
+		assert.Equal(t, time.Date(2024, 6, 1, 10, 0, 0, 0, time.UTC), entry.Start)
+		assert.Equal(t, time.Date(2024, 6, 1, 12, 0, 0, 0, time.UTC), entry.End)
+		assert.Equal(t, models.MaintenanceStatusScheduled, entry.Status)
+		assert.Equal(t, "jane@example.com", entry.UpdatedBy)
+		assert.True(t, !entry.UpdatedAt.Before(before) && !entry.UpdatedAt.After(after))
+		assert.Equal(t, "created", entry.UpdateReason)
+		assert.False(t, entry.Notified)
+	})
+
+	t.Run("invalid start format", func(t *testing.T) {
+		p := valid()
+		p.Start = "2024-06-01 10:00:00"
+		_, err := p.ToMaintenanceEntry(contextWithEmail())
+		require.Error(t, err)
+		assert.Contains(t, err.Error(), "invalid start time format")
+	})
+
+	t.Run("invalid end format", func(t *testing.T) {
+		p := valid()
+		p.End = "2024-06-01 12:00:00"
+		_, err := p.ToMaintenanceEntry(contextWithEmail())
+		require.Error(t, err)
+		assert.Contains(t, err.Error(), "invalid end time format")
+	})
+
+	t.Run("end before start", func(t *testing.T) {
+		p := valid()
+		p.Start = testMaintenanceEnd
+		p.End = testMaintenanceStart
+		_, err := p.ToMaintenanceEntry(contextWithEmail())
+		require.Error(t, err)
+		assert.Contains(t, err.Error(), "end time must be after start time")
+	})
+
+	t.Run("missing email in context", func(t *testing.T) {
+		_, err := valid().ToMaintenanceEntry(context.Background())
+		require.Error(t, err)
+		assert.Contains(t, err.Error(), "failed to get email from context")
+	})
 }
