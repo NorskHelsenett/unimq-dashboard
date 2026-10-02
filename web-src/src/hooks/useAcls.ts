@@ -4,27 +4,25 @@ import { useEffect, useState } from "react";
 
 interface useACLResults {
     acls: ACL[];
-    loading: boolean;
+    loading: boolean
+    refetch: () => void
 }
 
 export function useACLs(): useACLResults {
-    const [acls, setAcls] = useState<ACL[]>([]);
-    const [loading, setLoading] = useState<boolean>(true);
+    const [acls, setAcls] = useState<ACL[]>([])
+    const [loading, setLoading] = useState<boolean>(true)
+    const [tick, setTick] = useState(0)
 
     useEffect(() => {
-        async function fetchAcls() {
-            setLoading(true);
-            try {
-                setAcls(await getACLs());
-            } catch (error) {
-                console.error("Failed to fetch ACLs:", error);
-                setAcls([]);
-            } finally {
-                setLoading(false);
-            }
-        }
-        fetchAcls();
-    }, [])
+        setLoading(true)
+        getACLs()
+        .then(setAcls)
+        .catch((err) => {
+            console.error("Failed to fetch ACLs:", err)
+            setAcls([])
+        })
+        .finally(() => setLoading(false))
+    }, [tick])
     
-    return { acls, loading };
+    return { acls, loading, refetch: () => setTick(t => t + 1) }
 }
