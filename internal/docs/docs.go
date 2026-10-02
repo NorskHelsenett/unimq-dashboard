@@ -2216,7 +2216,7 @@ const docTemplate = `{
                         "schema": {
                             "type": "array",
                             "items": {
-                                "$ref": "#/definitions/models.QueueDetail"
+                                "$ref": "#/definitions/models.RMQQueue"
                             }
                         }
                     },
@@ -2650,20 +2650,6 @@ const docTemplate = `{
                 }
             }
         },
-        "models.MessageStats": {
-            "type": "object",
-            "properties": {
-                "deliver_get_details": {
-                    "$ref": "#/definitions/models.RateDetail"
-                },
-                "publish_details": {
-                    "$ref": "#/definitions/models.RateDetail"
-                },
-                "redeliver_details": {
-                    "$ref": "#/definitions/models.RateDetail"
-                }
-            }
-        },
         "models.Metadata": {
             "type": "object",
             "properties": {
@@ -2786,41 +2772,6 @@ const docTemplate = `{
                 }
             }
         },
-        "models.QueueDetail": {
-            "type": "object",
-            "properties": {
-                "consumers": {
-                    "type": "integer"
-                },
-                "deliver_rate": {
-                    "type": "number"
-                },
-                "history": {
-                    "type": "array",
-                    "items": {
-                        "type": "integer"
-                    }
-                },
-                "message_bytes": {
-                    "type": "integer"
-                },
-                "messages": {
-                    "type": "integer"
-                },
-                "messages_unacknowledged": {
-                    "type": "integer"
-                },
-                "name": {
-                    "type": "string"
-                },
-                "publish_rate": {
-                    "type": "number"
-                },
-                "redeliver_rate": {
-                    "type": "number"
-                }
-            }
-        },
         "models.RMQNode": {
             "type": "object",
             "properties": {
@@ -2847,14 +2798,20 @@ const docTemplate = `{
                 "consumers": {
                     "type": "integer"
                 },
+                "deliver_rate": {
+                    "type": "number"
+                },
+                "history": {
+                    "type": "array",
+                    "items": {
+                        "type": "integer"
+                    }
+                },
                 "message_bytes": {
                     "type": "integer"
                 },
                 "message_bytes_persistent": {
                     "type": "integer"
-                },
-                "message_stats": {
-                    "$ref": "#/definitions/models.MessageStats"
                 },
                 "messages": {
                     "type": "integer"
@@ -2864,6 +2821,12 @@ const docTemplate = `{
                 },
                 "name": {
                     "type": "string"
+                },
+                "publish_rate": {
+                    "type": "number"
+                },
+                "redeliver_rate": {
+                    "type": "number"
                 },
                 "vhost": {
                     "type": "string"
@@ -2895,14 +2858,6 @@ const docTemplate = `{
                 },
                 "name": {
                     "type": "string"
-                }
-            }
-        },
-        "models.RateDetail": {
-            "type": "object",
-            "properties": {
-                "rate": {
-                    "type": "number"
                 }
             }
         },

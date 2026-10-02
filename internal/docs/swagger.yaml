@@ -231,15 +231,6 @@ definitions:
       rate:
         type: number
     type: object
-  models.MessageStats:
-    properties:
-      deliver_get_details:
-        $ref: '#/definitions/models.RateDetail'
-      publish_details:
-        $ref: '#/definitions/models.RateDetail'
-      redeliver_details:
-        $ref: '#/definitions/models.RateDetail'
-    type: object
   models.Metadata:
     properties:
       default_queue_type:
@@ -323,29 +314,6 @@ definitions:
       username:
         type: string
     type: object
-  models.QueueDetail:
-    properties:
-      consumers:
-        type: integer
-      deliver_rate:
-        type: number
-      history:
-        items:
-          type: integer
-        type: array
-      message_bytes:
-        type: integer
-      messages:
-        type: integer
-      messages_unacknowledged:
-        type: integer
-      name:
-        type: string
-      publish_rate:
-        type: number
-      redeliver_rate:
-        type: number
-    type: object
   models.RMQNode:
     properties:
       disk_free:
@@ -363,18 +331,26 @@ definitions:
     properties:
       consumers:
         type: integer
+      deliver_rate:
+        type: number
+      history:
+        items:
+          type: integer
+        type: array
       message_bytes:
         type: integer
       message_bytes_persistent:
         type: integer
-      message_stats:
-        $ref: '#/definitions/models.MessageStats'
       messages:
         type: integer
       messages_unacknowledged:
         type: integer
       name:
         type: string
+      publish_rate:
+        type: number
+      redeliver_rate:
+        type: number
       vhost:
         type: string
     type: object
@@ -395,11 +371,6 @@ definitions:
         type: integer
       name:
         type: string
-    type: object
-  models.RateDetail:
-    properties:
-      rate:
-        type: number
     type: object
   models.Recipient:
     properties:
@@ -1965,7 +1936,7 @@ paths:
           description: List of queue details
           schema:
             items:
-              $ref: '#/definitions/models.QueueDetail'
+              $ref: '#/definitions/models.RMQQueue'
             type: array
         "400":
           description: Bad Request
