@@ -3,7 +3,7 @@ import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import { RequireAuth } from '@/auth/RequireAuth'
 import { Layout } from '@/components/layout/Layout'
-import { AclCard } from '@/components/access-control/AclTable'
+import { AclCard } from '@/components/access-control/AclCard'
 import { useACLs } from '@/hooks/useAcls'
 import { useVhost } from '@/hooks/useVhost'
 
