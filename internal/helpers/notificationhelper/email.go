@@ -54,7 +54,11 @@ func sendEmail(config *config.EmailConfig, to, subject, body string, typ mail.Co
 	message.Subject(subject)
 	message.SetBodyString(typ, body)
 
-	client, err := mail.NewClient(config.EmailSMTPHost)
+	client, err := mail.NewClient(config.EmailSMTPHost,
+		mail.WithPort(config.EmailSMTPPort),
+		mail.WithUsername(config.EmailSMTPUsername),
+		mail.WithPassword(config.EmailSMTPPassword),
+	)
 	if err != nil {
 		status.Error = fmt.Errorf("failed to create mail client: %w", err)
 	}
