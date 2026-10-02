@@ -75,10 +75,10 @@ func (rc *APIService) FilterAccessibleVhosts(ctx context.Context, vhosts []model
 	}
 
 	accessible := make([]models.Vhost, 0, len(vhosts))
-	for _, vhost := range vhosts {
+	for i := range vhosts {
 		for _, acl := range acls {
-			if acl.Allows(models.ScopeRead, vhost.Name) {
-				accessible = append(accessible, vhost)
+			if acl.Allows(models.ScopeRead, vhosts[i].Name) {
+				accessible = append(accessible, vhosts[i])
 				break
 			}
 		}

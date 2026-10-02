@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"log/slog"
 
 	"github.com/sisneve/rabbitmq-dashboard/internal/models"
 	"go.mongodb.org/mongo-driver/v2/bson"
@@ -18,7 +19,11 @@ func (dbc *Database) GetACLs(ctx context.Context) ([]models.ACL, error) {
 	if err != nil {
 		return nil, fmt.Errorf("find acls: %w", err)
 	}
-	defer cursor.Close(ctx)
+	defer func() {
+		if err := cursor.Close(ctx); err != nil {
+			slog.ErrorContext(ctx, "failed to close ACL cursor", "error", err)
+		}
+	}()
 
 	var acls []models.ACL
 	if err := cursor.All(ctx, &acls); err != nil {
@@ -36,7 +41,11 @@ func (dbc *Database) GetACLsForGroups(ctx context.Context, groups []string) ([]m
 	if err != nil {
 		return nil, fmt.Errorf("find acls for groups: %w", err)
 	}
-	defer cursor.Close(ctx)
+	defer func() {
+		if err := cursor.Close(ctx); err != nil {
+			slog.ErrorContext(ctx, "failed to close ACL cursor", "error", err)
+		}
+	}()
 
 	var acls []models.ACL
 	if err := cursor.All(ctx, &acls); err != nil {
