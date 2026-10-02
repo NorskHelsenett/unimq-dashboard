@@ -182,10 +182,9 @@ func (r *RMQClient) GetQueues() ([]models.RMQQueue, error) {
 		return nil, fmt.Errorf("%w. %w", ErrQueueNotFound, err)
 	}
 
-	for _, q := range queues {
-		q.History = appendHistory(q.Vhost+"/"+q.Name, q.Messages)
+	for i := range queues {
+		queues[i].History = appendHistory(queues[i].Vhost+"/"+queues[i].Name, queues[i].Messages)
 	}
-
 	return queues, nil
 }
 
@@ -201,8 +200,8 @@ func (r *RMQClient) GetQueue(vhost string) ([]models.RMQQueue, error) {
 		}
 	}
 
-	for _, q := range queues {
-		q.History = appendHistory(vhost+"/"+q.Name, q.Messages)
+	for i := range queues {
+		queues[i].History = appendHistory(queues[i].Vhost+"/"+queues[i].Name, queues[i].Messages)
 	}
 	return queues, nil
 }
