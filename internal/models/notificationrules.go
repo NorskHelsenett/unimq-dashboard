@@ -14,12 +14,12 @@ var (
 
 // Alarm rule definition
 type AlarmRulePatch struct {
-	Name      httpsuite.Optional[string]    `json:"name" example:"High Queue Size" validate:"nonull"`
-	Type      httpsuite.Optional[AlarmType] `json:"type" example:"queue_size" validate:"alarmtype,nonull"`
-	QueueName httpsuite.Optional[string]    `json:"queue_name,omitempty" example:"my-queue" validate:"omitempty,nonull"`
-	Threshold httpsuite.Optional[float64]   `json:"threshold,omitempty" example:"1000" validate:"nonull"`
-	Message   httpsuite.Optional[string]    `json:"message" example:"Queue size has exceeded the threshold"`
-	Enabled   httpsuite.Optional[bool]      `json:"enabled" example:"true" validate:"nonull"`
+	Name      httpsuite.Optional[string]    `json:"name" swaggertype:"string" example:"High Queue Size" validate:"nonull"`
+	Type      httpsuite.Optional[AlarmType] `json:"type" swaggertype:"string"  example:"queue_size" validate:"alarmtype,nonull"`
+	QueueName httpsuite.Optional[string]    `json:"queue_name,omitempty" eswaggertype:"string" xample:"my-queue" validate:"omitempty,nonull"`
+	Threshold httpsuite.Optional[float64]   `json:"threshold,omitempty" swaggertype:"number" example:"1000" validate:"nonull"`
+	Message   httpsuite.Optional[string]    `json:"message" swaggertype:"string" example:"Queue size has exceeded the threshold"`
+	Enabled   httpsuite.Optional[bool]      `json:"enabled" swaggertype:"boolean" example:"true" validate:"nonull"`
 }
 
 func ParseAlarmRulePatch(patch *AlarmRulePatch) (map[string]any, error) {
