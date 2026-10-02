@@ -61,7 +61,7 @@ func ReadQueueIDFromRequest(r *http.Request) (string, error) {
 		return "", fmt.Errorf("%w: queue-id", ErrMissingRequiredParameter)
 	}
 
-	eQueue, err := url.QueryUnescape(queue)
+	eQueue, err := url.PathUnescape(queue)
 	if err != nil {
 		return "", fmt.Errorf("%w: %w", ErrFailedToDecodeParameter, err)
 	}
