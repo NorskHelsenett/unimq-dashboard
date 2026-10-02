@@ -98,17 +98,6 @@ func TestRMQQueue_UnmarshalJSON_MissingMessageStats(t *testing.T) {
 	assert.Equal(t, 0.0, q.RedliverRate)
 }
 
-func TestRMQQueue_UnmarshalJSON_PreservesPreExistingHistory(t *testing.T) {
-	// History is populated by the rabbitmq client after unmarshalling (not part of
-	// the RabbitMQ API response), so decoding must not clobber a pre-set value.
-	q := models.RMQQueue{History: []int{1, 2, 3}}
-	data := []byte(`{"name":"my-queue"}`)
-
-	err := json.Unmarshal(data, &q)
-	require.NoError(t, err)
-	assert.Equal(t, []int{1, 2, 3}, q.History)
-}
-
 func TestRMQQueue_UnmarshalJSON_MalformedJSON(t *testing.T) {
 	var q models.RMQQueue
 	err := json.Unmarshal([]byte(`{"name":`), &q)

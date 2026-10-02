@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"net/url"
-	"sync"
 
 	"github.com/sisneve/rabbitmq-dashboard/internal/clients/rest"
 	"github.com/sisneve/rabbitmq-dashboard/internal/clients/rest/httpauthproviders"
@@ -16,29 +15,6 @@ type RMQClientInterface interface {
 
 type RMQClient struct {
 	restClient *rest.RestClient
-}
-
-// TODO: Figure out if the history is necessary.
-// If it is, the history should be stored in the database, not in memory, as it will be lost on restart.
-// The history length should also be moved to the config.
-
-const historySize = 20
-
-var history = struct {
-	mu   sync.Mutex
-	data map[string][]int
-}{data: make(map[string][]int)}
-
-func appendHistory(key string, value int) []int {
-	history.mu.Lock()
-	defer history.mu.Unlock()
-	// nolint:gocritic // leaving this for now, as use is unclear.
-	h := append(history.data[key], value)
-	if len(h) > historySize {
-		h = h[len(h)-historySize:]
-	}
-	history.data[key] = h
-	return h
 }
 
 type (
@@ -182,9 +158,6 @@ func (r *RMQClient) GetQueues() ([]models.RMQQueue, error) {
 		return nil, fmt.Errorf("%w. %w", ErrQueueNotFound, err)
 	}
 
-	for i := range queues {
-		queues[i].History = appendHistory(queues[i].Vhost+"/"+queues[i].Name, queues[i].Messages)
-	}
 	return queues, nil
 }
 
@@ -200,9 +173,6 @@ func (r *RMQClient) GetQueue(vhost string) ([]models.RMQQueue, error) {
 		}
 	}
 
-	for i := range queues {
-		queues[i].History = appendHistory(queues[i].Vhost+"/"+queues[i].Name, queues[i].Messages)
-	}
 	return queues, nil
 }
 

@@ -129,7 +129,6 @@ type RMQQueue struct {
 	Consumers              int     `json:"consumers"`
 	MessageBytes           int64   `json:"message_bytes"`
 	MessageBytesPersistent int64   `json:"message_bytes_persistent"`
-	History                []int   `json:"history"`
 	PublishRate            float64 `json:"publish_rate"`
 	DeliverRate            float64 `json:"deliver_rate"`
 	RedliverRate           float64 `json:"redeliver_rate"`
