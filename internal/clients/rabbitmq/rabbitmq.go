@@ -11,6 +11,9 @@ import (
 	"github.com/sisneve/rabbitmq-dashboard/internal/models"
 )
 
+type RMQClientInterface interface {
+}
+
 type RMQClient struct {
 	restClient *rest.RestClient
 }
@@ -154,8 +157,8 @@ func (r *RMQClient) GetVhost(name string) (*models.Vhost, error) {
 	return &vhost, nil
 }
 
-func (r *RMQClient) GetConnections() ([]models.ConnectionResponse, error) {
-	var connections []models.ConnectionResponse
+func (r *RMQClient) GetConnections() ([]models.RMQConnection, error) {
+	var connections []models.RMQConnection
 	_, err := r.restClient.Get("/connections", &connections)
 	if err != nil {
 		return nil, fmt.Errorf("%w. %w", ErrConnectionNotFound, err)
@@ -163,8 +166,8 @@ func (r *RMQClient) GetConnections() ([]models.ConnectionResponse, error) {
 	return connections, nil
 }
 
-func (r *RMQClient) GetChannels() ([]models.ChannelResponse, error) {
-	var channels []models.ChannelResponse
+func (r *RMQClient) GetChannels() ([]models.RMQChannel, error) {
+	var channels []models.RMQChannel
 	_, err := r.restClient.Get("/channels", &channels)
 	if err != nil {
 		return nil, fmt.Errorf("%w. %w", ErrChannelNotFound, err)

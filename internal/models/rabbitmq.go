@@ -125,11 +125,11 @@ func (l *RMQVhostLimits) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
-type ConnectionResponse struct {
+type RMQConnection struct {
 	Vhost string `json:"vhost"`
 }
 
-type ChannelResponse struct {
+type RMQChannel struct {
 	Vhost string `json:"vhost"`
 }
 
