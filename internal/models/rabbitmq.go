@@ -142,7 +142,7 @@ func (q *RMQQueue) UnmarshalJSON(data []byte) error {
 			} `json:"publish_details"`
 			DeliverDetails struct {
 				Rate float64 `json:"rate"`
-			} `json:"deliver_details"`
+			} `json:"deliver_get_details"`
 			RedelivDetails struct {
 				Rate float64 `json:"rate"`
 			} `json:"redeliver_details"`
