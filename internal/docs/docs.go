@@ -2801,12 +2801,6 @@ const docTemplate = `{
                 "deliver_rate": {
                     "type": "number"
                 },
-                "history": {
-                    "type": "array",
-                    "items": {
-                        "type": "integer"
-                    }
-                },
                 "message_bytes": {
                     "type": "integer"
                 },

@@ -333,10 +333,6 @@ definitions:
         type: integer
       deliver_rate:
         type: number
-      history:
-        items:
-          type: integer
-        type: array
       message_bytes:
         type: integer
       message_bytes_persistent:
