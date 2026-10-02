@@ -83,6 +83,17 @@ tasks:
       - go run {{.MAIN_PATH}}/main.go
     silent: true
 
+  check:
+    deps:
+      - check-go-installed
+    desc: Run all checks (vet, test, lint, swag-verify)
+    cmds:
+      - task: vet
+      - task: test
+      - task: lint
+      - task: swag-verify
+    silent: true
+
   build:
     deps:
       - check-go-installed
@@ -111,12 +122,12 @@ tasks:
       - task: swag-check
       - task: swag-generate
       - bash -c '
-          if [ -n "$(git status --porcelain -- internal/docs)" ]; then
-            echo "Swagger documentation is out of date. Run '\''task go:swag'\'' and commit the result." >&2;
-            git --no-pager diff --stat -- internal/docs >&2;
-            exit 1;
-          fi;
-          echo "Swagger documentation is up to date."'
+        if [ -n "$(git status --porcelain -- internal/docs)" ]; then
+        echo "Swagger documentation is out of date. Run '\''task go:swag'\'' and commit the result." >&2;
+        git --no-pager diff --stat -- internal/docs >&2;
+        exit 1;
+        fi;
+        echo "Swagger documentation is up to date."'
     silent: true
 
   swag-generate:
