@@ -17,9 +17,6 @@ data:
   RABBITMQ_HOST: "{{ $.Values.unimq.backend.rabbitmq_host }}"
   RABBITMQ_PORT: "{{ $.Values.unimq.backend.rabbitmq_port }}"
   RABBITMQ_USERNAME: "{{ $.Values.unimq.backend.rabbitmq_username }}"
-  RABBITMQ_CHANNEL_LIMIT: "{{ $.Values.unimq.backend.rabbitmq_channel_limit }}"
-  RABBITMQ_CONNECTION_LIMIT: "{{ $.Values.unimq.backend.rabbitmq_connection_limit }}"
-  RABBITMQ_QUEUE_LIMIT: "{{ $.Values.unimq.backend.rabbitmq_queue_limit }}"
 
   EMAIL_SMTP_HOST: "{{ $.Values.unimq.backend.email_smtp_host }}"
   EMAIL_SMTP_PORT: "{{ $.Values.unimq.backend.email_smtp_port }}"
@@ -27,7 +24,9 @@ data:
   EMAIL_FROM_ADDRESS: "{{ $.Values.unimq.backend.email_from_address }}"
 
   OIDC_CLIENT_ID: "{{ $.Values.unimq.backend.oidc_client_id }}"
+  OIDC_CLIENT_SECRET: "{{ $.Values.unimq.backend.oidc_client_secret }}"
   OIDC_URL: "{{ $.Values.unimq.backend.oidc_url }}"
   OIDC_REDIRECT_URL: "{{ $.Values.unimq.backend.oidc_redirect_url }}"
+  OIDC_SWAGGER_CLIENT_ID: "{{ $.Values.unimq.backend.oidc_swagger_client_id }}"
 
   ADMIN_GROUPS: "{{ $.Values.unimq.backend.admin_groups }}"
