@@ -22,9 +22,7 @@ service:
   frontend:
     port: 80
 
-# Gateway API (HTTPRoute) settings. Routes "/api" to the backend service and
-# everything else to the frontend service, matching the app's own dev-server
-# proxy behaviour (see web-src/vite.config.ts).
+# Gateway API (HTTPRoute) settings.
 gateway:
   enabled: true
   name: lt-integrasjon
@@ -36,13 +34,6 @@ gateway:
     gatewayapi-operator.vitistack.io/enabled: "true"
 
 unimq:
-  # Vite/frontend settings are baked into the frontend image at build time
-  # (Vite only reads VITE_* variables at `npm run build`), so they cannot be
-  # injected at container runtime and are kept here for documentation only.
-  vite:
-    auth_issuer: ""
-    client_id: ""
-
   backend:
     # API connection settings
     base_url: "0.0.0.0"
@@ -55,33 +46,31 @@ unimq:
     mongodb_host: "localhost"
     mongodb_port: "27017"
     mongodb_username: "admin"
-    # Remember to update this with a real value; it is base64 encoded automatically.
-    mongodb_password: "password"
     mongodb_database: "unimq"
+
+    # Remember to update this with a real value.
+    mongodb_password: "password"
 
     # rabbitmq connection settings
     rabbitmq_host: "http://localhost"
     rabbitmq_port: "15672"
     rabbitmq_username: "guest"
-    # Remember to update this with a real value; it is base64 encoded automatically.
+    # Remember to update this with a real value.
     rabbitmq_password: "guest"
-
-    rabbitmq_channel_limit: 1000
-    rabbitmq_connection_limit: 300
-    rabbitmq_queue_limit: 150
 
     # email/smtp settings, notifications are disabled when smtp_host is empty
     email_smtp_host: ""
     email_smtp_port: "587"
-    email_smtp_username: ""
-    # Remember to update this with a real value; it is base64 encoded automatically.
-    email_smtp_password: ""
     email_from_address: "unimq@example.com"
+    email_smtp_username: ""
+    # Remember to update this with a real value.
+    email_smtp_password: ""
 
     # OIDC authentication settings
     oidc_client_id: "unimq-dashboard"
     oidc_client_secret: "placeholder"
     oidc_url: "http://localhost:5556/dex"
     oidc_redirect_url: "http://localhost/api/v1/login/callback"
+    oidc_swagger_client_id: "unimq-swagger"
 
     admin_groups: "group.name1@local,group.name2@local"
