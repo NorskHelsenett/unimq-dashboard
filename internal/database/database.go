@@ -11,6 +11,21 @@ import (
 	"go.mongodb.org/mongo-driver/v2/mongo/options"
 )
 
+type Databaser interface {
+	InitCollections() error
+	Ping(ctx context.Context, timeoutSecs int) error
+}
+
+type (
+	Filter struct {
+		Property string
+		Value    string
+		Operator FilterOperator
+	}
+
+	FilterOperator string
+)
+
 type Database struct {
 	uri         string
 	db          string

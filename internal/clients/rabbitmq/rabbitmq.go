@@ -4,6 +4,8 @@ import (
 	"context"
 	"fmt"
 	"net/url"
+	"slices"
+	"strings"
 
 	"github.com/sisneve/rabbitmq-dashboard/internal/clients/rest"
 	"github.com/sisneve/rabbitmq-dashboard/internal/clients/rest/httpauthproviders"
@@ -11,7 +13,56 @@ import (
 )
 
 type RMQClientInterface interface {
+	GetVhosts(filters ...Filter) ([]models.Vhost, error)
+
+	GetConnections(filters ...Filter) ([]*models.RMQConnection, error)
+	GetChannels(filters ...Filter) ([]*models.RMQChannel, error)
+	GetQueues(filters ...Filter) ([]*models.RMQQueue, error)
+
+	GetNodes(filters ...Filter) ([]*models.RMQNode, error)
+
+	GetMetrics(filters ...Filter) ([]*models.VhostMetrics, error)
+	GetVhostUsage(filters ...Filter) ([]*models.RMQVhostUsage, error)
 }
+
+type (
+	Filter struct {
+		Parameter Parameter
+		Value     string
+	}
+
+	Parameter      string
+	FilterProperty string
+)
+
+var (
+	ErrUnsupportedFilterParameter = fmt.Errorf("unsupported filter parameter")
+)
+
+func convertFiltersToQueryParams(filters []Filter) string {
+	builder := &strings.Builder{}
+
+	builder.WriteString("?")
+
+	for i, filter := range filters {
+		if i > 0 {
+			builder.WriteString("&")
+		}
+		builder.WriteString(string(filter.Parameter))
+		builder.WriteString("=")
+		builder.WriteString(url.QueryEscape(filter.Value))
+	}
+
+	return builder.String()
+}
+
+const (
+	ParameterName       Parameter = "name"
+	ParameterPage       Parameter = "page"
+	ParameterPageSize   Parameter = "page_size"
+	ParameterUseRegex   Parameter = "use_regex"
+	ParameterPagination Parameter = "pagination"
+)
 
 type RMQClient struct {
 	restClient *rest.RestClient
@@ -90,12 +141,54 @@ func NewRMQClient(opts ...rmqClientOptions) (*RMQClient, error) {
 	return client, nil
 }
 
-func (r *RMQClient) GetVhosts() ([]models.Vhost, error) {
-	var vhosts []models.Vhost
-	_, err := r.restClient.Get("/vhosts", &vhosts)
+func (r *RMQClient) GetVhosts(filters ...Filter) ([]*models.Vhost, error) {
+	var vhost string
+	vhostsFilter := make([]string, 0)
+
+	switch {
+	case len(filters) == 0:
+		//  No Filters, fetch all.
+	case len(filters) == 1:
+		// One filter, check if it's the name filter, and use the path parameter to fetch the specific vhost.
+		if filters[0].Parameter == ParameterName {
+			vhost = filters[0].Value
+		} else {
+			return nil, fmt.Errorf("%w: %s", ErrUnsupportedFilterParameter, filters[0].Parameter)
+		}
+	case len(filters) > 1:
+		// Multiple filters, check if the name filter is present, query for all vhosts and filter the results based on the name filter.
+		for _, filter := range filters {
+			if filter.Parameter == ParameterName {
+				vhostsFilter = append(vhostsFilter, filter.Value)
+			} else {
+				return nil, fmt.Errorf("%w: %s", ErrUnsupportedFilterParameter, filter.Parameter)
+			}
+		}
+	default:
+		return nil, fmt.Errorf("only one filter is supported for GetVhosts")
+	}
+
+	uri := "/vhosts"
+	if vhost != "" {
+		uri += "/" + vhost
+	}
+
+	var vhosts []*models.Vhost
+	_, err := r.restClient.Get(uri, &vhosts)
 	if err != nil {
 		return nil, err
 	}
+
+	if len(vhostsFilter) > 0 {
+		filteredVhosts := make([]*models.Vhost, 0)
+		for _, v := range vhosts {
+			if slices.Contains(vhostsFilter, v.Name) {
+				filteredVhosts = append(filteredVhosts, v)
+			}
+		}
+		vhosts = filteredVhosts
+	}
+
 	return vhosts, nil
 }
 
