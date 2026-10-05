@@ -5,14 +5,16 @@ import (
 
 	"github.com/sisneve/rabbitmq-dashboard/internal/api/httpsuite"
 	"github.com/sisneve/rabbitmq-dashboard/internal/clients/rabbitmq"
+	"github.com/sisneve/rabbitmq-dashboard/internal/database"
 )
 
 type RMQHandler struct {
 	RMQClient   *rabbitmq.RMQClient
+	DB          *database.Database
 	AdminGroups []string
 }
 
-func NewRMQHandler(rmqClient *rabbitmq.RMQClient, adminGroups []string) *RMQHandler {
+func NewRMQHandler(rmqClient *rabbitmq.RMQClient, db *database.Database, adminGroups []string) *RMQHandler {
 	return &RMQHandler{
 		RMQClient:   rmqClient,
 		AdminGroups: adminGroups,
