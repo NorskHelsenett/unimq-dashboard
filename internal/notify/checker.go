@@ -144,16 +144,28 @@ func (c *Checker) runChecks() {
 			continue
 		}
 
-		metrics, err := c.RMQClient.GetMetrics(vhost.Name)
+		filter := rabbitmq.NewFilter(rabbitmq.ParameterName, rabbitmq.FilterTypeVhost, vhost.Name)
+		metrics, err := c.RMQClient.GetMetrics(filter)
 		if err != nil {
 			slog.ErrorContext(c.Ctx, "Failed to fetch metrics", "vhost", vhost.Name, "error", err)
 			continue
 		}
 
-		queues, err := c.RMQClient.GetQueue(vhost.Name)
+		if len(metrics) > 1 {
+			slog.WarnContext(c.Ctx, "Multiple metrics found for vhost, using the first one", "vhost", vhost.Name)
+		}
+
+		queues, err := c.RMQClient.GetQueues(filter)
 		if err != nil {
 			slog.ErrorContext(c.Ctx, "Failed to fetch queue details", "vhost", vhost.Name, "error", err)
 			continue
+		}
+
+		vhostQueues := make([]models.RMQQueue, 0)
+		for _, q := range queues {
+			if q.Vhost == vhost.Name {
+				vhostQueues = append(vhostQueues, *q)
+			}
 		}
 
 		urls = append(urls, vhost.WebhookURLs()...)
@@ -161,7 +173,7 @@ func (c *Checker) runChecks() {
 
 		// Evaluate each rule for the vhost and send notifications if needed.
 		for _, rule := range vhost.Rules {
-			c.checkRule(rule, &vhost, metrics, queues)
+			c.checkRule(rule, &vhost, metrics[0], vhostQueues)
 		}
 	}
 

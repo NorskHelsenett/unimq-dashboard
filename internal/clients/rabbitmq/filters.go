@@ -63,6 +63,8 @@ func convertFiltersToQueryParams(filters []Filter) string {
 }
 
 // Convert filters to path parameters. Only supports the [ParameterName] filter.
+// Returns the updated URI with the path parameter and a slice of filters that should be applied after fetching the resource(s).
+// If the slice of filters is empty, it means that all resources should be fetched.
 func convertFiltersToPathParams(filters []Filter, uri string) (string, []string, error) {
 	var parameter string
 	parameterFilter := make([]string, 0)

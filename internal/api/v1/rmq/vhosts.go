@@ -129,7 +129,9 @@ func (rc *RMQHandler) GetVhostLimitsHandler(w http.ResponseWriter, r *http.Reque
 	if err != nil {
 		// If the limits are not found, we return an empty limits object instead of an error as there are no limits set.
 		if errors.Is(err, rabbitmq.ErrLimitsNotFound) {
-			vhostLimits = models.NewRMQVhostLimits(vhost)
+			vhostLimit := models.NewRMQVhostLimits(vhost)
+			httpsuite.SendResponse(r.Context(), w, "no limits defined", http.StatusOK, &vhostLimit)
+			return
 		} else {
 			httpsuite.WriteJSONError(w,
 				http.StatusInternalServerError,
@@ -141,7 +143,7 @@ func (rc *RMQHandler) GetVhostLimitsHandler(w http.ResponseWriter, r *http.Reque
 		}
 	}
 
-	httpsuite.SendResponse(r.Context(), w, "", http.StatusOK, &vhostLimits)
+	httpsuite.SendResponse(r.Context(), w, "gathered limits defined", http.StatusOK, &vhostLimits)
 
 }
 
