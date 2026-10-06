@@ -29,9 +29,10 @@ export function useVhostNotification(): UseVhostNotificationResult {
         setVhosts(names)
         const sel = getSelectedVhost(names)
         setSelected(sel)
-        return getVhostNotification(sel)
+        return sel ? getVhostNotification(sel) : null
       })
       .then(data => setNotification(data))
+      .catch(() => setNotification(null))
       .finally(() => setLoading(false))
   }, [])
 

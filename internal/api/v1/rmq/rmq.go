@@ -1,18 +1,25 @@
 package rmq
 
 import (
+	"context"
 	"net/http"
 
 	"github.com/sisneve/rabbitmq-dashboard/internal/api/httpsuite"
 	"github.com/sisneve/rabbitmq-dashboard/internal/clients/mongodb"
 	"github.com/sisneve/rabbitmq-dashboard/internal/clients/rabbitmq"
 	"github.com/sisneve/rabbitmq-dashboard/internal/database"
+	"github.com/sisneve/rabbitmq-dashboard/internal/models"
 )
 
+type ACLStore interface {
+	GetACLsForGroups(context.Context, []string) ([]models.ACL, error)
+}
+
 type RMQHandler struct {
+<<<<<<< HEAD
 	RMQClient   rabbitmq.RMQClientInterface
-	DB          *mongodb.Database
 	Store       database.Store
+	DB          ACLStore
 	AdminGroups []string
 }
 

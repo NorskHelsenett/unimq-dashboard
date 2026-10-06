@@ -1,5 +1,5 @@
 import type { IndexData, Limits } from "@/pages/index"
-import { getVhosts } from "@/services/vhosts"
+import { getSelectedVhost, getVhosts } from "@/services/vhosts"
 import { getMetrics } from "@/services/metrics"
 import type { Metrics } from "@/types/metrics"
 import { useEffect, useState } from "react"
@@ -13,8 +13,10 @@ export function useIndex(): IndexData {
     useEffect(() => {
         getVhosts().then(names => {
             setVhosts(names)
-            const sel = new URLSearchParams(window.location.search).get('vhost') ?? names[0] ?? ''
-            setSelected(sel)
+            setSelected(getSelectedVhost(names))
+        }).catch(() => {
+            setVhosts([])
+            setSelected('')
         })
     }, [])
 

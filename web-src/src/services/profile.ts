@@ -23,7 +23,7 @@ interface ApiResponse<T> {
 
 /**
  * The three outcomes the session probe has to tell apart. A plain
- * `Profile | null` would collapse "not an admin" into "something broke", and
+ * `Profile | null` would collapse "access denied" into "something broke", and
  * those need very different screens: one is final, the other is retryable.
  */
 export type ProfileResult =
@@ -42,7 +42,6 @@ export type ProfileResult =
 export async function fetchProfile(signal?: AbortSignal): Promise<ProfileResult> {
     const res = await apiFetch("/api/v1/profile", { signal });
 
-    // Authenticated, but not in ADMIN_GROUPS. Signing in again cannot fix it.
     if (res.status === 403) {
         return { status: "forbidden" };
     }

@@ -7,8 +7,11 @@ export interface ApiResponse<T> {
   body: T
 }
 
-export async function getVhosts(): Promise<string[]> {
-  const res = await apiFetch('/api/v1/vhosts')
+export async function getVhosts(signal?: AbortSignal): Promise<string[]> {
+  const res = await apiFetch('/api/v1/vhosts', { signal })
+  if (!res.ok) {
+    throw new Error(`Vhost request failed (${res.status})`)
+  }
   const data: ApiResponse<VhostObj[]> = await res.json()
   return (data.body ?? []).map(v => v.name)
 }

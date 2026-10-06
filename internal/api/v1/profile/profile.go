@@ -1,6 +1,7 @@
 package profile
 
 import (
+	"context"
 	"log/slog"
 	"net/http"
 
@@ -8,13 +9,19 @@ import (
 	"github.com/sisneve/rabbitmq-dashboard/internal/models"
 )
 
-type ProfileHandler struct {
-	adminGroups []string
+type ACLStore interface {
+	GetACLsForGroups(context.Context, []string) ([]models.ACL, error)
 }
 
-func NewProfileHandler(groups []string) *ProfileHandler {
+type ProfileHandler struct {
+	adminGroups []string
+	aclStore    ACLStore
+}
+
+func NewProfileHandler(groups []string, aclStore ACLStore) *ProfileHandler {
 	return &ProfileHandler{
 		adminGroups: groups,
+		aclStore:    aclStore,
 	}
 }
 
@@ -29,11 +36,33 @@ func NewProfileHandler(groups []string) *ProfileHandler {
 // @security		bearer
 // @security		OAuth2[openid, profile, email, groups, audience:server:client_id:unimq-dashboard]
 func (ps *ProfileHandler) GetProfileHandler(w http.ResponseWriter, r *http.Request) {
-
-	_, err := httpsuite.IsAGroupInClaim(r.Context(), ps.adminGroups)
-	if err != nil {
-		httpsuite.WriteJSONErrorForbidden(w, httpsuite.WithError(err))
-		return
+	if _, err := httpsuite.IsAGroupInClaim(r.Context(), ps.adminGroups); err != nil {
+		groups, err := httpsuite.GetGroupsFromClaim(r.Context())
+		if err != nil || len(groups) == 0 {
+			httpsuite.WriteJSONErrorForbidden(w, httpsuite.WithErrorMessage("no ACL grants read access"))
+			return
+		}
+		acls, err := ps.aclStore.GetACLsForGroups(r.Context(), groups)
+		if err != nil {
+			httpsuite.WriteJSONError(w, http.StatusInternalServerError, httpsuite.WithError(err), httpsuite.WithErrorMessage("failed to validate ACL"))
+			return
+		}
+		allowed := false
+		for _, acl := range acls {
+			for _, vhostID := range acl.VhostIDs {
+				if acl.Allows(models.ScopeRead, vhostID) {
+					allowed = true
+					break
+				}
+			}
+			if allowed {
+				break
+			}
+		}
+		if !allowed {
+			httpsuite.WriteJSONErrorForbidden(w, httpsuite.WithErrorMessage("no ACL grants read access"))
+			return
+		}
 	}
 
 	username, err := httpsuite.GetUsernameFromContext(r.Context())

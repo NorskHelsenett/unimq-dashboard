@@ -54,7 +54,7 @@ func SetupRoutes(ctx context.Context, config *config.Config, db *mongodb.Databas
 	}
 
 	rmqHandler := rmq.NewRMQHandler(rmqclient, db, config.AdminGroups)
-	profileHandler := profile.NewProfileHandler(config.AdminGroups)
+	profileHandler := profile.NewProfileHandler(config.AdminGroups, db)
 
 	applySwaggerOIDCIssuer(config.OIDC.OIDCURL)
 
