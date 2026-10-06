@@ -4,6 +4,8 @@ import (
 	"encoding/json"
 	"log/slog"
 	"net/http"
+
+	"github.com/sisneve/rabbitmq-dashboard/internal/logger"
 )
 
 type (
@@ -81,6 +83,7 @@ func WriteJSONError(w http.ResponseWriter, status int, opts ...JSONErrorOption) 
 			"error", apiErr.error,
 			"message", apiErr.internalErrorMessage,
 			"status_code", apiErr.statusCode,
+			logger.LogCallerInfo(),
 		)
 	}
 
