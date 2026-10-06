@@ -5,6 +5,8 @@ import (
 	"log/slog"
 	"os"
 	"path"
+	"runtime"
+	"strconv"
 
 	"github.com/go-chi/chi/v5/middleware"
 )
@@ -61,4 +63,19 @@ func getHandlerOpts(loglevel slog.Level) *slog.HandlerOptions {
 	}
 
 	return handlerOpts
+}
+
+func LogCallerInfo() slog.Attr {
+	pc, file, line, ok := runtime.Caller(2)
+	if !ok {
+		return slog.String("caller", "unknown")
+	}
+
+	fn := runtime.FuncForPC(pc)
+	if fn == nil {
+		return slog.String("caller", "unknown")
+	}
+
+	return slog.String("caller", fn.Name()+" "+file+":"+strconv.FormatInt(int64(line), 10))
+
 }
