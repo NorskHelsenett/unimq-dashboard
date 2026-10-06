@@ -9,8 +9,6 @@ func SetupRMQRoutes(r chi.Router, rmqhandler *rmq.RMQHandler) {
 
 	r.Route("/vhosts", func(r chi.Router) {
 		r.Get("/", rmqhandler.GetVhostsHandler)
-		//r.Get("/{vhost-name}", rmqhandler.GetVhostHandler)
-		//r.Get("/{vhost-name}/metrics", rmqhandler.MetricHandler)
 		r.With(rmqhandler.VhostACLMiddleware).Get("/{vhost-name}", rmqhandler.GetVhostHandler)
 		r.With(rmqhandler.VhostACLMiddleware).Get("/{vhost-name}/metrics", rmqhandler.MetricHandler)
 		r.Get("/{vhost-name}/limits", rmqhandler.GetVhostLimitsHandler)
