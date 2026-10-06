@@ -92,6 +92,12 @@ func (acl ACL) Validate() error {
 	if len(acl.VhostIDs) == 0 {
 		return errors.New("at least one vhost_id is required")
 	}
+	for _, vhostID := range acl.VhostIDs {
+		if strings.TrimSpace(vhostID) == "" {
+			return errors.New("vhost_id does not exist or is invalid")
+		}
+	}
+
 	return nil
 }
 

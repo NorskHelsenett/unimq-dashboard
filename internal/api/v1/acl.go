@@ -183,6 +183,10 @@ func (rc *APIService) UpsertACLHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if err := rc.DB.UpsertACL(r.Context(), &acl); err != nil {
+		if errors.Is(err, database.ErrVhostNotFound) {
+			httpsuite.WriteJSONError(w, http.StatusBadRequest, httpsuite.WithErrorMessage(err.Error()))
+			return
+		}
 		httpsuite.WriteJSONError(w, http.StatusInternalServerError, httpsuite.WithError(err), httpsuite.WithErrorMessage("failed to save ACL"))
 		return
 	}
