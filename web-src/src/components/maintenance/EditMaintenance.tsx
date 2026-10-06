@@ -6,7 +6,72 @@ import { Button } from "../ui/button"
 import { DeleteMaintenance } from "./DeleteMaintenance"
 import { MaintenanceEditLogSheet } from "./MaintenanceEditLogSheet"
 import { Response } from "../ui/response"
-import { toDatetimeLocal, toServerDateTime, osloWallClockToTimestamp, nowLabel } from "@/lib/osloTime"
+import { Tooltip, TooltipContent, TooltipTrigger } from "../ui/tooltip"
+
+const osloTimeZone = 'Europe/Oslo'
+
+const osloDateParts = (date: Date) => {
+    const parts = new Intl.DateTimeFormat('en-CA', {
+        timeZone: osloTimeZone,
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit',
+        hourCycle: 'h23',
+    }).formatToParts(date).reduce<Record<string, string>>((result, part) => {
+        result[part.type] = part.value
+        return result
+    }, {})
+
+    return parts
+}
+
+const toDatetimeLocal = (datetime: string) => {
+    const parts = osloDateParts(new Date(datetime))
+    return `${parts.year}-${parts.month}-${parts.day}T${parts.hour}:${parts.minute}`
+}
+
+const toServerDateTime = (value: string) => {
+    const [datePart, timePart] = value.split('T')
+    const [year, month, day] = datePart.split('-').map(Number)
+    const [hour, minute] = timePart.split(':').map(Number)
+
+    // Treat the input as Oslo wall-clock time, then send the equivalent UTC time.
+    const wallClockAsUtc = Date.UTC(year, month - 1, day, hour, minute)
+    const osloParts = osloDateParts(new Date(wallClockAsUtc))
+    const osloClockAsUtc = Date.UTC(
+        Number(osloParts.year),
+        Number(osloParts.month) - 1,
+        Number(osloParts.day),
+        Number(osloParts.hour),
+        Number(osloParts.minute),
+    )
+    const utc = new Date(wallClockAsUtc - (osloClockAsUtc - wallClockAsUtc))
+    return `${utc.getUTCFullYear()}-${String(utc.getUTCMonth() + 1).padStart(2, '0')}-${String(utc.getUTCDate()).padStart(2, '0')} ${String(utc.getUTCHours()).padStart(2, '0')}:${String(utc.getUTCMinutes()).padStart(2, '0')}:00`
+}
+
+const osloWallClockToTimestamp = (value: string) => {
+    const [datePart, timePart] = value.split('T')
+    const [year, month, day] = datePart.split('-').map(Number)
+    const [hour, minute] = timePart.split(':').map(Number)
+    const wallClockAsUtc = Date.UTC(year, month - 1, day, hour, minute)
+    const osloParts = osloDateParts(new Date(wallClockAsUtc))
+    const osloClockAsUtc = Date.UTC(
+        Number(osloParts.year),
+        Number(osloParts.month) - 1,
+        Number(osloParts.day),
+        Number(osloParts.hour),
+        Number(osloParts.minute),
+    )
+    return wallClockAsUtc - (osloClockAsUtc - wallClockAsUtc)
+}
+
+const nowLabel = () => {
+    const parts = osloDateParts(new Date())
+    return `${parts.year}-${parts.month}-${parts.day} ${parts.hour}:${parts.minute}:${parts.second}`
+}
 
 export function EditMaintenance({ maintenance }: { maintenance: Maintenance }) {
     const session = useSession()
@@ -187,19 +252,26 @@ export function EditMaintenance({ maintenance }: { maintenance: Maintenance }) {
                 {error && <p className="text-destructive text-sm col-span-2">{error}</p>}
 
                 <div className="flex items-center justify-between col-span-2">
-                    <Button
-                        type="button"
-                        variant="destructive"
-                        size="sm"
-                        onClick={() => setShowDelete(true)}
-                    >
-                        Delete maintenance
-                    </Button>
+                    <Tooltip>
+                        <TooltipTrigger asChild>
+                            <Button
+                                type="button"
+                                variant="destructive"
+                                size="sm"
+                                className="text-destructive hover:bg-destructive/10 hover:text-destructive/80"
+                                aria-label="Delete maintenance"
+                                onClick={() => setShowDelete(true)}
+                            >
+                                Delete
+                            </Button>
+                        </TooltipTrigger>
+                        <TooltipContent>Delete maintenance</TooltipContent>
+                    </Tooltip>
                     <div className="flex gap-2">
                         <Button type="button" variant="outline" size="sm" onClick={() => setShowLogs(true)}>
                             View edit history
                         </Button>
-                        <Button type="submit" variant="orange" disabled={saving}>
+                        <Button type="submit" className="bg-submit-button text-white hover:bg-submit-button/90" disabled={saving}>
                             {saving ? "Saving…" : "Save changes"}
                         </Button>
                     </div>

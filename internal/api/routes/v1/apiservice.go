@@ -46,6 +46,13 @@ func SetupUtilityRoutes(r chi.Router, apiservice *api.APIService, dex *dex.DexCl
 
 func SetupInternalRoutes(r chi.Router, apiservice *api.APIService) {
 
+	r.Route("/acls", func(r chi.Router) {
+		r.Get("/", apiservice.GetACLsHandler)
+		r.Put("/", apiservice.UpsertACLHandler)
+		r.Get("/{group}", apiservice.GetACLHandler)
+		r.Delete("/{group}", apiservice.DeleteACLHandler)
+	})
+
 	r.Route("/maintenance", func(r chi.Router) {
 		r.Get("/", apiservice.GetMaintenanceHandler)
 		r.Get("/{maintenance-id}", apiservice.GetMaintenanceEntryHandler)
@@ -65,6 +72,7 @@ func SetupInternalRoutes(r chi.Router, apiservice *api.APIService) {
 	r.Route("/notifications", func(r chi.Router) {
 		r.Get("/", apiservice.GetNotificationsHandler)
 		r.Route("/{vhost-name}", func(r chi.Router) {
+			r.Use(apiservice.VhostACLMiddleware)
 			r.Get("/", apiservice.GetNotificationsVhostHandler)
 			r.Delete("/", apiservice.DeleteNotificationsHandler)
 			r.Post("/recipients", apiservice.AddNotificationsRecipientHandler)

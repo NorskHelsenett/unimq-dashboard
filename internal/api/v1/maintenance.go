@@ -28,12 +28,6 @@ import (
 // @security		OAuth2[openid, profile, email, groups, audience:server:client_id:unimq-dashboard]
 func (rc *APIService) GetMaintenanceHandler(w http.ResponseWriter, r *http.Request) {
 
-	_, err := httpsuite.IsAGroupInClaim(r.Context(), rc.AdminGroups)
-	if err != nil {
-		httpsuite.WriteJSONErrorForbidden(w, httpsuite.WithInternalErrorMessage(err.Error()))
-		return
-	}
-
 	// Advance stale entries before returning so callers always see current statuses
 	if _, err := rc.DB.AdvanceMaintenanceStatuses(r.Context()); err != nil {
 		slog.WarnContext(r.Context(), "failed to advance maintenance statuses", "error", err)
@@ -78,14 +72,8 @@ func (rc *APIService) GetMaintenanceHandler(w http.ResponseWriter, r *http.Reque
 // @security		bearer
 // @security		OAuth2[openid, profile, email, groups, audience:server:client_id:unimq-dashboard]
 func (rc *APIService) GetMaintenanceEntryHandler(w http.ResponseWriter, r *http.Request) {
-
-	_, err := httpsuite.IsAGroupInClaim(r.Context(), rc.AdminGroups)
-	if err != nil {
-		httpsuite.WriteJSONErrorForbidden(w, httpsuite.WithInternalErrorMessage(err.Error()))
-		return
-	}
-
 	maintenanceId, err := requesthelper.ReadMaintenanceIDFromRequest(r)
+
 	if err != nil {
 		httpsuite.WriteJSONError(w,
 			http.StatusBadRequest,

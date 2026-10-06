@@ -1,4 +1,4 @@
-import { NAV_ITEMS } from "@/lib/navItems"
+import { NAV_ITEMS, NAV_ITEMS_ADMIN } from "@/lib/navItems"
 import { LogoLink } from "./LogoLink"
 import { cn } from "@/lib/utils"
 import { User, Sun, Moon } from "lucide-react"
@@ -29,6 +29,24 @@ export function Sidebar() {
                     <LogoLink collapsed={collapsed} />
                     <div className="flex flex-col gap-1 pt-10 flex-1 overflow-y-auto">
                         {NAV_ITEMS.map((item) => {
+                            const active = isActive(item.href, currentPath)
+                            return (
+                                <a key={item.href} href={item.href + vhostParam} className={cn(
+                                    "flex items-center py-2",
+                                    collapsed ? "justify-center px-2" : "gap-2 px-4",
+                                    active 
+                                        ? "bg-surface-sidebar-active text-text-sidebar-active border-l-3 border-brand font-bold" 
+                                        : "text-text-sidebar hover:bg-surface-sidebar-active hover:text-text-sidebar-active"
+                                        
+                                )}>
+                                    {item.icon && <item.icon size={18} className="shrink-0" />}
+                                    {!collapsed && <span className="truncate">{item.label}</span>}
+                                </a>
+                                
+                            )
+                        })}
+                        <hr className="my-2 border-border-sidebar" />
+                        {NAV_ITEMS_ADMIN.map((item) => {
                             const active = isActive(item.href, currentPath)
                             return (
                                 <a key={item.href} href={item.href + vhostParam} className={cn(

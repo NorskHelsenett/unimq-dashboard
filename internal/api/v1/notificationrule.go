@@ -32,14 +32,8 @@ import (
 // @security		bearer
 // @security		OAuth2[openid, profile, email, groups, audience:server:client_id:unimq-dashboard]
 func (rc *APIService) GetNotificationRuleHandler(w http.ResponseWriter, r *http.Request) {
-
-	_, err := httpsuite.IsAGroupInClaim(r.Context(), rc.AdminGroups)
-	if err != nil {
-		httpsuite.WriteJSONErrorForbidden(w, httpsuite.WithInternalErrorMessage(err.Error()))
-		return
-	}
-
 	vhost, err := requesthelper.ReadVhostFromRequest(r)
+
 	if err != nil {
 		httpsuite.WriteJSONError(w,
 			http.StatusBadRequest,
@@ -104,13 +98,6 @@ func (rc *APIService) GetNotificationRuleHandler(w http.ResponseWriter, r *http.
 // @security		bearer
 // @security		OAuth2[openid, profile, email, groups, audience:server:client_id:unimq-dashboard]
 func (rc *APIService) AddNotificationsRuleHandler(w http.ResponseWriter, r *http.Request) {
-
-	_, err := httpsuite.IsAGroupInClaim(r.Context(), rc.AdminGroups)
-	if err != nil {
-		httpsuite.WriteJSONErrorForbidden(w, httpsuite.WithInternalErrorMessage(err.Error()))
-		return
-	}
-
 	vhost, err := requesthelper.ReadVhostFromRequest(r)
 	if err != nil {
 		httpsuite.WriteJSONError(w,
@@ -196,14 +183,8 @@ func (rc *APIService) AddNotificationsRuleHandler(w http.ResponseWriter, r *http
 // @security		bearer
 // @security		OAuth2[openid, profile, email, groups, audience:server:client_id:unimq-dashboard]
 func (rc *APIService) DeleteNotificationsRuleHandler(w http.ResponseWriter, r *http.Request) {
-
-	_, err := httpsuite.IsAGroupInClaim(r.Context(), rc.AdminGroups)
-	if err != nil {
-		httpsuite.WriteJSONErrorForbidden(w, httpsuite.WithInternalErrorMessage(err.Error()))
-		return
-	}
-
 	vhost, err := requesthelper.ReadVhostFromRequest(r)
+
 	if err != nil {
 		httpsuite.WriteJSONError(w,
 			http.StatusBadRequest,
@@ -250,13 +231,6 @@ func (rc *APIService) DeleteNotificationsRuleHandler(w http.ResponseWriter, r *h
 // @security		bearer
 // @security		OAuth2[openid, profile, email, groups, audience:server:client_id:unimq-dashboard]
 func (rc *APIService) PatchNotificationsRuleHandler(w http.ResponseWriter, r *http.Request) {
-
-	_, err := httpsuite.IsAGroupInClaim(r.Context(), rc.AdminGroups)
-	if err != nil {
-		httpsuite.WriteJSONErrorForbidden(w, httpsuite.WithInternalErrorMessage(err.Error()))
-		return
-	}
-
 	vhost, err := requesthelper.ReadVhostFromRequest(r)
 	if err != nil {
 		httpsuite.WriteJSONError(w,
@@ -352,14 +326,8 @@ func (rc *APIService) PatchNotificationsRuleHandler(w http.ResponseWriter, r *ht
 // @security		bearer
 // @security		OAuth2[openid, profile, email, groups, audience:server:client_id:unimq-dashboard]
 func (rc *APIService) ToggleNotificationsRuleHandler(w http.ResponseWriter, r *http.Request) {
-
-	_, err := httpsuite.IsAGroupInClaim(r.Context(), rc.AdminGroups)
-	if err != nil {
-		httpsuite.WriteJSONErrorForbidden(w, httpsuite.WithInternalErrorMessage(err.Error()))
-		return
-	}
-
 	vhost, err := requesthelper.ReadVhostFromRequest(r)
+
 	if err != nil {
 		httpsuite.WriteJSONError(w,
 			http.StatusBadRequest,
@@ -426,14 +394,8 @@ func (rc *APIService) ToggleNotificationsRuleHandler(w http.ResponseWriter, r *h
 // @security		bearer
 // @security		OAuth2[openid, profile, email, groups, audience:server:client_id:unimq-dashboard]
 func (rc *APIService) TestNotificationsRuleHandler(w http.ResponseWriter, r *http.Request) {
-
-	_, err := httpsuite.IsAGroupInClaim(r.Context(), rc.AdminGroups)
-	if err != nil {
-		httpsuite.WriteJSONErrorForbidden(w, httpsuite.WithInternalErrorMessage(err.Error()))
-		return
-	}
-
 	vhost, err := requesthelper.ReadVhostFromRequest(r)
+
 	if err != nil {
 		httpsuite.WriteJSONError(w,
 			http.StatusBadRequest,

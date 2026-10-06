@@ -24,13 +24,6 @@ import (
 // @security		bearer
 // @security		OAuth2[openid, profile, email, groups, audience:server:client_id:unimq-dashboard]
 func (rc *RMQHandler) GetQueuesHandler(w http.ResponseWriter, r *http.Request) {
-
-	_, err := httpsuite.IsAGroupInClaim(r.Context(), rc.AdminGroups)
-	if err != nil {
-		httpsuite.WriteJSONErrorForbidden(w, httpsuite.WithInternalErrorMessage(err.Error()))
-		return
-	}
-
 	vhost, err := requesthelper.ReadVhostFromRequest(r)
 	if err != nil {
 		httpsuite.WriteJSONError(w,
@@ -70,13 +63,6 @@ func (rc *RMQHandler) GetQueuesHandler(w http.ResponseWriter, r *http.Request) {
 // @security		bearer
 // @security		OAuth2[openid, profile, email, groups, audience:server:client_id:unimq-dashboard]
 func (rc *RMQHandler) GetQueuesByNameHandler(w http.ResponseWriter, r *http.Request) {
-
-	_, err := httpsuite.IsAGroupInClaim(r.Context(), rc.AdminGroups)
-	if err != nil {
-		httpsuite.WriteJSONErrorForbidden(w, httpsuite.WithInternalErrorMessage(err.Error()))
-		return
-	}
-
 	vhost, err := requesthelper.ReadVhostFromRequest(r)
 	if err != nil {
 		httpsuite.WriteJSONError(w,

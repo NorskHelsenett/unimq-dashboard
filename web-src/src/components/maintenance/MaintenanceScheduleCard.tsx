@@ -6,7 +6,7 @@ import { addMaintenance, upperCaseStatus } from "@/services/maintenance"
 import { Button } from "../ui/button"
 import { Response } from "../ui/response"
 import { Tooltip, TooltipContent, TooltipTrigger } from "../ui/tooltip"
-import { Pencil, CalendarClock } from "lucide-react"
+import { CalendarClock, Pencil, Trash2 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { useState } from "react"
 import { DeleteMaintenance } from "./DeleteMaintenance"
@@ -51,7 +51,7 @@ function AddMaintenanceForm({onClose, onCancel, onError} : { onClose: () => void
                     <label className="text-sm font-medium">New maintenance</label>
                     <input name="description" placeholder="Description" required className="border rounded px-2 py-1.5 text-sm" />
                 </div>
-                <Button type="submit" variant="orange" size="sm">Save</Button>
+                <Button type="submit" size="sm" className="bg-submit-button text-white hover:bg-submit-button/90">Save</Button>
                 <Button type="button" variant="ghost" size="sm" onClick={onCancel}>Cancel</Button>
             </div>
             <div className="grid grid-cols-2 gap-2">
@@ -193,9 +193,20 @@ export function MaintenanceScheduleCard({ maintenanceSchedule, onRefresh }: { ma
                                                     </TooltipTrigger>
                                                     <TooltipContent>Edit</TooltipContent>
                                                 </Tooltip>
-                                                <Button variant="destructive" size="xs" onClick={() => setDeletingId(maintenance.id)}>
-                                                    Delete
-                                                </Button>
+                                                <Tooltip>
+                                                    <TooltipTrigger asChild>
+                                                        <Button
+                                                            variant="ghost"
+                                                            size="sm"
+                                                            className="p-0 text-text-muted hover:text-destructive"
+                                                            aria-label={`Delete ${maintenance.description}`}
+                                                            onClick={() => setDeletingId(maintenance.id)}
+                                                        >
+                                                            <Trash2 className="h-4 w-4" />
+                                                        </Button>
+                                                    </TooltipTrigger>
+                                                    <TooltipContent>Delete</TooltipContent>
+                                                </Tooltip>
                                             </div>
                                         </td>
                                     </tr>

@@ -53,7 +53,7 @@ func SetupRoutes(ctx context.Context, config *config.Config, db *database.Databa
 		return nil, fmt.Errorf("failed to create API service: %w", err)
 	}
 
-	rmqHandler := rmq.NewRMQHandler(rmqclient, config.AdminGroups)
+	rmqHandler := rmq.NewRMQHandler(rmqclient, db, config.AdminGroups)
 	profileHandler := profile.NewProfileHandler(config.AdminGroups)
 
 	applySwaggerOIDCIssuer(config.OIDC.OIDCURL)
