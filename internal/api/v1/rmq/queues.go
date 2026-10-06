@@ -34,7 +34,8 @@ func (rc *RMQHandler) GetQueuesHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	queues, err := rc.RMQClient.GetQueue(vhost)
+	filter := rabbitmq.NewFilter(rabbitmq.ParameterName, rabbitmq.FilterTypeVhost, vhost)
+	queues, err := rc.RMQClient.GetQueues(filter)
 	if err != nil {
 		httpsuite.WriteJSONError(w,
 			http.StatusNotFound,
@@ -83,7 +84,10 @@ func (rc *RMQHandler) GetQueuesByNameHandler(w http.ResponseWriter, r *http.Requ
 		return
 	}
 
-	queues, err := rc.RMQClient.GetQueueByName(vhost, queue)
+	filters := make([]rabbitmq.Filter, 0, 2)
+	filters = append(filters, rabbitmq.NewFilter(rabbitmq.ParameterName, rabbitmq.FilterTypeVhost, vhost))
+	filters = append(filters, rabbitmq.NewFilter(rabbitmq.ParameterName, rabbitmq.FilterTypeQueue, queue))
+	queues, err := rc.RMQClient.GetQueues(filters...)
 	if err != nil {
 		if errors.Is(err, rabbitmq.ErrQueueNotFound) {
 			httpsuite.WriteJSONError(w,

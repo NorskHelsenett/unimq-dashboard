@@ -75,7 +75,11 @@ func (rc *RMQHandler) GetVhostHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	vhostData, err := rc.RMQClient.GetVhost(vhost)
+	filter := rabbitmq.Filter{
+		Parameter: rabbitmq.ParameterName,
+		Value:     vhost,
+	}
+	vhostData, err := rc.RMQClient.GetVhosts(filter)
 	if err != nil {
 		httpsuite.WriteJSONError(w,
 			http.StatusInternalServerError,
@@ -120,8 +124,10 @@ func (rc *RMQHandler) GetVhostLimitsHandler(w http.ResponseWriter, r *http.Reque
 		return
 	}
 
-	vhostLimits, err := rc.RMQClient.GetVhostLimit(vhost)
+	filter := rabbitmq.NewFilter(rabbitmq.ParameterName, rabbitmq.FilterTypeVhost, vhost)
+	vhostLimits, err := rc.RMQClient.GetVhostLimits(filter)
 	if err != nil {
+		// If the limits are not found, we return an empty limits object instead of an error as there are no limits set.
 		if errors.Is(err, rabbitmq.ErrLimitsNotFound) {
 			vhostLimits = models.NewRMQVhostLimits(vhost)
 		} else {
@@ -168,7 +174,8 @@ func (rc *RMQHandler) GetRMQVhostUsageHandler(w http.ResponseWriter, r *http.Req
 		return
 	}
 
-	usage, err := rc.RMQClient.GetVhostUsage(vhost)
+	filter := rabbitmq.NewFilter(rabbitmq.ParameterName, rabbitmq.FilterTypeVhost, vhost)
+	usage, err := rc.RMQClient.GetVhostUsage(filter)
 	if err != nil {
 		httpsuite.WriteJSONError(w,
 			http.StatusInternalServerError,

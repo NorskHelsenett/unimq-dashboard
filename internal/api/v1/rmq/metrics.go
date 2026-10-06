@@ -4,6 +4,7 @@ import (
 	"net/http"
 
 	"github.com/sisneve/rabbitmq-dashboard/internal/api/httpsuite"
+	"github.com/sisneve/rabbitmq-dashboard/internal/clients/rabbitmq"
 	"github.com/sisneve/rabbitmq-dashboard/internal/helpers/requesthelper"
 )
 
@@ -31,7 +32,8 @@ func (rc *RMQHandler) MetricHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	metrics, err := rc.RMQClient.GetMetrics(vhost)
+	filter := rabbitmq.NewFilter(rabbitmq.ParameterName, rabbitmq.FilterTypeVhost, vhost)
+	metrics, err := rc.RMQClient.GetMetrics(filter)
 	if err != nil {
 		httpsuite.WriteJSONError(w,
 			http.StatusInternalServerError,
