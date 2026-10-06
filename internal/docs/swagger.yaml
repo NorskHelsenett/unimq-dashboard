@@ -585,6 +585,12 @@ paths:
             $ref: '#/definitions/httpsuite.ErrorResponse'
       security:
       - bearer: []
+      - OAuth2:
+        - openid
+        - profile
+        - email
+        - groups
+        - audience:server:client_id:unimq-dashboard
       summary: Get ACLs
       tags:
       - ACLs
@@ -625,6 +631,12 @@ paths:
             $ref: '#/definitions/httpsuite.ErrorResponse'
       security:
       - bearer: []
+      - OAuth2:
+        - openid
+        - profile
+        - email
+        - groups
+        - audience:server:client_id:unimq-dashboard
       summary: Create or update an ACL
       tags:
       - ACLs
@@ -667,6 +679,8 @@ paths:
             $ref: '#/definitions/httpsuite.ErrorResponse'
       security:
       - bearer: []
+      - OAuth2Application:
+        - admin
       summary: Delete an ACL
       tags:
       - ACLs
@@ -708,6 +722,12 @@ paths:
             $ref: '#/definitions/httpsuite.ErrorResponse'
       security:
       - bearer: []
+      - OAuth2:
+        - openid
+        - profile
+        - email
+        - groups
+        - audience:server:client_id:unimq-dashboard
       summary: Get an ACL
       tags:
       - ACLs

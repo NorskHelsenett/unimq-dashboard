@@ -69,6 +69,15 @@ const docTemplate = `{
                 "security": [
                     {
                         "bearer": []
+                    },
+                    {
+                        "OAuth2": [
+                            "openid",
+                            "profile",
+                            "email",
+                            "groups",
+                            "audience:server:client_id:unimq-dashboard"
+                        ]
                     }
                 ],
                 "description": "Get all vhost access control lists. Requires membership in an admin group.",
@@ -113,6 +122,15 @@ const docTemplate = `{
                 "security": [
                     {
                         "bearer": []
+                    },
+                    {
+                        "OAuth2": [
+                            "openid",
+                            "profile",
+                            "email",
+                            "groups",
+                            "audience:server:client_id:unimq-dashboard"
+                        ]
                     }
                 ],
                 "description": "Create or replace a group's vhost access control list. Requires membership in an admin group.",
@@ -176,6 +194,15 @@ const docTemplate = `{
                 "security": [
                     {
                         "bearer": []
+                    },
+                    {
+                        "OAuth2": [
+                            "openid",
+                            "profile",
+                            "email",
+                            "groups",
+                            "audience:server:client_id:unimq-dashboard"
+                        ]
                     }
                 ],
                 "description": "Get the access control list for a group. Requires membership in an admin group.",
@@ -238,6 +265,11 @@ const docTemplate = `{
                 "security": [
                     {
                         "bearer": []
+                    },
+                    {
+                        "OAuth2Application": [
+                            "admin"
+                        ]
                     }
                 ],
                 "description": "Delete a group's vhost access control list. Requires membership in an admin group.",
