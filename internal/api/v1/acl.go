@@ -104,6 +104,7 @@ func (rc *APIService) requireAdmin(w http.ResponseWriter, r *http.Request) bool 
 // @Failure		500	{object}	httpsuite.ErrorResponse
 // @Router			/v1/acls [get]
 // @security		bearer
+// @security		OAuth2[openid, profile, email, groups, audience:server:client_id:unimq-dashboard]
 func (rc *APIService) GetACLsHandler(w http.ResponseWriter, r *http.Request) {
 	if !rc.requireAdmin(w, r) {
 		return
@@ -130,6 +131,7 @@ func (rc *APIService) GetACLsHandler(w http.ResponseWriter, r *http.Request) {
 // @Failure		500		{object}	httpsuite.ErrorResponse
 // @Router			/v1/acls/{group} [get]
 // @security		bearer
+// @security		OAuth2[openid, profile, email, groups, audience:server:client_id:unimq-dashboard]
 func (rc *APIService) GetACLHandler(w http.ResponseWriter, r *http.Request) {
 	if !rc.requireAdmin(w, r) {
 		return
@@ -165,6 +167,7 @@ func (rc *APIService) GetACLHandler(w http.ResponseWriter, r *http.Request) {
 // @Failure		500	{object}	httpsuite.ErrorResponse
 // @Router			/v1/acls [put]
 // @security		bearer
+// @security		OAuth2[openid, profile, email, groups, audience:server:client_id:unimq-dashboard]
 func (rc *APIService) UpsertACLHandler(w http.ResponseWriter, r *http.Request) {
 	if !rc.requireAdmin(w, r) {
 		return
@@ -199,6 +202,7 @@ func (rc *APIService) UpsertACLHandler(w http.ResponseWriter, r *http.Request) {
 // @Failure		500		{object}	httpsuite.ErrorResponse
 // @Router			/v1/acls/{group} [delete]
 // @security		bearer
+// @Security		OAuth2Application[admin]
 func (rc *APIService) DeleteACLHandler(w http.ResponseWriter, r *http.Request) {
 	if !rc.requireAdmin(w, r) {
 		return
