@@ -1,7 +1,7 @@
 import { Vhosts } from "@/types/vhosts"
 import { ChangeEvent } from "react"
 
-export function VhostSelector({ Vhosts, Selected }: Vhosts) {
+export function VhostSelector({ Vhosts, Selected, placeholder = 'No accessible vhosts' }: Vhosts & { placeholder?: string }) {
     function handleChange(e: ChangeEvent<HTMLSelectElement>) {
         const params = new URLSearchParams(window.location.search)
         params.set('vhost', e.target.value)
@@ -10,10 +10,13 @@ export function VhostSelector({ Vhosts, Selected }: Vhosts) {
 
     return (
         <select
+            aria-label="Virtual host"
+            disabled={Vhosts.length === 0}
             value={Selected}
             onChange={handleChange}
             className="text-xs border border-border-card rounded-md px-2 py-2 bg-surface-card focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent cursor-pointer shadow-sm"
         >
+            {Vhosts.length === 0 && <option value="">{placeholder}</option>}
             {Vhosts.map((v) => (
                 <option key={v} value={v}>
                     {v}

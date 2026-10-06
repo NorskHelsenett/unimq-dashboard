@@ -192,8 +192,8 @@ export function RequireAuth({ children }: { children: React.ReactNode }) {
                     Your account does not have access to this dashboard.
                 </p>
                 <p className="text-sm text-muted-foreground max-w-md">
-                    Access requires membership of an administrator group. Signing in
-                    again will not help — ask an administrator to add you.
+                    Ask an administrator to grant one of your groups at least read
+                    access to a virtual host through an ACL.
                 </p>
                 <button className="underline text-sm mt-2" onClick={() => void logout()}>
                     Sign out

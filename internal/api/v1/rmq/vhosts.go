@@ -24,13 +24,6 @@ import (
 // @security		bearer
 // @security		OAuth2[openid, profile, email, groups, audience:server:client_id:unimq-dashboard]
 func (rc *RMQHandler) GetVhostsHandler(w http.ResponseWriter, r *http.Request) {
-
-	_, err := httpsuite.IsAGroupInClaim(r.Context(), rc.AdminGroups)
-	if err != nil {
-		httpsuite.WriteJSONErrorForbidden(w, httpsuite.WithInternalErrorMessage(err.Error()))
-		return
-	}
-
 	vhosts, err := rc.RMQClient.GetVhosts()
 	if err != nil {
 		httpsuite.WriteJSONError(w,
@@ -38,6 +31,16 @@ func (rc *RMQHandler) GetVhostsHandler(w http.ResponseWriter, r *http.Request) {
 			httpsuite.WithError(err),
 			httpsuite.WithErrorMessage("failed to fetch vhosts"),
 		)
+		return
+	}
+
+	vhosts, err = rc.FilterAccessibleVhosts(r.Context(), vhosts)
+	if err != nil {
+		if errors.Is(err, ErrACLForbidden) {
+			httpsuite.WriteJSONErrorForbidden(w, httpsuite.WithInternalErrorMessage(err.Error()))
+			return
+		}
+		httpsuite.WriteJSONError(w, http.StatusInternalServerError, httpsuite.WithError(err), httpsuite.WithErrorMessage("failed to validate ACL"))
 		return
 	}
 
@@ -58,13 +61,6 @@ func (rc *RMQHandler) GetVhostsHandler(w http.ResponseWriter, r *http.Request) {
 // @security		bearer
 // @security		OAuth2[openid, profile, email, groups, audience:server:client_id:unimq-dashboard]
 func (rc *RMQHandler) GetVhostHandler(w http.ResponseWriter, r *http.Request) {
-
-	_, err := httpsuite.IsAGroupInClaim(r.Context(), rc.AdminGroups)
-	if err != nil {
-		httpsuite.WriteJSONErrorForbidden(w, httpsuite.WithInternalErrorMessage(err.Error()))
-		return
-	}
-
 	vhost, err := requesthelper.ReadVhostFromRequest(r)
 	if err != nil {
 		httpsuite.WriteJSONError(w,
@@ -103,13 +99,6 @@ func (rc *RMQHandler) GetVhostHandler(w http.ResponseWriter, r *http.Request) {
 // @security		bearer
 // @security		OAuth2[openid, profile, email, groups, audience:server:client_id:unimq-dashboard]
 func (rc *RMQHandler) GetVhostLimitsHandler(w http.ResponseWriter, r *http.Request) {
-
-	_, err := httpsuite.IsAGroupInClaim(r.Context(), rc.AdminGroups)
-	if err != nil {
-		httpsuite.WriteJSONErrorForbidden(w, httpsuite.WithInternalErrorMessage(err.Error()))
-		return
-	}
-
 	vhost, err := requesthelper.ReadVhostFromRequest(r)
 	if err != nil {
 		httpsuite.WriteJSONError(w,
@@ -152,12 +141,6 @@ func (rc *RMQHandler) GetVhostLimitsHandler(w http.ResponseWriter, r *http.Reque
 // @security		bearer
 // @security		OAuth2[openid, profile, email, groups, audience:server:client_id:unimq-dashboard]
 func (rc *RMQHandler) GetRMQVhostUsageHandler(w http.ResponseWriter, r *http.Request) {
-	_, err := httpsuite.IsAGroupInClaim(r.Context(), rc.AdminGroups)
-	if err != nil {
-		httpsuite.WriteJSONErrorForbidden(w, httpsuite.WithInternalErrorMessage(err.Error()))
-		return
-	}
-
 	vhost, err := requesthelper.ReadVhostFromRequest(r)
 	if err != nil {
 		httpsuite.WriteJSONError(w,
