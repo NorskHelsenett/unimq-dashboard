@@ -121,8 +121,8 @@ func IsAGroupInClaim(ctx context.Context, groups []string) (string, error) {
 		}
 	}
 
-slog.InfoContext(ctx, "no matching group found in claims", "expected_groups", groups, "retrieved_groups", allGroups)
-return "", fmt.Errorf("%w. %v", ErrNoMatchingGroup, allGroups)
+	slog.InfoContext(ctx, "no matching group found in claims", "expected_groups", groups, "retrieved_groups", allGroups)
+	return "", fmt.Errorf("%w. %v", ErrNoMatchingGroup, allGroups)
 }
 
 func castSliceToStringSlice[T any](input []T) []string {

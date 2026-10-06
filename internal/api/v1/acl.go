@@ -121,13 +121,13 @@ func (rc *APIService) GetACLsHandler(w http.ResponseWriter, r *http.Request) {
 // @Description	Get the access control list for a group. Requires membership in an admin group.
 // @Tags			ACLs
 // @Produce		json
-// @Param			group	path	string	true	"Group name"
-// @Success		200	{object}	models.ACL
-// @Failure		400	{object}	httpsuite.ErrorResponse
-// @Failure		401	{object}	httpsuite.ErrorResponse
-// @Failure		403	{object}	httpsuite.ErrorResponse
-// @Failure		404	{object}	httpsuite.ErrorResponse
-// @Failure		500	{object}	httpsuite.ErrorResponse
+// @Param			group	path		string	true	"Group name"
+// @Success		200		{object}	models.ACL
+// @Failure		400		{object}	httpsuite.ErrorResponse
+// @Failure		401		{object}	httpsuite.ErrorResponse
+// @Failure		403		{object}	httpsuite.ErrorResponse
+// @Failure		404		{object}	httpsuite.ErrorResponse
+// @Failure		500		{object}	httpsuite.ErrorResponse
 // @Router			/v1/acls/{group} [get]
 // @security		bearer
 func (rc *APIService) GetACLHandler(w http.ResponseWriter, r *http.Request) {
@@ -157,7 +157,7 @@ func (rc *APIService) GetACLHandler(w http.ResponseWriter, r *http.Request) {
 // @Tags			ACLs
 // @Accept			json
 // @Produce		json
-// @Param			acl	body	models.ACL	true	"ACL definition"
+// @Param			acl	body		models.ACL	true	"ACL definition"
 // @Success		200	{object}	models.ACL
 // @Failure		400	{object}	httpsuite.ErrorResponse
 // @Failure		401	{object}	httpsuite.ErrorResponse
@@ -190,13 +190,13 @@ func (rc *APIService) UpsertACLHandler(w http.ResponseWriter, r *http.Request) {
 // @Description	Delete a group's vhost access control list. Requires membership in an admin group.
 // @Tags			ACLs
 // @Produce		json
-// @Param			group	path	string	true	"Group name"
-// @Success		200	{string}	string	"ACL deleted successfully"
-// @Failure		400	{object}	httpsuite.ErrorResponse
-// @Failure		401	{object}	httpsuite.ErrorResponse
-// @Failure		403	{object}	httpsuite.ErrorResponse
-// @Failure		404	{object}	httpsuite.ErrorResponse
-// @Failure		500	{object}	httpsuite.ErrorResponse
+// @Param			group	path		string	true	"Group name"
+// @Success		200		{string}	string	"ACL deleted successfully"
+// @Failure		400		{object}	httpsuite.ErrorResponse
+// @Failure		401		{object}	httpsuite.ErrorResponse
+// @Failure		403		{object}	httpsuite.ErrorResponse
+// @Failure		404		{object}	httpsuite.ErrorResponse
+// @Failure		500		{object}	httpsuite.ErrorResponse
 // @Router			/v1/acls/{group} [delete]
 // @security		bearer
 func (rc *APIService) DeleteACLHandler(w http.ResponseWriter, r *http.Request) {

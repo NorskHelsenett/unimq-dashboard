@@ -41,7 +41,6 @@ func (rc *RMQHandler) GetVhostsHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	
 	httpsuite.SendResponse(r.Context(), w, "", http.StatusOK, &vhosts)
 }
 

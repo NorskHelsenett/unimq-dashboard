@@ -18,6 +18,52 @@ const docTemplate = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
+        "/healthz": {
+            "get": {
+                "description": "Returns a simple health check response to indicate that the service is running",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Health"
+                ],
+                "summary": "Health check",
+                "responses": {
+                    "200": {
+                        "description": "healthy",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/readyz": {
+            "get": {
+                "description": "Checks the readiness of the service by verifying connectivity to RabbitMQ, MongoDB, and Dex",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Health"
+                ],
+                "summary": "Readiness check",
+                "responses": {
+                    "200": {
+                        "description": "ready",
+                        "schema": {
+                            "$ref": "#/definitions/models.HealthStatus"
+                        }
+                    },
+                    "502": {
+                        "description": "not ready",
+                        "schema": {
+                            "$ref": "#/definitions/models.HealthStatus"
+                        }
+                    }
+                }
+            }
+        },
         "/v1/acls": {
             "get": {
                 "security": [
@@ -2520,6 +2566,9 @@ const docTemplate = `{
                 }
             }
         },
+        "httpsuite.Optional-string": {
+            "type": "object"
+        },
         "models.ACL": {
             "type": "object",
             "properties": {
@@ -3110,20 +3159,15 @@ const docTemplate = `{
                 "RecipientTypeUnknown"
             ]
         },
-        "models.Scope": {
-            "type": "integer",
-            "format": "int32",
+        "models.Status": {
+            "type": "string",
             "enum": [
-                0,
-                1,
-                2,
-                3
+                "healthy",
+                "unhealthy"
             ],
             "x-enum-varnames": [
-                "ScopeUnknown",
-                "ScopeRead",
-                "ScopeWrite",
-                "ScopeAdmin"
+                "StatusHealthy",
+                "StatusUnhealthy"
             ]
         },
         "models.TestNotificationResponse": {

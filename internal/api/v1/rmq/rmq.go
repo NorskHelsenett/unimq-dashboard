@@ -10,11 +10,11 @@ import (
 
 type RMQHandler struct {
 	RMQClient   *rabbitmq.RMQClient
-	DB *database.Database
+	DB          *database.Database
 	AdminGroups []string
 }
 
-func NewRMQHandler(rmqClient *rabbitmq.RMQClient, db *database.Database, adminGroups []string) *RMQHandler {	
+func NewRMQHandler(rmqClient *rabbitmq.RMQClient, db *database.Database, adminGroups []string) *RMQHandler {
 	return &RMQHandler{
 		RMQClient:   rmqClient,
 		DB:          db,

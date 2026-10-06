@@ -60,7 +60,6 @@ func (rc *RMQHandler) VhostACLMiddleware(next http.Handler) http.Handler {
 	})
 }
 
-
 func (rc *RMQHandler) FilterAccessibleVhosts(ctx context.Context, vhosts []models.Vhost) ([]models.Vhost, error) {
 	if _, err := httpsuite.IsAGroupInClaim(ctx, rc.AdminGroups); err == nil {
 		return vhosts, nil

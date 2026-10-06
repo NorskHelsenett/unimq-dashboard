@@ -153,7 +153,7 @@ func (rc *APIService) AddNotificationsRecipientHandler(w http.ResponseWriter, r 
 // @security		OAuth2[openid, profile, email, groups, audience:server:client_id:unimq-dashboard]
 func (rc *APIService) DeleteNotificationsRecipientHandler(w http.ResponseWriter, r *http.Request) {
 	vhost, err := requesthelper.ReadVhostFromRequest(r)
-	
+
 	if err != nil {
 		httpsuite.WriteJSONError(w,
 			http.StatusBadRequest,
