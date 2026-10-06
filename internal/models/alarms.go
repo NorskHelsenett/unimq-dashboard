@@ -7,8 +7,8 @@ import (
 )
 
 type AlarmEntry struct {
-	AlarmID string     `bson:"_id"`
-	Entries []LogEntry `bson:"entries"`
+	AlarmID string     `bson:"_id" json:"alarmID"`
+	Entries []LogEntry `bson:"entries" json:"entries"`
 }
 
 type LogEvent string
@@ -16,6 +16,7 @@ type LogEvent string
 const (
 	LogEventFired    LogEvent = "fired"
 	LogEventResolved LogEvent = "resolved"
+	LogEventError    LogEvent = "error"
 )
 
 type LogEntry struct {

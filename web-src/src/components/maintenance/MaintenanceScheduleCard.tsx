@@ -12,22 +12,12 @@ import { useState } from "react"
 import { DeleteMaintenance } from "./DeleteMaintenance"
 import { SectionCard, SectionCardHeader } from "../ui/section-card"
 import { StatusDot } from "../ui/status-dot"
+import { osloDateParts, osloWallClockToTimestamp, toServerDateTime } from "@/lib/osloTime"
 
 function AddMaintenanceForm({onClose, onCancel, onError} : { onClose: () => void, onCancel: () => void, onError: (msg: string) => void }) {
     const [validationError, setValidationError] = useState<string | null>(null)
 
-    const nowParts = new Intl.DateTimeFormat('no-NO', {
-        timeZone: 'Europe/Oslo',
-        year: 'numeric',
-        month: '2-digit',
-        day: '2-digit',
-        hour: '2-digit',
-        minute: '2-digit',
-        hourCycle: 'h23',
-    }).formatToParts(new Date()).reduce<Record<string, string>>((parts, part) => {
-        parts[part.type] = part.value
-        return parts
-    }, {})
+    const nowParts = osloDateParts(new Date())
     const minNow = `${nowParts.year}-${nowParts.month}-${nowParts.day}T${nowParts.hour}:${nowParts.minute}`
 
     return(
@@ -36,20 +26,21 @@ function AddMaintenanceForm({onClose, onCancel, onError} : { onClose: () => void
             const fd = new FormData(e.currentTarget)
             const start = fd.get("start") as string
             const end = fd.get("end") as string
-            if (new Date(start) <= new Date()) {
+            // start/end are "datetime-local" values with no timezone info; interpret
+            // them as Oslo wall-clock time, matching the `minNow` bound above.
+            if (osloWallClockToTimestamp(start) <= Date.now()) {
                 setValidationError("Start date must be in the future.")
                 return
             }
-            if (new Date(end) <= new Date(start)) {
+            if (osloWallClockToTimestamp(end) <= osloWallClockToTimestamp(start)) {
                 setValidationError("End date must be after the start date.")
                 return
             }
             setValidationError(null)
-            const toDateTime = (v: string) => v.replace("T", " ") + (v.length === 16 ? ":00" : "")
             addMaintenance({
                 description: fd.get("description") as string,
-                start: toDateTime(start),
-                end: toDateTime(end),
+                start: toServerDateTime(start),
+                end: toServerDateTime(end),
             }).then(() => onClose()).catch((err) => onError(err?.message ?? "Failed to add maintenance."))
         }} className="bg-surface-card border border-blue-200 rounded-lg p-4 mb-4 shadow">
             {validationError && (

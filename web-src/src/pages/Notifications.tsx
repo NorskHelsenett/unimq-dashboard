@@ -10,8 +10,8 @@ import { useVhostNotification } from '@/hooks/useVhostNotification'
 
 const Notifications = () => {
   const { selected, notification, loading } = useVhostNotification()
-  const rules = notification?.Rules ?? []
-  const recipients = notification?.Recipients ?? []
+  const rules = notification?.rules ?? []
+  const recipients = notification?.recipients ?? []
 
   return (
     <Layout>

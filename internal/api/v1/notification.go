@@ -3,11 +3,10 @@ package api
 import (
 	"errors"
 	"net/http"
-	"net/url"
 
-	"github.com/go-chi/chi/v5"
+	"github.com/sisneve/rabbitmq-dashboard/internal/api/httpsuite"
+	"github.com/sisneve/rabbitmq-dashboard/internal/helpers/requesthelper"
 	"github.com/sisneve/rabbitmq-dashboard/internal/models"
-	"github.com/sisneve/rabbitmq-dashboard/internal/routes/httpsuite"
 	"go.mongodb.org/mongo-driver/v2/mongo"
 )
 
@@ -21,6 +20,7 @@ import (
 // @Failure		502	{object}	httpsuite.ErrorResponse
 // @Router			/v1/notifications [get]
 // @security		bearer
+// @security		OAuth2[openid, profile, email, groups, audience:server:client_id:unimq-dashboard]
 func (rc *APIService) GetNotificationsHandler(w http.ResponseWriter, r *http.Request) {
 
 	_, err := httpsuite.IsAGroupInClaim(r.Context(), rc.AdminGroups)
@@ -54,31 +54,22 @@ func (rc *APIService) GetNotificationsHandler(w http.ResponseWriter, r *http.Req
 // @Failure		502			{object}	httpsuite.ErrorResponse
 // @Router			/v1/notifications/{vhost-name} [get]
 // @security		bearer
+// @security		OAuth2[openid, profile, email, groups, audience:server:client_id:unimq-dashboard]
 func (rc *APIService) GetNotificationsVhostHandler(w http.ResponseWriter, r *http.Request) {
-	vhost := chi.URLParam(r, "vhost")
-	if vhost == "" {
-		httpsuite.WriteJSONError(w,
-			http.StatusBadRequest,
-			httpsuite.WithErrorMessage("missing required vhost parameter"),
-		)
-		return
-	}
-
-	eVhost, err := url.QueryUnescape(vhost)
+	vhost, err := requesthelper.ReadVhostFromRequest(r)
 	if err != nil {
 		httpsuite.WriteJSONError(w,
 			http.StatusBadRequest,
 			httpsuite.WithError(err),
-			httpsuite.WithExternalErrorMessage("failed to decode vhost name"),
-			httpsuite.WithInternalErrorMessage("error decoding vhost name: "+vhost),
+			httpsuite.WithErrorMessage("failed to read vhost parameter"),
 		)
 		return
 	}
 
-	notification, err := rc.DB.GetNotification(r.Context(), eVhost)
+	notification, err := rc.DB.GetNotification(r.Context(), vhost)
 	if err != nil {
 		if errors.Is(err, mongo.ErrNoDocuments) {
-			empty := models.NewVhostNotification(eVhost)
+			empty := models.NewVhostNotification(vhost)
 			httpsuite.SendResponse(r.Context(), w, "Gathered notifications on vhost", http.StatusOK, empty)
 			return
 		}
@@ -105,28 +96,20 @@ func (rc *APIService) GetNotificationsVhostHandler(w http.ResponseWriter, r *htt
 // @Failure		502			{object}	httpsuite.ErrorResponse
 // @Router			/v1/notifications/{vhost-name} [delete]
 // @security		bearer
+// @security		OAuth2[openid, profile, email, groups, audience:server:client_id:unimq-dashboard]
 func (rc *APIService) DeleteNotificationsHandler(w http.ResponseWriter, r *http.Request) {
-	vhost := chi.URLParam(r, "vhost")
-	if vhost == "" {
-		httpsuite.WriteJSONError(w,
-			http.StatusBadRequest,
-			httpsuite.WithErrorMessage("missing required vhost parameter"),
-		)
-		return
-	}
-
-	eVhost, err := url.QueryUnescape(vhost)
+	vhost, err := requesthelper.ReadVhostFromRequest(r)
+	
 	if err != nil {
 		httpsuite.WriteJSONError(w,
 			http.StatusBadRequest,
 			httpsuite.WithError(err),
-			httpsuite.WithExternalErrorMessage("failed to decode vhost name"),
-			httpsuite.WithInternalErrorMessage("error decoding vhost name: "+vhost),
+			httpsuite.WithErrorMessage("failed to read vhost parameter"),
 		)
 		return
 	}
 
-	err = rc.DB.DeleteNotification(r.Context(), eVhost)
+	err = rc.DB.DeleteNotification(r.Context(), vhost)
 	if err != nil {
 		httpsuite.WriteJSONError(w,
 			http.StatusInternalServerError,

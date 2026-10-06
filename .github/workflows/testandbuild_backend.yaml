@@ -32,10 +32,14 @@ jobs:
       - name: Run tests
         run: go test ./...
 
-      - name: Build Swagger
-        run: |
-          go install github.com/swaggo/swag/cmd/swag@latest
-          make docs-run
+      - name: Set up Task
+        uses: arduino/setup-task@v2
+        with:
+          version: 3.x
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Verify Swagger docs are up to date
+        run: task go:swag-verify
 
       - name: Build
         run: |

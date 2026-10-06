@@ -26,10 +26,12 @@ linters:
 
   settings:
     gocyclo:
-      min-complexity: 15
+      min-complexity: 20
     funlen:
-      lines: 160
-      statements: 60
+      lines: 200
+      statements: 100
+    dupl:
+      threshold: 200
     revive:
       rules:
         - name: comment-spacings

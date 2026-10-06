@@ -7,13 +7,13 @@ import (
 	"testing"
 
 	"github.com/go-chi/chi/v5"
-	"github.com/sisneve/rabbitmq-dashboard/internal/routes/httpsuite"
+	"github.com/sisneve/rabbitmq-dashboard/internal/api/httpsuite"
 )
 
 func requestWithVhostAndGroups(vhost string, groups []any) *http.Request {
 	request := httptest.NewRequest(http.MethodGet, "/", nil)
 	routeContext := chi.NewRouteContext()
-	routeContext.URLParams.Add("vhost", vhost)
+	routeContext.URLParams.Add("vhost-name", vhost)
 
 	ctx := context.WithValue(request.Context(), chi.RouteCtxKey, routeContext)
 	if groups != nil {

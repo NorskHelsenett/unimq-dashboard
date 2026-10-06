@@ -7,11 +7,12 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/go-chi/chi/v5"
 	"github.com/google/uuid"
+	"github.com/sisneve/rabbitmq-dashboard/internal/api/httpsuite"
 	"github.com/sisneve/rabbitmq-dashboard/internal/database"
+	"github.com/sisneve/rabbitmq-dashboard/internal/helpers/requesthelper"
+	"github.com/sisneve/rabbitmq-dashboard/internal/helpers/timehelper"
 	"github.com/sisneve/rabbitmq-dashboard/internal/models"
-	"github.com/sisneve/rabbitmq-dashboard/internal/routes/httpsuite"
 )
 
 // @Summary		Get scheduled  maintenance information and history
@@ -24,6 +25,7 @@ import (
 // @Failure		500	{object}	httpsuite.ErrorResponse
 // @Router			/v1/maintenance [get]
 // @security		bearer
+// @security		OAuth2[openid, profile, email, groups, audience:server:client_id:unimq-dashboard]
 func (rc *APIService) GetMaintenanceHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Advance stale entries before returning so callers always see current statuses
@@ -48,7 +50,7 @@ func (rc *APIService) GetMaintenanceHandler(w http.ResponseWriter, r *http.Reque
 			httpsuite.WithError(err),
 			httpsuite.WithErrorMessage("failed to fetch maintenance history"),
 		)
-		maintenanceHistory = []models.MaintenanceEntry{}
+		return
 	}
 
 	response := models.NewMaintenanceResponse(scheduled, maintenanceHistory)
@@ -68,17 +70,20 @@ func (rc *APIService) GetMaintenanceHandler(w http.ResponseWriter, r *http.Reque
 // @Failure		500				{object}	httpsuite.ErrorResponse
 // @Router			/v1/maintenance/{maintenance-id} [get]
 // @security		bearer
+// @security		OAuth2[openid, profile, email, groups, audience:server:client_id:unimq-dashboard]
 func (rc *APIService) GetMaintenanceEntryHandler(w http.ResponseWriter, r *http.Request) {
-	id := chi.URLParam(r, "maintenance")
-	if id == "" {
+	maintenanceId, err := requesthelper.ReadMaintenanceIDFromRequest(r)
+	
+	if err != nil {
 		httpsuite.WriteJSONError(w,
 			http.StatusBadRequest,
-			httpsuite.WithErrorMessage("maintenance id is required"),
+			httpsuite.WithError(err),
+			httpsuite.WithErrorMessage("failed to read maintenance id parameter"),
 		)
 		return
 	}
 
-	entry, err := rc.DB.GetMaintenanceEntry(r.Context(), id)
+	entry, err := rc.DB.GetMaintenanceEntry(r.Context(), maintenanceId)
 	if err != nil {
 		if errors.Is(err, database.ErrMaintenanceNotFound) {
 			httpsuite.WriteJSONError(w,
@@ -111,6 +116,7 @@ func (rc *APIService) GetMaintenanceEntryHandler(w http.ResponseWriter, r *http.
 // @Failure		500		{object}	httpsuite.ErrorResponse
 // @Router			/v1/maintenance [post]
 // @security		bearer
+// @security		OAuth2[openid, profile, email, groups, audience:server:client_id:unimq-dashboard]
 func (rc *APIService) AddMaintenanceHandler(w http.ResponseWriter, r *http.Request) {
 
 	_, err := httpsuite.IsAGroupInClaim(r.Context(), rc.AdminGroups)
@@ -120,7 +126,7 @@ func (rc *APIService) AddMaintenanceHandler(w http.ResponseWriter, r *http.Reque
 	}
 
 	var entry models.PostMaintenanceEntry
-	err = httpsuite.ReadResponse(r, &entry)
+	err = httpsuite.ReadResponse(w, r, &entry)
 	if err != nil {
 		httpsuite.WriteJSONError(w,
 			http.StatusBadRequest,
@@ -130,13 +136,13 @@ func (rc *APIService) AddMaintenanceHandler(w http.ResponseWriter, r *http.Reque
 		return
 	}
 
-	dbentry, err := entry.ToMaintenanceEntry()
+	dbentry, err := entry.ToMaintenanceEntry(r.Context())
 	if err != nil {
 		slog.Error("error converting to maintenance entry", "error", err)
 		httpsuite.WriteJSONError(w,
-			http.StatusInternalServerError,
+			http.StatusBadRequest,
 			httpsuite.WithError(err),
-			httpsuite.WithErrorMessage("failed to convert to maintenance entry"),
+			httpsuite.WithErrorMessage("bad time format"),
 		)
 		return
 	}
@@ -169,6 +175,7 @@ func (rc *APIService) AddMaintenanceHandler(w http.ResponseWriter, r *http.Reque
 // @Failure		500				{object}	httpsuite.ErrorResponse
 // @Router			/v1/maintenance/{maintenance-id} [put]
 // @security		bearer
+// @security		OAuth2[openid, profile, email, groups, audience:server:client_id:unimq-dashboard]
 func (rc *APIService) UpdateMaintenanceStatusHandler(w http.ResponseWriter, r *http.Request) {
 
 	_, err := httpsuite.IsAGroupInClaim(r.Context(), rc.AdminGroups)
@@ -177,17 +184,18 @@ func (rc *APIService) UpdateMaintenanceStatusHandler(w http.ResponseWriter, r *h
 		return
 	}
 
-	id := chi.URLParam(r, "maintenance")
-	if id == "" {
+	maintenance, err := requesthelper.ReadMaintenanceIDFromRequest(r)
+	if err != nil {
 		httpsuite.WriteJSONError(w,
 			http.StatusBadRequest,
-			httpsuite.WithErrorMessage("maintenance id is required"),
+			httpsuite.WithError(err),
+			httpsuite.WithErrorMessage("failed to read maintenance id parameter"),
 		)
 		return
 	}
 
 	var request models.UpdateMaintenance
-	err = httpsuite.ReadResponse(r, &request)
+	err = httpsuite.ReadResponse(w, r, &request)
 	if err != nil {
 		httpsuite.WriteJSONError(w,
 			http.StatusBadRequest,
@@ -197,7 +205,7 @@ func (rc *APIService) UpdateMaintenanceStatusHandler(w http.ResponseWriter, r *h
 		return
 	}
 
-	err = rc.DB.SetMaintenanceEntryStatus(r.Context(), id, request.Status)
+	err = rc.DB.SetMaintenanceEntryStatus(r.Context(), maintenance, request.Status)
 	if err != nil {
 		httpsuite.WriteJSONError(w,
 			http.StatusInternalServerError,
@@ -232,17 +240,18 @@ func (rc *APIService) PatchMaintenanceHandler(w http.ResponseWriter, r *http.Req
 		return
 	}
 
-	id := chi.URLParam(r, "maintenance")
-	if id == "" {
+	maintenanceId, err := requesthelper.ReadMaintenanceIDFromRequest(r)
+	if err != nil {
 		httpsuite.WriteJSONError(w,
 			http.StatusBadRequest,
-			httpsuite.WithErrorMessage("maintenance id is required"),
+			httpsuite.WithError(err),
+			httpsuite.WithErrorMessage("failed to read maintenance id parameter"),
 		)
 		return
 	}
 
 	var request models.PatchMaintenanceEntry
-	if err := httpsuite.ReadResponse(r, &request); err != nil {
+	if err := httpsuite.ReadResponse(w, r, &request); err != nil {
 		httpsuite.WriteJSONError(w,
 			http.StatusBadRequest,
 			httpsuite.WithError(err),
@@ -260,10 +269,19 @@ func (rc *APIService) PatchMaintenanceHandler(w http.ResponseWriter, r *http.Req
 		return
 	}
 
-	start, _ := time.Parse("2006-01-02 15:04:05", request.Start)
-	end, _ := time.Parse("2006-01-02 15:04:05", request.End)
+	start, _ := timehelper.ParseTimeInRFC3339(request.Start)
+	end, _ := timehelper.ParseTimeInRFC3339(request.End)
 
-	err = rc.DB.PatchMaintenanceEntry(r.Context(), id, request.Description, start, end, request.Reason, request.UpdatedBy)
+	email, err := httpsuite.GetEmailFromContext(r.Context())
+	if err != nil {
+		httpsuite.WriteJSONError(w,
+			http.StatusInternalServerError,
+			httpsuite.WithError(err),
+			httpsuite.WithErrorMessage("failed to get user email from context"),
+		)
+		return
+	}
+	err = rc.DB.PatchMaintenanceEntry(r.Context(), maintenanceId, request.Description, start, end, request.Reason, email)
 	if err != nil {
 		if errors.Is(err, database.ErrMaintenanceNotFound) {
 			httpsuite.WriteJSONError(w,
@@ -283,12 +301,12 @@ func (rc *APIService) PatchMaintenanceHandler(w http.ResponseWriter, r *http.Req
 
 	logEntry := &models.MaintenanceEditLog{
 		ID:            uuid.New().String(),
-		MaintenanceID: id,
+		MaintenanceID: maintenanceId,
 		Description:   request.Description,
 		Start:         start,
 		End:           end,
 		Reason:        request.Reason,
-		UpdatedBy:     request.UpdatedBy,
+		UpdatedBy:     email,
 		UpdatedAt:     time.Now().UTC(),
 	}
 	if logErr := rc.DB.AddMaintenanceEditLog(r.Context(), logEntry); logErr != nil {
@@ -317,16 +335,17 @@ func (rc *APIService) GetMaintenanceEditLogsHandler(w http.ResponseWriter, r *ht
 		return
 	}
 
-	id := chi.URLParam(r, "maintenance")
-	if id == "" {
+	maintenanceId, err := requesthelper.ReadMaintenanceIDFromRequest(r)
+	if err != nil {
 		httpsuite.WriteJSONError(w,
 			http.StatusBadRequest,
-			httpsuite.WithErrorMessage("maintenance id is required"),
+			httpsuite.WithError(err),
+			httpsuite.WithErrorMessage("failed to read maintenance id parameter"),
 		)
 		return
 	}
 
-	logs, err := rc.DB.GetMaintenanceEditLogs(r.Context(), id)
+	logs, err := rc.DB.GetMaintenanceEditLogs(r.Context(), maintenanceId)
 	if err != nil {
 		httpsuite.WriteJSONError(w,
 			http.StatusInternalServerError,
@@ -355,6 +374,7 @@ func (rc *APIService) GetMaintenanceEditLogsHandler(w http.ResponseWriter, r *ht
 // @Failure		500	{object}	httpsuite.ErrorResponse
 // @Router			/v1/maintenance/{maintenance-id} [delete]
 // @security		bearer
+// @security		OAuth2[openid, profile, email, groups, audience:server:client_id:unimq-dashboard]
 func (rc *APIService) DeleteMaintenanceHandler(w http.ResponseWriter, r *http.Request) {
 
 	_, err := httpsuite.IsAGroupInClaim(r.Context(), rc.AdminGroups)
@@ -363,16 +383,17 @@ func (rc *APIService) DeleteMaintenanceHandler(w http.ResponseWriter, r *http.Re
 		return
 	}
 
-	id := chi.URLParam(r, "maintenance")
-	if id == "" {
+	maintenanceId, err := requesthelper.ReadMaintenanceIDFromRequest(r)
+	if err != nil {
 		httpsuite.WriteJSONError(w,
 			http.StatusBadRequest,
-			httpsuite.WithErrorMessage("maintenance id is required"),
+			httpsuite.WithError(err),
+			httpsuite.WithErrorMessage("failed to read maintenance id parameter"),
 		)
 		return
 	}
 
-	err = rc.DB.DeleteMaintenanceEntry(r.Context(), id)
+	err = rc.DB.DeleteMaintenanceEntry(r.Context(), maintenanceId)
 	if err != nil {
 		if errors.Is(err, database.ErrMaintenanceNotFound) {
 			httpsuite.WriteJSONError(w,

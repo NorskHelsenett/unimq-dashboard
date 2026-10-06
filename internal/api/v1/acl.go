@@ -7,9 +7,9 @@ import (
 	"net/url"
 
 	"github.com/go-chi/chi/v5"
+	"github.com/sisneve/rabbitmq-dashboard/internal/api/httpsuite"
 	"github.com/sisneve/rabbitmq-dashboard/internal/database"
 	"github.com/sisneve/rabbitmq-dashboard/internal/models"
-	"github.com/sisneve/rabbitmq-dashboard/internal/routes/httpsuite"
 )
 
 var ErrACLForbidden = errors.New("acl does not grant access")
@@ -37,7 +37,7 @@ func (rc *APIService) authorizeVhost(ctx context.Context, required models.Scope,
 
 func (rc *APIService) VhostACLMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		vhost, err := url.QueryUnescape(chi.URLParam(r, "vhost"))
+		vhost, err := url.QueryUnescape(chi.URLParam(r, "vhost-name"))
 		if err != nil || vhost == "" {
 			httpsuite.WriteJSONError(w, http.StatusBadRequest, httpsuite.WithErrorMessage("invalid vhost name"))
 			return
@@ -171,7 +171,7 @@ func (rc *APIService) UpsertACLHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var acl models.ACL
-	if err := httpsuite.ReadResponse(r, &acl); err != nil {
+	if err := httpsuite.ReadResponse(w, r, &acl); err != nil {
 		httpsuite.WriteJSONError(w, http.StatusBadRequest, httpsuite.WithError(err), httpsuite.WithErrorMessage("invalid request body"))
 		return
 	}

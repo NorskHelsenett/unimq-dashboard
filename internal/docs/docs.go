@@ -256,6 +256,15 @@ const docTemplate = `{
                 "security": [
                     {
                         "bearer": []
+                    },
+                    {
+                        "OAuth2": [
+                            "openid",
+                            "profile",
+                            "email",
+                            "groups",
+                            "audience:server:client_id:unimq-dashboard"
+                        ]
                     }
                 ],
                 "description": "Get alarm history for all rules",
@@ -311,6 +320,15 @@ const docTemplate = `{
                 "security": [
                     {
                         "bearer": []
+                    },
+                    {
+                        "OAuth2": [
+                            "openid",
+                            "profile",
+                            "email",
+                            "groups",
+                            "audience:server:client_id:unimq-dashboard"
+                        ]
                     }
                 ],
                 "description": "Get alarm history for a specific rule",
@@ -376,85 +394,41 @@ const docTemplate = `{
                 }
             }
         },
-        "/v1/checker/status": {
+        "/v1/login/callback": {
             "get": {
-                "security": [
-                    {
-                        "bearer": []
-                    }
-                ],
-                "description": "Get the current status of the notification checker",
+                "description": "Handles the OAuth callback from Dex and exchanges the code for a token",
                 "produces": [
                     "application/json"
                 ],
                 "tags": [
-                    "Notifications"
+                    "Authentication"
                 ],
-                "summary": "Get checker status",
+                "summary": "Handle Dex OAuth callback",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Authorization code",
+                        "name": "code",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "CSRF state issued by /v1/login/redirect",
+                        "name": "state",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
                 "responses": {
-                    "200": {
-                        "description": "OK",
+                    "302": {
+                        "description": "redirect",
                         "schema": {
-                            "$ref": "#/definitions/notify.CheckerStatus"
+                            "type": "string"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/httpsuite.ErrorResponse"
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized",
-                        "schema": {
-                            "$ref": "#/definitions/httpsuite.ErrorResponse"
-                        }
-                    },
-                    "403": {
-                        "description": "Forbidden",
-                        "schema": {
-                            "$ref": "#/definitions/httpsuite.ErrorResponse"
-                        }
-                    },
-                    "503": {
-                        "description": "Service Unavailable",
-                        "schema": {
-                            "$ref": "#/definitions/httpsuite.ErrorResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/v1/cluster": {
-            "get": {
-                "security": [
-                    {
-                        "bearer": []
-                    }
-                ],
-                "description": "Get overall cluster statistics and health information",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Cluster"
-                ],
-                "summary": "Get Cluster Stats",
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/models.ClusterStats"
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized",
-                        "schema": {
-                            "$ref": "#/definitions/httpsuite.ErrorResponse"
-                        }
-                    },
-                    "403": {
-                        "description": "Forbidden",
                         "schema": {
                             "$ref": "#/definitions/httpsuite.ErrorResponse"
                         }
@@ -468,11 +442,98 @@ const docTemplate = `{
                 }
             }
         },
+        "/v1/login/redirect": {
+            "get": {
+                "description": "Redirects the user to the Dex server for authentication",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Authentication"
+                ],
+                "summary": "Redirect to Dex for authentication",
+                "responses": {
+                    "302": {
+                        "description": "redirect",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/httpsuite.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/v1/login/refresh": {
+            "post": {
+                "description": "Exchanges the refresh token for a new ID token and reissues the session cookie.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Authentication"
+                ],
+                "summary": "Refresh the session",
+                "responses": {
+                    "204": {
+                        "description": "no content",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/httpsuite.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/httpsuite.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/v1/logout": {
+            "post": {
+                "description": "Clears the session cookie. The OIDC provider session is untouched because Dex exposes no end_session_endpoint.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Authentication"
+                ],
+                "summary": "Log out",
+                "responses": {
+                    "204": {
+                        "description": "no content",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
         "/v1/maintenance": {
             "get": {
                 "security": [
                     {
                         "bearer": []
+                    },
+                    {
+                        "OAuth2": [
+                            "openid",
+                            "profile",
+                            "email",
+                            "groups",
+                            "audience:server:client_id:unimq-dashboard"
+                        ]
                     }
                 ],
                 "description": "Get scheduled  maintenance information and history",
@@ -514,6 +575,15 @@ const docTemplate = `{
                 "security": [
                     {
                         "bearer": []
+                    },
+                    {
+                        "OAuth2": [
+                            "openid",
+                            "profile",
+                            "email",
+                            "groups",
+                            "audience:server:client_id:unimq-dashboard"
+                        ]
                     }
                 ],
                 "description": "Add new maintenance entry with description, start time, and end time that will have the status Scheduled",
@@ -574,6 +644,15 @@ const docTemplate = `{
                 "security": [
                     {
                         "bearer": []
+                    },
+                    {
+                        "OAuth2": [
+                            "openid",
+                            "profile",
+                            "email",
+                            "groups",
+                            "audience:server:client_id:unimq-dashboard"
+                        ]
                     }
                 ],
                 "description": "Get a specific maintenance entry by ID",
@@ -636,6 +715,15 @@ const docTemplate = `{
                 "security": [
                     {
                         "bearer": []
+                    },
+                    {
+                        "OAuth2": [
+                            "openid",
+                            "profile",
+                            "email",
+                            "groups",
+                            "audience:server:client_id:unimq-dashboard"
+                        ]
                     }
                 ],
                 "description": "Update the status of a maintenance entry (e.g., scheduled, in-progress, completed)",
@@ -710,6 +798,15 @@ const docTemplate = `{
                 "security": [
                     {
                         "bearer": []
+                    },
+                    {
+                        "OAuth2": [
+                            "openid",
+                            "profile",
+                            "email",
+                            "groups",
+                            "audience:server:client_id:unimq-dashboard"
+                        ]
                     }
                 ],
                 "description": "Delete a specific maintenance entry by ID",
@@ -899,6 +996,15 @@ const docTemplate = `{
                 "security": [
                     {
                         "bearer": []
+                    },
+                    {
+                        "OAuth2": [
+                            "openid",
+                            "profile",
+                            "email",
+                            "groups",
+                            "audience:server:client_id:unimq-dashboard"
+                        ]
                     }
                 ],
                 "description": "Get all notification vhosts and settings",
@@ -945,6 +1051,15 @@ const docTemplate = `{
                 "security": [
                     {
                         "bearer": []
+                    },
+                    {
+                        "OAuth2": [
+                            "openid",
+                            "profile",
+                            "email",
+                            "groups",
+                            "audience:server:client_id:unimq-dashboard"
+                        ]
                     }
                 ],
                 "description": "Get notification rules and settings for a specific vhost",
@@ -1001,6 +1116,15 @@ const docTemplate = `{
                 "security": [
                     {
                         "bearer": []
+                    },
+                    {
+                        "OAuth2": [
+                            "openid",
+                            "profile",
+                            "email",
+                            "groups",
+                            "audience:server:client_id:unimq-dashboard"
+                        ]
                     }
                 ],
                 "description": "Deletes the notification configuration for a specific vhost",
@@ -1059,6 +1183,15 @@ const docTemplate = `{
                 "security": [
                     {
                         "bearer": []
+                    },
+                    {
+                        "OAuth2": [
+                            "openid",
+                            "profile",
+                            "email",
+                            "groups",
+                            "audience:server:client_id:unimq-dashboard"
+                        ]
                     }
                 ],
                 "description": "Add a new notification recipient for a specific vhost",
@@ -1129,6 +1262,15 @@ const docTemplate = `{
                 "security": [
                     {
                         "bearer": []
+                    },
+                    {
+                        "OAuth2": [
+                            "openid",
+                            "profile",
+                            "email",
+                            "groups",
+                            "audience:server:client_id:unimq-dashboard"
+                        ]
                     }
                 ],
                 "description": "Get a specific notification recipient for a vhost",
@@ -1192,6 +1334,15 @@ const docTemplate = `{
                 "security": [
                     {
                         "bearer": []
+                    },
+                    {
+                        "OAuth2": [
+                            "openid",
+                            "profile",
+                            "email",
+                            "groups",
+                            "audience:server:client_id:unimq-dashboard"
+                        ]
                     }
                 ],
                 "description": "Delete a specific notification recipient for a vhost",
@@ -1254,6 +1405,15 @@ const docTemplate = `{
                 "security": [
                     {
                         "bearer": []
+                    },
+                    {
+                        "OAuth2": [
+                            "openid",
+                            "profile",
+                            "email",
+                            "groups",
+                            "audience:server:client_id:unimq-dashboard"
+                        ]
                     }
                 ],
                 "description": "Add a new notification rule for a specific vhost",
@@ -1281,7 +1441,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/models.PostAlarmRule"
+                            "$ref": "#/definitions/models.AlarmRuleCreate"
                         }
                     }
                 ],
@@ -1330,6 +1490,15 @@ const docTemplate = `{
                 "security": [
                     {
                         "bearer": []
+                    },
+                    {
+                        "OAuth2": [
+                            "openid",
+                            "profile",
+                            "email",
+                            "groups",
+                            "audience:server:client_id:unimq-dashboard"
+                        ]
                     }
                 ],
                 "description": "Retrieve a specific notification rule for a vhost",
@@ -1395,79 +1564,19 @@ const docTemplate = `{
                     }
                 }
             },
-            "post": {
-                "security": [
-                    {
-                        "bearer": []
-                    }
-                ],
-                "description": "Delete a specific notification rule for a vhost",
-                "tags": [
-                    "Notifications"
-                ],
-                "summary": "Update a notification rule",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "Vhost Name",
-                        "name": "vhost-name",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "Notification Rule ID",
-                        "name": "rule-id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "description": "Updated Notification Rule Object",
-                        "name": "rule",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/models.AlarmRuleUpdate"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "Rule updated successfully",
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/httpsuite.ErrorResponse"
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized",
-                        "schema": {
-                            "$ref": "#/definitions/httpsuite.ErrorResponse"
-                        }
-                    },
-                    "403": {
-                        "description": "Forbidden",
-                        "schema": {
-                            "$ref": "#/definitions/httpsuite.ErrorResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/httpsuite.ErrorResponse"
-                        }
-                    }
-                }
-            },
             "delete": {
                 "security": [
                     {
                         "bearer": []
+                    },
+                    {
+                        "OAuth2": [
+                            "openid",
+                            "profile",
+                            "email",
+                            "groups",
+                            "audience:server:client_id:unimq-dashboard"
+                        ]
                     }
                 ],
                 "description": "Delete a specific notification rule for a vhost",
@@ -1523,6 +1632,84 @@ const docTemplate = `{
                         }
                     }
                 }
+            },
+            "patch": {
+                "security": [
+                    {
+                        "bearer": []
+                    },
+                    {
+                        "OAuth2": [
+                            "openid",
+                            "profile",
+                            "email",
+                            "groups",
+                            "audience:server:client_id:unimq-dashboard"
+                        ]
+                    }
+                ],
+                "description": "Patch a specific notification rule for a vhost",
+                "tags": [
+                    "Notifications"
+                ],
+                "summary": "Patch a notification rule",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Vhost Name",
+                        "name": "vhost-name",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Notification Rule ID",
+                        "name": "rule-id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Patched Notification Rule Object",
+                        "name": "rule",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/models.AlarmRulePatch"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Rule patched successfully",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/httpsuite.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/httpsuite.ErrorResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/httpsuite.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/httpsuite.ErrorResponse"
+                        }
+                    }
+                }
             }
         },
         "/v1/notifications/{vhost-name}/rules/{rule-id}/test": {
@@ -1530,6 +1717,15 @@ const docTemplate = `{
                 "security": [
                     {
                         "bearer": []
+                    },
+                    {
+                        "OAuth2": [
+                            "openid",
+                            "profile",
+                            "email",
+                            "groups",
+                            "audience:server:client_id:unimq-dashboard"
+                        ]
                     }
                 ],
                 "description": "Send a test notification using the specified rule to verify its configuration",
@@ -1595,6 +1791,15 @@ const docTemplate = `{
                 "security": [
                     {
                         "bearer": []
+                    },
+                    {
+                        "OAuth2": [
+                            "openid",
+                            "profile",
+                            "email",
+                            "groups",
+                            "audience:server:client_id:unimq-dashboard"
+                        ]
                     }
                 ],
                 "description": "Enable or disable a specific notification rule for a vhost",
@@ -1652,11 +1857,179 @@ const docTemplate = `{
                 }
             }
         },
+        "/v1/profile": {
+            "get": {
+                "security": [
+                    {
+                        "bearer": []
+                    },
+                    {
+                        "OAuth2": [
+                            "openid",
+                            "profile",
+                            "email",
+                            "groups",
+                            "audience:server:client_id:unimq-dashboard"
+                        ]
+                    }
+                ],
+                "description": "Get the profile information of the authenticated user",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Profile"
+                ],
+                "summary": "Get user profile",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/models.Profile"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/httpsuite.ErrorResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/httpsuite.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/v1/rabbitmq": {
+            "get": {
+                "security": [
+                    {
+                        "bearer": []
+                    },
+                    {
+                        "OAuth2": [
+                            "openid",
+                            "profile",
+                            "email",
+                            "groups",
+                            "audience:server:client_id:unimq-dashboard"
+                        ]
+                    }
+                ],
+                "description": "Get statistics for all nodes in the RabbitMQ cluster",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "RabbitMQ"
+                ],
+                "summary": "Get node statistics",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/models.RMQNode"
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/httpsuite.ErrorResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/httpsuite.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/httpsuite.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/v1/status": {
+            "get": {
+                "security": [
+                    {
+                        "bearer": []
+                    },
+                    {
+                        "OAuth2": [
+                            "openid",
+                            "profile",
+                            "email",
+                            "groups",
+                            "audience:server:client_id:unimq-dashboard"
+                        ]
+                    }
+                ],
+                "description": "Get the current status of the notification checker",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Checker"
+                ],
+                "summary": "Get checker status",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/notify.CheckerStatus"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/httpsuite.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/httpsuite.ErrorResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/httpsuite.ErrorResponse"
+                        }
+                    },
+                    "503": {
+                        "description": "Service Unavailable",
+                        "schema": {
+                            "$ref": "#/definitions/httpsuite.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/v1/vhosts": {
             "get": {
                 "security": [
                     {
                         "bearer": []
+                    },
+                    {
+                        "OAuth2": [
+                            "openid",
+                            "profile",
+                            "email",
+                            "groups",
+                            "audience:server:client_id:unimq-dashboard"
+                        ]
                     }
                 ],
                 "description": "Get a list of all vhosts in the RabbitMQ cluster",
@@ -1712,6 +2085,15 @@ const docTemplate = `{
                 "security": [
                     {
                         "bearer": []
+                    },
+                    {
+                        "OAuth2": [
+                            "openid",
+                            "profile",
+                            "email",
+                            "groups",
+                            "audience:server:client_id:unimq-dashboard"
+                        ]
                     }
                 ],
                 "description": "Get details of a specific vhost by name",
@@ -1765,11 +2147,87 @@ const docTemplate = `{
                 }
             }
         },
+        "/v1/vhosts/{vhost-name}/limits": {
+            "get": {
+                "security": [
+                    {
+                        "bearer": []
+                    },
+                    {
+                        "OAuth2": [
+                            "openid",
+                            "profile",
+                            "email",
+                            "groups",
+                            "audience:server:client_id:unimq-dashboard"
+                        ]
+                    }
+                ],
+                "description": "Get limits of a specific vhost by name",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Vhosts"
+                ],
+                "summary": "Get vhost limits",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Vhost Name",
+                        "name": "vhost-name",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/models.RMQVhostLimits"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/httpsuite.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/httpsuite.ErrorResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/httpsuite.ErrorResponse"
+                        }
+                    },
+                    "502": {
+                        "description": "Bad Gateway",
+                        "schema": {
+                            "$ref": "#/definitions/httpsuite.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/v1/vhosts/{vhost-name}/metrics": {
             "get": {
                 "security": [
                     {
                         "bearer": []
+                    },
+                    {
+                        "OAuth2": [
+                            "openid",
+                            "profile",
+                            "email",
+                            "groups",
+                            "audience:server:client_id:unimq-dashboard"
+                        ]
                     }
                 ],
                 "description": "Get real-time metrics for a specific vhost, including queue lengths, message rates, and resource usage",
@@ -1828,6 +2286,15 @@ const docTemplate = `{
                 "security": [
                     {
                         "bearer": []
+                    },
+                    {
+                        "OAuth2": [
+                            "openid",
+                            "profile",
+                            "email",
+                            "groups",
+                            "audience:server:client_id:unimq-dashboard"
+                        ]
                     }
                 ],
                 "description": "Fetches a list of all queues in a specified virtual host.",
@@ -1853,7 +2320,7 @@ const docTemplate = `{
                         "schema": {
                             "type": "array",
                             "items": {
-                                "$ref": "#/definitions/models.QueueAPIResponse"
+                                "$ref": "#/definitions/models.RMQQueue"
                             }
                         }
                     },
@@ -1895,6 +2362,15 @@ const docTemplate = `{
                 "security": [
                     {
                         "bearer": []
+                    },
+                    {
+                        "OAuth2": [
+                            "openid",
+                            "profile",
+                            "email",
+                            "groups",
+                            "audience:server:client_id:unimq-dashboard"
+                        ]
                     }
                 ],
                 "description": "Fetches details of all queues in a specified virtual host.",
@@ -1927,7 +2403,7 @@ const docTemplate = `{
                         "schema": {
                             "type": "array",
                             "items": {
-                                "$ref": "#/definitions/models.QueueDetail"
+                                "$ref": "#/definitions/models.RMQQueue"
                             }
                         }
                     },
@@ -1951,6 +2427,70 @@ const docTemplate = `{
                     },
                     "404": {
                         "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/httpsuite.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/httpsuite.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/v1/vhosts/{vhost-name}/usage": {
+            "get": {
+                "security": [
+                    {
+                        "bearer": []
+                    },
+                    {
+                        "OAuth2": [
+                            "openid",
+                            "profile",
+                            "email",
+                            "groups",
+                            "audience:server:client_id:unimq-dashboard"
+                        ]
+                    }
+                ],
+                "description": "Get usage statistics for a specific vhost in the RabbitMQ cluster",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Vhosts"
+                ],
+                "summary": "Get Vhost usage",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Vhost Name",
+                        "name": "vhost-name",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/models.RMQVhostUsage"
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/httpsuite.ErrorResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
                         "schema": {
                             "$ref": "#/definitions/httpsuite.ErrorResponse"
                         }
@@ -2054,16 +2594,64 @@ const docTemplate = `{
                 }
             }
         },
-        "models.AlarmRuleUpdate": {
+        "models.AlarmRuleCreate": {
             "type": "object",
             "properties": {
+                "enabled": {
+                    "type": "boolean",
+                    "example": true
+                },
                 "message": {
                     "type": "string",
                     "example": "Queue size has exceeded the threshold"
                 },
+                "name": {
+                    "type": "string",
+                    "example": "High Queue Size"
+                },
+                "queue_name": {
+                    "type": "string",
+                    "example": "my-queue"
+                },
                 "threshold": {
                     "type": "number",
                     "example": 1000
+                },
+                "type": {
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/models.AlarmType"
+                        }
+                    ],
+                    "example": "queue_size"
+                }
+            }
+        },
+        "models.AlarmRulePatch": {
+            "type": "object",
+            "properties": {
+                "enabled": {
+                    "type": "boolean",
+                    "example": true
+                },
+                "message": {
+                    "type": "string",
+                    "example": "Queue size has exceeded the threshold"
+                },
+                "name": {
+                    "type": "string",
+                    "example": "High Queue Size"
+                },
+                "queue_name": {
+                    "$ref": "#/definitions/httpsuite.Optional-string"
+                },
+                "threshold": {
+                    "type": "number",
+                    "example": 1000
+                },
+                "type": {
+                    "type": "string",
+                    "example": "queue_size"
                 }
             }
         },
@@ -2099,42 +2687,27 @@ const docTemplate = `{
                 "maintenance"
             ],
             "x-enum-varnames": [
-                "Channels",
-                "Connections",
-                "Queues",
-                "Unacked_Messages",
-                "Queue_Messages",
-                "Queue_Size",
-                "No_Consumer",
-                "Maintenance"
+                "channels",
+                "connections",
+                "queues",
+                "unacked_messages",
+                "queue_messages",
+                "queue_size",
+                "no_consumer",
+                "maintenance"
             ]
         },
-        "models.ClusterStats": {
+        "models.HealthStatus": {
             "type": "object",
             "properties": {
-                "min_disk_limit": {
-                    "type": "integer"
+                "database": {
+                    "$ref": "#/definitions/models.Status"
                 },
-                "nodes": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/models.NodeStats"
-                    }
+                "dex": {
+                    "$ref": "#/definitions/models.Status"
                 },
-                "total_disk_free": {
-                    "type": "integer"
-                },
-                "total_mem_limit": {
-                    "type": "integer"
-                },
-                "total_mem_used": {
-                    "type": "integer"
-                },
-                "vhost_resources": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/models.VhostResources"
-                    }
+                "rabbitMQ": {
+                    "$ref": "#/definitions/models.Status"
                 }
             }
         },
@@ -2165,11 +2738,13 @@ const docTemplate = `{
             "type": "string",
             "enum": [
                 "fired",
-                "resolved"
+                "resolved",
+                "error"
             ],
             "x-enum-varnames": [
                 "LogEventFired",
-                "LogEventResolved"
+                "LogEventResolved",
+                "LogEventError"
             ]
         },
         "models.MaintenanceEditLog": {
@@ -2210,7 +2785,7 @@ const docTemplate = `{
                 },
                 "end": {
                     "type": "string",
-                    "example": "2024-06-01 12:00:00"
+                    "example": "2024-06-01T12:00:00Z"
                 },
                 "id": {
                     "type": "string",
@@ -2221,7 +2796,7 @@ const docTemplate = `{
                 },
                 "start": {
                     "type": "string",
-                    "example": "2024-06-01 10:00:00"
+                    "example": "2024-06-01T10:00:00Z"
                 },
                 "status": {
                     "allOf": [
@@ -2284,20 +2859,6 @@ const docTemplate = `{
                 }
             }
         },
-        "models.MessageStats": {
-            "type": "object",
-            "properties": {
-                "deliver_get_details": {
-                    "$ref": "#/definitions/models.RateDetail"
-                },
-                "publish_details": {
-                    "$ref": "#/definitions/models.RateDetail"
-                },
-                "redeliver_details": {
-                    "$ref": "#/definitions/models.RateDetail"
-                }
-            }
-        },
         "models.Metadata": {
             "type": "object",
             "properties": {
@@ -2315,7 +2876,112 @@ const docTemplate = `{
                 }
             }
         },
-        "models.NodeStats": {
+        "models.PatchMaintenanceEntry": {
+            "type": "object",
+            "properties": {
+                "description": {
+                    "type": "string",
+                    "example": "maintenance for server upgrade"
+                },
+                "end": {
+                    "type": "string",
+                    "example": "2024-06-01T12:00:00Z"
+                },
+                "reason": {
+                    "type": "string",
+                    "example": "updated maintenance time"
+                },
+                "start": {
+                    "type": "string",
+                    "example": "2024-06-01T10:00:00Z"
+                }
+            }
+        },
+        "models.PostMaintenanceEntry": {
+            "type": "object",
+            "properties": {
+                "description": {
+                    "type": "string",
+                    "example": "maintenance for server upgrade"
+                },
+                "end": {
+                    "type": "string",
+                    "example": "2024-06-01T12:00:00Z"
+                },
+                "start": {
+                    "type": "string",
+                    "example": "2024-06-01T10:00:00Z"
+                }
+            }
+        },
+        "models.PostRecipient": {
+            "type": "object",
+            "required": [
+                "name",
+                "type"
+            ],
+            "properties": {
+                "email": {
+                    "type": "string",
+                    "example": "ola.normann@normann.no"
+                },
+                "name": {
+                    "type": "string",
+                    "example": "Slack Channel to team"
+                },
+                "type": {
+                    "enum": [
+                        "webhook",
+                        "email"
+                    ],
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/models.RecipientType"
+                        }
+                    ],
+                    "example": "webhook"
+                },
+                "url": {
+                    "type": "string",
+                    "example": "https://hooks.slack.com/services"
+                }
+            }
+        },
+        "models.Profile": {
+            "type": "object",
+            "properties": {
+                "email": {
+                    "type": "string"
+                },
+                "email_verified": {
+                    "type": "boolean"
+                },
+                "expires_at": {
+                    "description": "\"exp\" claim in Unix seconds",
+                    "type": "integer"
+                },
+                "groups": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "issued_at": {
+                    "description": "\"iat\" claim in Unix seconds",
+                    "type": "integer"
+                },
+                "issuer": {
+                    "type": "string"
+                },
+                "subject": {
+                    "type": "string"
+                },
+                "username": {
+                    "type": "string"
+                }
+            }
+        },
+        "models.RMQNode": {
             "type": "object",
             "properties": {
                 "disk_free": {
@@ -2335,131 +3001,7 @@ const docTemplate = `{
                 }
             }
         },
-        "models.PatchMaintenanceEntry": {
-            "type": "object",
-            "properties": {
-                "description": {
-                    "type": "string"
-                },
-                "end": {
-                    "type": "string"
-                },
-                "reason": {
-                    "type": "string"
-                },
-                "start": {
-                    "type": "string"
-                },
-                "updated_by": {
-                    "type": "string"
-                }
-            }
-        },
-        "models.PostAlarmRule": {
-            "type": "object",
-            "properties": {
-                "enabled": {
-                    "type": "boolean",
-                    "example": true
-                },
-                "message": {
-                    "type": "string",
-                    "example": "Queue size has exceeded the threshold"
-                },
-                "name": {
-                    "type": "string",
-                    "example": "High Queue Size"
-                },
-                "queue_name": {
-                    "type": "string",
-                    "example": "my-queue"
-                },
-                "threshold": {
-                    "type": "number",
-                    "example": 1000
-                },
-                "type": {
-                    "allOf": [
-                        {
-                            "$ref": "#/definitions/models.AlarmType"
-                        }
-                    ],
-                    "example": "queue_size"
-                }
-            }
-        },
-        "models.PostMaintenanceEntry": {
-            "type": "object",
-            "properties": {
-                "description": {
-                    "type": "string",
-                    "example": "maintenance for server upgrade"
-                },
-                "end": {
-                    "type": "string",
-                    "example": "2024-06-01 12:00:00"
-                },
-                "start": {
-                    "type": "string",
-                    "example": "2024-06-01 10:00:00"
-                }
-            }
-        },
-        "models.PostRecipient": {
-            "type": "object",
-            "properties": {
-                "email": {
-                    "type": "string",
-                    "example": "ola.normann@normann.no"
-                },
-                "name": {
-                    "type": "string",
-                    "example": "Slack Channel to team"
-                },
-                "type": {
-                    "allOf": [
-                        {
-                            "$ref": "#/definitions/models.RecipientType"
-                        }
-                    ],
-                    "example": "webhook"
-                },
-                "url": {
-                    "type": "string",
-                    "example": "https://hooks.slack.com/services"
-                }
-            }
-        },
-        "models.QueueAPIResponse": {
-            "type": "object",
-            "properties": {
-                "consumers": {
-                    "type": "integer"
-                },
-                "message_bytes": {
-                    "type": "integer"
-                },
-                "message_bytes_persistent": {
-                    "type": "integer"
-                },
-                "message_stats": {
-                    "$ref": "#/definitions/models.MessageStats"
-                },
-                "messages": {
-                    "type": "integer"
-                },
-                "messages_unacknowledged": {
-                    "type": "integer"
-                },
-                "name": {
-                    "type": "string"
-                },
-                "vhost": {
-                    "type": "string"
-                }
-            }
-        },
-        "models.QueueDetail": {
+        "models.RMQQueue": {
             "type": "object",
             "properties": {
                 "consumers": {
@@ -2468,13 +3010,10 @@ const docTemplate = `{
                 "deliver_rate": {
                     "type": "number"
                 },
-                "history": {
-                    "type": "array",
-                    "items": {
-                        "type": "integer"
-                    }
-                },
                 "message_bytes": {
+                    "type": "integer"
+                },
+                "message_bytes_persistent": {
                     "type": "integer"
                 },
                 "messages": {
@@ -2491,19 +3030,47 @@ const docTemplate = `{
                 },
                 "redeliver_rate": {
                     "type": "number"
+                },
+                "vhost": {
+                    "type": "string"
                 }
             }
         },
-        "models.RateDetail": {
+        "models.RMQVhostLimits": {
             "type": "object",
             "properties": {
-                "rate": {
-                    "type": "number"
+                "max_connections": {
+                    "type": "integer"
+                },
+                "max_queues": {
+                    "type": "integer"
+                },
+                "vhost": {
+                    "type": "string"
+                }
+            }
+        },
+        "models.RMQVhostUsage": {
+            "type": "object",
+            "properties": {
+                "disk_bytes": {
+                    "type": "integer"
+                },
+                "message_bytes": {
+                    "type": "integer"
+                },
+                "name": {
+                    "type": "string"
                 }
             }
         },
         "models.Recipient": {
             "type": "object",
+            "required": [
+                "id",
+                "name",
+                "type"
+            ],
             "properties": {
                 "email": {
                     "type": "string"
@@ -2515,7 +3082,15 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "type": {
-                    "$ref": "#/definitions/models.RecipientType"
+                    "enum": [
+                        "webhook",
+                        "email"
+                    ],
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/models.RecipientType"
+                        }
+                    ]
                 },
                 "url": {
                     "type": "string"
@@ -2554,6 +3129,12 @@ const docTemplate = `{
         "models.TestNotificationResponse": {
             "type": "object",
             "properties": {
+                "failed_destinations": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
                 "message": {
                     "type": "string"
                 },
@@ -2675,20 +3256,6 @@ const docTemplate = `{
                 }
             }
         },
-        "models.VhostResources": {
-            "type": "object",
-            "properties": {
-                "disk_bytes": {
-                    "type": "integer"
-                },
-                "message_bytes": {
-                    "type": "integer"
-                },
-                "name": {
-                    "type": "string"
-                }
-            }
-        },
         "notify.CheckerStatus": {
             "type": "object",
             "properties": {
@@ -2705,6 +3272,19 @@ const docTemplate = `{
         }
     },
     "securityDefinitions": {
+        "OAuth2": {
+            "type": "oauth2",
+            "flow": "accessCode",
+            "authorizationUrl": "http://localhost:5556/dex/auth",
+            "tokenUrl": "http://localhost:5556/dex/token",
+            "scopes": {
+                "audience:server:client_id:unimq-dashboard": "Issue a token whose audience the dashboard API accepts",
+                "email": "User email address",
+                "groups": "Group membership used for authorization",
+                "openid": "OpenID Connect identity",
+                "profile": "User profile"
+            }
+        },
         "bearer": {
             "description": "\"JWT token for authentication, obtained from the Dex OIDC provider, formatted as 'Bearer {token}' in the Authorization header\"",
             "type": "apiKey",

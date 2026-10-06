@@ -2,11 +2,11 @@ package api
 
 import (
 	"net/http"
-	"net/url"
 
-	"github.com/go-chi/chi/v5"
+	"github.com/sisneve/rabbitmq-dashboard/internal/api/httpsuite"
+	"github.com/sisneve/rabbitmq-dashboard/internal/helpers/requesthelper"
+	"github.com/sisneve/rabbitmq-dashboard/internal/helpers/validatorhelper"
 	"github.com/sisneve/rabbitmq-dashboard/internal/models"
-	"github.com/sisneve/rabbitmq-dashboard/internal/routes/httpsuite"
 )
 
 // @Summary		Get a notification recipient
@@ -22,29 +22,21 @@ import (
 // @Failure		500				{object}	httpsuite.ErrorResponse
 // @Router			/v1/notifications/{vhost-name}/recipients/{recipient-id} [get]
 // @security		bearer
+// @security		OAuth2[openid, profile, email, groups, audience:server:client_id:unimq-dashboard]
 func (rc *APIService) GetNotificationsRecipientHandler(w http.ResponseWriter, r *http.Request) {
-	vhost := chi.URLParam(r, "vhost")
-	if vhost == "" {
-		httpsuite.WriteJSONError(w,
-			http.StatusBadRequest,
-			httpsuite.WithErrorMessage("missing required vhost parameter"),
-		)
-		return
-	}
+	vhost, err := requesthelper.ReadVhostFromRequest(r)
 
-	eVhost, err := url.QueryUnescape(vhost)
 	if err != nil {
 		httpsuite.WriteJSONError(w,
-			http.StatusInternalServerError,
+			http.StatusBadRequest,
 			httpsuite.WithError(err),
-			httpsuite.WithExternalErrorMessage("failed to decode vhost name"),
-			httpsuite.WithInternalErrorMessage("error decoding vhost name: "+vhost),
+			httpsuite.WithErrorMessage("failed to read vhost parameter"),
 		)
 		return
 	}
 
-	id := chi.URLParam(r, "recipient")
-	if id == "" {
+	recipientID, err := requesthelper.ReadRecipientIDFromRequest(r)
+	if err != nil {
 		httpsuite.WriteJSONError(w,
 			http.StatusBadRequest,
 			httpsuite.WithErrorMessage("missing required recipient id parameter"),
@@ -52,13 +44,13 @@ func (rc *APIService) GetNotificationsRecipientHandler(w http.ResponseWriter, r 
 		return
 	}
 
-	recipient, err := rc.DB.GetNotificationRecipient(r.Context(), eVhost, id)
+	recipient, err := rc.DB.GetNotificationRecipient(r.Context(), vhost, recipientID)
 	if err != nil {
 		httpsuite.WriteJSONError(w,
 			http.StatusInternalServerError,
 			httpsuite.WithError(err),
 			httpsuite.WithExternalErrorMessage("failed to fetch recipients"),
-			httpsuite.WithInternalErrorMessage("failed to fetch recipients for vhost: "+eVhost),
+			httpsuite.WithInternalErrorMessage("failed to fetch recipients for vhost: "+vhost),
 		)
 		return
 	}
@@ -80,29 +72,20 @@ func (rc *APIService) GetNotificationsRecipientHandler(w http.ResponseWriter, r 
 // @Failure		500			{object}	httpsuite.ErrorResponse
 // @Router			/v1/notifications/{vhost-name}/recipients [post]
 // @security		bearer
+// @security		OAuth2[openid, profile, email, groups, audience:server:client_id:unimq-dashboard]
 func (rc *APIService) AddNotificationsRecipientHandler(w http.ResponseWriter, r *http.Request) {
-	vhost := chi.URLParam(r, "vhost")
-	if vhost == "" {
-		httpsuite.WriteJSONError(w,
-			http.StatusBadRequest,
-			httpsuite.WithErrorMessage("missing required vhost parameter"),
-		)
-		return
-	}
-
-	eVhost, err := url.QueryUnescape(vhost)
+	vhost, err := requesthelper.ReadVhostFromRequest(r)
 	if err != nil {
 		httpsuite.WriteJSONError(w,
-			http.StatusInternalServerError,
+			http.StatusBadRequest,
 			httpsuite.WithError(err),
-			httpsuite.WithExternalErrorMessage("failed to decode vhost name"),
-			httpsuite.WithInternalErrorMessage("error decoding vhost name: "+vhost),
+			httpsuite.WithErrorMessage("failed to read vhost parameter"),
 		)
 		return
 	}
 
 	var recipient models.PostRecipient
-	err = httpsuite.ReadResponse(r, &recipient)
+	err = httpsuite.ReadResponse(w, r, &recipient)
 	if err != nil {
 		httpsuite.WriteJSONError(w,
 			http.StatusBadRequest,
@@ -111,6 +94,17 @@ func (rc *APIService) AddNotificationsRecipientHandler(w http.ResponseWriter, r 
 		)
 		return
 	}
+
+	err = validatorhelper.IsRequestValid(recipient)
+	if err != nil {
+		httpsuite.WriteJSONError(w,
+			http.StatusBadRequest,
+			httpsuite.WithError(err),
+			httpsuite.WithErrorMessage("request validation failed"),
+		)
+		return
+	}
+
 	out, err := recipient.ToRecipient()
 	if err != nil {
 		httpsuite.WriteJSONError(w,
@@ -121,7 +115,7 @@ func (rc *APIService) AddNotificationsRecipientHandler(w http.ResponseWriter, r 
 		return
 	}
 
-	vhostNotification, err := rc.ensureNotificationHostExists(r.Context(), eVhost)
+	vhostNotification, err := rc.ensureNotificationHostExists(r.Context(), vhost)
 	if err != nil {
 		httpsuite.WriteJSONError(w,
 			http.StatusInternalServerError,
@@ -156,44 +150,35 @@ func (rc *APIService) AddNotificationsRecipientHandler(w http.ResponseWriter, r 
 // @Failure		500				{object}	httpsuite.ErrorResponse
 // @Router			/v1/notifications/{vhost-name}/recipients/{recipient-id} [delete]
 // @security		bearer
+// @security		OAuth2[openid, profile, email, groups, audience:server:client_id:unimq-dashboard]
 func (rc *APIService) DeleteNotificationsRecipientHandler(w http.ResponseWriter, r *http.Request) {
-	vhost := chi.URLParam(r, "vhost")
-	if vhost == "" {
-		httpsuite.WriteJSONError(w,
-			http.StatusBadRequest,
-			httpsuite.WithErrorMessage("missing required vhost parameter"),
-		)
-		return
-	}
-
-	eVhost, err := url.QueryUnescape(vhost)
+	vhost, err := requesthelper.ReadVhostFromRequest(r)
+	
 	if err != nil {
 		httpsuite.WriteJSONError(w,
 			http.StatusBadRequest,
 			httpsuite.WithError(err),
-			httpsuite.WithExternalErrorMessage("failed to decode vhost name"),
-			httpsuite.WithInternalErrorMessage("error decoding vhost name: "+vhost),
+			httpsuite.WithErrorMessage("failed to read vhost parameter"),
 		)
 		return
 	}
 
-	id := chi.URLParam(r, "recipient")
-	if id == "" {
+	recipientID, err := requesthelper.ReadRecipientIDFromRequest(r)
+	if err != nil {
 		httpsuite.WriteJSONError(w,
 			http.StatusBadRequest,
-			httpsuite.WithError(err),
 			httpsuite.WithErrorMessage("missing required recipient id parameter"),
 		)
 		return
 	}
 
-	err = rc.DB.DeleteNotificationRecipient(r.Context(), eVhost, id)
+	err = rc.DB.DeleteNotificationRecipient(r.Context(), vhost, recipientID)
 	if err != nil {
 		httpsuite.WriteJSONError(w,
 			http.StatusInternalServerError,
 			httpsuite.WithError(err),
 			httpsuite.WithExternalErrorMessage("failed to delete recipient"),
-			httpsuite.WithInternalErrorMessage("failed to delete recipient: "+id),
+			httpsuite.WithInternalErrorMessage("failed to delete recipient: "+recipientID+" for vhost: "+vhost),
 		)
 		return
 	}

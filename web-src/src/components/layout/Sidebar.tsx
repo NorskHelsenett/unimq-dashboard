@@ -3,7 +3,7 @@ import { LogoLink } from "./LogoLink"
 import { cn } from "@/lib/utils"
 import { User, Sun, Moon } from "lucide-react"
 import { Selector, SelectorTrigger, SelectorContent, SelectorItem } from "../ui/selector"
-import { useAuth } from "react-oidc-context"
+import { logout } from "@/lib/apiClient"
 import { useSidebarResize } from "@/hooks/useSidebarResize"
 import { useTheme } from "@/hooks/useTheme"
 
@@ -17,7 +17,6 @@ export function Sidebar() {
     const currentVhost = new URLSearchParams(window.location.search).get('vhost')
     const vhostParam = currentVhost ? `?vhost=${encodeURIComponent(currentVhost)}` : ''
     const { width, collapsed, onMouseDown } = useSidebarResize()
-    const auth = useAuth()
     const { theme, toggle } = useTheme()
 
     return (
@@ -74,7 +73,7 @@ export function Sidebar() {
                                 </button>
                                 <Selector onValueChange={(value) => {
                                     if (value === 'signout') {
-                                        auth.signoutRedirect()
+                                        void logout()
                                     } else {
                                         window.location.href = value
                                     }
@@ -97,7 +96,7 @@ export function Sidebar() {
                             <div className="flex items-center justify-between">
                                 <Selector onValueChange={(value) => {
                                     if (value === 'signout') {
-                                        auth.signoutRedirect()
+                                        void logout()
                                     } else {
                                         window.location.href = value
                                     }
