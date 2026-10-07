@@ -45,7 +45,12 @@ var (
 )
 
 // Used where query parameters are supported.
+// Returns an empty string when there are no filters, so the caller does not emit a bare "?".
 func convertFiltersToQueryParams(filters []Filter) string {
+	if len(filters) == 0 {
+		return ""
+	}
+
 	builder := &strings.Builder{}
 
 	builder.WriteString("?")
@@ -75,7 +80,7 @@ func convertFiltersToPathParams(filters []Filter, uri string) (string, []string,
 	case len(filters) == 1:
 		// One filter, check if it's the name filter, and use the path parameter to fetch the specific resource.
 		if filters[0].Parameter == ParameterName {
-			parameter = filters[0].Value
+			parameter = url.PathEscape(filters[0].Value)
 		} else {
 			return "", nil, fmt.Errorf("%w: %s", ErrUnsupportedFilterParameter, filters[0].Parameter)
 		}

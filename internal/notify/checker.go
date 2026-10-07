@@ -19,7 +19,7 @@ type (
 	Checker struct {
 		Ctx         context.Context
 		DB          *database.Database
-		RMQClient   *rabbitmq.RMQClient
+		RMQClient   rabbitmq.RMQClientInterface
 		interval    time.Duration
 		mu          sync.RWMutex
 		lastChecked time.Time
@@ -36,7 +36,7 @@ type (
 	CheckerOptions func(*Checker)
 )
 
-func WithRMQClient(client *rabbitmq.RMQClient) CheckerOptions {
+func WithRMQClient(client rabbitmq.RMQClientInterface) CheckerOptions {
 	return func(c *Checker) {
 		c.RMQClient = client
 	}

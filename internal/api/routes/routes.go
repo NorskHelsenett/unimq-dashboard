@@ -36,7 +36,7 @@ func applySwaggerOIDCIssuer(issuer string) {
 	)
 }
 
-func SetupRoutes(ctx context.Context, config *config.Config, db *database.Database, rmqclient *rabbitmq.RMQClient, checker *notify.Checker) (chi.Router, error) {
+func SetupRoutes(ctx context.Context, config *config.Config, db *database.Database, rmqclient rabbitmq.RMQClientInterface, checker *notify.Checker) (chi.Router, error) {
 
 	dex, err := dex.NewDexClient(ctx, config.OIDC)
 	if err != nil {

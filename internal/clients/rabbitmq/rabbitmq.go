@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"net/http"
 	"slices"
 
 	"github.com/sisneve/rabbitmq-dashboard/internal/clients/rest"
@@ -12,7 +13,7 @@ import (
 )
 
 type RMQClientInterface interface {
-	GetVhosts(filters ...Filter) ([]models.Vhost, error)
+	GetVhosts(filters ...Filter) ([]*models.Vhost, error)
 	GetVhostUsage(filters ...Filter) ([]*models.RMQVhostUsage, error)
 	GetVhostLimits(filters ...Filter) ([]*models.RMQVhostLimits, error)
 
@@ -23,11 +24,16 @@ type RMQClientInterface interface {
 	GetNodes(filters ...Filter) ([]*models.RMQNode, error)
 
 	GetMetrics(filters ...Filter) ([]*models.VhostMetrics, error)
+
+	Ping() error
 }
 
 type RMQClient struct {
 	restClient *rest.RestClient
 }
+
+// Guard against RMQClient not implementing RMQClientInterface in compile time.
+var _ RMQClientInterface = (*RMQClient)(nil)
 
 type (
 	rmqClientConfig struct {
@@ -115,12 +121,15 @@ var (
 func (r *RMQClient) GetVhosts(filters ...Filter) ([]*models.Vhost, error) {
 
 	uri, vhostsFilter, err := convertFiltersToPathParams(filters, "/vhosts")
+	if err != nil {
+		return nil, fmt.Errorf("%w. %w", ErrInternalServerError, err)
+	}
 
 	var vhosts []*models.Vhost
 	status, err := r.restClient.Get(uri, &vhosts)
 	if err != nil {
 		switch status {
-		case 404:
+		case http.StatusNotFound:
 			return nil, fmt.Errorf("%w. %w", ErrVhostNotFound, err)
 		default:
 			return nil, fmt.Errorf("%w. %w", ErrInternalServerError, err)
@@ -145,9 +154,14 @@ func (r *RMQClient) GetConnections(filters ...Filter) ([]*models.RMQConnection, 
 
 	var connections []*models.RMQConnection
 	uri := "/connections" + queryparams
-	_, err := r.restClient.Get(uri, &connections)
+	status, err := r.restClient.Get(uri, &connections)
 	if err != nil {
-		return nil, fmt.Errorf("%w. %w", ErrConnectionNotFound, err)
+		switch status {
+		case http.StatusNotFound:
+			return nil, fmt.Errorf("%w. %w", ErrConnectionNotFound, err)
+		default:
+			return nil, fmt.Errorf("%w. %w", ErrInternalServerError, err)
+		}
 	}
 	return connections, nil
 }
@@ -156,9 +170,14 @@ func (r *RMQClient) GetChannels(filters ...Filter) ([]*models.RMQChannel, error)
 	queryparams := convertFiltersToQueryParams(filters)
 	var channels []*models.RMQChannel
 	uri := "/channels" + queryparams
-	_, err := r.restClient.Get(uri, &channels)
+	status, err := r.restClient.Get(uri, &channels)
 	if err != nil {
-		return nil, fmt.Errorf("%w. %w", ErrChannelNotFound, err)
+		switch status {
+		case http.StatusNotFound:
+			return nil, fmt.Errorf("%w. %w", ErrChannelNotFound, err)
+		default:
+			return nil, fmt.Errorf("%w. %w", ErrInternalServerError, err)
+		}
 	}
 	return channels, nil
 }
@@ -167,9 +186,14 @@ func (r *RMQClient) GetQueues(filters ...Filter) ([]*models.RMQQueue, error) {
 	queryparams := convertFiltersToQueryParams(filters)
 	var queues []*models.RMQQueue
 	uri := "/queues" + queryparams
-	_, err := r.restClient.Get(uri, &queues)
+	status, err := r.restClient.Get(uri, &queues)
 	if err != nil {
-		return nil, fmt.Errorf("%w. %w", ErrQueueNotFound, err)
+		switch status {
+		case http.StatusNotFound:
+			return nil, fmt.Errorf("%w. %w", ErrQueueNotFound, err)
+		default:
+			return nil, fmt.Errorf("%w. %w", ErrInternalServerError, err)
+		}
 	}
 
 	return queues, nil
@@ -182,13 +206,42 @@ func (r *RMQClient) GetNodes(filters ...Filter) ([]*models.RMQNode, error) {
 	status, err := r.restClient.Get(uri, &nodes)
 	if err != nil {
 		switch status {
-		case 404:
+		case http.StatusNotFound:
 			return nil, fmt.Errorf("%w. %w", ErrNodeNotFound, err)
 		default:
 			return nil, fmt.Errorf("%w. %w", ErrInternalServerError, err)
 		}
 	}
 	return nodes, nil
+}
+
+func (r *RMQClient) GetVhostLimits(filters ...Filter) ([]*models.RMQVhostLimits, error) {
+	uri, vhosts, err := convertFiltersToPathParams(filters, "/vhost-limits")
+	if err != nil {
+		return nil, fmt.Errorf("%w. %w", ErrInternalServerError, err)
+	}
+	var limits []*models.RMQVhostLimits
+	status, err := r.restClient.Get(uri, &limits)
+	if err != nil {
+		switch status {
+		case http.StatusNotFound:
+			return nil, fmt.Errorf("%w. %w", ErrLimitsNotFound, err)
+
+		default:
+			return nil, fmt.Errorf("%w. %w", ErrInternalServerError, err)
+		}
+	}
+
+	if len(vhosts) > 0 {
+		filteredLimits := make([]*models.RMQVhostLimits, 0)
+		for _, l := range limits {
+			if slices.Contains(vhosts, l.Vhost) {
+				filteredLimits = append(filteredLimits, l)
+			}
+		}
+		limits = filteredLimits
+	}
+	return limits, nil
 }
 
 func (r *RMQClient) GetMetrics(filters ...Filter) ([]*models.VhostMetrics, error) {
@@ -201,7 +254,7 @@ func (r *RMQClient) GetMetrics(filters ...Filter) ([]*models.VhostMetrics, error
 	vhostObject, err := r.GetVhosts(vhostFilter...)
 	if err != nil {
 		if errors.Is(err, ErrVhostNotFound) {
-			return nil, fmt.Errorf("%w. %w", ErrVhostNotFound, err)
+			return nil, err
 		}
 		if len(vhostFilter) > 0 {
 			return nil, fmt.Errorf("failed to retrieve vhost(s) %v. %w", vhostNames, err)
@@ -277,8 +330,10 @@ func (r *RMQClient) Ping() error {
 func (r *RMQClient) GetVhostUsage(filters ...Filter) ([]*models.RMQVhostUsage, error) {
 
 	vhostFilter := getFiltersByType(filters, FilterTypeVhost)
-	queueFiilter := getFiltersByType(filters, FilterTypeQueue)
-	filter := append(vhostFilter, queueFiilter...)
+	queueFilter := getFiltersByType(filters, FilterTypeQueue)
+	filter := make([]Filter, 0, len(vhostFilter)+len(queueFilter))
+	filter = append(filter, vhostFilter...)
+	filter = append(filter, queueFilter...)
 	queues, err := r.GetQueues(filter...)
 	if err != nil {
 		return nil, err
@@ -301,33 +356,4 @@ func (r *RMQClient) GetVhostUsage(filters ...Filter) ([]*models.RMQVhostUsage, e
 
 	return usage, nil
 
-}
-
-func (r *RMQClient) GetVhostLimits(filters ...Filter) ([]*models.RMQVhostLimits, error) {
-	uri, vhosts, err := convertFiltersToPathParams(filters, "/vhost-limits")
-	if err != nil {
-		return nil, fmt.Errorf("%w. %w", ErrInternalServerError, err)
-	}
-	var limits []*models.RMQVhostLimits
-	status, err := r.restClient.Get(uri, &limits)
-	if err != nil {
-		switch status {
-		case 404:
-			return nil, fmt.Errorf("%w. %w", ErrLimitsNotFound, err)
-
-		default:
-			return nil, fmt.Errorf("%w. %w", ErrInternalServerError, err)
-		}
-	}
-
-	if len(vhosts) > 0 {
-		filteredLimits := make([]*models.RMQVhostLimits, 0)
-		for _, l := range limits {
-			if slices.Contains(vhosts, l.Vhost) {
-				filteredLimits = append(filteredLimits, l)
-			}
-		}
-		limits = filteredLimits
-	}
-	return limits, nil
 }

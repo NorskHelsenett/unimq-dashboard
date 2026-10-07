@@ -75,10 +75,7 @@ func (rc *RMQHandler) GetVhostHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	filter := rabbitmq.Filter{
-		Parameter: rabbitmq.ParameterName,
-		Value:     vhost,
-	}
+	filter := rabbitmq.NewFilter(rabbitmq.ParameterName, rabbitmq.FilterTypeVhost, vhost)
 	vhostData, err := rc.RMQClient.GetVhosts(filter)
 	if err != nil {
 		httpsuite.WriteJSONError(w,
