@@ -20,9 +20,9 @@ const (
 const AllVhosts = "*"
 
 type ACL struct {
-	Group       string   `json:"group" bson:"_id"`
-	Permissions []Scope  `json:"permissions" bson:"permissions" swaggertype:"array,string" enums:"read,write,admin"`
-	VhostIDs    []string `json:"vhost_ids" bson:"vhost_ids"`
+	Group       string   `json:"group" bson:"_id" example:"acl-admin-group"`
+	Permissions []Scope  `json:"permissions" bson:"permissions" swaggertype:"array,string" enums:"read,write,admin" example:"read, write"`
+	VhostIDs    []string `json:"vhost_ids" bson:"vhost_ids" example:"/"`
 }
 
 func ParseScope(scope string) Scope {
