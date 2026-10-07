@@ -68,3 +68,17 @@ func ReadQueueIDFromRequest(r *http.Request) (string, error) {
 
 	return eQueue, nil
 }
+
+func ReadAclGroupFromRequest(r *http.Request) (string, error) {
+	group := chi.URLParam(r, "group")
+	if group == "" {
+		return "", fmt.Errorf("%w: group", ErrMissingRequiredParameter)
+	}
+
+	eGroup, err := url.PathUnescape(group)
+	if err != nil {
+		return "", fmt.Errorf("%w: %w", ErrFailedToDecodeParameter, err)
+	}
+
+	return eGroup, nil
+}
