@@ -9,13 +9,13 @@ import { useVhost } from '@/hooks/useVhost'
 
 
 export function AccessControl() {
-    const {acls, loading, refetch } = useACLs() 
+    const {acls, loading, error, refetch } = useACLs() 
     const {vhosts, loading: vhostLoading } = useVhost()
 
 
     return (
         <Layout>
-           {loading || vhostLoading ? <p>Loading...</p> : <AclCard acls={acls} vhosts={vhosts} onRefresh={refetch} />}
+           {loading || vhostLoading ? <p>Loading...</p> : error ? <p>Error: {error.message}</p> : <AclCard acls={acls} vhosts={vhosts} onRefresh={refetch} />}
         </Layout>
     )
 }

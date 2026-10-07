@@ -4,13 +4,15 @@ import { useEffect, useState } from "react";
 
 interface useACLResults {
     acls: ACL[];
-    loading: boolean
+    loading: boolean,
+    error: Error | null,
     refetch: () => void
 }
 
 export function useACLs(): useACLResults {
     const [acls, setAcls] = useState<ACL[]>([])
     const [loading, setLoading] = useState<boolean>(true)
+    const [error, setError] = useState<Error | null>(null)
     const [tick, setTick] = useState(0)
 
     useEffect(() => {
@@ -20,9 +22,10 @@ export function useACLs(): useACLResults {
         .catch((err) => {
             console.error("Failed to fetch ACLs:", err)
             setAcls([])
+            setError(err)
         })
         .finally(() => setLoading(false))
     }, [tick])
     
-    return { acls, loading, refetch: () => setTick(t => t + 1) }
+    return { acls, loading, error, refetch: () => setTick(t => t + 1) }
 }
