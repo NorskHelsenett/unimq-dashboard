@@ -17,6 +17,7 @@ export function useACLs(): useACLResults {
 
     useEffect(() => {
         setLoading(true)
+        setError(null)
         getACLs()
         .then(setAcls)
         .catch((err) => {
