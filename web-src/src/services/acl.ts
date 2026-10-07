@@ -32,3 +32,15 @@ export async function deleteAcl(id: string): Promise<void> {
         throw new Error(`Failed to delete ACL: ${res.status} ${res.statusText}`)
     }
 }
+
+
+export async function accessToACLs(): Promise<boolean> {
+    const res = await apiFetch(`/api/v1/acls`)
+    if (res.status === 200) {
+        return true
+    }
+    if (res.status === 404) {
+        return false
+    }
+    throw new Error(`Failed to check ACL access: ${res.status} ${res.statusText}`)
+}
