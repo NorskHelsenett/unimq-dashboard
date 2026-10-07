@@ -16,7 +16,6 @@ type ACLStore interface {
 }
 
 type RMQHandler struct {
-<<<<<<< HEAD
 	RMQClient   rabbitmq.RMQClientInterface
 	Store       database.Store
 	DB          ACLStore
@@ -26,6 +25,7 @@ type RMQHandler struct {
 func NewRMQHandler(rmqClient rabbitmq.RMQClientInterface, db *mongodb.Database, adminGroups []string) *RMQHandler {
 	return &RMQHandler{
 		RMQClient:   rmqClient,
+		Store:       db,
 		DB:          db,
 		AdminGroups: adminGroups,
 	}

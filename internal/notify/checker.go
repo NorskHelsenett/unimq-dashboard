@@ -18,7 +18,7 @@ type (
 	// Checker periodically evaluates alarm rules against current RabbitMQ metrics and triggers notifications.
 	Checker struct {
 		Ctx         context.Context
-		DB          *mongodb.Database
+		DB          *database.Database
 		RMQClient   rabbitmq.RMQClientInterface
 		interval    time.Duration
 		mu          sync.RWMutex
