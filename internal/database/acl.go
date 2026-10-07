@@ -70,19 +70,6 @@ func (dbc *Database) UpsertACL(ctx context.Context, acl *models.ACL) error {
 		return err
 	}
 
-	for _, vhost := range acl.VhostIDs {
-		if vhost == models.AllVhosts {
-			continue
-		}
-		exists, err := dbc.CheckVhostExists(ctx, vhost)
-		if err != nil {
-			return fmt.Errorf("check vhost %q: %w", vhost, err)
-		}
-		if !exists {
-			return fmt.Errorf("vhost %q: %w", vhost, ErrVhostNotFound)
-		}
-	}
-
 	_, err := dbc.Collections.ACLs.ReplaceOne(
 		ctx,
 		bson.M{id: acl.Group},

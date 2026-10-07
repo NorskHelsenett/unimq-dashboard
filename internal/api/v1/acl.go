@@ -3,6 +3,7 @@ package api
 import (
 	"context"
 	"errors"
+	"fmt"
 	"net/http"
 
 	"github.com/sisneve/rabbitmq-dashboard/internal/api/httpsuite"
@@ -85,6 +86,26 @@ func (rc *APIService) FilterAccessibleVhosts(ctx context.Context, vhosts []model
 	return accessible, nil
 }
 
+func (rc *APIService) validateACLVhosts(vhostIDs []string) error {
+	vhosts, err := rc.RMQClient.GetVhosts()
+	if err != nil {
+		return fmt.Errorf("fetch vhosts: %w", err)
+	}
+	existing := make(map[string]struct{}, len(vhosts))
+	for _, v := range vhosts {
+		existing[v.Name] = struct{}{}
+	}
+	for _, vhost := range vhostIDs {
+		if vhost == models.AllVhosts {
+			continue
+		}
+		if _, ok := existing[vhost]; !ok {
+			return fmt.Errorf("vhost %q: %w", vhost, database.ErrVhostNotFound)
+		}
+	}
+	return nil
+}
+
 func (rc *APIService) requireAdmin(w http.ResponseWriter, r *http.Request) bool {
 	if _, err := httpsuite.IsAGroupInClaim(r.Context(), rc.AdminGroups); err != nil {
 		httpsuite.WriteJSONErrorForbidden(w, httpsuite.WithInternalErrorMessage(err.Error()))
@@ -163,6 +184,7 @@ func (rc *APIService) GetACLHandler(w http.ResponseWriter, r *http.Request) {
 // @Failure		401	{object}	httpsuite.ErrorResponse
 // @Failure		403	{object}	httpsuite.ErrorResponse
 // @Failure		500	{object}	httpsuite.ErrorResponse
+// @Failure		502	{object}	httpsuite.ErrorResponse
 // @Router			/v1/acls [put]
 // @security		bearer
 // @security		OAuth2[openid, profile, email, groups, audience:server:client_id:unimq-dashboard]
@@ -180,11 +202,15 @@ func (rc *APIService) UpsertACLHandler(w http.ResponseWriter, r *http.Request) {
 		httpsuite.WriteJSONError(w, http.StatusBadRequest, httpsuite.WithError(err), httpsuite.WithErrorMessage("invalid ACL"))
 		return
 	}
-	if err := rc.DB.UpsertACL(r.Context(), &acl); err != nil {
+	if err := rc.validateACLVhosts(acl.VhostIDs); err != nil {
 		if errors.Is(err, database.ErrVhostNotFound) {
 			httpsuite.WriteJSONError(w, http.StatusBadRequest, httpsuite.WithErrorMessage(err.Error()))
 			return
 		}
+		httpsuite.WriteJSONError(w, http.StatusBadGateway, httpsuite.WithError(err), httpsuite.WithErrorMessage("failed to fetch vhosts"))
+		return
+	}
+	if err := rc.DB.UpsertACL(r.Context(), &acl); err != nil {
 		httpsuite.WriteJSONError(w, http.StatusInternalServerError, httpsuite.WithError(err), httpsuite.WithErrorMessage("failed to save ACL"))
 		return
 	}

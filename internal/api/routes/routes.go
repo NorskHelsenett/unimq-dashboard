@@ -46,6 +46,7 @@ func SetupRoutes(ctx context.Context, config *config.Config, db *database.Databa
 	apiservice, err := api.NewAPIService(
 		api.WithContext(ctx),
 		api.WithDatabase(db),
+		api.WithRMQClient(rmqclient),
 		api.WithChecker(checker),
 		api.WithAdminGroups(config.AdminGroups),
 	)
