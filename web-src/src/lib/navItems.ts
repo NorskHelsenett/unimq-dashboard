@@ -11,3 +11,4 @@ export const NAV_ITEMS: NavItem[] = [
 export const NAV_ITEMS_ADMIN: NavItem[] = [
   { label: "Access control", href: "/access-control", icon: ShieldUser }
 ]
+

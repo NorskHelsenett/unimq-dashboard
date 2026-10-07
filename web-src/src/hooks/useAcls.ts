@@ -1,4 +1,4 @@
-import { getACLs } from "@/services/acl";
+import { getACLs, accessToACLs } from "@/services/acl";
 import { ACL } from "@/types/acl";
 import { useEffect, useState } from "react";
 
@@ -29,4 +29,26 @@ export function useACLs(): useACLResults {
     }, [tick])
     
     return { acls, loading, error, refetch: () => setTick(t => t + 1) }
+}
+
+export function useACLAccess(): boolean {
+    const [hasAccess, setHasAccess] = useState(false)
+
+    useEffect(() => {
+        let cancelled = false
+
+        accessToACLs()
+            .then((allowed) => {
+                if (!cancelled) setHasAccess(allowed)
+            })
+            .catch((error) => {
+                if (!cancelled) console.error("Failed to check ACL access", error)
+            })
+
+        return () => {
+            cancelled = true
+        }
+    }, [])
+
+    return hasAccess
 }
