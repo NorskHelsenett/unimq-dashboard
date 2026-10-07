@@ -7,8 +7,8 @@ export async function getACLs(): Promise<ACL[]> {
     if (!res.ok) {
         throw new Error(`Failed to fetch ACLs: ${res.status} ${res.statusText}`)
     }
-    const data: ApiResponse<ACL[]> = await res.json();
-    return data.body
+    const data: ApiResponse<ACL[] | null> = await res.json();
+    return data.body ?? []
 }
 
 export async function upsertACL({group, vhost_ids, permissions}: {group: string, vhost_ids: string[], permissions: string[]}): Promise<void> {
