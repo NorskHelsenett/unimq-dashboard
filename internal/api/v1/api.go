@@ -4,7 +4,11 @@ import (
 	"context"
 	"fmt"
 
+<<<<<<< HEAD
 	"github.com/sisneve/rabbitmq-dashboard/internal/clients/mongodb"
+=======
+	"github.com/sisneve/rabbitmq-dashboard/internal/clients/rabbitmq"
+>>>>>>> f9c130b (#59 Fix: Add check again rabbitMQ to check if the acl the user creates with the acl actually exists)
 	"github.com/sisneve/rabbitmq-dashboard/internal/database"
 	"github.com/sisneve/rabbitmq-dashboard/internal/notify"
 )
@@ -13,6 +17,7 @@ type APIService struct {
 	Ctx         context.Context
 	DB          *mongodb.Database
 	store       database.Store
+	RMQClient   *rabbitmq.RMQClient
 	AdminGroups []string
 	Checker     *notify.Checker
 }
@@ -29,6 +34,13 @@ func WithContext(ctx context.Context) APIServiceOption {
 func WithDatabase(db *mongodb.Database) APIServiceOption {
 	return func(rc *APIService) error {
 		rc.DB = db
+		return nil
+	}
+}
+
+func WithRMQClient(client *rabbitmq.RMQClient) APIServiceOption {
+	return func(rc *APIService) error {
+		rc.RMQClient = client
 		return nil
 	}
 }

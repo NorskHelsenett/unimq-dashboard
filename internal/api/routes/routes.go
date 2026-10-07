@@ -46,6 +46,7 @@ func SetupRoutes(ctx context.Context, config *config.Config, db *mongodb.Databas
 	apiservice, err := api.NewAPIService(
 		api.WithContext(ctx),
 		api.WithDatabase(db),
+		api.WithRMQClient(rmqclient),
 		api.WithChecker(checker),
 		api.WithAdminGroups(config.AdminGroups),
 	)
