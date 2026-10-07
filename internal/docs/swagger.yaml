@@ -1129,6 +1129,14 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/httpsuite.ErrorResponse'
+      security:
+      - bearer: []
+      - OAuth2:
+        - openid
+        - profile
+        - email
+        - groups
+        - audience:server:client_id:unimq-dashboard
       summary: Edit a maintenance entry
       tags:
       - Maintenance
@@ -1221,6 +1229,14 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/httpsuite.ErrorResponse'
+      security:
+      - bearer: []
+      - OAuth2:
+        - openid
+        - profile
+        - email
+        - groups
+        - audience:server:client_id:unimq-dashboard
       summary: Get edit history for a maintenance entry
       tags:
       - Maintenance
