@@ -14,8 +14,12 @@ definitions:
   models.ACL:
     properties:
       group:
+        example: acl-admin-group
         type: string
       permissions:
+        example:
+        - read
+        - ' write'
         items:
           enum:
           - read
@@ -24,6 +28,8 @@ definitions:
           type: string
         type: array
       vhost_ids:
+        example:
+        - /
         items:
           type: string
         type: array
@@ -1123,6 +1129,14 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/httpsuite.ErrorResponse'
+      security:
+      - bearer: []
+      - OAuth2:
+        - openid
+        - profile
+        - email
+        - groups
+        - audience:server:client_id:unimq-dashboard
       summary: Edit a maintenance entry
       tags:
       - Maintenance
@@ -1215,6 +1229,14 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/httpsuite.ErrorResponse'
+      security:
+      - bearer: []
+      - OAuth2:
+        - openid
+        - profile
+        - email
+        - groups
+        - audience:server:client_id:unimq-dashboard
       summary: Get edit history for a maintenance entry
       tags:
       - Maintenance

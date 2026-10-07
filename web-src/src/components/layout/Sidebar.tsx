@@ -6,6 +6,7 @@ import { Selector, SelectorTrigger, SelectorContent, SelectorItem } from "../ui/
 import { logout } from "@/lib/apiClient"
 import { useSidebarResize } from "@/hooks/useSidebarResize"
 import { useTheme } from "@/hooks/useTheme"
+import { useACLAccess } from "@/hooks/useAcls"
 
 function isActive(itemHref: string, currentPath: string): boolean {
     if (itemHref === '/') return currentPath === '/'
@@ -18,6 +19,7 @@ export function Sidebar() {
     const vhostParam = currentVhost ? `?vhost=${encodeURIComponent(currentVhost)}` : ''
     const { width, collapsed, onMouseDown } = useSidebarResize()
     const { theme, toggle } = useTheme()
+    const hasAccess = useACLAccess()
 
     return (
         <aside style={{ width }} className="relative overflow-x-auto">
@@ -45,22 +47,26 @@ export function Sidebar() {
                                 
                             )
                         })}
-                        <hr className="my-2 border-border-sidebar" />
-                        {NAV_ITEMS_ADMIN.map((item) => {
-                            const active = isActive(item.href, currentPath)
-                            return (
-                                <a key={item.href} href={item.href + vhostParam} className={cn(
-                                    "flex items-center py-2",
-                                    collapsed ? "justify-center px-2" : "gap-2 px-4",
-                                    active 
-                                        ? "bg-surface-sidebar-active text-text-sidebar-active border-l-3 border-brand font-bold" 
-                                        : "text-text-sidebar hover:bg-surface-sidebar-active hover:text-text-sidebar-active"
-                                )}>
-                                    {item.icon && <item.icon size={18} className="shrink-0" />}
-                                    {!collapsed && <span className="truncate">{item.label}</span>}
-                                </a>
-                            )
-                        })}
+                        {hasAccess && (
+                            <>
+                                <hr className="my-2 border-border-sidebar" />
+                                {NAV_ITEMS_ADMIN.map((item) => {
+                                const active = isActive(item.href, currentPath)
+                                return (
+                                    <a key={item.href} href={item.href + vhostParam} className={cn(
+                                        "flex items-center py-2",
+                                        collapsed ? "justify-center px-2" : "gap-2 px-4",
+                                        active 
+                                            ? "bg-surface-sidebar-active text-text-sidebar-active border-l-3 border-brand font-bold" 
+                                            : "text-text-sidebar hover:bg-surface-sidebar-active hover:text-text-sidebar-active"
+                                    )}>
+                                        {item.icon && <item.icon size={18} className="shrink-0" />}
+                                        {!collapsed && <span className="truncate">{item.label}</span>}
+                                    </a>
+                                )
+                            })}
+                            </>
+                        )}
                     </div>
                     <div className="mt-auto p-4">
                         {collapsed ? (

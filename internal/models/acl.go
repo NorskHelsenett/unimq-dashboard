@@ -20,9 +20,9 @@ const (
 const AllVhosts = "*"
 
 type ACL struct {
-	Group       string   `json:"group" bson:"_id"`
-	Permissions []Scope  `json:"permissions" bson:"permissions" swaggertype:"array,string" enums:"read,write,admin"`
-	VhostIDs    []string `json:"vhost_ids" bson:"vhost_ids"`
+	Group       string   `json:"group" bson:"_id" example:"acl-admin-group"`
+	Permissions []Scope  `json:"permissions" bson:"permissions" swaggertype:"array,string" enums:"read,write,admin" example:"read, write"`
+	VhostIDs    []string `json:"vhost_ids" bson:"vhost_ids" example:"/"`
 }
 
 func ParseScope(scope string) Scope {
@@ -92,6 +92,12 @@ func (acl ACL) Validate() error {
 	if len(acl.VhostIDs) == 0 {
 		return errors.New("at least one vhost_id is required")
 	}
+	for _, vhostID := range acl.VhostIDs {
+		if strings.TrimSpace(vhostID) == "" {
+			return errors.New("vhost_id does not exist or is invalid")
+		}
+	}
+
 	return nil
 }
 

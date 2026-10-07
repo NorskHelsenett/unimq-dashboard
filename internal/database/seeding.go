@@ -91,7 +91,7 @@ var (
 
 // Seed populates the database with initial data for testing and development purposes.
 // It drops existing collections and inserts predefined notification rules,
-// recipients, alarms, maintenance entries, and maintenance logs based on the provided queue mapping.
+// recipients, alarms, ACLs, maintenance entries, and maintenance logs based on the provided queue mapping.
 // The provided queue mapping is a map where the keys are vhost names and the values are slices of queue names associated with each vhost.
 func (dbc *Database) Seed(ctx context.Context, queueMapping map[string][]string) error {
 
@@ -138,6 +138,16 @@ func (dbc *Database) Seed(ctx context.Context, queueMapping map[string][]string)
 		err = dbc.SeedAlarms(ctx, vhost, alarmRules)
 		if err != nil {
 			return err
+		}
+	}
+
+	if len(vhosts) > 0 {
+		if err := dbc.SeedACLs(ctx, []models.ACL{{
+			Group:       "acl-testers",
+			Permissions: []models.Scope{models.ScopeRead, models.ScopeWrite},
+			VhostIDs:    vhosts,
+		}}); err != nil {
+			return fmt.Errorf("seed ACLs: %w", err)
 		}
 	}
 
@@ -277,6 +287,19 @@ func (dbc *Database) SeedAlarms(ctx context.Context, name string, alarmRules []m
 		entries.Entries = append(entries.Entries, models.NewLogEntry(models.LogEventFired, new(47.0), 10.0, rule.Type))
 
 		err := dbc.AddAlarm(ctx, &entries)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func (dbc *Database) SeedACLs(ctx context.Context, acls []models.ACL) error {
+
+	// nolint:gocritic // ignoring rangeValCopy as this is only used for seeding and not performance critical.
+	for _, acl := range acls {
+		err := dbc.UpsertACL(ctx, &acl)
 		if err != nil {
 			return err
 		}

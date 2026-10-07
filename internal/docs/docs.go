@@ -944,6 +944,20 @@ const docTemplate = `{
                 }
             },
             "patch": {
+                "security": [
+                    {
+                        "bearer": []
+                    },
+                    {
+                        "OAuth2": [
+                            "openid",
+                            "profile",
+                            "email",
+                            "groups",
+                            "audience:server:client_id:unimq-dashboard"
+                        ]
+                    }
+                ],
                 "description": "Edit description, start, and end of an existing maintenance entry, with an audit trail",
                 "consumes": [
                     "application/json"
@@ -1015,6 +1029,20 @@ const docTemplate = `{
         },
         "/v1/maintenance/{maintenance-id}/logs": {
             "get": {
+                "security": [
+                    {
+                        "bearer": []
+                    },
+                    {
+                        "OAuth2": [
+                            "openid",
+                            "profile",
+                            "email",
+                            "groups",
+                            "audience:server:client_id:unimq-dashboard"
+                        ]
+                    }
+                ],
                 "description": "Returns all edit log entries for a given maintenance ID",
                 "produces": [
                     "application/json"
@@ -2605,7 +2633,8 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "group": {
-                    "type": "string"
+                    "type": "string",
+                    "example": "acl-admin-group"
                 },
                 "permissions": {
                     "type": "array",
@@ -2616,13 +2645,20 @@ const docTemplate = `{
                             "write",
                             "admin"
                         ]
-                    }
+                    },
+                    "example": [
+                        "read",
+                        " write"
+                    ]
                 },
                 "vhost_ids": {
                     "type": "array",
                     "items": {
                         "type": "string"
-                    }
+                    },
+                    "example": [
+                        "/"
+                    ]
                 }
             }
         },

@@ -4,11 +4,10 @@ import (
 	"context"
 	"errors"
 	"net/http"
-	"net/url"
 
-	"github.com/go-chi/chi/v5"
 	"github.com/sisneve/rabbitmq-dashboard/internal/api/httpsuite"
 	"github.com/sisneve/rabbitmq-dashboard/internal/database"
+	"github.com/sisneve/rabbitmq-dashboard/internal/helpers/requesthelper"
 	"github.com/sisneve/rabbitmq-dashboard/internal/models"
 )
 
@@ -37,8 +36,8 @@ func (rc *APIService) authorizeVhost(ctx context.Context, required models.Scope,
 
 func (rc *APIService) VhostACLMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		vhost, err := url.QueryUnescape(chi.URLParam(r, "vhost-name"))
-		if err != nil || vhost == "" {
+		vhost, err := requesthelper.ReadVhostFromRequest(r)
+		if err != nil {
 			httpsuite.WriteJSONError(w, http.StatusBadRequest, httpsuite.WithErrorMessage("invalid vhost name"))
 			return
 		}
@@ -136,9 +135,8 @@ func (rc *APIService) GetACLHandler(w http.ResponseWriter, r *http.Request) {
 	if !rc.requireAdmin(w, r) {
 		return
 	}
-
-	group, err := url.QueryUnescape(chi.URLParam(r, "group"))
-	if err != nil || group == "" {
+	group, err := requesthelper.ReadAclGroupFromRequest(r)
+	if err != nil {
 		httpsuite.WriteJSONError(w, http.StatusBadRequest, httpsuite.WithErrorMessage("invalid group"))
 		return
 	}
@@ -183,6 +181,10 @@ func (rc *APIService) UpsertACLHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if err := rc.DB.UpsertACL(r.Context(), &acl); err != nil {
+		if errors.Is(err, database.ErrVhostNotFound) {
+			httpsuite.WriteJSONError(w, http.StatusBadRequest, httpsuite.WithErrorMessage(err.Error()))
+			return
+		}
 		httpsuite.WriteJSONError(w, http.StatusInternalServerError, httpsuite.WithError(err), httpsuite.WithErrorMessage("failed to save ACL"))
 		return
 	}
@@ -208,8 +210,8 @@ func (rc *APIService) DeleteACLHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	group, err := url.QueryUnescape(chi.URLParam(r, "group"))
-	if err != nil || group == "" {
+	group, err := requesthelper.ReadAclGroupFromRequest(r)
+	if err != nil {
 		httpsuite.WriteJSONError(w, http.StatusBadRequest, httpsuite.WithErrorMessage("invalid group"))
 		return
 	}
