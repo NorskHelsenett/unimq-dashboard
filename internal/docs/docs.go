@@ -2605,7 +2605,8 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "group": {
-                    "type": "string"
+                    "type": "string",
+                    "example": "acl-admin-group"
                 },
                 "permissions": {
                     "type": "array",
@@ -2616,13 +2617,20 @@ const docTemplate = `{
                             "write",
                             "admin"
                         ]
-                    }
+                    },
+                    "example": [
+                        "read",
+                        " write"
+                    ]
                 },
                 "vhost_ids": {
                     "type": "array",
                     "items": {
                         "type": "string"
-                    }
+                    },
+                    "example": [
+                        "/"
+                    ]
                 }
             }
         },
