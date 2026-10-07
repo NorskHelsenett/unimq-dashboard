@@ -232,6 +232,8 @@ func (rc *APIService) UpdateMaintenanceStatusHandler(w http.ResponseWriter, r *h
 // @Failure		404				{object}	httpsuite.ErrorResponse
 // @Failure		500				{object}	httpsuite.ErrorResponse
 // @Router			/v1/maintenance/{maintenance-id} [patch]
+// @security		bearer
+// @security		OAuth2[openid, profile, email, groups, audience:server:client_id:unimq-dashboard]
 func (rc *APIService) PatchMaintenanceHandler(w http.ResponseWriter, r *http.Request) {
 
 	_, err := httpsuite.IsAGroupInClaim(r.Context(), rc.AdminGroups)
@@ -327,6 +329,8 @@ func (rc *APIService) PatchMaintenanceHandler(w http.ResponseWriter, r *http.Req
 // @Failure		403				{object}	httpsuite.ErrorResponse
 // @Failure		500				{object}	httpsuite.ErrorResponse
 // @Router			/v1/maintenance/{maintenance-id}/logs [get]
+// @security		bearer
+// @security		OAuth2[openid, profile, email, groups, audience:server:client_id:unimq-dashboard]
 func (rc *APIService) GetMaintenanceEditLogsHandler(w http.ResponseWriter, r *http.Request) {
 
 	_, err := httpsuite.IsAGroupInClaim(r.Context(), rc.AdminGroups)
