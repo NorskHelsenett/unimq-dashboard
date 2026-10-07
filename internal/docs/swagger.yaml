@@ -14,8 +14,12 @@ definitions:
   models.ACL:
     properties:
       group:
+        example: acl-admin-group
         type: string
       permissions:
+        example:
+        - read
+        - ' write'
         items:
           enum:
           - read
@@ -24,6 +28,8 @@ definitions:
           type: string
         type: array
       vhost_ids:
+        example:
+        - /
         items:
           type: string
         type: array
