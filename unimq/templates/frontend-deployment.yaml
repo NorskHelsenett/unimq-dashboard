@@ -7,7 +7,7 @@ metadata:
     app: "{{ $.Values.name }}-frontend"
   namespace: "{{ $.Values.namespace }}"
 spec:
-  replicas: { { $.Values.replicaCount } }
+  replicas: {{ $.Values.replicaCount }}
   revisionHistoryLimit: 2
   selector:
     matchLabels:
@@ -36,7 +36,7 @@ spec:
                 - ALL
           ports:
             - name: http
-              containerPort: { { $.Values.service.frontend.port } }
+              containerPort: {{ $.Values.service.frontend.port }}
           envFrom:
             - configMapRef:
                 name: "{{ $.Values.name }}-configmap"
