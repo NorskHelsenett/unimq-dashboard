@@ -185,6 +185,12 @@ const docTemplate = `{
                         "schema": {
                             "$ref": "#/definitions/httpsuite.ErrorResponse"
                         }
+                    },
+                    "502": {
+                        "description": "Bad Gateway",
+                        "schema": {
+                            "$ref": "#/definitions/httpsuite.ErrorResponse"
+                        }
                     }
                 }
             }
