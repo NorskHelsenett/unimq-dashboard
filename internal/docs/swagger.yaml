@@ -635,6 +635,10 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/httpsuite.ErrorResponse'
+        "502":
+          description: Bad Gateway
+          schema:
+            $ref: '#/definitions/httpsuite.ErrorResponse'
       security:
       - bearer: []
       - OAuth2:
