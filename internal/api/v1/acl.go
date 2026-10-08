@@ -92,8 +92,8 @@ func (rc *APIService) validateACLVhosts(vhostIDs []string) error {
 		return fmt.Errorf("fetch vhosts: %w", err)
 	}
 	existing := make(map[string]struct{}, len(vhosts))
-	for _, v := range vhosts {
-		existing[v.Name] = struct{}{}
+	for i := range vhosts {
+		existing[vhosts[i].Name] = struct{}{}
 	}
 	for _, vhost := range vhostIDs {
 		if vhost == models.AllVhosts {
