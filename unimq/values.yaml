@@ -33,6 +33,22 @@ gateway:
     gatewayapi-operator.vitistack.io/cluster-issuer: dummy
     gatewayapi-operator.vitistack.io/enabled: "true"
 
+resources:
+  limits:
+    backend:
+      cpu: "500m"
+      memory: "256Mi"
+    frontend:
+      cpu: "100m"
+      memory: "64Mi"
+  requests:
+    backend:
+      cpu: "50m"
+      memory: "64Mi"
+    frontend:
+      cpu: "20m"
+      memory: "16Mi"
+
 unimq:
   backend:
     # API connection settings
