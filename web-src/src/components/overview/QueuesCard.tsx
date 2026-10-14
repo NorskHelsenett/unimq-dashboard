@@ -12,22 +12,18 @@ const monoFontStyling = "text-center text-sm font-mono tabular-nums"
 
 
 
-function QueueRow({ queue, vhost }: { queue: QueueDetail; vhost: string }) {
+function QueueRow({ queue }: { queue: QueueDetail }) {
     const noConsumer = queue.messages > 0 && queue.consumers === 0
-    const href = `/queue?vhost=${encodeURIComponent(vhost)}&name=${encodeURIComponent(queue.name)}`
 
     return (
         <tr className="border-b last:border-0 hover:bg-surface-page">
             <td className={cellPaddingStyling}>
-                <a href={href} className="font-medium text-orange-500 hover:text-orange-600 hover:underline text-center block w-full">
+                <span className="font-medium text-text-primary text-center block w-full">
                     {queue.name}
-                </a>
+                </span>
             </td>
             <td className={cn("border-l", monoFontStyling, cellPaddingStyling, queue.messages === 0 ? 'text-text-muted' : 'text-text-primary')}>
                 {queue.messages}
-            </td>
-            <td className={cn("w-64", cellPaddingStyling)}>
-                <Sparkline data={queue.history} />
             </td>
             <td className={cn("border-l", monoFontStyling, cellPaddingStyling, queue.message_bytes === 0 ? 'text-text-muted' : 'text-text-primary')}>
                 {fmtBytes(queue.message_bytes)}
@@ -85,7 +81,7 @@ function SubHeaderCell({ children, className }: { children?: React.ReactNode; cl
     )
 }
 
-export function QueuesCard({ vhost, queues, loading, error }: QueuesCardProps) {
+export function QueuesCard({ queues, loading, error }: QueuesCardProps) {
     return (
         <div className="rounded-xl border border-border-card bg-surface-card shadow-sm overflow-hidden w-full">
             <div className="px-5 py-4 border-b border-border-card">
@@ -96,7 +92,7 @@ export function QueuesCard({ vhost, queues, loading, error }: QueuesCardProps) {
                         <thead>
                             <tr>
                                 <HeaderCell>Queue</HeaderCell>
-                                <HeaderCell className="border-l" colSpan={2}>Messages</HeaderCell>
+                                <HeaderCell className="border-l" colSpan={1}>Messages</HeaderCell>
                                 <HeaderCell className="border-l" colSpan={2}>Storage</HeaderCell>
                                 <HeaderCell className="border-l px-3">Consumers</HeaderCell>
                                 <HeaderCell className="border-l" colSpan={3}>Rates</HeaderCell>
@@ -104,7 +100,6 @@ export function QueuesCard({ vhost, queues, loading, error }: QueuesCardProps) {
                             <tr className="border-b">
                                 <SubHeaderCell className={subHeaderCellPaddingStyling}>Name</SubHeaderCell>
                                 <SubHeaderCell className={cn("border-l", subHeaderCellPaddingStyling)}>Count</SubHeaderCell>
-                                <SubHeaderCell className={subHeaderCellPaddingStyling}>History</SubHeaderCell>
                                 <SubHeaderCell className={cn("border-l", subHeaderCellPaddingStyling)}>Size</SubHeaderCell>
                                 <SubHeaderCell className={subHeaderCellPaddingStyling}>Unacked</SubHeaderCell>
                                 <SubHeaderCell className={cn("border-l", subHeaderCellPaddingStyling)}>Number</SubHeaderCell>
@@ -126,7 +121,6 @@ export function QueuesCard({ vhost, queues, loading, error }: QueuesCardProps) {
                                     <tr key={i} className="border-b last:border-0">
                                         <td className={cellPaddingStyling}><Skeleton className="h-4 w-28" /></td>
                                         <td className={cellPaddingStyling}><Skeleton className="h-4 w-8 ml-auto" /></td>
-                                        <td className={cellPaddingStyling}><Skeleton className="h-4 w-16" /></td>
                                         <td className={cellPaddingStyling}><Skeleton className="h-4 w-12 ml-auto" /></td>
                                         <td className={cellPaddingStyling}><Skeleton className="h-4 w-8 ml-auto" /></td>
                                         <td className={cellPaddingStyling}><Skeleton className="h-4 w-6 ml-auto" /></td>
@@ -144,7 +138,7 @@ export function QueuesCard({ vhost, queues, loading, error }: QueuesCardProps) {
                                 </tr>
                             )}
                             {!error && !loading && queues.map((queue) => (
-                                <QueueRow key={queue.name} queue={queue} vhost={vhost} />
+                                <QueueRow key={queue.name} queue={queue} />
                             ))}
                         </tbody>
                     </table>

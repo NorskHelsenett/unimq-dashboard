@@ -123,7 +123,6 @@ const MainPage = () => {
                 {/* Queues table */}
                 {isVisible('queues') && (
                     <QueuesCard
-                        vhost={Selected}
                         queues={queues}
                         loading={queuesLoading}
                         error={queuesError}

@@ -15,7 +15,6 @@ export default defineConfig({
     rollupOptions: {
       input: {
         index: resolve(__dirname, "index.html"),
-        queue: resolve(__dirname, "src/pages/Queue.tsx"),
         notifications: resolve(__dirname, "entries/notifications.html"),
         notifRule: resolve(__dirname, "entries/notification_rule.html"),
         maintenance: resolve(__dirname, "entries/maintenance.html"),

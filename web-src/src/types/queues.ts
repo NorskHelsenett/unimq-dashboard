@@ -11,7 +11,6 @@ export interface QueueDetail {
 }
 
 export interface QueuesCardProps {
-    vhost: string
     queues: QueueDetail[]
     loading: boolean
     error: Error | null
