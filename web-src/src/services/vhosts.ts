@@ -1,5 +1,6 @@
 import { apiFetch } from '@/lib/apiClient'
 import { VhostObj } from '@/types/vhosts'
+import { VhostResources } from '@/types/clusterStats'
 
 export interface ApiResponse<T> {
   code: number
@@ -14,6 +15,15 @@ export async function getVhosts(signal?: AbortSignal): Promise<string[]> {
   }
   const data: ApiResponse<VhostObj[]> = await res.json()
   return (data.body ?? []).map(v => v.name)
+}
+
+export async function getVhostUsage(vhost: string, signal?: AbortSignal): Promise<VhostResources> {
+  const res = await apiFetch(`/api/v1/vhosts/${encodeURIComponent(vhost)}/usage`, { signal })
+  if (!res.ok) {
+    throw new Error(`Vhost usage request failed (${res.status})`)
+  }
+  const data: ApiResponse<VhostResources> = await res.json()
+  return data.body
 }
 
 

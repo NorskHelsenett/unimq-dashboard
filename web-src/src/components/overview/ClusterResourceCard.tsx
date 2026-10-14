@@ -3,16 +3,11 @@
 import { RatioChart } from "../charts/RatioChart"
 import { GaugeChart } from "../charts/GaugeChart"
 import { Tile } from "../layout/Tile"
-import { ClusterStats } from "@/types/clusterStats"
+import { NodeStats } from "@/types/clusterStats"
 import { convertBytes } from "@/lib/bytes"
 
-export const ClusterResourceCard = ({ clusters }: { clusters: ClusterStats | null }) => {
+export const ClusterResourceCard = ({ clusters }: { clusters: NodeStats[] | null }) => {
     if (!clusters) return <p>ClusterStats does not exist</p>
-
-    const totalMemUsed = clusters.total_mem_used
-    const totalMemLimit = clusters.total_mem_limit 
-    const totalDiskFree = clusters.total_disk_free
-    const minDiskLimit = clusters.min_disk_limit
 
     const DiskDescription = ({ free, limit }: { free: number, limit: number }) => (
         <div>
@@ -24,12 +19,15 @@ export const ClusterResourceCard = ({ clusters }: { clusters: ClusterStats | nul
     return (
         <div>
             <h2 className="text-lg font-semibold text-text-primary mb-3">Cluster Resources</h2>
-            <Tile>
-                <div className="flex gap-4">
-                    <GaugeChart title="Memory" usage={totalMemUsed} max={totalMemLimit} labelText={`${convertBytes(totalMemUsed)}/${convertBytes(totalMemLimit)}`} fontSize={16} />
-                    <RatioChart title={"Disk"} description={<DiskDescription free={totalDiskFree} limit={minDiskLimit}/>} free={totalDiskFree} limit={minDiskLimit} />
-                </div>
-            </Tile>
+            {clusters.map(node => (
+                <Tile key={node.name}>
+                    <p className="mb-2">{node.name}</p>
+                    <div className="flex gap-4">
+                        <GaugeChart title="Memory" usage={node.mem_used} max={node.mem_limit} labelText={`${convertBytes(node.mem_used)}/${convertBytes(node.mem_limit)}`} fontSize={16} />
+                        <RatioChart title={"Disk"} description={<DiskDescription free={node.disk_free} limit={node.disk_free_limit}/>} free={node.disk_free} limit={node.disk_free_limit} />
+                    </div>
+                </Tile>
+            ))}
         </div>
 
     )

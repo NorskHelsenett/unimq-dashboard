@@ -1,9 +1,9 @@
 import { useEffect, useState } from 'react'
 import { getClusters } from '@/services/clusters'
-import { ClusterStats } from '@/types/clusterStats'
+import { NodeStats } from '@/types/clusterStats'
 
 export function useClusters() {
-    const [clusters, setClusters] = useState<ClusterStats | null>(null)
+    const [clusters, setClusters] = useState<NodeStats[] | null>(null)
     const [loading, setLoading] = useState(true)
     
     useEffect(() => {

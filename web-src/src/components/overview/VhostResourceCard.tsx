@@ -1,16 +1,11 @@
 "use client"
 
 import { Tile } from "../layout/Tile"
-import { ClusterStats } from "@/types/clusterStats"
 import { convertBytes } from "@/lib/bytes"
+import { useVhostUsage } from "@/hooks/useVhostUsage"
 
-export const VhostResourceCard = ({ vhost, clusters }: { vhost: string, clusters: ClusterStats | null }) => {
-    const clusterStats = clusters
-    
-    if (!clusterStats) return <p>ClusterStats does not exist</p>
-
-    const vhostResources = clusterStats.vhost_resources ?? []
-    const vhostResource = vhostResources.find(v => v.name === vhost)
+export const VhostResourceCard = ({ vhost }: { vhost: string }) => {
+    const { usage: vhostResource } = useVhostUsage(vhost)
 
     return (
         <div>
