@@ -87,8 +87,8 @@ func (l *RMQVhostLimits) UnmarshalJSON(data []byte) error {
 	aux := &struct {
 		Vhost  string `json:"vhost"`
 		Values struct {
-			MaxConnections *int `json:"max_connections"`
-			MaxQueues      *int `json:"max_queues"`
+			MaxConnections *int `json:"max-connections"`
+			MaxQueues      *int `json:"max-queues"`
 		} `json:"values"`
 	}{}
 

@@ -1,5 +1,5 @@
 import { apiFetch } from '@/lib/apiClient'
-import { VhostObj } from '@/types/vhosts'
+import { VhostObj, Limits } from '@/types/vhosts'
 import { VhostResources } from '@/types/clusterStats'
 
 export interface ApiResponse<T> {
@@ -31,4 +31,13 @@ export function getSelectedVhost(vhosts: string[]): string {
   const params = new URLSearchParams(window.location.search)
   const vhost = params.get('vhost')
   return (vhost && vhosts.includes(vhost)) ? vhost : (vhosts[0] ?? '')
+}
+
+export async function getVhostLimits(vhost: string): Promise<Limits> {
+  const res = await apiFetch(`/api/v1/vhosts/${encodeURIComponent(vhost)}/limits`)
+  if (!res.ok) {
+    throw new Error(`Vhost limits request failed (${res.status})`)
+  }
+  const data: ApiResponse<Limits> = await res.json()
+  return data.body
 }

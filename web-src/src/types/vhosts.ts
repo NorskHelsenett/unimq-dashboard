@@ -6,3 +6,9 @@ export interface Vhosts {
 export interface VhostObj {
   name: string
 }
+
+export interface Limits {
+  vhost: string
+  max_connections: number;
+  max_queues: number;
+}

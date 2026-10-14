@@ -18,18 +18,13 @@ import { useVhostNotification } from "@/hooks/useVhostNotification";
 import { useScheduledMaintenance } from "@/hooks/useMaintenance";
 import { useDashboard } from "@/hooks/useDashboard";
 import type { Metrics } from "@/types/metrics"
-
-
-export interface Limits {
-    MaxConnections: number;
-    MaxQueues: number;
-}
+import type { Limits } from "@/types/vhosts"
 
 export interface IndexData {
-    Vhosts: string[];
-    Selected: string;
-    Metrics: Metrics | null;
-    Limits: Limits;
+    Vhosts: string[]
+    Selected: string
+    Metrics: Metrics | null
+    Limits: Limits | null
 }
 
 const root = document.getElementById("app");
@@ -47,7 +42,7 @@ function GreetingHeader() {
 }
 
 const MainPage = () => {
-    const { Vhosts, Selected, Metrics, Limits } = useIndex()
+    const { Selected, Metrics, Limits } = useIndex()
     const { clusters } = useClusters()
     const { queues, loading: queuesLoading, error: queuesError } = useQueues(Selected)
     const { notification } = useVhostNotification()
@@ -111,8 +106,8 @@ const MainPage = () => {
                                     channels={Metrics.channels}
                                     queues={Metrics.queues}
                                     unacked={Metrics.unacked}
-                                    maxConnections={Limits.MaxConnections}
-                                    maxQueues={Limits.MaxQueues}
+                                    maxConnections={Limits?.max_connections ?? 0}
+                                    maxQueues={Limits?.max_queues ?? 0}
                                 />
                             </div>
                         )}

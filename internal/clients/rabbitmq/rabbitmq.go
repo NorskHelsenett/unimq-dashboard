@@ -285,8 +285,8 @@ func (r *RMQClient) GetVhostLimits() ([]*models.RMQVhostLimits, error) {
 }
 
 func (r *RMQClient) GetVhostLimit(vhost string) (*models.RMQVhostLimits, error) {
-	var limit *models.RMQVhostLimits
-	status, err := r.restClient.Get("/vhost-limits/"+url.PathEscape(vhost), &limit)
+	var limits []models.RMQVhostLimits
+	status, err := r.restClient.Get("/vhost-limits/"+url.PathEscape(vhost), &limits)
 	if err != nil {
 		switch status {
 		case 404:
@@ -296,5 +296,8 @@ func (r *RMQClient) GetVhostLimit(vhost string) (*models.RMQVhostLimits, error) 
 			return nil, fmt.Errorf("%w. %w", ErrInternalServerError, err)
 		}
 	}
-	return limit, nil
+	if len(limits) == 0 {
+		return models.NewRMQVhostLimits(vhost), nil
+	}
+	return &limits[0], nil
 }
