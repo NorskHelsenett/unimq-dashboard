@@ -4,11 +4,13 @@ import { fmtBytes, fmtRate } from '@/lib/format'
 import { cn } from '@/lib/utils'
 import { Tooltip, TooltipContent, TooltipTrigger } from '../ui/tooltip'
 import { QueueDetail, QueuesCardProps } from '@/types/queues'
+import { useLayoutEffect, useRef } from 'react'
 
 
 const cellPaddingStyling = "py-2.5 px-3"
 const subHeaderCellPaddingStyling = "px-3"
 const monoFontStyling = "text-center text-sm font-mono tabular-nums"
+const visibleQueueCount = 15
 
 
 
@@ -82,14 +84,46 @@ function SubHeaderCell({ children, className }: { children?: React.ReactNode; cl
 }
 
 export function QueuesCard({ queues, loading, error }: QueuesCardProps) {
+    const scrollable = !loading && !error && queues.length > visibleQueueCount
+    const scrollRegionRef = useRef<HTMLDivElement>(null)
+
+    useLayoutEffect(() => {
+        const region = scrollRegionRef.current
+        if (!region) return
+        if (!scrollable) {
+            region.style.maxHeight = ''
+            return
+        }
+
+        const table = region.querySelector('table')
+        if (!table) return
+
+        const updateHeight = () => {
+            const lastVisibleRow = table.tBodies[0]?.rows[visibleQueueCount - 1]
+            if (!lastVisibleRow) return
+            region.style.maxHeight = `${lastVisibleRow.getBoundingClientRect().bottom - table.getBoundingClientRect().top}px`
+        }
+
+        updateHeight()
+        const observer = new ResizeObserver(updateHeight)
+        observer.observe(table)
+        return () => observer.disconnect()
+    }, [scrollable, queues])
+
     return (
         <div className="rounded-xl border border-border-card bg-surface-card shadow-sm overflow-hidden w-full">
             <div className="px-5 py-4 border-b border-border-card">
                 <h3 className="text-sm font-semibold text-text-primary">Queues</h3>
             </div>
-            <div className="overflow-x-auto">
+            <div
+                ref={scrollRegionRef}
+                className={cn("overflow-x-auto", scrollable && "overflow-y-auto")}
+                tabIndex={scrollable ? 0 : undefined}
+                role={scrollable ? "region" : undefined}
+                aria-label={scrollable ? "Queues" : undefined}
+            >
                     <table className="w-full border-collapse text-sm">
-                        <thead>
+                        <thead className={cn(scrollable && "sticky top-0 z-10 bg-surface-card")}>
                             <tr>
                                 <HeaderCell>Queue</HeaderCell>
                                 <HeaderCell className="border-l" colSpan={1}>Messages</HeaderCell>
