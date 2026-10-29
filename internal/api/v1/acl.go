@@ -100,7 +100,7 @@ func (rc *APIService) validateACLVhosts(vhostIDs []string) error {
 			continue
 		}
 		if _, ok := existing[vhost]; !ok {
-			return fmt.Errorf("vhost %q: %w", vhost, database.ErrVhostNotFound)
+			return fmt.Errorf("vhost %q: %w", vhost, database.ErrResourceNotFound)
 		}
 	}
 	return nil
@@ -213,7 +213,7 @@ func (rc *APIService) UpsertACLHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if err := rc.validateACLVhosts(acl.VhostIDs); err != nil {
-		if errors.Is(err, database.ErrVhostNotFound) {
+		if errors.Is(err, database.ErrResourceNotFound) {
 			httpsuite.WriteJSONError(w, http.StatusBadRequest, httpsuite.WithErrorMessage(err.Error()))
 			return
 		}
