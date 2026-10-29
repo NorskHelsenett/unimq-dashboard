@@ -8,8 +8,8 @@ import (
 	"sync"
 	"time"
 
+	"github.com/sisneve/rabbitmq-dashboard/internal/clients/mongodb"
 	"github.com/sisneve/rabbitmq-dashboard/internal/clients/rabbitmq"
-	"github.com/sisneve/rabbitmq-dashboard/internal/database"
 	"github.com/sisneve/rabbitmq-dashboard/internal/helpers/notificationhelper"
 	"github.com/sisneve/rabbitmq-dashboard/internal/models"
 )
@@ -18,7 +18,7 @@ type (
 	// Checker periodically evaluates alarm rules against current RabbitMQ metrics and triggers notifications.
 	Checker struct {
 		Ctx         context.Context
-		DB          *database.Database
+		DB          *mongodb.Database
 		RMQClient   rabbitmq.RMQClientInterface
 		interval    time.Duration
 		mu          sync.RWMutex
@@ -42,7 +42,7 @@ func WithRMQClient(client rabbitmq.RMQClientInterface) CheckerOptions {
 	}
 }
 
-func WithDB(db *database.Database) CheckerOptions {
+func WithDB(db *mongodb.Database) CheckerOptions {
 	return func(c *Checker) {
 		c.DB = db
 	}
@@ -306,7 +306,7 @@ func NotifyAlarm(ctx context.Context, vhost *models.VhostNotification, rule *mod
 }
 
 // checkMaintenanceRule checks for any scheduled maintenance and sends notifications if there are any new ones.
-func checkMaintenanceSchedules(ctx context.Context, db *database.Database, urls []string, emails []string) {
+func checkMaintenanceSchedules(ctx context.Context, db *mongodb.Database, urls []string, emails []string) {
 	scheduled, err := db.GetMaintenanceScheduled(ctx)
 	if err != nil {
 		slog.ErrorContext(ctx, "Failed to fetch scheduled maintenance", "error", err)
