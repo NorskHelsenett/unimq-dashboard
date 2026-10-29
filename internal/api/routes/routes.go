@@ -15,9 +15,9 @@ import (
 	"github.com/sisneve/rabbitmq-dashboard/internal/api/v1/profile"
 	"github.com/sisneve/rabbitmq-dashboard/internal/api/v1/rmq"
 	"github.com/sisneve/rabbitmq-dashboard/internal/clients/dex"
+	"github.com/sisneve/rabbitmq-dashboard/internal/clients/mongodb"
 	"github.com/sisneve/rabbitmq-dashboard/internal/clients/rabbitmq"
 	"github.com/sisneve/rabbitmq-dashboard/internal/config"
-	"github.com/sisneve/rabbitmq-dashboard/internal/database"
 	"github.com/sisneve/rabbitmq-dashboard/internal/docs"
 	"github.com/sisneve/rabbitmq-dashboard/internal/notify"
 )
@@ -36,7 +36,7 @@ func applySwaggerOIDCIssuer(issuer string) {
 	)
 }
 
-func SetupRoutes(ctx context.Context, config *config.Config, db *database.Database, rmqclient rabbitmq.RMQClientInterface, checker *notify.Checker) (chi.Router, error) {
+func SetupRoutes(ctx context.Context, config *config.Config, db *mongodb.Database, rmqclient rabbitmq.RMQClientInterface, checker *notify.Checker) (chi.Router, error) {
 
 	dex, err := dex.NewDexClient(ctx, config.OIDC)
 	if err != nil {
