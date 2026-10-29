@@ -9,6 +9,7 @@ import (
 	"github.com/go-chi/chi/v5"
 
 	"github.com/sisneve/rabbitmq-dashboard/internal/api/httpsuite"
+	"github.com/sisneve/rabbitmq-dashboard/internal/database"
 	"github.com/sisneve/rabbitmq-dashboard/internal/models"
 )
 
@@ -23,7 +24,7 @@ func (rc *RMQHandler) authorizeVhost(ctx context.Context, required models.Scope,
 	if err != nil {
 		return ErrACLForbidden
 	}
-	acls, err := rc.DB.GetACLsForGroups(ctx, groups)
+	acls, err := rc.Store.ACLHandler().GetByGroupIDs(ctx, groups)
 	if err != nil {
 		return err
 	}
@@ -69,7 +70,12 @@ func (rc *RMQHandler) FilterAccessibleVhosts(ctx context.Context, vhosts []model
 	if err != nil {
 		return nil, ErrACLForbidden
 	}
-	acls, err := rc.DB.GetACLsForGroups(ctx, groups)
+
+	filters := make([]database.Filter, len(groups))
+	for i, group := range groups {
+		filters[i] = database.NewFilter("group", database.FilterOpEqual, group)
+	}
+	acls, err := rc.Store.ACLHandler().Read(ctx, filters...)
 	if err != nil {
 		return nil, err
 	}

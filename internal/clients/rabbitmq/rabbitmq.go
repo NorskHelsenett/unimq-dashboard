@@ -125,8 +125,19 @@ func (r *RMQClient) GetVhosts(filters ...Filter) ([]*models.Vhost, error) {
 		return nil, fmt.Errorf("%w. %w", ErrInternalServerError, err)
 	}
 
+	// Due to the way the RabbitMQ API works, if we're expecting a singular vhost
+	// it returns a single object, but if we're expecting multiple vhosts it returns an array of objects.
+	// While this complicated the function, the behevaior across the API is consistent.
+	var status int
 	var vhosts []*models.Vhost
-	status, err := r.restClient.Get(uri, &vhosts)
+	if len(vhostsFilter) == 0 && len(filters) == 1 {
+		var vhost *models.Vhost
+		status, err = r.restClient.Get(uri, &vhost)
+		vhosts = append(vhosts, vhost)
+	} else {
+		status, err = r.restClient.Get(uri, &vhosts)
+	}
+
 	if err != nil {
 		switch status {
 		case http.StatusNotFound:

@@ -12,9 +12,9 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/sisneve/rabbitmq-dashboard/internal/api/httpsuite"
 	"github.com/sisneve/rabbitmq-dashboard/internal/api/v1/rmq"
+	"github.com/sisneve/rabbitmq-dashboard/internal/clients/mongodb"
 	"github.com/sisneve/rabbitmq-dashboard/internal/clients/rabbitmq"
 	"github.com/sisneve/rabbitmq-dashboard/internal/clients/rabbitmq/rmqfake"
-	"github.com/sisneve/rabbitmq-dashboard/internal/database"
 	"github.com/sisneve/rabbitmq-dashboard/internal/models"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -63,7 +63,7 @@ func decodeBody[T any](t *testing.T, rec *httptest.ResponseRecorder) T {
 }
 
 func TestNewRMQHandlerAcceptsAnInterfaceImplementation(t *testing.T) {
-	db := &database.Database{}
+	db := &mongodb.Database{}
 	handler := rmq.NewRMQHandler(&rmqfake.Client{}, db, []string{adminGroup})
 	require.NotNil(t, handler)
 	assert.NotNil(t, handler.RMQClient)
@@ -75,7 +75,7 @@ func TestGetVhostsHandlerReturnsVhosts(t *testing.T) {
 			return []*models.Vhost{{Name: "/"}, {Name: testVhost}}, nil
 		},
 	}
-	db := &database.Database{}
+	db := &mongodb.Database{}
 	handler := rmq.NewRMQHandler(client, db, []string{adminGroup})
 
 	rec := httptest.NewRecorder()
@@ -90,7 +90,7 @@ func TestGetVhostsHandlerReturnsVhosts(t *testing.T) {
 
 func TestGetVhostsHandlerForbiddenWithoutAdminGroup(t *testing.T) {
 	client := &rmqfake.Client{}
-	db := &database.Database{}
+	db := &mongodb.Database{}
 	handler := rmq.NewRMQHandler(client, db, []string{adminGroup})
 
 	rec := httptest.NewRecorder()
@@ -101,7 +101,7 @@ func TestGetVhostsHandlerForbiddenWithoutAdminGroup(t *testing.T) {
 }
 
 func TestGetVhostsHandlerPropagatesClientError(t *testing.T) {
-	db := &database.Database{}
+	db := &mongodb.Database{}
 	handler := rmq.NewRMQHandler(&rmqfake.Client{
 		GetVhostsFunc: func(_ ...rabbitmq.Filter) ([]*models.Vhost, error) {
 			return nil, fmt.Errorf("%w. boom", rabbitmq.ErrInternalServerError)
@@ -115,7 +115,7 @@ func TestGetVhostsHandlerPropagatesClientError(t *testing.T) {
 }
 
 func TestGetVhostHandlerPassesNameFilter(t *testing.T) {
-	db := &database.Database{}
+	db := &mongodb.Database{}
 	client := &rmqfake.Client{
 		GetVhostsFunc: func(_ ...rabbitmq.Filter) ([]*models.Vhost, error) {
 			return []*models.Vhost{{Name: testVhost}}, nil
@@ -136,7 +136,7 @@ func TestGetVhostHandlerPassesNameFilter(t *testing.T) {
 }
 
 func TestGetVhostLimitsHandlerReturnsEmptyLimitsWhenNoneDefined(t *testing.T) {
-	db := &database.Database{}
+	db := &mongodb.Database{}
 	handler := rmq.NewRMQHandler(&rmqfake.Client{
 		GetVhostLimitsFunc: func(_ ...rabbitmq.Filter) ([]*models.RMQVhostLimits, error) {
 			return nil, fmt.Errorf("%w. not set", rabbitmq.ErrLimitsNotFound)
@@ -155,7 +155,7 @@ func TestGetVhostLimitsHandlerReturnsEmptyLimitsWhenNoneDefined(t *testing.T) {
 }
 
 func TestGetVhostLimitsHandlerSurfacesOtherErrors(t *testing.T) {
-	db := &database.Database{}
+	db := &mongodb.Database{}
 	handler := rmq.NewRMQHandler(&rmqfake.Client{
 		GetVhostLimitsFunc: func(_ ...rabbitmq.Filter) ([]*models.RMQVhostLimits, error) {
 			return nil, errors.New("connection refused")
@@ -170,7 +170,7 @@ func TestGetVhostLimitsHandlerSurfacesOtherErrors(t *testing.T) {
 }
 
 func TestGetQueuesByNameHandlerMapsNotFound(t *testing.T) {
-	db := &database.Database{}
+	db := &mongodb.Database{}
 	handler := rmq.NewRMQHandler(&rmqfake.Client{
 		GetQueuesFunc: func(_ ...rabbitmq.Filter) ([]*models.RMQQueue, error) {
 			return nil, fmt.Errorf("%w. missing", rabbitmq.ErrQueueNotFound)
@@ -185,7 +185,7 @@ func TestGetQueuesByNameHandlerMapsNotFound(t *testing.T) {
 }
 
 func TestGetRMQNodesHandler(t *testing.T) {
-	db := &database.Database{}
+	db := &mongodb.Database{}
 	handler := rmq.NewRMQHandler(&rmqfake.Client{
 		GetNodesFunc: func(_ ...rabbitmq.Filter) ([]*models.RMQNode, error) {
 			return []*models.RMQNode{{Name: "rabbit@node1", MemUsed: 100}}, nil

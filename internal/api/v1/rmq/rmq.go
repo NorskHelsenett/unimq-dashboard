@@ -4,17 +4,19 @@ import (
 	"net/http"
 
 	"github.com/sisneve/rabbitmq-dashboard/internal/api/httpsuite"
+	"github.com/sisneve/rabbitmq-dashboard/internal/clients/mongodb"
 	"github.com/sisneve/rabbitmq-dashboard/internal/clients/rabbitmq"
 	"github.com/sisneve/rabbitmq-dashboard/internal/database"
 )
 
 type RMQHandler struct {
 	RMQClient   rabbitmq.RMQClientInterface
-	DB          *database.Database
+	DB          *mongodb.Database
+	Store       database.Store
 	AdminGroups []string
 }
 
-func NewRMQHandler(rmqClient rabbitmq.RMQClientInterface, db *database.Database, adminGroups []string) *RMQHandler {
+func NewRMQHandler(rmqClient rabbitmq.RMQClientInterface, db *mongodb.Database, adminGroups []string) *RMQHandler {
 	return &RMQHandler{
 		RMQClient:   rmqClient,
 		DB:          db,
