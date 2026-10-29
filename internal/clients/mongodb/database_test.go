@@ -1,9 +1,9 @@
-package database_test
+package mongodb_test
 
 import (
 	"testing"
 
-	"github.com/sisneve/rabbitmq-dashboard/internal/database"
+	"github.com/sisneve/rabbitmq-dashboard/internal/clients/mongodb"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -62,11 +62,11 @@ func TestDatabaseConnection(t *testing.T) {
 	for _, tc := range testcases {
 		t.Run(tc.name, func(t *testing.T) {
 			t.Parallel()
-			uri := database.CreateUri(tc.host, tc.port, tc.username, tc.password)
+			uri := mongodb.CreateUri(tc.host, tc.port, tc.username, tc.password)
 
 			require.Equalf(t, tc.expectedUri, uri, "Expected URI: %v, but got: %v", tc.expectedUri, uri)
 
-			client, err := database.CreateClient(uri, 30)
+			client, err := mongodb.CreateClient(uri, 30)
 
 			require.Equalf(t, tc.expectedError, err, "Expected error: %v, but got: %v of ", tc.expectedError, err)
 

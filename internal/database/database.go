@@ -2,216 +2,120 @@ package database
 
 import (
 	"context"
-	"fmt"
-	"net/url"
-	"strings"
-	"time"
+	"errors"
 
-	"go.mongodb.org/mongo-driver/v2/mongo"
-	"go.mongodb.org/mongo-driver/v2/mongo/options"
+	"github.com/sisneve/rabbitmq-dashboard/internal/models"
 )
 
-type Databaser interface {
+type Store interface {
 	InitCollections() error
 	Ping(ctx context.Context, timeoutSecs int) error
+
+	AlarmHandler() AlarmRepository
+	ACLHandler() ACLRepository
+	// VhostHandler() VhostHandler
+	// MaintenanceHandler() MaintenaceHandler
+	// MaintenanceLogsHandler() MaintenaceLogsHandler
+	// NotificationHandler() NotificationHandler
+	// NotificationRecipientHandler() NotificationRecipientHandler
+	// NotificationRulesHandler() NotificationRulesHandler
+}
+
+type StoreSeeder interface {
+	Seed(ctx context.Context) error
+}
+
+// AlarmHandler defines the interface for managing alarms in the database.
+//
+// Alarms are parented to an ID and can have multiple log entries.
+type AlarmRepository interface {
+	CRUDStore[models.AlarmEntry]
+	Append(ctx context.Context, alarmID string, logEntry models.LogEntry) error
+}
+
+// ACLHandler defines the interface for managing ACLs in the database.
+type ACLRepository interface {
+	CRUDStore[models.ACL]
+	CRUDStoreExtended[models.ACL]
+	GetByGroupIDs(ctx context.Context, groupIDs []string) ([]*models.ACL, error)
+}
+
+// VhostHandler defines the interface for managing vhosts in the database.
+type VhostHandler interface {
+	CRUDStore[models.Vhost]
+}
+
+// MaintenanceHandler defines the interface for managing maintenance entries in the database.
+type MaintenaceHandler interface {
+	Advance(ctx context.Context) error
+	CRUDStore[models.MaintenanceEntry]
+}
+
+type MaintenaceLogsHandler interface {
+	CRUDStore[models.MaintenanceEditLog]
+}
+
+type NotificationHandler interface {
+	CRUDStore[models.VhostNotification]
+	Toggle(ctx context.Context, id string) error
+	GetByParentID(ctx context.Context, parentID string) ([]*models.VhostNotification, error)
+}
+
+type NotificationRecipientHandler interface {
+	CRUDStore[models.Recipient]
+}
+
+type NotificationRulesHandler interface {
+	CRUDStore[models.AlarmRule]
+}
+
+// This is a base interface for most database operations. It defines the basic CRUD operations for a generic type T.
+type CRUDStore[T any] interface {
+	Create(ctx context.Context, item *T) error                 // Create a single item.
+	Read(ctx context.Context, filters ...Filter) ([]*T, error) // Read one or more items based on filters.
+	Update(ctx context.Context, item *T) error                 // Update a single item.
+	Delete(ctx context.Context, filters ...Filter) error       // Delete one or more items based on filters.
+}
+
+// CRUDStoreExtended extends the CRUDStore interface with additional methods for upserting and patching items.
+type CRUDStoreExtended[T any] interface {
+	Put(ctx context.Context, item *T) error                             // Upsert an item (create or update).
+	Patch(ctx context.Context, id string, updates map[string]any) error // Patch an item by ID.
 }
 
 type (
 	Filter struct {
 		Property string
+		Type     FilterType
 		Value    string
-		Operator FilterOperator
 	}
 
-	FilterOperator string
+	FilterType string
 )
 
-type Database struct {
-	uri         string
-	db          string
-	client      *mongo.Client
-	Collections *Collections
-	Inialized   bool
-	TimeoutSecs int
-}
-
-type Collections struct {
-	Alarms              *mongo.Collection
-	Maintenance         *mongo.Collection
-	MaintenanceEditLogs *mongo.Collection
-	Notifications       *mongo.Collection
-	ACLs                *mongo.Collection
-}
-
-// MongoConstants
 const (
-	set       = "$set"
-	id        = "_id"
-	statusKey = "status"
+	FilterOpEqual        FilterType = "eq"
+	FilterOpNotEqual     FilterType = "ne"
+	FilterOpIn           FilterType = "in"
+	FilterOpNotIn        FilterType = "nin"
+	FilterOpGreater      FilterType = "gt"
+	FilterOpLess         FilterType = "lt"
+	FilterOpGreaterEqual FilterType = "gte"
+	FilterOpLessEqual    FilterType = "lte"
 )
 
-type (
-	databaseConfig struct {
-		Host        string
-		Port        int
-		Username    string
-		Password    string
-		DB          string
-		TimeoutSecs int
+func NewFilter(property string, filterType FilterType, value string) Filter {
+	return Filter{
+		Property: property,
+		Type:     filterType,
+		Value:    value,
 	}
+}
 
-	databaseOptions func(*databaseConfig)
+type DatabaseMonitor interface {
+	Ping(ctx context.Context, timeoutSecs int) error
+}
+
+var (
+	ErrResourceNotFound = errors.New("resource not found")
 )
-
-func newDatabaseConfig() *databaseConfig {
-	return &databaseConfig{
-		Host:        "localhost",
-		Port:        27017,
-		Username:    "",
-		Password:    "",
-		DB:          "unimq-dashboard",
-		TimeoutSecs: 30,
-	}
-}
-
-func WithHost(host string) databaseOptions {
-	return func(dc *databaseConfig) {
-		dc.Host = host
-	}
-}
-
-func WithPort(port int) databaseOptions {
-	return func(dc *databaseConfig) {
-		dc.Port = port
-	}
-}
-
-func WithUsername(username string) databaseOptions {
-	return func(dc *databaseConfig) {
-		dc.Username = username
-	}
-}
-
-func WithPassword(password string) databaseOptions {
-	return func(dc *databaseConfig) {
-		dc.Password = password
-	}
-}
-
-func WithDatabase(db string) databaseOptions {
-	return func(dc *databaseConfig) {
-		dc.DB = db
-	}
-}
-
-func WithTimeout(timeoutSecs int) databaseOptions {
-	return func(dc *databaseConfig) {
-		dc.TimeoutSecs = timeoutSecs
-	}
-}
-
-func NewDatabase(opts ...databaseOptions) (*Database, error) {
-	config := newDatabaseConfig()
-
-	for _, opt := range opts {
-		opt(config)
-	}
-
-	uri := CreateUri(config.Host, config.Port, config.Username, config.Password)
-
-	dbc := Database{
-		uri:         uri,
-		db:          config.DB,
-		client:      nil,
-		Collections: nil,
-		Inialized:   false,
-		TimeoutSecs: config.TimeoutSecs,
-	}
-
-	client, err := CreateClient(uri, config.TimeoutSecs)
-	if err != nil {
-		return nil, fmt.Errorf("failed to create database client. %w", err)
-	}
-	dbc.client = client
-
-	err = dbc.initCollections()
-	if err != nil {
-		return nil, fmt.Errorf("failed to initialize database collections. %w", err)
-	}
-
-	return &dbc, nil
-}
-
-func (dbc *Database) Close(timeoutSecs int) error {
-	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(timeoutSecs)*time.Second)
-	defer cancel()
-
-	if err := dbc.client.Disconnect(ctx); err != nil {
-		return fmt.Errorf("failed to disconnect from database. %w", err)
-	}
-
-	return nil
-}
-
-func (dbc *Database) Ping(ctx context.Context, timeoutSecs int) error {
-	ctx, cancel := context.WithTimeout(ctx, time.Duration(timeoutSecs)*time.Second)
-	defer cancel()
-
-	if err := dbc.client.Ping(ctx, nil); err != nil {
-		return fmt.Errorf("failed to ping database. %w", err)
-	}
-
-	return nil
-}
-
-func CreateUri(host string, port int, username, password string) string {
-
-	// Remove any existing "mongodb://" prefix from the host string
-	host = strings.TrimPrefix(host, "mongodb://")
-
-	if username == "" && password == "" {
-		return fmt.Sprintf("mongodb://%s:%d", url.QueryEscape(host), port)
-	}
-
-	userInfo := url.UserPassword(username, password)
-
-	return fmt.Sprintf("mongodb://%s@%s:%d",
-		userInfo.String(),
-		url.PathEscape(host),
-		port,
-	)
-}
-
-func CreateClient(uri string, timeoutSecs int) (*mongo.Client, error) {
-	client, err := mongo.Connect(
-		options.Client().ApplyURI(uri),
-		options.Client().SetTimeout(time.Duration(timeoutSecs)*time.Second),
-	)
-	if err != nil {
-		return nil, fmt.Errorf("failed to connect to mongodb. %w", err)
-	}
-
-	return client, nil
-}
-
-func (dbc *Database) initCollections() error {
-
-	dbc.Collections = &Collections{
-		Alarms:              dbc.client.Database(dbc.db).Collection("alarms"),
-		Maintenance:         dbc.client.Database(dbc.db).Collection("maintenance"),
-		MaintenanceEditLogs: dbc.client.Database(dbc.db).Collection("maintenance_edit_logs"),
-		Notifications:       dbc.client.Database(dbc.db).Collection("notifications"),
-		ACLs:                dbc.client.Database(dbc.db).Collection("acls"),
-	}
-
-	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(dbc.TimeoutSecs)*time.Second)
-	defer cancel()
-
-	if err := dbc.client.Ping(ctx, nil); err != nil {
-		return fmt.Errorf("failed to verify connection to mongodb. %w", err)
-	}
-
-	dbc.Inialized = true
-
-	return nil
-}

@@ -1,4 +1,4 @@
-package database
+package mongodb
 
 import (
 	"context"
@@ -109,6 +109,10 @@ func (dbc *Database) Seed(ctx context.Context, queueMapping map[string][]string)
 
 	if err := dbc.Collections.MaintenanceEditLogs.Drop(ctx); err != nil {
 		return fmt.Errorf("failed to drop maintenance logs collection: %w", err)
+	}
+
+	if err := dbc.Collections.ACLs.Drop(ctx); err != nil {
+		return fmt.Errorf("failed to drop ACLs collection: %w", err)
 	}
 
 	vhosts := make([]string, 0, len(queueMapping))

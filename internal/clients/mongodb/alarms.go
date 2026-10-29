@@ -1,4 +1,4 @@
-package database
+package mongodb
 
 import (
 	"context"
@@ -6,10 +6,16 @@ import (
 	"log/slog"
 	"time"
 
+	"github.com/sisneve/rabbitmq-dashboard/internal/database"
 	"github.com/sisneve/rabbitmq-dashboard/internal/models"
 	"go.mongodb.org/mongo-driver/v2/bson"
+	"go.mongodb.org/mongo-driver/v2/mongo"
 	"go.mongodb.org/mongo-driver/v2/mongo/options"
 )
+
+type AlarmHandler struct {
+	Collection *mongo.Collection
+}
 
 var (
 	ErrAlarmNotFound = fmt.Errorf("alarm not found")
@@ -147,4 +153,24 @@ func (dbc *Database) DeleteAlarm(ctx context.Context, alarmID string) error {
 
 	slog.DebugContext(ctx, "deleted alarm", "runtime", time.Since(start), id, alarmID)
 	return err
+}
+
+func (ah *AlarmHandler) Create(ctx context.Context, alarm *models.AlarmEntry) error {
+	return fmt.Errorf("not implemented")
+}
+
+func (ah *AlarmHandler) Read(ctx context.Context, filters ...database.Filter) ([]*models.AlarmEntry, error) {
+	return nil, fmt.Errorf("not implemented")
+}
+
+func (ah *AlarmHandler) Update(ctx context.Context, alarm *models.AlarmEntry) error {
+	return fmt.Errorf("not implemented")
+}
+
+func (ah *AlarmHandler) Delete(ctx context.Context, filters ...database.Filter) error {
+	return fmt.Errorf("not implemented")
+}
+
+func (ah *AlarmHandler) Append(ctx context.Context, alarmID string, logEntry models.LogEntry) error {
+	return fmt.Errorf("not implemented")
 }
