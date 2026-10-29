@@ -23,7 +23,7 @@ func (rc *APIService) authorizeVhost(ctx context.Context, required models.Scope,
 	if err != nil {
 		return ErrACLForbidden
 	}
-	acls, err := rc.DB.GetACLsForGroups(ctx, groups)
+	acls, err := rc.store.ACLHandler().GetByGroupIDs(ctx, groups)
 	if err != nil {
 		return err
 	}
@@ -69,7 +69,7 @@ func (rc *APIService) FilterAccessibleVhosts(ctx context.Context, vhosts []model
 	if err != nil {
 		return nil, ErrACLForbidden
 	}
-	acls, err := rc.DB.GetACLsForGroups(ctx, groups)
+	acls, err := rc.store.ACLHandler().GetByGroupIDs(ctx, groups)
 	if err != nil {
 		return nil, err
 	}
@@ -110,7 +110,7 @@ func (rc *APIService) GetACLsHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	acls, err := rc.DB.GetACLs(r.Context())
+	acls, err := rc.store.ACLHandler().Read(r.Context())
 	if err != nil {
 		httpsuite.WriteJSONError(w, http.StatusInternalServerError, httpsuite.WithError(err), httpsuite.WithErrorMessage("failed to fetch ACLs"))
 		return
@@ -142,16 +142,26 @@ func (rc *APIService) GetACLHandler(w http.ResponseWriter, r *http.Request) {
 		httpsuite.WriteJSONError(w, http.StatusBadRequest, httpsuite.WithErrorMessage("invalid group"))
 		return
 	}
-	acl, err := rc.DB.GetACL(r.Context(), group)
+	filter := database.NewFilter("_id", database.FilterOpEqual, group)
+	acl, err := rc.store.ACLHandler().Read(r.Context(), filter)
 	if err != nil {
-		if errors.Is(err, database.ErrACLNotFound) {
+		if errors.Is(err, database.ErrResourceNotFound) {
 			httpsuite.WriteJSONError(w, http.StatusNotFound, httpsuite.WithErrorMessage("ACL not found"))
 			return
 		}
 		httpsuite.WriteJSONError(w, http.StatusInternalServerError, httpsuite.WithError(err), httpsuite.WithErrorMessage("failed to fetch ACL"))
 		return
 	}
-	httpsuite.SendResponse(r.Context(), w, "Fetched ACL", http.StatusOK, acl)
+	if len(acl) == 0 {
+		httpsuite.WriteJSONError(w, http.StatusNotFound, httpsuite.WithErrorMessage("ACL not found"))
+		return
+	}
+	if len(acl) > 1 {
+		httpsuite.WriteJSONError(w, http.StatusInternalServerError, httpsuite.WithErrorMessage("multiple ACLs found for group"))
+		return
+	}
+
+	httpsuite.SendResponse(r.Context(), w, "Fetched ACL", http.StatusOK, acl[0])
 }
 
 // @Summary		Create or update an ACL
@@ -182,7 +192,7 @@ func (rc *APIService) UpsertACLHandler(w http.ResponseWriter, r *http.Request) {
 		httpsuite.WriteJSONError(w, http.StatusBadRequest, httpsuite.WithError(err), httpsuite.WithErrorMessage("invalid ACL"))
 		return
 	}
-	if err := rc.DB.UpsertACL(r.Context(), &acl); err != nil {
+	if err := rc.store.ACLHandler().Put(r.Context(), &acl); err != nil {
 		httpsuite.WriteJSONError(w, http.StatusInternalServerError, httpsuite.WithError(err), httpsuite.WithErrorMessage("failed to save ACL"))
 		return
 	}
@@ -213,8 +223,11 @@ func (rc *APIService) DeleteACLHandler(w http.ResponseWriter, r *http.Request) {
 		httpsuite.WriteJSONError(w, http.StatusBadRequest, httpsuite.WithErrorMessage("invalid group"))
 		return
 	}
-	if err := rc.DB.DeleteACL(r.Context(), group); err != nil {
-		if errors.Is(err, database.ErrACLNotFound) {
+
+	filter := database.NewFilter("_id", database.FilterOpEqual, group)
+	err = rc.store.ACLHandler().Delete(r.Context(), filter)
+	if err != nil {
+		if errors.Is(err, database.ErrResourceNotFound) {
 			httpsuite.WriteJSONError(w, http.StatusNotFound, httpsuite.WithErrorMessage("ACL not found"))
 			return
 		}
