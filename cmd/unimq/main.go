@@ -13,9 +13,9 @@ import (
 	"time"
 
 	"github.com/sisneve/rabbitmq-dashboard/internal/api/routes"
+	"github.com/sisneve/rabbitmq-dashboard/internal/clients/mongodb"
 	"github.com/sisneve/rabbitmq-dashboard/internal/clients/rabbitmq"
 	"github.com/sisneve/rabbitmq-dashboard/internal/config"
-	"github.com/sisneve/rabbitmq-dashboard/internal/database"
 	"github.com/sisneve/rabbitmq-dashboard/internal/helpers/notificationhelper"
 	"github.com/sisneve/rabbitmq-dashboard/internal/logger"
 	"github.com/sisneve/rabbitmq-dashboard/internal/notify"
@@ -65,12 +65,12 @@ func main() {
 		panic(err)
 	}
 
-	db, err := database.NewDatabase(
-		database.WithDatabase(config.MongoDBDatabase),
-		database.WithHost(config.MongoDBHost),
-		database.WithPort(config.MongoDBPort),
-		database.WithUsername(config.MongoDBUsername),
-		database.WithPassword(config.MongoDBPassword),
+	db, err := mongodb.NewDatabase(
+		mongodb.WithDatabase(config.MongoDBDatabase),
+		mongodb.WithHost(config.MongoDBHost),
+		mongodb.WithPort(config.MongoDBPort),
+		mongodb.WithUsername(config.MongoDBUsername),
+		mongodb.WithPassword(config.MongoDBPassword),
 	)
 	if err != nil {
 		slog.ErrorContext(ctx, "failed to connect to database", "error", err)
