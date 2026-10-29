@@ -7,8 +7,8 @@ import (
 
 	"github.com/go-playground/validator/v10"
 	"github.com/sisneve/rabbitmq-dashboard/internal/api/httpsuite"
+	"github.com/sisneve/rabbitmq-dashboard/internal/clients/mongodb"
 	"github.com/sisneve/rabbitmq-dashboard/internal/clients/rabbitmq"
-	"github.com/sisneve/rabbitmq-dashboard/internal/database"
 	"github.com/sisneve/rabbitmq-dashboard/internal/helpers/notificationhelper"
 	"github.com/sisneve/rabbitmq-dashboard/internal/helpers/requesthelper"
 	"github.com/sisneve/rabbitmq-dashboard/internal/helpers/validatorhelper"
@@ -54,7 +54,7 @@ func (rc *APIService) GetNotificationRuleHandler(w http.ResponseWriter, r *http.
 
 	rule, err := rc.DB.GetNotificationRule(r.Context(), vhost, ruleID)
 	if err != nil {
-		if errors.Is(err, database.ErrNotificationRuleNotFound) {
+		if errors.Is(err, mongodb.ErrNotificationRuleNotFound) {
 			httpsuite.WriteJSONError(w,
 				http.StatusNotFound,
 				httpsuite.WithError(err),
@@ -291,7 +291,7 @@ func (rc *APIService) PatchNotificationsRuleHandler(w http.ResponseWriter, r *ht
 			)
 			return
 
-		case errors.Is(err, database.ErrNotificationRuleNotFound):
+		case errors.Is(err, mongodb.ErrNotificationRuleNotFound):
 			httpsuite.WriteJSONError(w,
 				http.StatusNotFound,
 				httpsuite.WithError(err),
@@ -416,7 +416,7 @@ func (rc *APIService) TestNotificationsRuleHandler(w http.ResponseWriter, r *htt
 
 	rule, err := rc.DB.GetNotificationRule(r.Context(), vhost, ruleID)
 	if err != nil {
-		if errors.Is(err, database.ErrVhostNotFound) {
+		if errors.Is(err, mongodb.ErrVhostNotFound) {
 			httpsuite.WriteJSONError(w,
 				http.StatusNotFound,
 				httpsuite.WithError(err),
@@ -424,7 +424,7 @@ func (rc *APIService) TestNotificationsRuleHandler(w http.ResponseWriter, r *htt
 			)
 			return
 		}
-		if errors.Is(err, database.ErrNotificationRuleNotFound) {
+		if errors.Is(err, mongodb.ErrNotificationRuleNotFound) {
 			httpsuite.WriteJSONError(w,
 				http.StatusNotFound,
 				httpsuite.WithError(err),

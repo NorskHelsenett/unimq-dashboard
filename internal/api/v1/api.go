@@ -4,13 +4,15 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/sisneve/rabbitmq-dashboard/internal/clients/mongodb"
 	"github.com/sisneve/rabbitmq-dashboard/internal/database"
 	"github.com/sisneve/rabbitmq-dashboard/internal/notify"
 )
 
 type APIService struct {
 	Ctx         context.Context
-	DB          *database.Database
+	DB          *mongodb.Database
+	store       database.Store
 	AdminGroups []string
 	Checker     *notify.Checker
 }
@@ -24,7 +26,7 @@ func WithContext(ctx context.Context) APIServiceOption {
 	}
 }
 
-func WithDatabase(db *database.Database) APIServiceOption {
+func WithDatabase(db *mongodb.Database) APIServiceOption {
 	return func(rc *APIService) error {
 		rc.DB = db
 		return nil

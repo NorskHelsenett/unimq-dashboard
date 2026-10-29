@@ -9,7 +9,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/sisneve/rabbitmq-dashboard/internal/api/httpsuite"
-	"github.com/sisneve/rabbitmq-dashboard/internal/database"
+	"github.com/sisneve/rabbitmq-dashboard/internal/clients/mongodb"
 	"github.com/sisneve/rabbitmq-dashboard/internal/helpers/requesthelper"
 	"github.com/sisneve/rabbitmq-dashboard/internal/helpers/timehelper"
 	"github.com/sisneve/rabbitmq-dashboard/internal/models"
@@ -85,7 +85,7 @@ func (rc *APIService) GetMaintenanceEntryHandler(w http.ResponseWriter, r *http.
 
 	entry, err := rc.DB.GetMaintenanceEntry(r.Context(), maintenanceId)
 	if err != nil {
-		if errors.Is(err, database.ErrMaintenanceNotFound) {
+		if errors.Is(err, mongodb.ErrMaintenanceNotFound) {
 			httpsuite.WriteJSONError(w,
 				http.StatusNotFound,
 				httpsuite.WithError(err),
@@ -285,7 +285,7 @@ func (rc *APIService) PatchMaintenanceHandler(w http.ResponseWriter, r *http.Req
 	}
 	err = rc.DB.PatchMaintenanceEntry(r.Context(), maintenanceId, request.Description, start, end, request.Reason, email)
 	if err != nil {
-		if errors.Is(err, database.ErrMaintenanceNotFound) {
+		if errors.Is(err, mongodb.ErrMaintenanceNotFound) {
 			httpsuite.WriteJSONError(w,
 				http.StatusNotFound,
 				httpsuite.WithError(err),
@@ -399,7 +399,7 @@ func (rc *APIService) DeleteMaintenanceHandler(w http.ResponseWriter, r *http.Re
 
 	err = rc.DB.DeleteMaintenanceEntry(r.Context(), maintenanceId)
 	if err != nil {
-		if errors.Is(err, database.ErrMaintenanceNotFound) {
+		if errors.Is(err, mongodb.ErrMaintenanceNotFound) {
 			httpsuite.WriteJSONError(w,
 				http.StatusNotFound,
 				httpsuite.WithError(err),
