@@ -5,11 +5,39 @@ import (
 	"log/slog"
 	"time"
 
+	"github.com/sisneve/rabbitmq-dashboard/internal/clients/mongodb"
 	"github.com/sisneve/rabbitmq-dashboard/internal/clients/rabbitmq"
 	"github.com/sisneve/rabbitmq-dashboard/internal/config"
 	"github.com/sisneve/rabbitmq-dashboard/internal/database"
 	"github.com/sisneve/rabbitmq-dashboard/internal/logger"
+	"github.com/sisneve/rabbitmq-dashboard/internal/models"
+	"github.com/sisneve/rabbitmq-dashboard/internal/services/storeservice"
 )
+
+var aclEntries = []models.ACL{
+	{
+		Group: "group.name1@local",
+		Permissions: []models.Scope{
+			models.ScopeAdmin,
+		},
+		VhostIDs: []string{"*"},
+	},
+	{
+		Group: "acl-admin-group",
+		Permissions: []models.Scope{
+			models.ScopeAdmin,
+		},
+		VhostIDs: []string{"/"},
+	},
+	{
+		Group: "acl-testers",
+		Permissions: []models.Scope{
+			models.ScopeRead,
+			models.ScopeWrite,
+		},
+		VhostIDs: []string{"*"},
+	},
+}
 
 // This file is used to generate test data for the different stores. It is not used in the actual application.
 func main() {
@@ -28,17 +56,20 @@ func main() {
 		return
 	}
 
-	db, err := database.NewDatabase(
-		database.WithDatabase(config.MongoDBDatabase),
-		database.WithHost(config.MongoDBHost),
-		database.WithPort(config.MongoDBPort),
-		database.WithUsername(config.MongoDBUsername),
-		database.WithPassword(config.MongoDBPassword),
+	db, err := mongodb.NewDatabase(
+		mongodb.WithDatabase(config.MongoDBDatabase),
+		mongodb.WithHost(config.MongoDBHost),
+		mongodb.WithPort(config.MongoDBPort),
+		mongodb.WithUsername(config.MongoDBUsername),
+		mongodb.WithPassword(config.MongoDBPassword),
 	)
 	if err != nil {
 		slog.Error("failed to connect to database", "error", err)
 		return
 	}
+
+	dbint := database.Store(db)
+	store := storeservice.NewStoreService(dbint)
 
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
@@ -79,6 +110,8 @@ func main() {
 		slog.Error("failed to seed database", "error", err)
 		return
 	}
+
+	store.SeedACLs(ctx, aclEntries)
 
 	slog.Info("database seeded successfully")
 }
