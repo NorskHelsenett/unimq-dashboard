@@ -4,11 +4,8 @@ import (
 	"context"
 	"fmt"
 
-<<<<<<< HEAD
 	"github.com/sisneve/rabbitmq-dashboard/internal/clients/mongodb"
-=======
 	"github.com/sisneve/rabbitmq-dashboard/internal/clients/rabbitmq"
->>>>>>> f9c130b (#59 Fix: Add check again rabbitMQ to check if the acl the user creates with the acl actually exists)
 	"github.com/sisneve/rabbitmq-dashboard/internal/database"
 	"github.com/sisneve/rabbitmq-dashboard/internal/notify"
 )
