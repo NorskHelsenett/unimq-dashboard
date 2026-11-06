@@ -10,8 +10,8 @@ import (
 	"github.com/google/uuid"
 	"github.com/sisneve/rabbitmq-dashboard/internal/api/httpsuite"
 	"github.com/sisneve/rabbitmq-dashboard/internal/clients/mongodb"
+	"github.com/sisneve/rabbitmq-dashboard/internal/database"
 	"github.com/sisneve/rabbitmq-dashboard/internal/helpers/requesthelper"
-	"github.com/sisneve/rabbitmq-dashboard/internal/helpers/timehelper"
 	"github.com/sisneve/rabbitmq-dashboard/internal/models"
 )
 
@@ -29,11 +29,15 @@ import (
 func (rc *APIService) GetMaintenanceHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Advance stale entries before returning so callers always see current statuses
-	if _, err := rc.DB.AdvanceMaintenanceStatuses(r.Context()); err != nil {
+	err := rc.store.MaintenanceHandler().Advance(r.Context())
+	if err != nil {
 		slog.WarnContext(r.Context(), "failed to advance maintenance statuses", "error", err)
 	}
 
-	scheduled, err := rc.DB.GetMaintenanceScheduled(r.Context())
+	// scheduled, err := rc.DB.GetMaintenanceScheduled(r.Context())
+	filter1 := database.NewFilter("status", database.FilterOpIn, string(models.MaintenanceStatusScheduled))
+	filter2 := database.NewFilter("status", database.FilterOpIn, string(models.MaintenanceStatusInProgress))
+	scheduled, err := rc.store.MaintenanceHandler().Read(r.Context(), filter1, filter2)
 	if err != nil {
 		httpsuite.WriteJSONError(w,
 			http.StatusInternalServerError,
@@ -43,7 +47,9 @@ func (rc *APIService) GetMaintenanceHandler(w http.ResponseWriter, r *http.Reque
 		return
 	}
 
-	maintenanceHistory, err := rc.DB.GetMaintenanceHistory(r.Context())
+	filter1 = database.NewFilter("status", database.FilterOpNotEqual, string(models.MaintenanceStatusDone))
+	filter2 = database.NewFilter("status", database.FilterOpNotEqual, string(models.MaintenanceStatusSkipped))
+	history, err := rc.store.MaintenanceHandler().Read(r.Context(), filter1, filter2)
 	if err != nil {
 		httpsuite.WriteJSONError(w,
 			http.StatusInternalServerError,
@@ -53,7 +59,7 @@ func (rc *APIService) GetMaintenanceHandler(w http.ResponseWriter, r *http.Reque
 		return
 	}
 
-	response := models.NewMaintenanceResponse(scheduled, maintenanceHistory)
+	response := models.NewMaintenanceResponse(scheduled, history)
 	httpsuite.SendResponse(r.Context(), w, "Fetched sheduled and historic maintenance", http.StatusOK, &response)
 }
 
@@ -83,7 +89,8 @@ func (rc *APIService) GetMaintenanceEntryHandler(w http.ResponseWriter, r *http.
 		return
 	}
 
-	entry, err := rc.DB.GetMaintenanceEntry(r.Context(), maintenanceId)
+	filter := database.NewFilter("_id", database.FilterOpEqual, maintenanceId)
+	entry, err := rc.store.MaintenanceHandler().Read(r.Context(), filter)
 	if err != nil {
 		if errors.Is(err, mongodb.ErrMaintenanceNotFound) {
 			httpsuite.WriteJSONError(w,
@@ -147,7 +154,7 @@ func (rc *APIService) AddMaintenanceHandler(w http.ResponseWriter, r *http.Reque
 		return
 	}
 
-	err = rc.DB.AddMaintenanceEntry(r.Context(), dbentry)
+	err = rc.store.MaintenanceHandler().Create(r.Context(), []*models.MaintenanceEntry{dbentry})
 	if err != nil {
 		httpsuite.WriteJSONError(w,
 			http.StatusInternalServerError,
@@ -205,7 +212,9 @@ func (rc *APIService) UpdateMaintenanceStatusHandler(w http.ResponseWriter, r *h
 		return
 	}
 
-	err = rc.DB.SetMaintenanceEntryStatus(r.Context(), maintenance, request.Status)
+	filter := database.NewFilter("_id", database.FilterOpEqual, maintenance)
+	update := map[string]any{"status": request.Status}
+	err = rc.store.MaintenanceHandler().Patch(r.Context(), update, filter)
 	if err != nil {
 		httpsuite.WriteJSONError(w,
 			http.StatusInternalServerError,
@@ -271,9 +280,6 @@ func (rc *APIService) PatchMaintenanceHandler(w http.ResponseWriter, r *http.Req
 		return
 	}
 
-	start, _ := timehelper.ParseTimeInRFC3339(request.Start)
-	end, _ := timehelper.ParseTimeInRFC3339(request.End)
-
 	email, err := httpsuite.GetEmailFromContext(r.Context())
 	if err != nil {
 		httpsuite.WriteJSONError(w,
@@ -283,7 +289,34 @@ func (rc *APIService) PatchMaintenanceHandler(w http.ResponseWriter, r *http.Req
 		)
 		return
 	}
-	err = rc.DB.PatchMaintenanceEntry(r.Context(), maintenanceId, request.Description, start, end, request.Reason, email)
+	patch := make(map[string]any)
+	httpsuite.SetUpdate(patch, "description", request.Description)
+
+	start, err := httpsuite.ValidateOptionalTime(request.Start)
+	if err != nil {
+		httpsuite.WriteJSONError(w,
+			http.StatusBadRequest,
+			httpsuite.WithError(err),
+			httpsuite.WithErrorMessage("invalid start time format"),
+		)
+	}
+	httpsuite.SetUpdate(patch, "start", httpsuite.NewOptional(start))
+
+	end, err := httpsuite.ValidateOptionalTime(request.End)
+	if err != nil {
+		httpsuite.WriteJSONError(w,
+			http.StatusBadRequest,
+			httpsuite.WithError(err),
+			httpsuite.WithErrorMessage("invalid end time format"),
+		)
+	}
+	httpsuite.SetUpdate(patch, "end", httpsuite.NewOptional(end))
+	patch["updated_by"] = email
+	patch["updated_at"] = time.Now()
+	httpsuite.SetUpdate(patch, "update_reason", request.Reason)
+
+	filter := database.NewFilter("_id", database.FilterOpEqual, maintenanceId)
+	err = rc.store.MaintenanceHandler().Patch(r.Context(), patch, filter)
 	if err != nil {
 		if errors.Is(err, mongodb.ErrMaintenanceNotFound) {
 			httpsuite.WriteJSONError(w,
@@ -301,18 +334,31 @@ func (rc *APIService) PatchMaintenanceHandler(w http.ResponseWriter, r *http.Req
 		return
 	}
 
+	description, _ := request.Description.Value()
+	reason, _ := request.Reason.Value()
+
 	logEntry := &models.MaintenanceEditLog{
 		ID:            uuid.New().String(),
 		MaintenanceID: maintenanceId,
-		Description:   request.Description,
-		Start:         start,
-		End:           end,
-		Reason:        request.Reason,
+		Description:   description,
+		Start:         *start,
+		End:           *end,
+		Reason:        reason,
 		UpdatedBy:     email,
 		UpdatedAt:     time.Now().UTC(),
 	}
-	if logErr := rc.DB.AddMaintenanceEditLog(r.Context(), logEntry); logErr != nil {
-		slog.WarnContext(r.Context(), "failed to write maintenance edit log", "error", logErr)
+
+	entries := make([]*models.MaintenanceEditLog, 0, 1)
+	entries = append(entries, logEntry)
+	err = rc.store.MaintenanceLogsHandler().Create(r.Context(), entries)
+	if err != nil {
+		slog.WarnContext(r.Context(), "failed to write maintenance edit log", "error", err)
+		httpsuite.WriteJSONError(w,
+			http.StatusInternalServerError,
+			httpsuite.WithError(err),
+			httpsuite.WithErrorMessage("failed to write maintenance edit log"),
+		)
+		return
 	}
 
 	httpsuite.SendResponse(r.Context(), w, "Maintenance entry updated successfully", http.StatusOK, httpsuite.NewEmptyResponse())
@@ -349,7 +395,8 @@ func (rc *APIService) GetMaintenanceEditLogsHandler(w http.ResponseWriter, r *ht
 		return
 	}
 
-	logs, err := rc.DB.GetMaintenanceEditLogs(r.Context(), maintenanceId)
+	filter := database.NewFilter("maintenance_id", database.FilterOpEqual, maintenanceId)
+	logs, err := rc.store.MaintenanceLogsHandler().Read(r.Context(), filter)
 	if err != nil {
 		httpsuite.WriteJSONError(w,
 			http.StatusInternalServerError,
@@ -360,7 +407,7 @@ func (rc *APIService) GetMaintenanceEditLogsHandler(w http.ResponseWriter, r *ht
 	}
 
 	type logsResponse struct {
-		Logs []models.MaintenanceEditLog `json:"logs"`
+		Logs []*models.MaintenanceEditLog `json:"logs"`
 	}
 	httpsuite.SendResponse(r.Context(), w, "Fetched maintenance edit logs", http.StatusOK, &logsResponse{Logs: logs})
 }
@@ -397,7 +444,8 @@ func (rc *APIService) DeleteMaintenanceHandler(w http.ResponseWriter, r *http.Re
 		return
 	}
 
-	err = rc.DB.DeleteMaintenanceEntry(r.Context(), maintenanceId)
+	filter := database.NewFilter("_id", database.FilterOpEqual, maintenanceId)
+	err = rc.store.MaintenanceHandler().Delete(r.Context(), filter)
 	if err != nil {
 		if errors.Is(err, mongodb.ErrMaintenanceNotFound) {
 			httpsuite.WriteJSONError(w,

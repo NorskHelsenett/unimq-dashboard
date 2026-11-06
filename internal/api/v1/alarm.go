@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	"github.com/sisneve/rabbitmq-dashboard/internal/api/httpsuite"
+	"github.com/sisneve/rabbitmq-dashboard/internal/database"
 	"github.com/sisneve/rabbitmq-dashboard/internal/helpers/requesthelper"
 	"go.mongodb.org/mongo-driver/v2/mongo"
 )
@@ -29,7 +30,7 @@ func (rc *APIService) GetAlarmHistoryAllHandler(w http.ResponseWriter, r *http.R
 		return
 	}
 
-	alarms, err := rc.DB.GetAlarmsAll(r.Context())
+	alarms, err := rc.store.AlarmHandler().Read(r.Context())
 	if err != nil {
 		httpsuite.WriteJSONError(w,
 			http.StatusInternalServerError,
@@ -73,7 +74,8 @@ func (rc *APIService) GetAlarmHistoryHandler(w http.ResponseWriter, r *http.Requ
 		return
 	}
 
-	alarms, err := rc.DB.GetAlarm(r.Context(), ruleID)
+	filter := database.NewFilter("_id", database.FilterOpEqual, ruleID)
+	alarms, err := rc.store.AlarmHandler().Read(r.Context(), filter)
 	if err != nil {
 		if errors.Is(err, mongo.ErrNoDocuments) {
 			httpsuite.WriteJSONError(w,
@@ -98,5 +100,21 @@ func (rc *APIService) GetAlarmHistoryHandler(w http.ResponseWriter, r *http.Requ
 		return
 	}
 
-	httpsuite.SendResponse(r.Context(), w, "Gathered notification history on rule ID "+ruleID, http.StatusOK, alarms)
+	if len(alarms) == 0 {
+		httpsuite.WriteJSONError(w,
+			http.StatusNotFound,
+			httpsuite.WithErrorMessage("no alarm history found for rule ID: "+ruleID),
+		)
+		return
+	}
+
+	if len(alarms) > 1 {
+		httpsuite.WriteJSONError(w,
+			http.StatusInternalServerError,
+			httpsuite.WithErrorMessage("multiple alarm history entries found for rule ID: "+ruleID),
+		)
+		return
+	}
+
+	httpsuite.SendResponse(r.Context(), w, "Gathered notification history on rule ID "+ruleID, http.StatusOK, alarms[0])
 }

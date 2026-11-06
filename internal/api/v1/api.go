@@ -13,8 +13,8 @@ import (
 type APIService struct {
 	Ctx         context.Context
 	DB          *mongodb.Database
+	RMQClient   rabbitmq.RMQClientInterface
 	store       database.Store
-	RMQClient   *rabbitmq.RMQClient
 	AdminGroups []string
 	Checker     *notify.Checker
 }
@@ -31,11 +31,12 @@ func WithContext(ctx context.Context) APIServiceOption {
 func WithDatabase(db *mongodb.Database) APIServiceOption {
 	return func(rc *APIService) error {
 		rc.DB = db
+		rc.store = db
 		return nil
 	}
 }
 
-func WithRMQClient(client *rabbitmq.RMQClient) APIServiceOption {
+func WithRMQClient(client rabbitmq.RMQClientInterface) APIServiceOption {
 	return func(rc *APIService) error {
 		rc.RMQClient = client
 		return nil
