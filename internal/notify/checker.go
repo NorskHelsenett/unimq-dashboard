@@ -10,6 +10,7 @@ import (
 
 	"github.com/sisneve/rabbitmq-dashboard/internal/clients/mongodb"
 	"github.com/sisneve/rabbitmq-dashboard/internal/clients/rabbitmq"
+	"github.com/sisneve/rabbitmq-dashboard/internal/database"
 	"github.com/sisneve/rabbitmq-dashboard/internal/helpers/notificationhelper"
 	"github.com/sisneve/rabbitmq-dashboard/internal/models"
 )
@@ -18,7 +19,8 @@ type (
 	// Checker periodically evaluates alarm rules against current RabbitMQ metrics and triggers notifications.
 	Checker struct {
 		Ctx         context.Context
-		DB          *database.Database
+		DB          *mongodb.Database
+		store       database.Store
 		RMQClient   rabbitmq.RMQClientInterface
 		interval    time.Duration
 		mu          sync.RWMutex
@@ -45,6 +47,7 @@ func WithRMQClient(client rabbitmq.RMQClientInterface) CheckerOptions {
 func WithDB(db *mongodb.Database) CheckerOptions {
 	return func(c *Checker) {
 		c.DB = db
+		c.store = db
 	}
 }
 
@@ -126,7 +129,8 @@ func (c *Checker) runChecks() {
 		return
 	}
 
-	if _, err := c.DB.AdvanceMaintenanceStatuses(c.Ctx); err != nil {
+	err := c.store.MaintenanceHandler().Advance(c.Ctx)
+	if err != nil {
 		slog.ErrorContext(c.Ctx, "Checker: failed to advance maintenance statuses", "error", err)
 	}
 
@@ -178,7 +182,7 @@ func (c *Checker) runChecks() {
 	}
 
 	// Check for any scheduled maintenance and send notifications if there are any new ones.
-	checkMaintenanceSchedules(c.Ctx, c.DB, urls, emails)
+	checkMaintenanceSchedules(c.Ctx, c.DB.MaintenanceHandler(), urls, emails)
 }
 
 var (
@@ -306,23 +310,23 @@ func NotifyAlarm(ctx context.Context, vhost *models.VhostNotification, rule *mod
 }
 
 // checkMaintenanceRule checks for any scheduled maintenance and sends notifications if there are any new ones.
-func checkMaintenanceSchedules(ctx context.Context, db *mongodb.Database, urls []string, emails []string) {
-	scheduled, err := db.GetMaintenanceScheduled(ctx)
+func checkMaintenanceSchedules(ctx context.Context, db database.MaintenaceRepository, urls []string, emails []string) {
+	filter := database.NewFilter("status", database.FilterOpEqual, models.MaintenanceStatusScheduled.String())
+	scheduled, err := db.Read(ctx, filter)
 	if err != nil {
 		slog.ErrorContext(ctx, "Failed to fetch scheduled maintenance", "error", err)
 		return
 	}
-	for i := range scheduled {
-		m := &scheduled[i]
-		if m.Notified {
+	for _, schedule := range scheduled {
+		if schedule.Notified {
 			continue
 		}
 
 		body := fmt.Sprintf(
 			"New maintenance scheduled:\n\n%s\n\nDate: %s – %s UTC",
-			m.Description,
-			m.Start.Format("2006-01-02 15:04"),
-			m.End.Format("15:04"),
+			schedule.Description,
+			schedule.Start.Format("2006-01-02 15:04"),
+			schedule.End.Format("15:04"),
 		)
 		subject := "[UniMQ] New maintenance scheduled"
 		webhookStatus := notificationhelper.SendWebhooks(urls, subject, body)
@@ -352,7 +356,9 @@ func checkMaintenanceSchedules(ctx context.Context, db *mongodb.Database, urls [
 			}
 		}
 
-		if err := db.SetMaintenanceEntryNotified(ctx, m.ID, true); err != nil {
+		filter := database.NewFilter("_id", database.FilterOpEqual, schedule.ID)
+		err := db.Patch(ctx, map[string]any{"notified": true}, filter)
+		if err != nil {
 			slog.ErrorContext(ctx, "Failed to mark maintenance as notified", "error", err)
 		}
 	}
