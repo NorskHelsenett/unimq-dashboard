@@ -226,7 +226,7 @@ func (dbc *Database) AlarmHandler() database.AlarmRepository {
 
 func (dbc *Database) MaintenanceHandler() database.MaintenaceRepository {
 	var out database.MaintenaceRepository
-	out = NewMaintenanceHandler(*dbc.Collections.Maintenance)
+	out = NewMaintenanceHandler(dbc.Collections.Maintenance)
 	return out
 }
 
