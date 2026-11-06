@@ -4,6 +4,9 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"time"
+
+	"github.com/sisneve/rabbitmq-dashboard/internal/helpers/timehelper"
 )
 
 type Optional[T any] struct {
@@ -43,12 +46,14 @@ func (o Optional[T]) MarshalJSON() ([]byte, error) {
 
 func (o Optional[T]) IsSet() bool  { return o.set }
 func (o Optional[T]) IsNull() bool { return o.set && o.null }
+
+// Value returns the value and a boolean indicating if the value is set and not null
 func (o Optional[T]) Value() (T, bool) {
 	return o.value, o.set && !o.null
 }
 
 // Any returns the value as interface{} to satisfy OptionalAny interface
-func (o Optional[T]) Any() (interface{}, bool) {
+func (o Optional[T]) Any() (any, bool) {
 	if !o.set || o.null {
 		return nil, false
 	}
@@ -77,4 +82,24 @@ func SetUpdate[T any](m map[string]any, column string, o Optional[T]) {
 	if v, ok := o.Value(); ok {
 		m[column] = v
 	}
+}
+
+var (
+	ErrTimeNotSet = fmt.Errorf("time not set")
+)
+
+func ValidateOptionalTime(timeStr Optional[string]) (*time.Time, error) {
+	if !timeStr.IsSet() {
+		return nil, ErrTimeNotSet
+	}
+	start, isNil := timeStr.Value()
+	if isNil {
+		return nil, fmt.Errorf("start time cannot be null")
+	}
+	startTime, err := timehelper.ParseTimeInRFC3339(start)
+	if err != nil {
+		return nil, fmt.Errorf("invalid start time format: %w", err)
+	}
+
+	return &startTime, nil
 }
