@@ -45,6 +45,23 @@ type Client struct {
 	calls []Call
 }
 
+func NewClient() *Client {
+	return &Client{
+		GetVhostsFunc:      nil,
+		GetVhostUsageFunc:  nil,
+		GetVhostLimitsFunc: nil,
+		GetConnectionsFunc: nil,
+		GetChannelsFunc:    nil,
+		GetQueuesFunc:      nil,
+		GetNodesFunc:       nil,
+		GetMetricsFunc:     nil,
+		PingFunc:           nil,
+
+		mu:    sync.Mutex{},
+		calls: []Call{},
+	}
+}
+
 // Guard against Client not implementing RMQClientInterface at compile time.
 var _ rabbitmq.RMQClientInterface = (*Client)(nil)
 

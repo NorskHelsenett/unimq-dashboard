@@ -143,7 +143,7 @@ func (r *RMQClient) GetVhosts(filters ...Filter) ([]*models.Vhost, error) {
 		case http.StatusNotFound:
 			return nil, fmt.Errorf("%w. %w", ErrVhostNotFound, err)
 		default:
-			return nil, fmt.Errorf("%w. %w", ErrInternalServerError, err)
+			return nil, returnServerError(err, status)
 		}
 	}
 
@@ -171,7 +171,7 @@ func (r *RMQClient) GetConnections(filters ...Filter) ([]*models.RMQConnection, 
 		case http.StatusNotFound:
 			return nil, fmt.Errorf("%w. %w", ErrConnectionNotFound, err)
 		default:
-			return nil, fmt.Errorf("%w. %w", ErrInternalServerError, err)
+			return nil, returnServerError(err, status)
 		}
 	}
 	return connections, nil
@@ -187,7 +187,7 @@ func (r *RMQClient) GetChannels(filters ...Filter) ([]*models.RMQChannel, error)
 		case http.StatusNotFound:
 			return nil, fmt.Errorf("%w. %w", ErrChannelNotFound, err)
 		default:
-			return nil, fmt.Errorf("%w. %w", ErrInternalServerError, err)
+			return nil, returnServerError(err, status)
 		}
 	}
 	return channels, nil
@@ -203,7 +203,7 @@ func (r *RMQClient) GetQueues(filters ...Filter) ([]*models.RMQQueue, error) {
 		case http.StatusNotFound:
 			return nil, fmt.Errorf("%w. %w", ErrQueueNotFound, err)
 		default:
-			return nil, fmt.Errorf("%w. %w", ErrInternalServerError, err)
+			return nil, returnServerError(err, status)
 		}
 	}
 
@@ -220,7 +220,7 @@ func (r *RMQClient) GetNodes(filters ...Filter) ([]*models.RMQNode, error) {
 		case http.StatusNotFound:
 			return nil, fmt.Errorf("%w. %w", ErrNodeNotFound, err)
 		default:
-			return nil, fmt.Errorf("%w. %w", ErrInternalServerError, err)
+			return nil, returnServerError(err, status)
 		}
 	}
 	return nodes, nil
@@ -239,7 +239,7 @@ func (r *RMQClient) GetVhostLimits(filters ...Filter) ([]*models.RMQVhostLimits,
 			return nil, fmt.Errorf("%w. %w", ErrLimitsNotFound, err)
 
 		default:
-			return nil, fmt.Errorf("%w. %w", ErrInternalServerError, err)
+			return nil, returnServerError(err, status)
 		}
 	}
 
@@ -331,9 +331,9 @@ func (r *RMQClient) GetMetrics(filters ...Filter) ([]*models.VhostMetrics, error
 }
 
 func (r *RMQClient) Ping() error {
-	_, err := r.restClient.Get("/overview", nil)
+	status, err := r.restClient.Get("/overview", nil)
 	if err != nil {
-		return fmt.Errorf("%w. %w", ErrInternalServerError, err)
+		return returnServerError(err, status)
 	}
 	return nil
 }
@@ -367,4 +367,8 @@ func (r *RMQClient) GetVhostUsage(filters ...Filter) ([]*models.RMQVhostUsage, e
 
 	return usage, nil
 
+}
+
+func returnServerError(err error, status int) error {
+	return fmt.Errorf("%w. status code %v. %w", ErrInternalServerError, status, err)
 }
