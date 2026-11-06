@@ -139,30 +139,6 @@ func (dbc *Database) Seed(ctx context.Context, queueMapping map[string][]string)
 			return err
 		}
 
-		err = dbc.SeedAlarms(ctx, vhost, alarmRules)
-		if err != nil {
-			return err
-		}
-	}
-
-	if len(vhosts) > 0 {
-		if err := dbc.SeedACLs(ctx, []models.ACL{{
-			Group:       "acl-testers",
-			Permissions: []models.Scope{models.ScopeRead, models.ScopeWrite},
-			VhostIDs:    vhosts,
-		}}); err != nil {
-			return fmt.Errorf("seed ACLs: %w", err)
-		}
-	}
-
-	err := dbc.seedMaintenace(ctx)
-	if err != nil {
-		return err
-	}
-
-	err = dbc.SeedMaintenanceLogs(ctx)
-	if err != nil {
-		return err
 	}
 
 	return nil
@@ -220,90 +196,6 @@ func (dbc *Database) seedNotificationRules(ctx context.Context, vhost string, al
 	// nolint:gocritic // ignoring rangeValCopy as this is only used for seeding and not performance critical.
 	for _, missingRule := range alarmRules {
 		err := dbc.AddNotificationRule(ctx, vhost, &missingRule)
-		if err != nil {
-			return err
-		}
-	}
-
-	return nil
-}
-
-func (dbc *Database) seedMaintenace(ctx context.Context) error {
-
-	// nolint:gocritic // ignoring rangeValCopy as this is only used for seeding and not performance critical.
-	for _, MaintenanceEntry := range maintenanceEntries {
-		err := dbc.AddMaintenanceEntry(ctx, &MaintenanceEntry)
-		if err != nil {
-			return err
-		}
-	}
-	return nil
-}
-
-func (dbc *Database) SeedMaintenanceEntry(ctx context.Context, entry *models.MaintenanceEntry) error {
-
-	// nolint:gocritic // ignoring rangeValCopy as this is only used for seeding and not performance critical.
-	err := dbc.AddMaintenanceEntry(ctx, entry)
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func (dbc *Database) SeedMaintenanceLogs(ctx context.Context) error {
-
-	// nolint:gocritic // ignoring rangeValCopy as this is only used for seeding and not performance critical.
-	for _, MaintenanceEntry := range maintenanceEntries {
-
-		logEntries := make([]models.MaintenanceEditLog, 0, 3)
-		logEntries = append(logEntries, *models.NewMaintenaceEditLog(MaintenanceEntry.ID, "Test maintenance log entry 1", time.Now(), time.Now().Add(2*time.Hour), "Initial creation", "user1"))
-		logEntries = append(logEntries, *models.NewMaintenaceEditLog(MaintenanceEntry.ID, "Test maintenance log entry 2", time.Now(), time.Now().Add(2*time.Hour), "Updated description", "user2"))
-		logEntries = append(logEntries, *models.NewMaintenaceEditLog(MaintenanceEntry.ID, "Test maintenance log entry 3", time.Now(), time.Now().Add(2*time.Hour), "Updated start and end times", "user3"))
-
-		for _, log := range logEntries {
-			err := dbc.AddMaintenanceEditLog(ctx, &log)
-			if err != nil {
-				return err
-			}
-		}
-
-	}
-
-	return nil
-}
-
-func (dbc *Database) SeedAlarms(ctx context.Context, name string, alarmRules []models.AlarmRule) error {
-
-	// nolint:gocritic // ignoring rangeValCopy as this is only used for seeding and not performance critical.
-	for _, rule := range alarmRules {
-
-		entries := models.AlarmEntry{
-			AlarmID: rule.ID,
-			Entries: []models.LogEntry{},
-		}
-
-		val := 5.0
-		entries.Entries = append(entries.Entries, models.NewLogEntry(models.LogEventFired, &val, 3.4, rule.Type))
-		entries.Entries = append(entries.Entries, models.NewLogEntry(models.LogEventResolved, &val, 42.0, rule.Type))
-		entries.Entries = append(entries.Entries, models.NewLogEntry(models.LogEventFired, &val, 0.67, rule.Type))
-		entries.Entries = append(entries.Entries, models.NewLogEntry(models.LogEventResolved, &val, 69.0, rule.Type))
-		entries.Entries = append(entries.Entries, models.NewLogEntry(models.LogEventFired, new(47.0), 10.0, rule.Type))
-
-		err := dbc.AddAlarm(ctx, &entries)
-		if err != nil {
-			return err
-		}
-	}
-
-	return nil
-}
-
-func (dbc *Database) SeedACLs(ctx context.Context, acls []models.ACL) error {
-
-	// nolint:gocritic // ignoring rangeValCopy as this is only used for seeding and not performance critical.
-	for _, acl := range acls {
-		err := dbc.UpsertACL(ctx, &acl)
 		if err != nil {
 			return err
 		}
