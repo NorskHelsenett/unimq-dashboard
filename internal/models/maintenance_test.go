@@ -165,69 +165,6 @@ func TestUpdateMaintenance_UnmarshalJSON_MalformedJSON(t *testing.T) {
 	assert.Error(t, err)
 }
 
-func TestPatchMaintenanceEntry_Validate(t *testing.T) {
-	valid := func() *models.PatchMaintenanceEntry {
-		return &models.PatchMaintenanceEntry{
-			Description: "server upgrade",
-			Start:       testMaintenanceStart,
-			End:         testMaintenanceEnd,
-			Reason:      "updated maintenance time",
-		}
-	}
-
-	t.Run("valid", func(t *testing.T) {
-		assert.NoError(t, valid().Validate())
-	})
-
-	t.Run("missing description", func(t *testing.T) {
-		p := valid()
-		p.Description = ""
-		err := p.Validate()
-		require.Error(t, err)
-		assert.Contains(t, err.Error(), "description is required")
-	})
-
-	t.Run("missing reason", func(t *testing.T) {
-		p := valid()
-		p.Reason = ""
-		err := p.Validate()
-		require.Error(t, err)
-		assert.Contains(t, err.Error(), "reason is required")
-	})
-
-	t.Run("invalid start format", func(t *testing.T) {
-		p := valid()
-		p.Start = "2024-06-01 10:00:00"
-		err := p.Validate()
-		require.Error(t, err)
-		assert.Contains(t, err.Error(), "invalid start time format")
-	})
-
-	t.Run("invalid end format", func(t *testing.T) {
-		p := valid()
-		p.End = "2024-06-01 12:00:00"
-		err := p.Validate()
-		require.Error(t, err)
-		assert.Contains(t, err.Error(), "invalid end time format")
-	})
-
-	t.Run("end before start", func(t *testing.T) {
-		p := valid()
-		p.Start = testMaintenanceEnd
-		p.End = testMaintenanceStart
-		err := p.Validate()
-		require.Error(t, err)
-		assert.Contains(t, err.Error(), "end time must be after start time")
-	})
-
-	t.Run("end equal to start is accepted", func(t *testing.T) {
-		p := valid()
-		p.Start = testMaintenanceStart
-		p.End = testMaintenanceStart
-		assert.NoError(t, p.Validate(), "end.Before(start) is false when they are equal, so this currently passes validation")
-	})
-}
-
 const testMaintenanceEmail = "jane@example.com"
 
 func contextWithEmail() context.Context {

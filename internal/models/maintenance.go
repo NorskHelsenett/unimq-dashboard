@@ -22,6 +22,10 @@ const (
 	MaintenanceStatusUnknown    MaintenanceStatus = "unknown"
 )
 
+func (s MaintenanceStatus) String() string {
+	return string(s)
+}
+
 func ParseMaintenanceStatus(s string) MaintenanceStatus {
 	switch s {
 	case "scheduled":
@@ -187,32 +191,47 @@ func NewMaintenanceEntry(description string, start time.Time, end time.Time) *Ma
 }
 
 type PatchMaintenanceEntry struct {
-	Description string `json:"description" example:"maintenance for server upgrade"`
-	Start       string `json:"start" example:"2024-06-01T10:00:00Z"`
-	End         string `json:"end" example:"2024-06-01T12:00:00Z"`
-	Reason      string `json:"reason" example:"updated maintenance time"`
+	Description  httpsuite.Optional[string]            `json:"description" example:"maintenance for server upgrade"`
+	Start        httpsuite.Optional[string]            `json:"start" example:"2024-06-01T10:00:00Z" valiate:"rfc3339,nonull"`
+	start        httpsuite.Optional[time.Time]         `swaggerignore:"true"`
+	End          httpsuite.Optional[string]            `json:"end" example:"2024-06-01T12:00:00Z"`
+	end          httpsuite.Optional[time.Time]         `swaggerignore:"true"`
+	Reason       httpsuite.Optional[string]            `json:"reason" example:"updated maintenance time"`
+	Status       httpsuite.Optional[MaintenanceStatus] `json:"status" bson:"status" example:"-"`
+	Notified     httpsuite.Optional[bool]              `json:"notified" bson:"notified"`
+	UpdatedBy    httpsuite.Optional[string]            `json:"updated_by,omitempty" bson:"updated_by,omitempty"`
+	UpdateReason httpsuite.Optional[string]            `json:"update_reason,omitempty" bson:"update_reason,omitempty"`
+	updatedAt    time.Time                             `swaggerignore:"true"`
 }
 
 func (p *PatchMaintenanceEntry) Validate() error {
-	if p.Description == "" {
-		return fmt.Errorf("description is required")
+
+	var startTime, endTime time.Time
+	if p.Start.IsSet() {
+		start, isNil := p.Start.Value()
+		if isNil {
+			return fmt.Errorf("start time cannot be null")
+		}
+		startTime, err := timehelper.ParseTimeInRFC3339(start)
+		if err != nil {
+			return fmt.Errorf("invalid start time format: %w", err)
+		}
+		p.start = httpsuite.NewOptional(startTime)
 	}
 
-	if p.Reason == "" {
-		return fmt.Errorf("reason is required")
+	if p.End.IsSet() {
+		end, isNil := p.End.Value()
+		if isNil {
+			return fmt.Errorf("end time cannot be null")
+		}
+		endTime, err := timehelper.ParseTimeInRFC3339(end)
+		if err != nil {
+			return fmt.Errorf("invalid start time format: %w", err)
+		}
+		p.start = httpsuite.NewOptional(endTime)
 	}
 
-	start, err := timehelper.ParseTimeInRFC3339(p.Start)
-	if err != nil {
-		return fmt.Errorf("invalid start time format: %w", err)
-	}
-
-	end, err := timehelper.ParseTimeInRFC3339(p.End)
-	if err != nil {
-		return fmt.Errorf("invalid end time format: %w", err)
-	}
-
-	if end.Before(start) {
+	if endTime.Before(startTime) {
 		return fmt.Errorf("end time must be after start time")
 	}
 
@@ -244,11 +263,11 @@ func NewMaintenaceEditLog(maintenanceID string, description string, start time.T
 }
 
 type MaintenanceResponse struct {
-	Scheduled []MaintenanceEntry `json:"scheduled"`
-	History   []MaintenanceEntry `json:"history"`
+	Scheduled []*MaintenanceEntry `json:"scheduled"`
+	History   []*MaintenanceEntry `json:"history"`
 }
 
-func NewMaintenanceResponse(scheduled []MaintenanceEntry, history []MaintenanceEntry) *MaintenanceResponse {
+func NewMaintenanceResponse(scheduled []*MaintenanceEntry, history []*MaintenanceEntry) *MaintenanceResponse {
 	return &MaintenanceResponse{
 		Scheduled: scheduled,
 		History:   history,
