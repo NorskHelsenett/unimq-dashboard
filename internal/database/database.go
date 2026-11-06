@@ -13,9 +13,9 @@ type Store interface {
 
 	AlarmHandler() AlarmRepository
 	ACLHandler() ACLRepository
+	MaintenanceHandler() MaintenaceRepository
+	MaintenanceLogsHandler() MaintenaceLogRepository
 	// VhostHandler() VhostHandler
-	// MaintenanceHandler() MaintenaceHandler
-	// MaintenanceLogsHandler() MaintenaceLogsHandler
 	// NotificationHandler() NotificationHandler
 	// NotificationRecipientHandler() NotificationRecipientHandler
 	// NotificationRulesHandler() NotificationRulesHandler
@@ -25,33 +25,34 @@ type StoreSeeder interface {
 	Seed(ctx context.Context) error
 }
 
-// AlarmHandler defines the interface for managing alarms in the database.
-//
-// Alarms are parented to an ID and can have multiple log entries.
+// AlarmRepository defines the interface for managing alarms in the database.
 type AlarmRepository interface {
 	CRUDStore[models.AlarmEntry]
 	Append(ctx context.Context, alarmID string, logEntry models.LogEntry) error
 }
 
-// ACLHandler defines the interface for managing ACLs in the database.
+// ACLRepository defines the interface for managing ACLs in the database.
 type ACLRepository interface {
 	CRUDStore[models.ACL]
-	CRUDStoreExtended[models.ACL]
+	Putter[models.ACL]
+	Patcher[models.ACL]
 	GetByGroupIDs(ctx context.Context, groupIDs []string) ([]*models.ACL, error)
 }
 
 // VhostHandler defines the interface for managing vhosts in the database.
-type VhostHandler interface {
+type VhostRepository interface {
 	CRUDStore[models.Vhost]
 }
 
-// MaintenanceHandler defines the interface for managing maintenance entries in the database.
-type MaintenaceHandler interface {
+// MaintenenaceRepository defines the interface for managing maintenance entries in the database.
+type MaintenaceRepository interface {
 	Advance(ctx context.Context) error
 	CRUDStore[models.MaintenanceEntry]
+	Patcher[models.PatchMaintenanceEntry]
 }
 
-type MaintenaceLogsHandler interface {
+// MaintenaceLogHandler defines the interface for managing maintenance edit logs in the database.
+type MaintenaceLogRepository interface {
 	CRUDStore[models.MaintenanceEditLog]
 }
 
@@ -71,23 +72,25 @@ type NotificationRulesHandler interface {
 
 // This is a base interface for most database operations. It defines the basic CRUD operations for a generic type T.
 type CRUDStore[T any] interface {
-	Create(ctx context.Context, item *T) error                 // Create a single item.
-	Read(ctx context.Context, filters ...Filter) ([]*T, error) // Read one or more items based on filters.
-	Update(ctx context.Context, item *T) error                 // Update a single item.
-	Delete(ctx context.Context, filters ...Filter) error       // Delete one or more items based on filters.
+	Create(ctx context.Context, items []*T) error                 // Create a single item.
+	Read(ctx context.Context, filters ...Filter) ([]*T, error)    // Read one or more items based on filters.
+	Update(ctx context.Context, item *T, filters ...Filter) error // Update a single item.
+	Delete(ctx context.Context, filters ...Filter) error          // Delete one or more items based on filters.
 }
 
-// CRUDStoreExtended extends the CRUDStore interface with additional methods for upserting and patching items.
-type CRUDStoreExtended[T any] interface {
-	Put(ctx context.Context, item *T) error                             // Upsert an item (create or update).
-	Patch(ctx context.Context, id string, updates map[string]any) error // Patch an item by ID.
+type Putter[T any] interface {
+	Put(ctx context.Context, item *T, filters ...Filter) error // Upsert an item (create or update).
+}
+
+type Patcher[T any] interface {
+	Patch(ctx context.Context, patch map[string]any, filters ...Filter) error // Patch an item by ID.
 }
 
 type (
 	Filter struct {
 		Property string
 		Type     FilterType
-		Value    string
+		Value    any
 	}
 
 	FilterType string
@@ -104,7 +107,7 @@ const (
 	FilterOpLessEqual    FilterType = "lte"
 )
 
-func NewFilter(property string, filterType FilterType, value string) Filter {
+func NewFilter(property string, filterType FilterType, value any) Filter {
 	return Filter{
 		Property: property,
 		Type:     filterType,
@@ -117,5 +120,7 @@ type DatabaseMonitor interface {
 }
 
 var (
-	ErrResourceNotFound = errors.New("resource not found")
+	ErrGeneralDatabaseError     = errors.New("general database error")
+	ErrResourceNotFound         = errors.New("resource not found")
+	ErrInvalidRequestParameters = errors.New("invalid request parameters")
 )

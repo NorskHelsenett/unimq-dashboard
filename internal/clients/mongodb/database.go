@@ -214,12 +214,24 @@ func (dbc *Database) InitCollections() error {
 
 func (dbc *Database) ACLHandler() database.ACLRepository {
 	var out database.ACLRepository
-	out = &ACLHandler{dbc.Collections.ACLs}
+	out = NewACLHandler(dbc.Collections.ACLs)
 	return out
 }
 
 func (dbc *Database) AlarmHandler() database.AlarmRepository {
 	var out database.AlarmRepository
-	out = &AlarmHandler{dbc.Collections.Alarms}
+	out = NewAlarmHandler(dbc.Collections.Alarms)
+	return out
+}
+
+func (dbc *Database) MaintenanceHandler() database.MaintenaceRepository {
+	var out database.MaintenaceRepository
+	out = NewMaintenanceHandler(*dbc.Collections.Maintenance)
+	return out
+}
+
+func (dbc *Database) MaintenanceLogsHandler() database.MaintenaceLogRepository {
+	var out database.MaintenaceLogRepository
+	out = NewMaintenanceLogHandler(*dbc.Collections.MaintenanceEditLogs)
 	return out
 }

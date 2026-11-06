@@ -15,94 +15,22 @@ import (
 
 type AlarmHandler struct {
 	Collection *mongo.Collection
+	*CollectorHolder[models.AlarmEntry]
 }
+
+func NewAlarmHandler(collection *mongo.Collection) *AlarmHandler {
+	return &AlarmHandler{
+		Collection:      collection,
+		CollectorHolder: NewCollectorHolder[models.AlarmEntry](collection),
+	}
+}
+
+// interface guard clause.
+var _ database.AlarmRepository = (*AlarmHandler)(nil)
 
 var (
 	ErrAlarmNotFound = fmt.Errorf("alarm not found")
 )
-
-func (dbc *Database) GetAlarmsAll(ctx context.Context) ([]models.AlarmEntry, error) {
-
-	start := time.Now()
-
-	cursor, err := dbc.Collections.Alarms.Find(ctx, bson.M{})
-	if err != nil {
-		return nil, fmt.Errorf("failed to find alarms. %w", err)
-	}
-
-	defer func() {
-		err := cursor.Close(ctx)
-		if err != nil {
-			slog.ErrorContext(ctx, "failed to close cursor", "runtime", time.Since(start), "error", err)
-		}
-	}()
-
-	var alarms []models.AlarmEntry
-	err = cursor.All(ctx, &alarms)
-	if err != nil {
-		slog.ErrorContext(ctx, "failed to decode alarms", "runtime", time.Since(start), "error", err)
-		return nil, err
-	}
-
-	slog.DebugContext(ctx, "retrieved alarms", "runtime", time.Since(start), "count", len(alarms))
-
-	return alarms, nil
-}
-
-func (dbc *Database) GetAlarm(ctx context.Context, alarmID string) (*models.AlarmEntry, error) {
-	start := time.Now()
-	var alarm models.AlarmEntry
-
-	filter := bson.M{id: alarmID}
-
-	err := dbc.Collections.Alarms.FindOne(ctx, filter).Decode(&alarm)
-	if err != nil {
-		slog.ErrorContext(ctx, "failed to find alarm",
-			"runtime", time.Since(start),
-			"_id", alarmID,
-			"error", err,
-		)
-		return nil, fmt.Errorf("%w. %w", ErrAlarmNotFound, err)
-	}
-
-	slog.DebugContext(ctx, "retrieved alarm",
-		"runtime", time.Since(start),
-		"_id", alarmID,
-	)
-
-	return &alarm, nil
-}
-
-func (dbc *Database) AddAlarm(ctx context.Context, alarm *models.AlarmEntry) error {
-	start := time.Now()
-
-	result, err := dbc.Collections.Alarms.InsertOne(ctx, alarm)
-	if err != nil {
-		slog.ErrorContext(ctx, "failed to create alarm",
-			"runtime", time.Since(start),
-			id, alarm.AlarmID,
-			"error", err,
-		)
-		return fmt.Errorf("failed to create alarm. %w", err)
-	}
-
-	if !result.Acknowledged {
-		slog.ErrorContext(ctx, "failed to create alarm",
-			"runtime", time.Since(start),
-			id, alarm.AlarmID,
-			"error", "insert not acknowledged",
-		)
-		return fmt.Errorf("failed to create alarm. insert not acknowledged")
-
-	}
-
-	slog.DebugContext(ctx, "created alarm",
-		"runtime", time.Since(start),
-		id, alarm.AlarmID,
-	)
-
-	return err
-}
 
 func (dbc *Database) InsertAlarmEntries(ctx context.Context, alarmID string, logEntries []models.LogEntry) error {
 	start := time.Now()
@@ -129,46 +57,6 @@ func (dbc *Database) InsertAlarmEntries(ctx context.Context, alarmID string, log
 
 	slog.DebugContext(ctx, "updated alarm", "runtime", time.Since(start), id, alarmID)
 	return nil
-}
-
-func (dbc *Database) DeleteAlarm(ctx context.Context, alarmID string) error {
-	start := time.Now()
-	result, err := dbc.Collections.Alarms.DeleteOne(ctx, bson.M{id: alarmID})
-	if err != nil {
-		slog.ErrorContext(ctx, "failed to delete alarm",
-			"runtime", time.Since(start),
-			id, alarmID,
-			"error", err,
-		)
-		return fmt.Errorf("failed to delete alarm. %w", err)
-	}
-	if result.DeletedCount == 0 {
-		slog.ErrorContext(ctx, "failed to delete alarm",
-			"runtime", time.Since(start),
-			id, alarmID,
-			"error", "no documents deleted",
-		)
-		return fmt.Errorf("failed to delete alarm. no documents deleted. %w", ErrAlarmNotFound)
-	}
-
-	slog.DebugContext(ctx, "deleted alarm", "runtime", time.Since(start), id, alarmID)
-	return err
-}
-
-func (ah *AlarmHandler) Create(ctx context.Context, alarm *models.AlarmEntry) error {
-	return fmt.Errorf("not implemented")
-}
-
-func (ah *AlarmHandler) Read(ctx context.Context, filters ...database.Filter) ([]*models.AlarmEntry, error) {
-	return nil, fmt.Errorf("not implemented")
-}
-
-func (ah *AlarmHandler) Update(ctx context.Context, alarm *models.AlarmEntry) error {
-	return fmt.Errorf("not implemented")
-}
-
-func (ah *AlarmHandler) Delete(ctx context.Context, filters ...database.Filter) error {
-	return fmt.Errorf("not implemented")
 }
 
 func (ah *AlarmHandler) Append(ctx context.Context, alarmID string, logEntry models.LogEntry) error {
