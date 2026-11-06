@@ -27,6 +27,7 @@ func NewRMQHandler(rmqClient rabbitmq.RMQClientInterface, db *mongodb.Database, 
 		RMQClient:   rmqClient,
 		Store:       db,
 		DB:          db,
+		Store:       db,
 		AdminGroups: adminGroups,
 	}
 }

@@ -89,7 +89,7 @@ func TestGetVhostsHandlerReturnsVhosts(t *testing.T) {
 }
 
 func TestGetVhostsHandlerForbiddenWithoutAdminGroup(t *testing.T) {
-	client := &rmqfake.Client{}
+	client := rmqfake.NewClient()
 	db := &mongodb.Database{}
 	handler := rmq.NewRMQHandler(client, db, []string{adminGroup})
 
