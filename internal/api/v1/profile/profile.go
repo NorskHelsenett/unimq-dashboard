@@ -9,6 +9,7 @@ import (
 	"github.com/sisneve/rabbitmq-dashboard/internal/models"
 )
 
+// TODO: Move this to a seperate package or make it a requirement in the Store interface.
 type ACLStore interface {
 	GetByGroupIDs(context.Context, []string) ([]*models.ACL, error)
 }

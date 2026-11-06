@@ -1,24 +1,19 @@
 package rmq
 
 import (
-	"context"
 	"net/http"
 
 	"github.com/sisneve/rabbitmq-dashboard/internal/api/httpsuite"
+	"github.com/sisneve/rabbitmq-dashboard/internal/api/v1/profile"
 	"github.com/sisneve/rabbitmq-dashboard/internal/clients/mongodb"
 	"github.com/sisneve/rabbitmq-dashboard/internal/clients/rabbitmq"
 	"github.com/sisneve/rabbitmq-dashboard/internal/database"
-	"github.com/sisneve/rabbitmq-dashboard/internal/models"
 )
-
-type ACLStore interface {
-	GetACLsForGroups(context.Context, []string) ([]models.ACL, error)
-}
 
 type RMQHandler struct {
 	RMQClient   rabbitmq.RMQClientInterface
 	Store       database.Store
-	DB          ACLStore
+	DB          profile.ACLStore
 	AdminGroups []string
 }
 
@@ -26,8 +21,7 @@ func NewRMQHandler(rmqClient rabbitmq.RMQClientInterface, db *mongodb.Database, 
 	return &RMQHandler{
 		RMQClient:   rmqClient,
 		Store:       db,
-		DB:          db,
-		Store:       db,
+		DB:          db.ACLHandler(),
 		AdminGroups: adminGroups,
 	}
 }
