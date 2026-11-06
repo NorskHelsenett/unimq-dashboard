@@ -10,7 +10,7 @@ import (
 )
 
 type ACLStore interface {
-	GetACLsForGroups(context.Context, []string) ([]models.ACL, error)
+	GetByGroupIDs(context.Context, []string) ([]*models.ACL, error)
 }
 
 type ProfileHandler struct {
@@ -42,7 +42,7 @@ func (ps *ProfileHandler) GetProfileHandler(w http.ResponseWriter, r *http.Reque
 			httpsuite.WriteJSONErrorForbidden(w, httpsuite.WithErrorMessage("no ACL grants read access"))
 			return
 		}
-		acls, err := ps.aclStore.GetACLsForGroups(r.Context(), groups)
+		acls, err := ps.aclStore.GetByGroupIDs(r.Context(), groups)
 		if err != nil {
 			httpsuite.WriteJSONError(w, http.StatusInternalServerError, httpsuite.WithError(err), httpsuite.WithErrorMessage("failed to validate ACL"))
 			return
