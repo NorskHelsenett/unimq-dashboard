@@ -3,6 +3,7 @@ package rmq
 import (
 	"context"
 	"errors"
+	"fmt"
 	"net/http"
 	"net/url"
 
@@ -61,7 +62,10 @@ func (rc *RMQHandler) VhostACLMiddleware(next http.Handler) http.Handler {
 	})
 }
 
-func (rc *RMQHandler) FilterAccessibleVhosts(ctx context.Context, vhosts []models.Vhost) ([]models.Vhost, error) {
+func (rc *RMQHandler) FilterAccessibleVhosts(ctx context.Context, vhosts []*models.Vhost) ([]*models.Vhost, error) {
+	if vhosts == nil {
+		return nil, fmt.Errorf("vhosts is nil. %w", database.ErrInvalidRequestParameters)
+	}
 	if _, err := httpsuite.IsAGroupInClaim(ctx, rc.AdminGroups); err == nil {
 		return vhosts, nil
 	}
@@ -75,12 +79,17 @@ func (rc *RMQHandler) FilterAccessibleVhosts(ctx context.Context, vhosts []model
 	for i, group := range groups {
 		filters[i] = database.NewFilter("group", database.FilterOpEqual, group)
 	}
+
+	if rc.Store == nil {
+		return nil, fmt.Errorf("store is nil. %w", database.ErrGeneralDatabaseError)
+	}
+
 	acls, err := rc.Store.ACLHandler().Read(ctx, filters...)
 	if err != nil {
 		return nil, err
 	}
 
-	accessible := make([]models.Vhost, 0, len(vhosts))
+	accessible := make([]*models.Vhost, 0, len(vhosts))
 	for i := range vhosts {
 		for _, acl := range acls {
 			if acl.Allows(models.ScopeRead, vhosts[i].Name) {
