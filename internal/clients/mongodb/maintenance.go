@@ -17,13 +17,13 @@ var (
 
 type MaintenaceHandler struct {
 	Collection *mongo.Collection
-	CollectorHolder[models.MaintenanceEntry]
+	*CollectorHolder[models.MaintenanceEntry]
 }
 
 func NewMaintenanceHandler(collection *mongo.Collection) *MaintenaceHandler {
 	return &MaintenaceHandler{
 		Collection:      collection,
-		CollectorHolder: CollectorHolder[models.MaintenanceEntry]{collection},
+		CollectorHolder: NewCollectorHolder[models.MaintenanceEntry](collection),
 	}
 }
 

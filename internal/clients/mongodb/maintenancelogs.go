@@ -7,14 +7,14 @@ import (
 )
 
 type MaintenaceLogHandler struct {
-	Collection mongo.Collection
-	CollectorHolder[models.MaintenanceEditLog]
+	Collection *mongo.Collection
+	*CollectorHolder[models.MaintenanceEditLog]
 }
 
-func NewMaintenanceLogHandler(collection mongo.Collection) *MaintenaceLogHandler {
+func NewMaintenanceLogHandler(collection *mongo.Collection) *MaintenaceLogHandler {
 	return &MaintenaceLogHandler{
 		Collection:      collection,
-		CollectorHolder: CollectorHolder[models.MaintenanceEditLog]{},
+		CollectorHolder: NewCollectorHolder[models.MaintenanceEditLog](collection),
 	}
 }
 

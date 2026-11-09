@@ -10,7 +10,6 @@ import (
 	"github.com/sisneve/rabbitmq-dashboard/internal/clients/mongodb"
 	"github.com/sisneve/rabbitmq-dashboard/internal/clients/rabbitmq"
 	"github.com/sisneve/rabbitmq-dashboard/internal/config"
-	"github.com/sisneve/rabbitmq-dashboard/internal/database"
 	"github.com/sisneve/rabbitmq-dashboard/internal/logger"
 	"github.com/sisneve/rabbitmq-dashboard/internal/models"
 	"github.com/sisneve/rabbitmq-dashboard/internal/services/storeservice"
@@ -143,7 +142,13 @@ func main() {
 		return
 	}
 
-	store, err := storeservice.NewStoreService(database.Store(db))
+	err = db.InitCollections()
+	if err != nil {
+		slog.Error("failed to initialize database collections", "error", err)
+		return
+	}
+
+	store, err := storeservice.NewStoreService(db)
 	if err != nil {
 		slog.Error("failed to create store service", "error", err)
 		return
