@@ -29,7 +29,7 @@ func (rc *APIService) GetNotificationsHandler(w http.ResponseWriter, r *http.Req
 		return
 	}
 
-	notifications, err := rc.DB.GetNotificationsAll(r.Context())
+	notifications, err := rc.store.NotificationHandler().Read(r.Context())
 	if err != nil {
 		httpsuite.WriteJSONError(w,
 			http.StatusInternalServerError,
@@ -66,7 +66,7 @@ func (rc *APIService) GetNotificationsVhostHandler(w http.ResponseWriter, r *htt
 		return
 	}
 
-	notification, err := rc.DB.GetNotification(r.Context(), vhost)
+	notification, err := rc.storeService.GetNotificationsByID(r.Context(), vhost)
 	if err != nil {
 		if errors.Is(err, mongo.ErrNoDocuments) {
 			empty := models.NewVhostNotification(vhost)
@@ -109,7 +109,7 @@ func (rc *APIService) DeleteNotificationsHandler(w http.ResponseWriter, r *http.
 		return
 	}
 
-	err = rc.DB.DeleteNotification(r.Context(), vhost)
+	err = rc.storeService.DeleteNotificationByID(r.Context(), vhost)
 	if err != nil {
 		httpsuite.WriteJSONError(w,
 			http.StatusInternalServerError,
