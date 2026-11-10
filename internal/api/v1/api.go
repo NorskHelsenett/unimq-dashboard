@@ -8,15 +8,17 @@ import (
 	"github.com/sisneve/rabbitmq-dashboard/internal/clients/rabbitmq"
 	"github.com/sisneve/rabbitmq-dashboard/internal/database"
 	"github.com/sisneve/rabbitmq-dashboard/internal/notify"
+	"github.com/sisneve/rabbitmq-dashboard/internal/services/storeservice"
 )
 
 type APIService struct {
-	Ctx         context.Context
-	DB          *mongodb.Database
-	RMQClient   rabbitmq.RMQClientInterface
-	store       database.Store
-	AdminGroups []string
-	Checker     *notify.Checker
+	Ctx          context.Context
+	DB           *mongodb.Database
+	RMQClient    rabbitmq.RMQClientInterface
+	store        database.Store
+	storeService *storeservice.StoreService
+	AdminGroups  []string
+	Checker      *notify.Checker
 }
 
 type APIServiceOption func(*APIService) error
@@ -32,6 +34,7 @@ func WithDatabase(db *mongodb.Database) APIServiceOption {
 	return func(rc *APIService) error {
 		rc.DB = db
 		rc.store = db
+		rc.storeService, _ = storeservice.NewStoreService(db)
 		return nil
 	}
 }
