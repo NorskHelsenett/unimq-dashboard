@@ -220,7 +220,7 @@ func (rc *APIService) UpsertACLHandler(w http.ResponseWriter, r *http.Request) {
 		httpsuite.WriteJSONError(w, http.StatusBadGateway, httpsuite.WithError(err), httpsuite.WithErrorMessage("failed to fetch vhosts"))
 		return
 	}
-	if err := rc.store.ACLHandler().Put(r.Context(), &acl); err != nil {
+	if err := rc.store.ACLHandler().Put(r.Context(), []*models.ACL{&acl}); err != nil {
 		httpsuite.WriteJSONError(w, http.StatusInternalServerError, httpsuite.WithError(err), httpsuite.WithErrorMessage("failed to save ACL"))
 		return
 	}

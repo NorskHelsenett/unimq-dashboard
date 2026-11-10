@@ -7,10 +7,8 @@ import (
 )
 
 func (rc *StoreService) SeedACLs(ctx context.Context, acls []*models.ACL) error {
-	for _, acl := range acls {
-		if err := rc.ACLHandler().Put(ctx, acl); err != nil {
-			return err
-		}
+	if err := rc.ACLHandler().Put(ctx, acls); err != nil {
+		return err
 	}
 	return nil
 }
