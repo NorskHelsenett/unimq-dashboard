@@ -134,7 +134,7 @@ func (c *Checker) runChecks() {
 		slog.ErrorContext(c.Ctx, "Checker: failed to advance maintenance statuses", "error", err)
 	}
 
-	notifications, err := c.DB.GetNotificationsAll(c.Ctx)
+	notifications, err := c.store.NotificationHandler().Read(c.Ctx)
 	if err != nil {
 		slog.ErrorContext(c.Ctx, "Failed to fetch notifications from database", "error", err)
 		return
@@ -154,10 +154,16 @@ func (c *Checker) runChecks() {
 			slog.ErrorContext(c.Ctx, "Failed to fetch metrics", "vhost", vhost.Name, "error", err)
 			continue
 		}
+		if len(metrics) == 0 {
+			slog.WarnContext(c.Ctx, "No metrics found for vhost", "vhost", vhost.Name)
+			continue
+		}
 
 		if len(metrics) > 1 {
 			slog.WarnContext(c.Ctx, "Multiple metrics found for vhost, using the first one", "vhost", vhost.Name)
 		}
+
+		metric := metrics[0]
 
 		queues, err := c.RMQClient.GetQueues(filter)
 		if err != nil {
@@ -177,7 +183,7 @@ func (c *Checker) runChecks() {
 
 		// Evaluate each rule for the vhost and send notifications if needed.
 		for _, rule := range vhost.Rules {
-			c.checkRule(rule, &vhost, metrics[0], vhostQueues)
+			c.checkRule(rule, vhost, metric, vhostQueues)
 		}
 	}
 
