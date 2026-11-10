@@ -32,11 +32,13 @@ type Database struct {
 }
 
 type Collections struct {
-	Alarms              *mongo.Collection
-	Maintenance         *mongo.Collection
-	MaintenanceEditLogs *mongo.Collection
-	Notifications       *mongo.Collection
-	ACLs                *mongo.Collection
+	Alarms                 *mongo.Collection
+	Maintenance            *mongo.Collection
+	MaintenanceEditLogs    *mongo.Collection
+	Notifications          *mongo.Collection
+	NotificationRecipients *mongo.Collection
+	NotificationRules      *mongo.Collection
+	ACLs                   *mongo.Collection
 }
 
 // MongoConstants
@@ -190,14 +192,21 @@ func CreateClient(uri string, timeoutSecs int) (*mongo.Client, error) {
 	return client, nil
 }
 
+// InitCollections initializes the collections in the database.
+// It pings the database to ensure that the connection is valid.
+//
+// Running this function multiple times is safe.
+// TODO: Should have a channel to monitor the connection to log database connection issues and attempt to reconnect if the connection is lost.
 func (dbc *Database) InitCollections() error {
 
 	dbc.Collections = &Collections{
-		Alarms:              dbc.client.Database(dbc.db).Collection("alarms"),
-		Maintenance:         dbc.client.Database(dbc.db).Collection("maintenance"),
-		MaintenanceEditLogs: dbc.client.Database(dbc.db).Collection("maintenance_edit_logs"),
-		Notifications:       dbc.client.Database(dbc.db).Collection("notifications"),
-		ACLs:                dbc.client.Database(dbc.db).Collection("acls"),
+		Alarms:                 dbc.client.Database(dbc.db).Collection("alarms"),
+		Maintenance:            dbc.client.Database(dbc.db).Collection("maintenance"),
+		MaintenanceEditLogs:    dbc.client.Database(dbc.db).Collection("maintenance_edit_logs"),
+		Notifications:          dbc.client.Database(dbc.db).Collection("notifications"),
+		NotificationRecipients: dbc.client.Database(dbc.db).Collection("notification_recipients"),
+		NotificationRules:      dbc.client.Database(dbc.db).Collection("notification_rules"),
+		ACLs:                   dbc.client.Database(dbc.db).Collection("acls"),
 	}
 
 	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(dbc.TimeoutSecs)*time.Second)
@@ -232,6 +241,24 @@ func (dbc *Database) MaintenanceHandler() database.MaintenaceRepository {
 
 func (dbc *Database) MaintenanceLogsHandler() database.MaintenaceLogRepository {
 	var out database.MaintenaceLogRepository
-	out = NewMaintenanceLogHandler(*dbc.Collections.MaintenanceEditLogs)
+	out = NewMaintenanceLogHandler(dbc.Collections.MaintenanceEditLogs)
+	return out
+}
+
+func (dbc *Database) NotificationHandler() database.NotificationRepository {
+	var out database.NotificationRepository
+	out = NewNotificationHandler(dbc.Collections.Notifications)
+	return out
+}
+
+func (dbc *Database) NotificationRecipientsHandler() database.NotificationRecipientRepository {
+	var out database.NotificationRecipientRepository
+	out = NewNotificationRecipientHandler(dbc.Collections.NotificationRecipients)
+	return out
+}
+
+func (dbc *Database) NotificationRulesHandler() database.NotificationRulesRepository {
+	var out database.NotificationRulesRepository
+	out = NewNotificationRuleHandler(dbc.Collections.NotificationRules)
 	return out
 }
