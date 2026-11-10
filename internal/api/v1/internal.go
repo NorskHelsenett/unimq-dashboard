@@ -24,7 +24,7 @@ func (rc *APIService) ensureNotificationHostExists(ctx context.Context, vhost st
 		return nil, fmt.Errorf("error decoding vhost name: %w", err)
 	}
 
-	vhostNotification, err := rc.DB.GetNotification(ctx, eVhost)
+	vhostNotification, err := rc.storeService.GetNotificationsByID(ctx, eVhost)
 	if err != nil {
 		if errors.Is(err, mongo.ErrNoDocuments) {
 
@@ -34,7 +34,7 @@ func (rc *APIService) ensureNotificationHostExists(ctx context.Context, vhost st
 				Recipients: []*models.Recipient{},
 				Notified:   false,
 			}
-			err = rc.DB.AddNotification(ctx, *vhostNotification)
+			err = rc.store.NotificationHandler().Create(ctx, []*models.VhostNotification{vhostNotification})
 			if err != nil {
 				return nil, fmt.Errorf("%w. %w", errFailedToCreateNotificationHost, err)
 			}
