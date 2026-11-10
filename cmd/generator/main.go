@@ -188,12 +188,12 @@ func main() {
 
 	slog.Info("RabbitMQ seeded successfully")
 
-	err = db.Seed(ctx, queueMapping)
+	err = db.Drop(ctx)
 	if err != nil {
-		slog.Error("failed to seed database", "error", err)
+		slog.Error("failed to drop database", "error", err)
 		return
 	}
-	slog.Info("Database seeded successfully")
+	slog.Info("Database dropped in preparation for seeding")
 
 	store.SeedACLs(ctx, aclEntries)
 	slog.Info("ACLs seeded successfully")
