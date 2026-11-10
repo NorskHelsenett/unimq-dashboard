@@ -107,14 +107,24 @@ func (c *CollectorHolder[T]) Patch(ctx context.Context, patch map[string]any, fi
 	return nil
 }
 
-func (c *CollectorHolder[T]) Put(ctx context.Context, put *T, filters ...database.Filter) error {
+func (c *CollectorHolder[T]) Put(ctx context.Context, put []*T, filters ...database.Filter) error {
 	filter := parseFilters(filters...)
 	update := bson.M{"$set": put}
-	opts := options.UpdateOne().SetUpsert(true)
+	opts := options.UpdateMany().SetUpsert(true)
 
-	_, err := c.Collection.UpdateOne(ctx, filter, update, opts)
+	result, err := c.Collection.UpdateMany(ctx, filter, update, opts)
 	if err != nil {
 		return fmt.Errorf("put resource %v failed. %w", put, err)
 	}
+
+	if result.MatchedCount == 0 && result.UpsertedCount == 0 {
+		return fmt.Errorf("put resource %v failed. no documents matched or upserted", put)
+	}
+
+	return nil
+}
+
+// Note: The Drop method is intentionally left as a no-op. Dropping the entire collection can be useful in testing or resetting the database, but it should be used with caution in production environments.
+func (c *CollectorHolder[T]) Drop(ctx context.Context) error {
 	return nil
 }

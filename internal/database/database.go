@@ -16,9 +16,9 @@ type Store interface {
 	MaintenanceHandler() MaintenaceRepository
 	MaintenanceLogsHandler() MaintenaceLogRepository
 	// VhostHandler() VhostHandler
-	// NotificationHandler() NotificationHandler
-	// NotificationRecipientHandler() NotificationRecipientHandler
-	// NotificationRulesHandler() NotificationRulesHandler
+	NotificationHandler() NotificationRepository
+	NotificationRecipientsHandler() NotificationRecipientRepository
+	NotificationRulesHandler() NotificationRulesRepository
 }
 
 type StoreSeeder interface {
@@ -56,17 +56,16 @@ type MaintenaceLogRepository interface {
 	CRUDStore[models.MaintenanceEditLog]
 }
 
-type NotificationHandler interface {
+// NotificationRepository defines the interface for managing notifications in the database.
+type NotificationRepository interface {
 	CRUDStore[models.VhostNotification]
-	Toggle(ctx context.Context, id string) error
-	GetByParentID(ctx context.Context, parentID string) ([]*models.VhostNotification, error)
 }
 
-type NotificationRecipientHandler interface {
+type NotificationRecipientRepository interface {
 	CRUDStore[models.Recipient]
 }
 
-type NotificationRulesHandler interface {
+type NotificationRulesRepository interface {
 	CRUDStore[models.AlarmRule]
 }
 
@@ -76,10 +75,11 @@ type CRUDStore[T any] interface {
 	Read(ctx context.Context, filters ...Filter) ([]*T, error)    // Read one or more items based on filters.
 	Update(ctx context.Context, item *T, filters ...Filter) error // Update a single item.
 	Delete(ctx context.Context, filters ...Filter) error          // Delete one or more items based on filters.
+	Drop(ctx context.Context) error                               // Drop the entire collection. This should be a noop operation in production, but useful for testing or resetting the database.
 }
 
 type Putter[T any] interface {
-	Put(ctx context.Context, item *T, filters ...Filter) error // Upsert an item (create or update).
+	Put(ctx context.Context, items []*T, filters ...Filter) error // Upsert an item (create or update).
 }
 
 type Patcher[T any] interface {
