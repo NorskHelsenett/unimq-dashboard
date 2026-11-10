@@ -18,7 +18,6 @@ import (
 	"github.com/sisneve/rabbitmq-dashboard/internal/clients/mongodb"
 	"github.com/sisneve/rabbitmq-dashboard/internal/clients/rabbitmq"
 	"github.com/sisneve/rabbitmq-dashboard/internal/config"
-	"github.com/sisneve/rabbitmq-dashboard/internal/database"
 	"github.com/sisneve/rabbitmq-dashboard/internal/docs"
 	"github.com/sisneve/rabbitmq-dashboard/internal/notify"
 	"github.com/sisneve/rabbitmq-dashboard/internal/services/storeservice"
@@ -56,7 +55,7 @@ func SetupRoutes(ctx context.Context, config *config.Config, db *mongodb.Databas
 		return nil, fmt.Errorf("failed to create API service: %w", err)
 	}
 
-	store, err := storeservice.NewStoreService(database.Store(db))
+	store, err := storeservice.NewStoreService(db)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create store service: %w", err)
 	}
