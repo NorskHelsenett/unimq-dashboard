@@ -77,6 +77,12 @@ func main() {
 		panic(err)
 	}
 
+	err = db.InitCollections()
+	if err != nil {
+		slog.ErrorContext(ctx, "failed to initialize database collections", "error", err)
+		panic(err)
+	}
+
 	rmq, err := rabbitmq.NewRMQClient(
 		rabbitmq.WithRMQHost(config.RabbitMQHost),
 		rabbitmq.WithRMQPort(config.RabbitMQPort),
