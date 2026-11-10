@@ -240,5 +240,56 @@ func main() {
 		}
 	}
 
+	for _, vhost := range vhosts {
+		recipients := []*models.Recipient{
+			{
+				ID:       uuid.New().String(),
+				Vhost:    vhost,
+				Name:     "Test Recipient for " + vhost,
+				URL:      "https://example.com/notify",
+				Email:    "",
+				Type:     models.RecipientTypeWebhook,
+				Notified: false,
+			},
+			{
+				ID:       uuid.New().String(),
+				Vhost:    vhost,
+				Name:     "Test Email Recipient for " + vhost,
+				URL:      "",
+				Email:    "olanordmann@test.com",
+				Type:     models.RecipientTypeEmail,
+				Notified: false,
+			},
+		}
+
+		err = store.NotificationRecipientsHandler().Create(ctx, recipients)
+		if err != nil {
+			slog.Error("failed to seed notification recipients", "error", err)
+			return
+		}
+
+		rules := []*models.AlarmRule{
+			{
+				ID:        uuid.New().String(),
+				Vhost:     vhost,
+				QueueName: "",
+				Name:      "Test Rule for " + vhost,
+				Threshold: 10.0,
+				Type:      models.AlarmTypeConnections,
+				Enabled:   true,
+				Status:    models.AlarmStatusActive,
+				LastFired: new(time.Now().Add(-10 * time.Minute)),
+				LastValue: new(5.0),
+			},
+		}
+
+		err = store.NotificationRulesHandler().Create(ctx, rules)
+		if err != nil {
+			slog.Error("failed to seed notification rules", "error", err)
+			return
+		}
+
+	}
+
 	slog.Info("maintenance logs seeded successfully")
 }
