@@ -6,9 +6,26 @@ import (
 	"log/slog"
 	"time"
 
+	"github.com/sisneve/rabbitmq-dashboard/internal/database"
 	"github.com/sisneve/rabbitmq-dashboard/internal/models"
 	"go.mongodb.org/mongo-driver/v2/bson"
+	"go.mongodb.org/mongo-driver/v2/mongo"
 )
+
+type NotificationRecipientHandler struct {
+	Collection *mongo.Collection
+	*CollectorHolder[models.Recipient]
+}
+
+func NewNotificationRecipientHandler(collection *mongo.Collection) *NotificationRecipientHandler {
+	return &NotificationRecipientHandler{
+		Collection:      collection,
+		CollectorHolder: NewCollectorHolder[models.Recipient](collection),
+	}
+}
+
+// interface guard clause.
+var _ database.NotificationRecipientRepository = (*NotificationRecipientHandler)(nil)
 
 var (
 	ErrRecipientNotFound = fmt.Errorf("notification recipient not found")

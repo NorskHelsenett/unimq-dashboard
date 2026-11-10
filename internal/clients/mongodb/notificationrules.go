@@ -8,8 +8,25 @@ import (
 	"time"
 
 	"github.com/sisneve/rabbitmq-dashboard/internal/api/httpsuite"
+	"github.com/sisneve/rabbitmq-dashboard/internal/database"
 	"github.com/sisneve/rabbitmq-dashboard/internal/models"
+	"go.mongodb.org/mongo-driver/v2/mongo"
 )
+
+type NotificationRulesHandler struct {
+	Collection *mongo.Collection
+	*CollectorHolder[models.AlarmRule]
+}
+
+func NewNotificationRuleHandler(collection *mongo.Collection) *NotificationRulesHandler {
+	return &NotificationRulesHandler{
+		Collection:      collection,
+		CollectorHolder: NewCollectorHolder[models.AlarmRule](collection),
+	}
+}
+
+// interface guard clause.
+var _ database.NotificationRulesRepository = (*NotificationRulesHandler)(nil)
 
 func (dbc *Database) GetNotificationRules(ctx context.Context, notificationID string) ([]*models.AlarmRule, error) {
 	start := time.Now()
