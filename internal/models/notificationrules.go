@@ -77,7 +77,8 @@ func (c *AlarmRuleCreate) ToAlarmRule() (*AlarmRule, error) {
 }
 
 type AlarmRule struct {
-	ID        string      `json:"id" bson:"id"`
+	ID        string      `json:"id" bson:"_id"`
+	Vhost     string      `json:"vhost" bson:"vhost"`
 	Name      string      `json:"name" bson:"name"`
 	Type      AlarmType   `json:"type" bson:"type"`
 	QueueName string      `json:"queue_name,omitempty" bson:"queueName"`
