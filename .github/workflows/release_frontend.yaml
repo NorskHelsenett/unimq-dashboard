@@ -5,9 +5,6 @@ on:
 
 permissions:
   contents: read
-  packages: write
-  id-token: write
-  actions: write
 
 concurrency:
   group: release-frontend-${{ github.ref }}
@@ -34,6 +31,9 @@ jobs:
             runner: ubuntu-24.04-arm
 
     runs-on: ${{ matrix.runner }}
+    permissions:
+      contents: read
+      packages: write
 
     steps:
       - name: Prepare
@@ -43,13 +43,17 @@ jobs:
           echo "PLATFORM_PAIR=${PLATFORM//\//-}" >> "$GITHUB_ENV"
 
       - name: Checkout
-        uses: actions/checkout@v7
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+
+      - name: Read toolchain version
+        run: |
+          echo "NODE_VERSION=$(tr -d '[:space:]' < web-src/.nvmrc)" >> "$GITHUB_ENV"
 
       - name: Set up Buildx
-        uses: docker/setup-buildx-action@v4
+        uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4
 
       - name: Login to GHCR
-        uses: docker/login-action@v4
+        uses: docker/login-action@8aa5831fb8d48d8f76594c7ddde61ae58019f550 # v4
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
@@ -57,14 +61,14 @@ jobs:
 
       - name: Generate metadata
         id: meta
-        uses: docker/metadata-action@v6
+        uses: docker/metadata-action@dc802804100637a589fabce1cb79ff13a1411302 # v6
         with:
           images: ${{ env.IMAGE }}
           tags: ${{ env.METADATA_TAGS }}
 
       - name: Build and push frontend by digest
         id: bake
-        uses: docker/bake-action@v7
+        uses: docker/bake-action@59cb1203cd42bcefd40a1b6d73b589e48c86040e # v7
         env:
           PLATFORMS: ${{ matrix.platform }}
           CACHE_SCOPE: ${{ env.PLATFORM_PAIR }}
@@ -87,7 +91,7 @@ jobs:
           touch "${{ runner.temp }}/digests/${digest#sha256:}"
 
       - name: Upload digest
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
         with:
           name: digests-frontend-${{ env.PLATFORM_PAIR }}
           path: ${{ runner.temp }}/digests/*
@@ -97,20 +101,24 @@ jobs:
   release-frontend:
     needs: [build-frontend]
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+      id-token: write
 
     steps:
       - name: Download digests
-        uses: actions/download-artifact@v8
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8
         with:
           path: ${{ runner.temp }}/digests
           pattern: digests-frontend-*
           merge-multiple: true
 
       - name: Set up Buildx
-        uses: docker/setup-buildx-action@v4
+        uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4
 
       - name: Login to GHCR
-        uses: docker/login-action@v4
+        uses: docker/login-action@8aa5831fb8d48d8f76594c7ddde61ae58019f550 # v4
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
@@ -118,7 +126,7 @@ jobs:
 
       - name: Generate metadata
         id: meta
-        uses: docker/metadata-action@v6
+        uses: docker/metadata-action@dc802804100637a589fabce1cb79ff13a1411302 # v6
         with:
           images: ${{ env.IMAGE }}
           tags: ${{ env.METADATA_TAGS }}
@@ -132,13 +140,19 @@ jobs:
             $(printf "${IMAGE}@sha256:%s " *)
 
       - name: Inspect image
+        id: inspect
+        env:
+          VERSION: ${{ steps.meta.outputs.version }}
         run: |
-          docker buildx imagetools inspect "${IMAGE}:${{ steps.meta.outputs.version }}"
+          docker buildx imagetools inspect "${IMAGE}:${VERSION}"
+          digest="$(docker buildx imagetools inspect "${IMAGE}:${VERSION}" --format '{{json .Manifest}}' | jq -er '.digest')"
+          echo "digest=${digest}" >> "$GITHUB_OUTPUT"
 
       - name: Install Cosign
-        uses: sigstore/cosign-installer@v4.1.2
+        uses: sigstore/cosign-installer@6f9f17788090df1f26f669e9d70d6ae9567deba6 # v4.1.2
 
       - name: Sign frontend image
+        env:
+          DIGEST: ${{ steps.inspect.outputs.digest }}
         run: |
-          cosign sign --yes --recursive \
-          "${IMAGE}:${{ steps.meta.outputs.version }}"
+          cosign sign --yes --recursive "${IMAGE}@${DIGEST}"
