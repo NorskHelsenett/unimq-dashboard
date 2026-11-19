@@ -4,17 +4,98 @@ on:
   pull_request:
     branches:
       - main
+  push:
+    branches:
+      - main
+  merge_group:
   workflow_dispatch:
 
 permissions:
   contents: read
 
+concurrency:
+  group: testandbuild-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
 jobs:
+  # Skipped jobs count as passing for required status checks, so path filtering
+  # is done per job rather than with `on.<event>.paths`.
+  changes:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: read
+    outputs:
+      frontend: ${{ steps.filter.outputs.frontend }}
+      backend: ${{ steps.filter.outputs.backend }}
+      chart: ${{ steps.filter.outputs.chart }}
+      docker: ${{ steps.filter.outputs.docker }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+
+      - name: Detect changed paths
+        id: filter
+        uses: dorny/paths-filter@ceb8a2b8f2d89434be7ff52d3de7ec3738c5cc9d # v4.0.3
+        with:
+          filters: |
+            frontend:
+              - 'web-src/**'
+              - '.github/workflows/testandbuild*.yaml'
+            backend:
+              - '**/*.go'
+              - 'go.mod'
+              - 'go.sum'
+              - 'internal/docs/**'
+              - '.golangci.yaml'
+              - 'Taskfile.yml'
+              - 'taskfiles/**'
+              - '.github/workflows/testandbuild*.yaml'
+            chart:
+              - 'unimq/**'
+              - '.github/workflows/testandbuild*.yaml'
+            docker:
+              - 'dockerfiles/**'
+              - 'docker-bake.hcl'
+              - '.dockerignore'
+              - 'web-src/**'
+              - 'cmd/**'
+              - 'internal/**'
+              - 'main.go'
+              - 'go.mod'
+              - 'go.sum'
+              - '.github/workflows/testandbuild*.yaml'
+
   frontend:
+    needs: changes
+    if: github.event_name == 'workflow_dispatch' || needs.changes.outputs.frontend == 'true'
     uses: ./.github/workflows/testandbuild_frontend.yaml
 
   backend:
+    needs: changes
+    if: github.event_name == 'workflow_dispatch' || needs.changes.outputs.backend == 'true'
     uses: ./.github/workflows/testandbuild_backend.yaml
 
   chart:
+    needs: changes
+    if: github.event_name == 'workflow_dispatch' || needs.changes.outputs.chart == 'true'
     uses: ./.github/workflows/testandbuild_chart.yaml
+
+  docker:
+    needs: changes
+    if: github.event_name == 'workflow_dispatch' || needs.changes.outputs.docker == 'true'
+    uses: ./.github/workflows/testandbuild_docker.yaml
+
+  # Single stable check to require in branch protection.
+  result:
+    if: always()
+    needs: [frontend, backend, chart, docker]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Verify no job failed
+        env:
+          RESULTS: ${{ toJSON(needs.*.result) }}
+        run: |
+          jq -e 'all(. == "success" or . == "skipped")' <<< "$RESULTS"
