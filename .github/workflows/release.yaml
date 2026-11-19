@@ -5,21 +5,50 @@ on:
     tags:
       - "v*.*.*"
 
-permissions:
-  contents: write
-  packages: write
-  id-token: write
-  actions: write
+permissions: {}
 
 jobs:
+  test-frontend:
+    uses: ./.github/workflows/testandbuild_frontend.yaml
+    permissions:
+      contents: read
+
+  test-backend:
+    uses: ./.github/workflows/testandbuild_backend.yaml
+    permissions:
+      contents: read
+
+  test-chart:
+    uses: ./.github/workflows/testandbuild_chart.yaml
+    permissions:
+      contents: read
+
   frontend:
+    needs: [test-frontend, test-backend, test-chart]
     uses: ./.github/workflows/release_frontend.yaml
+    permissions:
+      contents: read
+      packages: write
+      id-token: write
 
   backend:
+    needs: [test-frontend, test-backend, test-chart]
     uses: ./.github/workflows/release_backend.yaml
+    permissions:
+      contents: read
+      packages: write
+      id-token: write
 
   chart:
+    needs: [test-frontend, test-backend, test-chart]
     uses: ./.github/workflows/release_chart.yaml
+    permissions:
+      contents: read
+      packages: write
+      id-token: write
 
   notes:
+    needs: [frontend, backend, chart]
     uses: ./.github/workflows/release_notes.yaml
+    permissions:
+      contents: write
