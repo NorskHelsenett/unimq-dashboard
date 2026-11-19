@@ -12,6 +12,17 @@ variable "PLATFORMS" {
   default = "linux/amd64,linux/arm64"
 }
 
+# Toolchain versions. CI overrides these from the repo's single sources of truth
+# (the "go" directive in go.mod and web-src/.nvmrc); the defaults are only a
+# fallback for local builds and must be kept in sync with those files.
+variable "GO_VERSION" {
+  default = "1.27.0"
+}
+
+variable "NODE_VERSION" {
+  default = "24"
+}
+
 # Keeps the GitHub Actions cache entries of parallel per-platform builds apart.
 variable "CACHE_SCOPE" {
   default = "local"
@@ -38,7 +49,7 @@ target "frontend" {
   dockerfile = "dockerfiles/Dockerfile.frontend"
 
   args = {
-    NODE_VERSION = "22"
+    NODE_VERSION = NODE_VERSION
   }
 
   cache-from = [
@@ -60,7 +71,7 @@ target "backend" {
   dockerfile = "dockerfiles/Dockerfile.backend"
 
   args = {
-    GO_VERSION = "1.27.0"
+    GO_VERSION = GO_VERSION
   }
 
   cache-from = [
