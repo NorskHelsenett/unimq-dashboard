@@ -47,7 +47,9 @@ jobs:
 
       - name: Read toolchain version
         run: |
-          echo "GO_VERSION=$(awk '/^go /{print $2}' go.mod)" >> "$GITHUB_ENV"
+          go_version="$(awk '/^go /{print $2}' go.mod)"
+          [[ -n "${go_version}" ]] || { echo "::error::no go directive in go.mod"; exit 1; }
+          echo "GO_VERSION=${go_version}" >> "$GITHUB_ENV"
 
       - name: Set up Buildx
         uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4

@@ -22,9 +22,13 @@ jobs:
 
       - name: Read toolchain versions
         run: |
+          go_version="$(awk '/^go /{print $2}' go.mod)"
+          node_version="$(tr -d '[:space:]' < web-src/.nvmrc)"
+          [[ -n "${go_version}" ]] || { echo "::error::no go directive in go.mod"; exit 1; }
+          [[ -n "${node_version}" ]] || { echo "::error::web-src/.nvmrc is empty"; exit 1; }
           {
-            echo "GO_VERSION=$(awk '/^go /{print $2}' go.mod)"
-            echo "NODE_VERSION=$(tr -d '[:space:]' < web-src/.nvmrc)"
+            echo "GO_VERSION=${go_version}"
+            echo "NODE_VERSION=${node_version}"
           } >> "$GITHUB_ENV"
 
       - name: Set up Buildx
